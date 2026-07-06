@@ -1,0 +1,26 @@
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local environment and secrets
+.env
+.env.*
+*.secret
+*.secrets
+secrets/
+
+# Python / node / build noise
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+node_modules/
+dist/
+build/
+
+# Observatory future raw capture outputs
+captures/
+raw-captures/
+*.local.json
