@@ -57,7 +57,7 @@ When M5 activates, read:
 
 | File | Status | Purpose | Notes |
 |---|---|---|---|
-| _none yet_ |  |  | Research docs begin at M5/M6 unless owner changes roadmap |
+| `m5-research-gate-plan.md` | research gate plan | Defines M6 research gates, output docs, source priorities, completion rules, and execution order | M5 artifact; planning only; does not execute research |
 
 ---
 
