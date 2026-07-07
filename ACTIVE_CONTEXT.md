@@ -1,39 +1,46 @@
-# The Observatory — Active Context
+# Active Context - The Observatory
 
-Status: active  
-Last updated: 2026-07-07  
-Purpose: short current-state file for humans and LLMs before starting work.
+Status: authority
+Authority: current operating context
+Purpose: tell fresh sessions what phase the repo is in and what work is currently allowed
+Last updated: 2026-07-07
 
 ---
 
 ## Current Phase
 
-The project is in **early planning / doctrine / roadmap shaping**.
-
-Current work target:
+The Observatory is in:
 
 ```text
-Build the LLM-first repo navigation and roadmap preservation system.
+knowledge-doc preservation / pre-boundary-reconciliation planning
 ```
 
-This is not schema work yet.
+This is still not implementation authorization.
 
 ---
 
-## Active Work Item
-
-Create and connect root onboarding/control files:
+## Active Milestone
 
 ```text
-LLM_START_HERE.md
-REPO_MAP.md
-ROADMAP_RULES.md
-ROADMAP.md
-ACTIVE_CONTEXT.md
-NEXT_SESSION_HANDOFF.md
+M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
 ```
 
-Also establish folder README rules so future milestone required-reading paths do not become vague.
+M0, M0.1, M1, and M2 are complete locally. The local repo is ahead of `origin/main`; push is still recommended before handing work to another tool or clone.
+
+---
+
+## Current Task
+
+Execute M3 as bounded knowledge-doc preservation work.
+
+Current M3 work is allowed to:
+
+- add the classified Claude/project knowledge docs to `planning-inbox/`;
+- label them as planning, research agenda, or advisory context;
+- update `planning-inbox/README.md`;
+- preserve the docs without promoting them into authority.
+
+M3 is about making important source material repo-visible. It is not implementation, boundary rewriting, research execution, or schema work.
 
 ---
 
@@ -41,54 +48,69 @@ Also establish folder README rules so future milestone required-reading paths do
 
 Do not start:
 
-- PostgreSQL schema design;
-- migrations;
-- DataForSEO pulls;
-- Ahrefs/Semrush integration;
-- MCP implementation;
-- dashboard work;
-- customer data handling;
-- strategy/recommendation storage;
-- cross-scope aggregation.
+- schema design
+- migrations
+- Postgres implementation
+- DataForSEO pulls
+- Ahrefs work
+- Semrush work
+- provider purchases
+- MCP implementation
+- API implementation
+- dashboard or operator console work
+- customer data handling
+- strategy storage
+- recommendation storage
+- provider admission
+- capture runner implementation
+- automated recurring capture
 
-These are later milestones or deferred candidates.
-
----
-
-## Current Hard Boundaries
-
-- Observatory stores observations, not conclusions.
-- Strategy is compute-on-read unless a future owner ruling creates a governed boundary.
-- Customer first-party data is not stored here.
-- Typed API/MCP read tools are the only future access door.
-- Hammer tests are a hard gate before real schema/API/tool behavior.
-- Provider data is testimony, not truth.
-- Roadmap required reading must be explicit.
+No schema goblin jazz. No provider confetti cannon. No dashboard side quest.
 
 ---
 
-## Current Open Questions
+## Current Boundary Posture
 
-- Final root file set: keep both `LLM_START_HERE.md` and any model-specific start files, or consolidate model-specific files into this general LLM entrypoint?
-- Exact first roadmap milestone names and order.
-- Which existing Claude-created docs should move from project knowledge into the GitHub repo, if not already present.
-- Whether to add `GLOSSARY.md`, `DOC_STATUS.md`, and `FORBIDDEN_PATTERNS.md` in this initial root-control pass.
+The Observatory stores observations, not conclusions.
+
+The connected LLM interprets at read time.
+
+Accepted conclusions promote out to the owning consumer, such as SearchClarity, Neon Ronin, or Kaizen.
+
+Customer records stay outside Observatory.
+
+Customer first-party analytics stay outside Observatory unless a future explicit owner ruling changes the law. Current expected handling is read-time overlay only.
+
+LLMs and agents must not receive direct SQL access or database credentials. Future access is typed API / MCP read tools only.
+
+Provider disagreement is first-class evidence. Proprietary provider scores are observations of provider model output, not facts about the web.
+
+Hammer tests are a hard gate for implementation.
 
 ---
 
-## Recommended Next Action
+## Current Completion State
 
-1. Finish root control files.
-2. Update `README.md` to point to the new onboarding path.
-3. Draft `ROADMAP.md` as a roadmap operating document first, not a schema plan.
-4. Add folder README template/rule before listing any folder as required milestone reading.
+Closed:
 
----
+- M0 - LLM-first repo navigation and roadmap preservation
+- M0.1 - Knowledgebase-to-repo reconciliation and candidate decision pass
+- M1 - Roadmap Content Draft and Milestone Sequencing
+- M2 - Folder Structure and Folder README Indexes
 
-## Notes For The Next LLM
+Active:
 
-You are not here to build the Observatory database yet.
+- M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
 
-You are here to make sure the repo cannot forget itself.
+Next after M3:
 
-If you are about to create schema, provider calls, or implementation code, stop and check the roadmap gates.
+```text
+M4 - Boundary Reconciliation and Doctrine Hardening
+```
+
+M2 folder ruling completed:
+
+```text
+Created: decisions/, archive/, research/
+Deferred: contracts/ until M7, hammers/ until M8
+```

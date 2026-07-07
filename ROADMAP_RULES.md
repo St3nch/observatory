@@ -1,200 +1,226 @@
-# The Observatory — Roadmap Rules
+# Roadmap Rules — The Observatory
 
-Status: draft 1  
-Date: 2026-07-07  
-Purpose: preserve roadmap memory, control roadmap edits, and force required reading before milestone work.
-
----
-
-## 1. Roadmap Purpose
-
-The roadmap is the project memory spine.
-
-It is not only a task list. It exists so a future human or LLM can determine:
-
-- what is active now;
-- what has already been decided;
-- what must be read before work begins;
-- what is blocked;
-- what is forbidden;
-- what belongs to a later milestone;
-- what must not be rebuilt from vague memory.
-
-The roadmap must make it difficult for a fresh LLM to freestyle architecture from vibes.
+Status: authority
+Authority: roadmap control rules
+Purpose: preserve project memory and prevent roadmap drift
 
 ---
 
-## 2. Roadmap Preservation Rules
+## Purpose
 
-1. **Never delete milestone history silently.** Completed milestones stay visible or move to a completed section with closure notes.
-2. **Never rewrite accepted history as if it always said the new thing.** If direction changes, add an amendment note.
-3. **Every milestone must include required reading.** Required reading may be individual files or folders.
-4. **Folders listed as required reading must have a `README.md`.** That README must summarize the folder and its important docs.
-5. **No milestone starts from memory alone.** The LLM must read the milestone's required docs before planning or implementation.
-6. **Every milestone must state explicit non-goals.** This prevents scope creep and accidental system birth.
-7. **Every milestone must state gates before implementation.** If rights, retention, spend, schema, test, or boundary gates are unresolved, implementation stops.
-8. **Every milestone must produce durable artifacts.** No progress by conversation mist.
-9. **Research topics must stay tied to the milestone or blocker they resolve.** No random research swamp.
-10. **Roadmap edits must be small, reviewable, and boring.** Boring means we did not accidentally build a doctrine casino.
+The roadmap is the project's memory spine.
+
+It exists so The Observatory does not become a pile of half-remembered chat decisions, stale ambitions, and one lonely README screaming into the void.
+
+Roadmap changes must preserve context, boundaries, required reading, and implementation gates.
 
 ---
 
-## 3. Roadmap Edit Classes
+## Roadmap Preservation Rules
 
-### Class A — Maintenance Edit
-
-Examples:
-
-- typo fixes;
-- path fixes;
-- formatting cleanup;
-- adding a missing link that does not change meaning.
-
-Allowed without owner ruling.
-
-### Class B — Clarification Edit
-
-Examples:
-
-- clarifying milestone scope;
-- adding required reading;
-- adding a blocker;
-- adding acceptance criteria;
-- adding an explicit non-goal that preserves existing doctrine.
-
-Allowed, but the edit must include a short change note.
-
-### Class C — Scope Change
-
-Examples:
-
-- adding a milestone;
-- reordering milestones;
-- changing a milestone's goal;
-- moving implementation earlier/later;
-- adding a new layer or system boundary;
-- admitting a new provider or capture instrument.
-
-Requires explicit owner approval.
-
-### Class D — Doctrine Change
-
-Examples:
-
-- changing Observatory boundary law;
-- reviving killed concepts;
-- allowing customer first-party data storage in Observatory;
-- allowing direct SQL or credentials to agents;
-- weakening hammer-test requirements;
-- permitting stored strategy/recommendation records.
-
-Requires explicit owner ruling and must be recorded in `01-harvest-register.md` or `decisions/` once that folder is earned.
+1. Keep milestone intent visible.
+2. Keep current status visible.
+3. Keep deferred work visible without pretending it is approved.
+4. Keep killed concepts visibly killed.
+5. Preserve required reading before implementation.
+6. Record blockers instead of silently skipping them.
+7. Do not collapse planning notes into authority without an explicit edit class and reason.
+8. Do not start implementation work before the relevant milestone gate.
+9. Do not delete roadmap history silently.
 
 ---
 
-## 4. Required Milestone Format
+## Roadmap Edit Classes
 
-Every milestone in `ROADMAP.md` must use this structure:
+Every meaningful roadmap edit should fit one of these classes.
+
+### Maintenance
+
+Small upkeep that does not change meaning.
+
+Examples:
+
+- typo fixes
+- link fixes
+- status date updates
+- adding a missing file reference
+- formatting cleanup
+
+### Clarification
+
+Improves wording or makes an existing rule easier to understand without changing scope.
+
+Examples:
+
+- clearer milestone wording
+- sharper boundary phrasing
+- adding an example that matches existing doctrine
+- splitting a vague sentence into a precise checklist
+
+### Scope Change
+
+Changes what the roadmap includes, excludes, sequences, or prioritizes.
+
+Examples:
+
+- adding a milestone
+- removing a milestone
+- moving provider validation earlier or later
+- introducing a new folder family
+- turning a deferred item into an active planning item
+
+Scope changes require owner approval or an explicit accepted planning decision.
+
+### Doctrine Change
+
+Changes project law.
+
+Examples:
+
+- allowing customer first-party data into Observatory
+- allowing stored recommendations
+- allowing direct SQL access for an agent
+- weakening hammer-test gates
+- reviving a killed ancestor concept
+
+Doctrine changes require explicit owner ruling. Treat them like a loaded nail gun.
+
+---
+
+## Milestone Required-Reading Rule
+
+Every milestone must list required reading before implementation begins.
+
+Required reading may name:
+
+- exact files
+- exact folders
+- exact external source documents when unavoidable
+
+If a milestone lists a folder as required reading, that folder must contain a `README.md` that summarizes what each important document in that folder is for.
+
+No folder README, no folder-as-required-reading. Simple. Brutal. Effective.
+
+---
+
+## Folder README Rule
+
+Every folder that becomes part of a required read path must include a `README.md` with:
+
+- purpose
+- what belongs there
+- what does not belong there
+- reading order
+- file index
+- related roadmap milestones
+- notes for LLMs
+- last review notes
+
+Use `FOLDER_README_TEMPLATE.md` unless there is a good reason not to.
+
+---
+
+## Required Milestone Format
+
+Each roadmap milestone should include:
 
 ```text
-# Milestone N — Name
-
+Milestone ID:
+Name:
 Status:
-Owner:
-Last updated:
-Current state:
-
-## Goal
-
-## Why this milestone exists
-
-## Required reading before work
-
-## Required context summary
-
-## Inputs
-
-## Outputs
-
-## Explicit non-goals
-
-## Gates before implementation
-
-## Acceptance criteria
-
-## Closure note
-
-## Links to follow-up work
+Purpose:
+Required reading:
+Allowed work:
+Forbidden work:
+Exit criteria:
+Blockers:
+Next milestone:
 ```
 
----
-
-## 5. Required Reading Rules
-
-Required reading may point to:
-
-- specific files;
-- folders;
-- prior milestone outputs;
-- research docs;
-- contracts;
-- registers;
-- decision docs;
-- external local repo paths.
-
-If a folder is listed, that folder must contain `README.md` with:
-
-- folder purpose;
-- what belongs there;
-- what does not belong there;
-- file index;
-- summary of each important file;
-- authority/status of each important file;
-- recommended reading order;
-- related roadmap milestones;
-- notes for LLMs.
-
-A milestone must not say "read the folder" unless the folder tells the LLM what the folder means. No lazy treasure maps.
-
----
-
-## 6. Required Reading Proof
-
-Before doing milestone work, an LLM must summarize:
-
-1. which required docs it read;
-2. the boundaries that affect the milestone;
-3. what the milestone is not allowed to change;
-4. open blockers;
-5. the proposed next action.
-
-This summary belongs in the working response or the milestone work note. No silent reading theater.
-
----
-
-## 7. Implementation Gate Rule
-
-Implementation means any of the following:
-
-- schema creation;
-- migrations;
-- production code;
-- provider/API calls;
-- paid capture;
-- MCP/API tool implementation;
-- data persistence behavior;
-- customer-facing output behavior.
-
-Implementation may not start until the milestone's gates are satisfied.
-
-Planning docs may be created earlier, but must clearly label themselves as planning and must not imply approval.
-
----
-
-## 8. Final Rule
+Optional but recommended:
 
 ```text
-Roadmap memory beats LLM memory.
+Owner rulings needed:
+Files likely touched:
+Hammer implications:
+Notes for LLMs:
 ```
 
-If the roadmap and the chat disagree, stop and reconcile before working.
+---
+
+## Planned Milestone Context Rule
+
+Planned milestones must point to the planning/context documents that will matter when the milestone activates.
+
+For early planned milestones, list exact files where possible.
+
+For later milestones whose complete inputs will be produced by earlier gates, the roadmap must still name the expected prior milestone outputs, such as:
+
+- M4 boundary outputs
+- M6 research outputs
+- M7 contract outputs
+- M8 hammer matrix
+- M9 first-slice decision
+
+Do not leave future milestones as contextless labels.
+
+Full `Required reading`, `Blockers`, and `Owner rulings needed` fields become mandatory when a milestone is activated. Before activation, the roadmap must at least preserve enough planning-document context for the next steward to know what to read and why.
+
+---
+
+## Milestone Closure Convention
+
+A milestone closes only through an explicit closure edit.
+
+A closure edit must:
+
+1. verify the milestone exit criteria against the live repo;
+2. update the milestone summary table;
+3. move the closing milestone to `closed` status;
+4. move the next milestone to `active` status;
+5. update `ACTIVE_CONTEXT.md`;
+6. update `NEXT_SESSION_HANDOFF.md`;
+7. record unresolved audit findings or blockers in the appropriate planning/control doc;
+8. commit the exact changed paths;
+9. push before handing work to another tool or clone when push tooling is available.
+
+Do not leave a completed milestone marked active just because the work feels done. If it is not closed in the repo, it is not closed.
+
+---
+
+## Required Reading Proof
+
+Before implementation begins for a milestone, the acting steward must report:
+
+- files read
+- folders read through their README index
+- missing files, if any
+- contradictions or stale docs found
+- whether the milestone gate is open or blocked
+
+If required reading cannot be completed, the milestone is blocked.
+
+---
+
+## Implementation Gate Rule
+
+Implementation may begin only when:
+
+1. the roadmap milestone allows implementation;
+2. required reading is complete;
+3. boundaries are not contradictory;
+4. required folder READMEs exist;
+5. owner approval has been recorded where needed;
+6. hammer expectations are known for the implementation area.
+
+M0 does not allow implementation.
+
+---
+
+## Anti-Drift Rule
+
+If a proposed roadmap edit would make The Observatory store strategy, recommendations, customer records, or fake truth, stop and classify it as a doctrine change.
+
+Default answer: no.
+
+The project can get fancier later. First it has to stop stepping on rakes.

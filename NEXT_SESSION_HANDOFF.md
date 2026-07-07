@@ -1,82 +1,146 @@
-# The Observatory — Next Session Handoff
+# Next Session Handoff - The Observatory
 
-Status: active  
-Last updated: 2026-07-07  
-Purpose: short continuation note for the next human/LLM session.
+Status: authority
+Authority: fresh-session handoff
+Purpose: preserve current state after M2 closure and M3 activation
+Last updated: 2026-07-07
 
 ---
 
 ## Current State
 
-The repo is being converted into an LLM-first project workspace.
+The Observatory is in knowledge-doc preservation / pre-boundary-reconciliation planning.
 
-The immediate work is not database design. The immediate work is root navigation and roadmap preservation so future LLMs do not forget the planning docs or accidentally skip boundaries.
+Closed milestones:
 
----
+- M0 - LLM-first repo navigation and roadmap preservation
+- M0.1 - Knowledgebase-to-repo reconciliation and candidate decision pass
+- M1 - Roadmap Content Draft and Milestone Sequencing
+- M2 - Folder Structure and Folder README Indexes
 
-## Files Added In Current Pass
-
-```text
-ROADMAP_RULES.md
-REPO_MAP.md
-LLM_START_HERE.md
-ACTIVE_CONTEXT.md
-ROADMAP.md
-FOLDER_README_TEMPLATE.md
-NEXT_SESSION_HANDOFF.md
-```
-
-`README.md` still needs to be updated to point to the new root read path if that has not happened yet.
-
----
-
-## Active Milestone
+Active milestone:
 
 ```text
-M0 — LLM-First Repo Navigation and Roadmap Preservation
+M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
 ```
 
-Goal: make the repo self-explaining before deeper roadmap content, research gates, schema, MCP, or provider work.
+M1 created the detailed roadmap sequence through Observatory v1, and M2 created the approved folders/indexes. The repo is still not ready for schema, provider, API, MCP, dashboard, or customer-data work.
+
+The next milestone after M3 is:
+
+```text
+M4 - Boundary Reconciliation and Doctrine Hardening
+```
 
 ---
 
-## Most Important Boundaries
+## Active Read Path
 
-- Observatory stores observations, not strategy.
-- Connected LLM interprets at read time.
-- Accepted conclusions promote out to Kaizen / Neon Ronin / SearchClarity / another owner-approved destination.
-- Customer first-party data is not stored here.
-- LLMs and agents do not get SQL or credentials.
-- Typed API/MCP tools are the future access door.
+Fresh sessions must read:
+
+1. `README.md`
+2. `LLM_START_HERE.md`
+3. `ACTIVE_CONTEXT.md`
+4. `ROADMAP.md`
+5. `ROADMAP_RULES.md`
+6. `REPO_MAP.md`
+7. `00-project-overview.md`
+8. `01-harvest-register.md`
+9. `02-boundaries.md`
+10. `NEXT_SESSION_HANDOFF.md`
+
+For planning notes, read `planning-inbox/README.md` first.
+
+---
+
+## Boundaries to Preserve
+
+- Observatory stores observations, not conclusions.
+- Strategy is compute-on-read by the connected LLM, not stored in Observatory.
+- Customer records are out.
+- Customer first-party data is out.
+- Customer overlays are read-time only unless a future explicit owner ruling changes the law.
+- Provider disagreement is preserved as first-class evidence.
+- Proprietary provider scores are observations of provider model output, not facts about the web.
+- Rights and retention fail closed.
+- LLMs and agents get no direct SQL access or credentials.
+- Future access is through typed API / MCP tools only.
 - Hammer tests are a hard gate.
-- Roadmap required reading is mandatory.
-- Folders listed as required reading must have README summaries.
+- VEDA Brain and other killed ancestor concepts stay killed.
+- Internal first-party telemetry requires explicit internal-scope handling before any storage.
+
+---
+
+## Roadmap State
+
+`ROADMAP.md` now sequences:
+
+- M0 / M0.1 closure
+- M1 closed roadmap sequencing
+- M2 closed folder structure and folder README indexes
+- M3 active knowledge doc preservation
+- M4 boundary reconciliation
+- M5/M6 research gate planning and execution
+- M7 contracts
+- M8 hammer matrix
+- M9 first evidence slice definition
+- M10 schema planning only
+- M11-M12 implementation foundation and first slice build after gates
+- M13 provider admission and controlled pull plan
+- M14 typed read API / MCP contract and prototype
+- M15 SearchClarity proof workflow
+- M16 Provider Cross-Check proof
+- M17 owned telemetry overlay proof
+- M18 recurring watch panel planning
+- M19 hardening / backup / recovery / operations
+- M20 Observatory v1 acceptance
 
 ---
 
 ## Immediate Next Steps
 
-1. Update `README.md` to point to `LLM_START_HERE.md`, `ROADMAP.md`, `ROADMAP_RULES.md`, `REPO_MAP.md`, and `ACTIVE_CONTEXT.md`.
-2. Review whether Claude-created docs in project knowledge need to be added to the GitHub repo.
-3. Draft or refine M1 roadmap content.
-4. Create folder README files only when folders are actually used by roadmap required reading.
-5. Do not start schema work yet.
+Proceed with active M3:
+
+```text
+M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
+```
+
+M3 should add these classified project knowledge docs to `planning-inbox/` with labels, without promoting them into authority:
+
+- `strategy-layer-dangerous-design.md`
+- `deep-research-danger-agenda.md`
+- `steward-context-dump.md`
+
+Then update `planning-inbox/README.md`.
 
 ---
 
 ## Open Questions
 
-- Should `CLAUDE_START_HERE.md` remain model-specific, or should `LLM_START_HERE.md` fully replace it?
-- Should `GLOSSARY.md`, `DOC_STATUS.md`, and `FORBIDDEN_PATTERNS.md` be added during M0 or postponed to M1/M2?
-- Which uploaded project-knowledge docs are not yet in the GitHub repo?
-- What exact milestone sequence should M1 produce?
+Open questions to carry forward:
+
+- Should M3 immediately add `strategy-layer-dangerous-design.md`, `deep-research-danger-agenda.md`, and `steward-context-dump.md` to `planning-inbox/`?
+- Should M4 boundary reconciliation happen before or after adding the Claude docs?
+- Which M5 research gate should execute first once research begins?
+- Should Provider Cross-Check get its own standalone planning doc before M5, or wait for M5/M7?
 
 ---
 
-## Warning To Next LLM
+## Do Not Start Yet
 
-Do not turn the roadmap into implementation permission.
+Do not start:
 
-The roadmap is currently being built so implementation can happen safely later.
+- schema design
+- migrations
+- DataForSEO pulls
+- Ahrefs/Semrush work
+- provider admission
+- capture runner implementation
+- API implementation
+- MCP implementation
+- dashboard/operator console work
+- customer data handling
+- strategy/recommendation storage
+- automated recurring capture
 
-If you are about to create schema, write provider integration code, make API calls, build an MCP server, or design a dashboard, stop. You are probably ahead of the roadmap.
+The project now has rails. Stay on them. No schema goblin jazz.

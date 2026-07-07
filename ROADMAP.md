@@ -1,319 +1,1072 @@
-# The Observatory — Roadmap
+# Roadmap - The Observatory
 
-Status: draft 1  
-Date: 2026-07-07  
-Purpose: milestone control document for planning, research, implementation, tests, and completion of The Observatory.
-
----
-
-## 1. Roadmap Role
-
-This roadmap is the project memory spine.
-
-It does not only list work. It controls how work begins:
-
-```text
-read required docs
-summarize required context
-check gates
-confirm non-goals
-then work
-```
-
-If an LLM cannot name the active milestone, required reading, boundaries, gates, and non-goals, it is not ready to act.
-
-Roadmap rules live in `ROADMAP_RULES.md`.
-
-Repo navigation lives in `REPO_MAP.md`.
+Status: authority
+Authority: roadmap operating document
+Purpose: preserve milestone memory, required reading, gates, and execution sequence from planning through Observatory v1
+Last updated: 2026-07-07
 
 ---
 
-## 2. Active Milestone
+## Roadmap Role
 
-Current active milestone:
+This file is the operating roadmap for The Observatory.
 
-```text
-M0 — LLM-First Repo Navigation and Roadmap Preservation
-```
+It is not provider authorization.
+It is not direct implementation approval.
+It is not permission to create schema, migrations, MCP tools, dashboards, provider integrations, or strategy storage.
 
-No schema, provider, MCP, dashboard, or implementation work is active yet.
+The roadmap exists to preserve:
+
+- current active milestone
+- required reading before work
+- allowed work
+- forbidden work
+- milestone gates
+- research gates
+- future build order
+- deferred ideas
+- killed ideas
+- sequencing memory
+
+Roadmap edit rules live in `ROADMAP_RULES.md`.
 
 ---
 
-## 3. Milestone Status Labels
+## Core Project Law
+
+The Observatory stores observations, not conclusions.
+
+The connected LLM interprets at read time.
+
+Accepted conclusions promote out to the owning consumer.
+
+The Observatory is the telescope. The connected LLM is the astronomer. The database must never become the astronomer.
+
+Hard boundaries:
+
+- no customer records
+- no customer first-party analytics storage in Observatory
+- no strategy tables
+- no recommendation tables
+- no score-as-truth tables
+- no provider-as-truth model
+- no direct SQL or credentials for LLMs/agents
+- no VEDA Brain resurrection
+- rights and retention fail closed
+- provider disagreement is first-class evidence
+- hammer tests are a hard gate before implementation acceptance
+
+---
+
+## Status Labels
 
 | Status | Meaning |
 |---|---|
-| planned | Not started. |
-| active | Current work. |
-| blocked | Cannot proceed until named blocker is resolved. |
-| review | Work produced; needs owner/steward review. |
-| accepted | Milestone output accepted. |
-| closed | Accepted and closure note recorded. |
-| deferred | Owned future work; no action now. |
-| killed | Explicitly not happening. |
+| closed | Exit criteria met and committed |
+| active | Current milestone |
+| planned | Sequenced but not active |
+| blocked | Cannot proceed until blocker is resolved |
+| ready for review | Work complete enough for owner/steward review |
+| deferred | Owned future concern, not active |
+| forbidden unless owner ruling | Not allowed unless owner changes project law |
+| killed | Explicitly rejected; must not re-enter under another name |
 
 ---
 
-## 4. Milestone Template
+## Required Milestone Template
 
-Every milestone must use this structure:
+Each milestone must include:
 
 ```text
-# Milestone N — Name
-
+Milestone ID:
+Name:
 Status:
-Owner:
-Last updated:
-Current state:
-
-## Goal
-
-## Why this milestone exists
-
-## Required reading before work
-
-## Required context summary
-
-## Inputs
-
-## Outputs
-
-## Explicit non-goals
-
-## Gates before implementation
-
-## Acceptance criteria
-
-## Closure note
-
-## Links to follow-up work
+Purpose:
+Required reading:
+Allowed work:
+Forbidden work:
+Exit criteria:
+Blockers:
+Next milestone:
 ```
+
+Optional fields:
+
+```text
+Owner rulings needed:
+Files likely touched:
+Hammer implications:
+Notes for LLMs:
+```
+
+If required reading includes a folder, that folder must have a `README.md` index.
 
 ---
 
-# Milestone 0 — LLM-First Repo Navigation and Roadmap Preservation
+## Milestone Summary
 
-Status: active  
-Owner: Project owner  
-Last updated: 2026-07-07  
-Current state: root onboarding/control files being created
+| Milestone | Name | Status | Purpose |
+|---|---|---|---|
+| M0 | LLM-First Repo Navigation and Roadmap Preservation | closed | Create repo navigation, boundaries, and roadmap-control files |
+| M0.1 | Knowledgebase-to-Repo Reconciliation and Candidate Decision Pass | closed | Classify Claude/GPT docs and candidate ideas without activating them blindly |
+| M1 | Roadmap Content Draft and Milestone Sequencing | closed | Turn planning inputs into the real staged project roadmap |
+| M2 | Folder Structure and Folder README Indexes | closed | Create only earned folders and folder indexes |
+| M3 | Knowledge Doc Preservation and Planning-Inbox Expansion | active | Add classified Claude docs to planning-inbox with labels |
+| M4 | Boundary Reconciliation and Doctrine Hardening | planned | Reconcile richer boundary material and harden project law |
+| M5 | Research Gate Plan | planned | Define research questions, outputs, and gates before design/build |
+| M6 | Research Gate Execution | planned | Complete required research before contracts/schema/provider work |
+| M7 | Core Contract Planning | planned | Draft non-schema contracts for evidence, scope, provider, query panels, capture packages |
+| M8 | Hammer Matrix and Acceptance Gates | planned | Define hostile-path tests and hard gates before implementation |
+| M9 | First Evidence Slice Definition | planned | Choose the smallest useful evidence slice to build first |
+| M10 | Schema Planning Only | planned | Design schema after contracts and research; no migrations yet |
+| M11 | Implementation Foundation | planned | Create project implementation skeleton only after gates open |
+| M12 | First Evidence Slice Build | planned | Build and test the first observation path |
+| M13 | Provider Admission and Controlled Pull Plan | planned | Admit first provider through rights/cost/recipe gates |
+| M14 | Typed Read API / MCP Contract and Prototype | planned | Expose evidence through bounded read tools, not raw SQL |
+| M15 | SearchClarity Proof Workflow | planned | Prove customer-facing evidence support without storing customer records |
+| M16 | Provider Cross-Check Proof | planned | Prove provider disagreement as first-class evidence |
+| M17 | Owned Telemetry Overlay Proof | planned | Prove read-time overlay without storing customer first-party data |
+| M18 | Recurring Watch Panel Planning | planned | Plan recurring capture only after provider/cost/hammers exist |
+| M19 | Hardening, Backup, Recovery, and Operations | planned | Make the system durable and recoverable |
+| M20 | Observatory v1 Acceptance | planned | Accept or reject v1 against doctrine, evidence, and hammers |
 
-## Goal
+---
 
+## Active Milestone
+
+### Milestone ID
+
+M3
+
+### Name
+
+Knowledge Doc Preservation and Planning-Inbox Expansion
+
+### Status
+
+active
+
+### Purpose
+
+Add classified Claude/project knowledge docs to the repo with labels, without promoting them into authority.
+
+M3 preserves serious project source material so M4 boundary reconciliation and M5 research planning can work from repo-visible context.
+
+### Required Reading
+
+- `README.md`
+- `LLM_START_HERE.md`
+- `ACTIVE_CONTEXT.md`
+- `ROADMAP.md`
+- `ROADMAP_RULES.md`
+- `REPO_MAP.md`
+- `planning-inbox/README.md`
+- `planning-inbox/knowledgebase-reconciliation.md`
+- `planning-inbox/audit-response-2026-07-07.md`
+
+### Allowed Work
+
+- add `planning-inbox/strategy-layer-dangerous-design.md`
+- add `planning-inbox/deep-research-danger-agenda.md`
+- add `planning-inbox/steward-context-dump.md`
+- update `planning-inbox/README.md`
+- preserve labels and authority posture
+
+### Forbidden Work
+
+- promoting these docs to root authority without review
+- activating dangerous ideas
+- adding all uploaded docs blindly
+- overwriting live root authority docs
+- schema design
+- provider calls or purchases
+- MCP/API implementation
+- dashboard work
+
+### Blockers
+
+- Source contents must come from uploaded/project-knowledge docs, not reconstruction.
+- Any missing knowledge doc must be reported instead of invented.
+- Local commits should be pushed before another tool or clone relies on GitHub state.
+
+### Exit Criteria
+
+M3 may close when:
+
+- classified Claude/project knowledge docs are added with labels;
+- `planning-inbox/README.md` indexes them;
+- no doc is promoted to authority accidentally;
+- M4 has sufficient repo-visible context for boundary reconciliation;
+- `ACTIVE_CONTEXT.md` and `NEXT_SESSION_HANDOFF.md` point to the correct next milestone;
+- changes are committed.
+
+### Next Milestone
+
+M4 - Boundary Reconciliation and Doctrine Hardening
+
+---
+
+## Closed Milestones
+
+### M0 - LLM-First Repo Navigation and Roadmap Preservation
+
+Status: closed
+
+Purpose:
 Make the repo self-explaining for humans and LLMs before deeper planning or implementation begins.
 
-## Why this milestone exists
+Completed outputs:
 
-Planning docs get forgotten over time. Future LLMs need a durable repo map, roadmap rules, active context, and required-reading system so they do not rebuild from memory fog.
+- `README.md`
+- `LLM_START_HERE.md`
+- `ACTIVE_CONTEXT.md`
+- `ROADMAP.md`
+- `ROADMAP_RULES.md`
+- `REPO_MAP.md`
+- `FOLDER_README_TEMPLATE.md`
+- `NEXT_SESSION_HANDOFF.md`
+- `planning-inbox/README.md`
+- `02-boundaries.md`
 
-## Required reading before work
+### M0.1 - Knowledgebase-to-Repo Reconciliation and Candidate Decision Pass
 
-```text
-README.md
-00-project-overview.md
-01-harvest-register.md
-02-boundaries.md
-ROADMAP_RULES.md
-REPO_MAP.md
-ACTIVE_CONTEXT.md
-```
+Status: closed
 
-## Required context summary
+Purpose:
+Reconcile important project knowledge docs against the live repo and classify candidate ideas before roadmap activation.
 
-The LLM must understand:
+Completed output:
 
-- the Observatory stores observations, not strategy;
-- roadmap memory beats LLM memory;
-- required reading must be explicit per milestone;
-- folders listed as required reading must have README summaries;
-- this milestone is about navigation/control, not database design.
+- `planning-inbox/knowledgebase-reconciliation.md`
 
-## Inputs
+Key preserved decisions:
 
-- Existing project overview and boundary docs.
-- Owner requirement for LLM-first onboarding files.
-- Owner requirement for milestone required reading.
-- Owner requirement for folder READMEs when folders are listed.
+- base Claude docs are serious project source material;
+- dangerous docs are candidate/suggestion material, not implementation approval;
+- Provider Cross-Check & Disagreement Model is an important early design rule / future contract candidate;
+- persistent Strategy/IMI storage remains forbidden unless owner ruling changes project law.
 
-## Outputs
+### M1 - Roadmap Content Draft and Milestone Sequencing
 
-```text
-LLM_START_HERE.md
-REPO_MAP.md
-ROADMAP_RULES.md
-ROADMAP.md
-ACTIVE_CONTEXT.md
-NEXT_SESSION_HANDOFF.md
-FOLDER_README_TEMPLATE.md
-README.md update
-```
+Status: closed
 
-## Explicit non-goals
+Purpose:
+Turn M0/M0.1 planning into a real staged roadmap from current docs through Observatory v1.
 
-This milestone must not create or approve:
+Completed outputs:
 
-- schema;
-- migrations;
-- provider pulls;
-- paid capture;
-- MCP implementation;
-- dashboard work;
-- customer data handling;
-- strategy/recommendation storage;
-- cross-scope aggregation.
+- detailed M0 through M20 roadmap sequence
+- Provider Cross-Check preserved as early design rule / research gate / future contract candidate
+- M2/M3/M4 next steps established
+- research-before-contracts-before-schema-before-implementation sequence established
+- audit-response backlog created and indexed
 
-## Gates before implementation
+Closure note:
+M1 closed through an audit-response closure pass after Claude's 2026-07-07 repo audit found that M1 was substantively complete but still marked active.
 
-No implementation is in scope.
+### M2 - Folder Structure and Folder README Indexes
 
-Before later implementation milestones can begin, they must have:
+Status: closed
 
-- required reading listed;
-- boundary summary;
-- non-goals;
-- gates;
-- acceptance criteria.
+Purpose:
+Create only the folder structure that the roadmap earned, with README indexes for every required-reading folder created in M2.
 
-## Acceptance criteria
+Completed outputs:
 
-- Root onboarding files exist.
-- `README.md` points to the LLM-first read path.
-- `ROADMAP_RULES.md` defines edit/preservation rules.
-- `REPO_MAP.md` explains what goes where.
-- `ROADMAP.md` identifies active milestone and required format.
-- Folder README rule/template exists.
-- A fresh LLM can read root docs and know not to start schema work.
+- `.gitattributes`
+- `decisions/README.md`
+- `decisions/decision-record-template.md`
+- `decisions/2026-07-07-m2-folder-subset.md`
+- `archive/README.md`
+- `research/README.md`
+- `REPO_MAP.md` updated to match actual folders
+- `README.md` read-order and sibling-repo note cleaned up
+- `planning-inbox/README.md` updated with audit-response and Go8 note
 
-## Closure note
-
-Open.
-
-## Links to follow-up work
-
-- M1 — Roadmap Content Draft and Milestone Sequencing.
-- M2 — Folder Structure and Folder README Indexes.
-- M3 — Research Gate Planning.
+Closure note:
+M2 created the owner-approved folder subset: `decisions/`, `archive/`, and `research/`. `contracts/` remains deferred until M7 and `hammers/` remains deferred until M8.
 
 ---
 
-# Milestone 1 — Roadmap Content Draft and Milestone Sequencing
+## Planned Milestones
+
+### M4 - Boundary Reconciliation and Doctrine Hardening
 
 Status: planned
 
-## Goal
+Purpose:
+Compare richer uploaded/project-knowledge boundary material against live root `02-boundaries.md` and harden project law before design work.
 
-Draft the real project milestone sequence from planning and research through completed Observatory v1.
+Required reading / planning context:
 
-## Required reading before work
+- `02-boundaries.md`
+- `01-harvest-register.md`
+- `planning-inbox/knowledgebase-reconciliation.md`
+- `planning-inbox/audit-response-2026-07-07.md`
+- added M3 steward/context docs
+- uploaded/project-knowledge boundary material available to the steward
 
-```text
-ROADMAP.md
-ROADMAP_RULES.md
-REPO_MAP.md
-ACTIVE_CONTEXT.md
-00-project-overview.md
-01-harvest-register.md
-02-boundaries.md
-strategy-layer-dangerous-design.md
-planning-inbox/deep-research-danger-agenda.md
-planning-inbox/repo-first-research-triage.md
-```
+Allowed work:
 
-If any listed doc is missing from the repo, stop and resolve placement before continuing.
+- compare uploaded/project-knowledge `02-boundaries.md` against live root version
+- add missing boundary rules if owner-approved
+- clarify customer first-party data boundary
+- clarify internal owned telemetry boundary
+- clarify Strategy Layer boundary
+- clarify provider disagreement / proprietary score rule
+- clarify forbidden/killed concepts
 
-## Explicit non-goals
+Forbidden work:
 
-Do not start schema or implementation. This milestone sequences work; it does not execute it.
+- weakening boundaries
+- admitting customer first-party storage without owner ruling
+- allowing strategy/recommendation tables
+- allowing direct SQL/credentials
 
-## Acceptance criteria
+Exit criteria:
 
-- Milestones are listed in order.
-- Each milestone has required reading.
-- Research gates appear before schema gates.
-- Hammer-test milestone appears before real implementation.
-- MCP/typed read-tool contract appears before MCP implementation.
-- Customer/private-data boundary is preserved.
+- root `02-boundaries.md` is strong enough to gate research/contracts;
+- known boundary deltas are resolved or explicitly deferred.
+
+Next milestone: M5
 
 ---
 
-# Milestone 2 — Folder Structure and Folder README Indexes
+### M5 - Research Gate Plan
 
 Status: planned
 
-## Goal
+Purpose:
+Define the research gates that must be completed before contracts, schema, provider admission, or API/MCP implementation.
 
-Create the minimum folder structure needed by the roadmap, with README files that explain each folder.
+Required reading / planning context:
 
-## Required reading before work
+- `planning-inbox/repo-first-research-triage.md`
+- `planning-inbox/knowledgebase-reconciliation.md`
+- `planning-inbox/audit-response-2026-07-07.md`
+- M4 boundary outputs
 
-```text
-REPO_MAP.md
-ROADMAP_RULES.md
-FOLDER_README_TEMPLATE.md
-ROADMAP.md
-```
+Research gates to plan:
 
-## Explicit non-goals
+1. DataForSEO rights / retention / cost
+2. marketplace evidence ceiling
+3. GEO / AI citation methodology
+4. Provider Cross-Check & Disagreement Model
+5. provider personality profiles / proprietary score treatment
+6. freshness / staleness / volatility
+7. claim-safety language
+8. negative evidence / absence rules
+9. surface coverage / blind spots
+10. owned property telemetry boundary
+11. CapturePackage v0.1 inputs
+12. evidence ID / citation model needs
 
-Do not create empty sprawl. Create folders only when they are needed by roadmap milestones or current docs.
+Forbidden work:
 
-## Acceptance criteria
+- paid provider pulls
+- schema design
+- implementation
 
-- Every folder used as required reading has a README.
-- Every folder README includes purpose, what belongs, what does not belong, file index, reading order, related milestones, and LLM notes.
+Exit criteria:
+
+- each research gate has question, output doc, required sources, and completion rule;
+- M6 execution order is clear.
+
+Next milestone: M6
 
 ---
 
-# Milestone 3 — Research Gate Planning
+### M6 - Research Gate Execution
 
 Status: planned
 
-## Goal
+Purpose:
+Execute the planned research gates and produce source-grounded docs before contract/schema work.
 
-Turn the existing danger agenda and repo-first triage into ordered research gates that block or enable later contracts/schema.
+Required reading / planning context:
 
-## Required reading before work
+- M5 research gate plan
+- `planning-inbox/audit-response-2026-07-07.md`
+- M4 boundary outputs
+- source docs named by each research gate
 
-```text
-planning-inbox/deep-research-danger-agenda.md
-planning-inbox/repo-first-research-triage.md
-strategy-layer-dangerous-design.md
-01-harvest-register.md
-02-boundaries.md
-```
+Blockers:
 
-## Explicit non-goals
+- M5 research gate plan must exist.
+- M4 boundary reconciliation must be complete or explicitly scoped for research.
 
-Do not execute DataForSEO pulls. Do not buy Ahrefs/Semrush. Do not create schema.
+Allowed work:
 
-## Acceptance criteria
+- research current provider docs and terms
+- research methodology for GEO/AI citation measurement
+- research provider comparison and score interpretation
+- research claim-safety/report language
+- research evidence/citation models
+- create research docs under `research/`
 
-- Research topics are tied to blockers.
-- DataForSEO rights/retention is first-class.
-- Provider comparison is captured as a research lane.
-- Marketplace evidence ceiling is captured.
-- GEO/AI citation methodology is captured.
+Forbidden work:
+
+- provider purchases
+- paid pulls
+- schema or migration work
+- MCP/API implementation
+
+Exit criteria:
+
+- research docs exist and are indexed;
+- blockers are known;
+- contract planning can begin without guessing.
+
+Next milestone: M7
+
+---
+
+### M7 - Core Contract Planning
+
+Status: planned
+
+Purpose:
+Draft non-schema contracts that define evidence behavior before database design.
+
+Required reading / planning context:
+
+- M6 research outputs
+- M4 boundary outputs
+- `planning-inbox/audit-response-2026-07-07.md`
+- future contract document template
+
+Blockers:
+
+- M6 research outputs must exist.
+- Contract template must exist before drafting contract docs.
+
+Contracts to draft:
+
+- scope / scope_class / rights / retention contract
+- evidence ID and citation contract
+- provider registry / provider testimony contract
+- Provider Cross-Check & Disagreement Model contract
+- Provider Disagreement Ledger candidate contract
+- query panel contract
+- CapturePackage v0.1 contract
+- raw archive / payload pointer contract
+- provider payload diff / drift contract
+- freshness / staleness / volatility contract
+- claim language matrix contract
+- negative evidence / absence rules contract
+- owned telemetry overlay contract
+- promotion / conclusion-handoff contract
+- SearchClarity consumer-contract placeholder
+- typed API/MCP read-tool contract
+
+Forbidden work:
+
+- physical schema
+- migrations
+- provider pulls
+- implementation
+
+Exit criteria:
+
+- contracts are coherent enough for schema planning;
+- forbidden storage patterns remain excluded.
+
+Next milestone: M8
+
+---
+
+### M8 - Hammer Matrix and Acceptance Gates
+
+Status: planned
+
+Purpose:
+Define hard tests and hostile-path gates before implementation starts.
+
+Required reading / planning context:
+
+- M7 contract outputs
+- M4 boundary outputs
+- `planning-inbox/audit-response-2026-07-07.md`
+
+Blockers:
+
+- Core contracts must be coherent enough to test.
+
+Hammer categories:
+
+- observation vs conclusion separation
+- no customer records
+- no customer first-party storage
+- rights fail-closed
+- retention fail-closed
+- provider disagreement preservation
+- proprietary score treatment
+- raw payload preservation / pointer integrity
+- no direct SQL/credentials for LLMs
+- no strategy/recommendation storage
+- no fake scratch/candidate strategy cache
+- overlay no-persistence
+- schema migration rollback/recovery expectations
+- capture package validation
+- read-tool scope isolation
+
+Exit criteria:
+
+- hammers are defined before build;
+- first slice has acceptance tests.
+
+Next milestone: M9
+
+---
+
+### M9 - First Evidence Slice Definition
+
+Status: planned
+
+Purpose:
+Choose the smallest useful first slice that proves Observatory behavior without overbuilding.
+
+Required reading / planning context:
+
+- M7 contract outputs
+- M8 hammer matrix
+- M6 research outputs
+- `planning-inbox/audit-response-2026-07-07.md`
+
+Blockers:
+
+- Contracts and hammer expectations must exist before first-slice selection.
+
+Likely first-slice candidates:
+
+- DataForSEO SERP/keyword observation sample
+- manual/public page snapshot package
+- provider-response raw archive plus metadata
+- query panel plus evidence ID output
+- provider disagreement mini-proof using controlled fixture data before real provider spend
+
+Decision rule:
+
+The first slice must prove observation storage, provenance, rights labels, raw preservation, evidence ID, and read-time interpretation support.
+
+Forbidden work:
+
+- broad schema families
+- dashboard
+- recurring capture
+- multiple providers at once
+
+Exit criteria:
+
+- first slice chosen;
+- contract coverage known;
+- hammer set named explicitly;
+- evidence ID behavior named;
+- scope/rights/retention behavior named;
+- schema planning can target the slice.
+
+Next milestone: M10
+
+---
+
+### M10 - Schema Planning Only
+
+Status: planned
+
+Purpose:
+Design schema for the approved first slice only, after research/contracts/hammers exist.
+
+Required reading / planning context:
+
+- M9 first-slice decision
+- M7 contract outputs
+- M8 hammer matrix
+- M6 research outputs
+- `planning-inbox/audit-response-2026-07-07.md`
+
+Blockers:
+
+- Evidence ID model must be settled.
+- Scope/rights/retention model must be settled.
+- First-slice hammer set must be named.
+
+Allowed work:
+
+- logical schema design
+- migration plan draft
+- table responsibility notes
+- anti-pattern checks
+- evidence/query examples
+
+Forbidden work:
+
+- running migrations
+- connecting providers
+- implementing API/MCP
+- adding strategy/recommendation tables
+- broad schema beyond first slice
+
+Exit criteria:
+
+- schema plan passes boundary review and hammer expectations.
+
+Next milestone: M11
+
+---
+
+### M11 - Implementation Foundation
+
+Status: planned
+
+Purpose:
+Create the minimal implementation foundation only after schema plan and gates are approved.
+
+Required reading / planning context:
+
+- M10 schema plan
+- M8 hammer matrix
+- M9 first-slice decision
+- `planning-inbox/audit-response-2026-07-07.md`
+
+Blockers:
+
+- Schema plan must pass boundary review.
+- M11 deliverables must be re-specified concretely before implementation begins.
+
+Allowed work:
+
+- repo implementation skeleton if needed
+- test harness
+- migration folder setup
+- local config pattern without secrets
+- initial hammer test scaffold
+
+Forbidden work:
+
+- provider calls
+- dashboard
+- strategy storage
+- MCP tool exposure before contract
+
+Exit criteria:
+
+- foundation exists;
+- no boundary violations;
+- tests run locally.
+
+Next milestone: M12
+
+---
+
+### M12 - First Evidence Slice Build
+
+Status: planned
+
+Purpose:
+Build the approved first evidence slice.
+
+Required reading / planning context:
+
+- M10 schema plan
+- M11 implementation foundation outputs
+- M8 hammer matrix
+- M9 first-slice decision
+- `planning-inbox/audit-response-2026-07-07.md`
+
+Blockers:
+
+- M12 deliverables must be re-specified concretely before build begins.
+- Raw archive backup/hash-verification expectation must be defined before real raw evidence is accepted.
+
+Allowed work:
+
+- migrations for first slice only
+- fixture/sample ingestion path
+- raw archive pointer behavior
+- evidence ID behavior
+- bounded read path
+- hammer tests
+
+Forbidden work:
+
+- broad provider integrations
+- recurring capture
+- dashboards
+- strategy tables
+
+Exit criteria:
+
+- first slice works under hammers;
+- raw archive pointers are backed by hash verification expectations;
+- observations are separate from interpretation.
+
+Next milestone: M13
+
+---
+
+### M13 - Provider Admission and Controlled Pull Plan
+
+Status: planned
+
+Purpose:
+Admit the first real provider through rights, retention, cost, recipe, and stop-condition gates.
+
+Required reading / planning context:
+
+- M6 provider/right/cost research outputs
+- M7 provider testimony/disagreement contracts
+- M12 first-slice proof outputs
+- `planning-inbox/audit-response-2026-07-07.md`
+
+Blockers:
+
+- OBR-01: DataForSEO rights / retention / cost must be researched and accepted before any paid pull.
+- Provider admission doc, recipe, cost ceiling, and stop conditions must exist.
+
+Likely first provider:
+
+- DataForSEO, if research gates clear it
+
+Allowed work:
+
+- provider admission doc
+- capture recipe
+- cost ceiling
+- stop conditions
+- raw payload preservation plan
+- tiny controlled pull proposal
+
+Forbidden work:
+
+- unapproved paid pulls
+- Ahrefs/Semrush spend
+- bulk capture
+- recurring capture
+
+Exit criteria:
+
+- provider admission approved;
+- pull recipe and stop conditions exist.
+
+Next milestone: M14
+
+---
+
+### M14 - Typed Read API / MCP Contract and Prototype
+
+Status: planned
+
+Purpose:
+Expose evidence through bounded typed read tools without giving LLMs SQL or credentials.
+
+Required reading / planning context:
+
+- M7 typed API/MCP read-tool contract
+- M12 first-slice outputs
+- M8 read-tool hammer expectations
+- `planning-inbox/audit-response-2026-07-07.md`
+
+Blockers:
+
+- Typed read-tool contract must exist.
+- First evidence slice must exist to read from.
+
+Allowed work:
+
+- read API contract
+- MCP read tool contract
+- evidence-pack output shape
+- freshness/blind-spot warnings
+- provider disagreement output
+- prototype after contract gate
+
+Forbidden work:
+
+- arbitrary SQL tool
+- table CRUD tools
+- direct DB credentials to LLM/agents
+- write tools before separate governance
+
+Exit criteria:
+
+- read tools expose evidence safely;
+- no direct SQL/credential path exists.
+
+Next milestone: M15
+
+---
+
+### M15 - SearchClarity Proof Workflow
+
+Status: planned
+
+Purpose:
+Prove Observatory can support SearchClarity-style evidence without becoming a customer database.
+
+Required reading / planning context:
+
+- M7 SearchClarity consumer-contract placeholder
+- M7 promotion / conclusion-handoff contract
+- M14 typed read outputs
+- M6 claim-safety research outputs
+- `planning-inbox/audit-response-2026-07-07.md`
+
+Blockers:
+
+- Typed read surface must exist.
+- Claim-safety and customer-data boundaries must be contractually clear.
+
+Allowed work:
+
+- evidence-pack to report-support workflow
+- claim-safety matrix use
+- customer-scoped public observation handling
+- read-time first-party overlay contract if needed
+
+Forbidden work:
+
+- customer records in Observatory
+- report delivery records in Observatory
+- customer first-party storage in Observatory
+
+Exit criteria:
+
+- evidence can support a customer-facing report workflow externally;
+- customer data boundary holds.
+
+Next milestone: M16
+
+---
+
+### M16 - Provider Cross-Check Proof
+
+Status: planned
+
+Purpose:
+Prove provider disagreement can be represented and read without making any provider truth.
+
+Required reading / planning context:
+
+- M7 Provider Cross-Check & Disagreement Model contract
+- M7 Provider Disagreement Ledger candidate contract
+- M14 typed read outputs
+- M13 admitted provider/pull plan if real providers are involved
+- `planning-inbox/audit-response-2026-07-07.md`
+
+Blockers:
+
+- Provider disagreement contract must exist.
+- If using real provider observations, provider admission must be complete.
+
+Allowed work:
+
+- compare admitted provider fixtures or controlled observations
+- capture-time-distance warnings
+- proprietary score labels
+- provider personality/profile notes
+- disagreement evidence output
+
+Forbidden work:
+
+- truth scores
+- provider winner logic
+- unapproved tool purchases
+- recurring cross-provider capture
+
+Exit criteria:
+
+- disagreement appears as evidence;
+- read tools explain disagreement and caveats.
+
+Next milestone: M17
+
+---
+
+### M17 - Owned Telemetry Overlay Proof
+
+Status: planned
+
+Purpose:
+Prove read-time overlay behavior for owned/internal or customer first-party series without contaminating Observatory storage.
+
+Required reading / planning context:
+
+- M7 owned telemetry overlay contract
+- M8 overlay no-persistence hammers
+- M14 typed read outputs
+- M4 boundary outputs
+- `planning-inbox/audit-response-2026-07-07.md`
+
+Blockers:
+
+- Overlay contract and no-storage hammers must exist.
+
+Allowed work:
+
+- overlay contract
+- ephemeral input behavior
+- alignment against Observatory evidence
+- no-storage tests
+
+Forbidden work:
+
+- customer first-party storage in Observatory
+- private analytics ingestion as canonical data
+
+Exit criteria:
+
+- overlay works without persistence;
+- boundary is proven by tests.
+
+Next milestone: M18
+
+---
+
+### M18 - Recurring Watch Panel Planning
+
+Status: planned
+
+Purpose:
+Plan recurring capture only after provider, cost, rights, recipe, and hammer gates exist. M18 is planning only; recurring capture execution is not part of v1 unless the owner explicitly changes the roadmap.
+
+Required reading / planning context:
+
+- M13 provider admission outputs
+- M16 provider cross-check proof outputs
+- M8 hammer matrix
+- M6 freshness/staleness/volatility research outputs
+- `planning-inbox/audit-response-2026-07-07.md`
+
+Blockers:
+
+- Provider/cost/rights gates must exist before recurring capture planning is meaningful.
+
+Allowed work:
+
+- watch panel design
+- cadence policy
+- budget policy
+- stop conditions
+- stale/coverage warnings
+
+Forbidden work:
+
+- scheduler implementation before approval
+- autonomous spend
+- broad crawling/scraping
+
+Exit criteria:
+
+- recurring capture can be approved or rejected responsibly.
+
+Next milestone: M19
+
+---
+
+### M19 - Hardening, Backup, Recovery, and Operations
+
+Status: planned
+
+Purpose:
+Make Observatory durable, auditable, and recoverable.
+
+Required reading / planning context:
+
+- M12 first-slice build outputs
+- M18 recurring watch panel plan
+- M8 hammer matrix
+- `planning-inbox/audit-response-2026-07-07.md`
+
+Blockers:
+
+- Evidence system must exist enough to harden.
+- Raw archive/hash expectations must be known.
+
+Allowed work:
+
+- backup plan
+- restore proof
+- audit log expectations
+- secret exposure checks
+- retention cleanup proof
+- operational runbooks
+
+Exit criteria:
+
+- restore proof exists;
+- operational risk is documented;
+- evidence system is not fragile glassware.
+
+Next milestone: M20
+
+---
+
+### M20 - Observatory v1 Acceptance
+
+Status: planned
+
+Purpose:
+Accept or reject Observatory v1 against doctrine, evidence behavior, hammers, and consumer usefulness.
+
+Required reading / planning context:
+
+- M19 hardening / backup / recovery outputs
+- M8 hammer matrix and hammer results
+- M12 first-slice proof outputs
+- M15 SearchClarity proof outputs
+- M16 Provider Cross-Check proof outputs
+- M17 owned telemetry overlay proof outputs
+- `planning-inbox/audit-response-2026-07-07.md`
+
+Blockers:
+
+- Acceptance evidence bundle must be defined by M19 or before M20 activation.
+
+Acceptance questions:
+
+- Does it store observations, not conclusions?
+- Does it preserve raw/provenance/rights/freshness?
+- Does it keep provider disagreement first-class?
+- Does it avoid customer-record and first-party-data contamination?
+- Does it expose evidence through safe typed reads?
+- Does it support a useful SearchClarity/internal proof?
+- Do hammers pass?
+
+Exit criteria:
+
+- v1 accepted, rejected, or returned for hardening.
 
 ---
 
 ## Deferred / Maybe Later
 
-These are not active:
+These are visible so they do not keep reincarnating as surprise side quests.
 
-- dashboard/operator console;
-- persistent Strategy/IMI storage;
-- cross-scope aggregate seismograph;
-- embeddings/vector store;
-- automated recurring capture;
-- customer-facing report automation.
-
-They may be revisited only through roadmap edit rules and owner ruling where required.
+| Item | Status | Current rule |
+|---|---|---|
+| dashboard/operator console | deferred | Not active until evidence/read workflows prove need |
+| persistent Strategy/IMI storage | forbidden unless owner ruling | Must not live inside Observatory; requires explicit future doctrine change elsewhere |
+| cross-scope aggregate seismograph | forbidden unless owner ruling | Requires governed exception because cross-scope aggregation can leak customer-engagement intelligence |
+| embeddings/vector store | deferred | No vector store until retrieval need is proven and boundary-safe |
+| automated recurring capture | deferred | Requires provider admission, cost gates, rights rules, recipes, and hammers |
+| customer-facing report automation | deferred | Belongs to SearchClarity/consumer workflow, not Observatory core |
+| Ahrefs/Semrush integration | deferred | Future provider admission only; no purchase/integration now |
+| tactic verdict database | forbidden unless owner ruling | Too close to Strategy/IMI storage and VEDA Brain revival |
 
 ---
 
-## Final Rule
+## Notes for LLMs
 
-```text
-Do not start the database until the roadmap has taught the next LLM what the database is allowed to be.
-```
+The roadmap is not permission to build everything named in it.
+
+A named future item is not approved work.
+
+A contract milestone is not a schema milestone.
+
+A research gate is not a provider purchase.
+
+Deferred means: remember it, do not build it.
+
+Forbidden unless owner ruling means: stop unless the owner explicitly changes project law.
+
+Killed means: do not sneak it back in wearing a fake mustache.

@@ -1,258 +1,157 @@
-# The Observatory — Repo Map
+# Repo Map — The Observatory
 
-Status: draft 1  
-Date: 2026-07-07  
-Purpose: tell humans and LLMs what goes where in this repo.
-
----
-
-## 1. Map Rule
-
-The repo must explain itself.
-
-A fresh LLM should be able to land in the root, read the root onboarding files, and know:
-
-- what the project is;
-- what files to read first;
-- where each kind of work belongs;
-- which docs are authority vs planning vs working notes;
-- what must not be created here.
-
-No repo archaeology. No guessing. No vibes-based raccoon architecture.
+Status: authority
+Authority: repository navigation
+Purpose: explain what goes where and prevent random-folder archaeology
 
 ---
-
-## 2. Root Files
-
-| File | Purpose | Status |
-|---|---|---|
-| `README.md` | Human-facing overview and quick start. | active root overview |
-| `LLM_START_HERE.md` | First file every LLM should read before work. | required |
-| `REPO_MAP.md` | This file; map of where project knowledge belongs. | required |
-| `ROADMAP.md` | Milestone control document. | required |
-| `ROADMAP_RULES.md` | Rules for preserving/editing/executing the roadmap. | required |
-| `ACTIVE_CONTEXT.md` | Current active milestone, blockers, and next action. | required |
-| `NEXT_SESSION_HANDOFF.md` | Session-to-session continuation note. | required |
-| `00-project-overview.md` | Identity, purpose, telescope rule, relationships. | authority draft |
-| `01-harvest-register.md` | Decision-shaped inheritance register. | authority draft |
-| `02-boundaries.md` | Boundary law: in/out, rights, scope, anti-drift. | authority draft |
-
----
-
-## 3. Current Root Reading Order
-
-For a fresh LLM:
-
-```text
-README.md
-LLM_START_HERE.md
-ACTIVE_CONTEXT.md
-ROADMAP.md
-ROADMAP_RULES.md
-REPO_MAP.md
-00-project-overview.md
-01-harvest-register.md
-02-boundaries.md
-NEXT_SESSION_HANDOFF.md
-```
-
-Then read the milestone-specific required reading from `ROADMAP.md`.
-
----
-
-## 4. Folder Rules
-
-Every major folder must contain a `README.md` before it is used as milestone required reading.
-
-Folder README format:
-
-```text
-# Folder Name
 
 ## Purpose
 
-## What belongs here
+This file explains the intended layout of The Observatory repo.
 
-## What does not belong here
+Fresh LLMs must use this file before creating files or proposing folder structure changes.
 
-## Reading order
-
-## File index
-
-| File | Status | Authority | Summary |
-|---|---|---|---|
-
-## Related roadmap milestones
-
-## Notes for LLMs
-```
-
-If a folder lacks a README, a milestone may link individual files inside it, but may not list the folder as required reading.
+Do not create random folders from vibes. That is how repos turn into haunted filing cabinets.
 
 ---
 
-## 5. Planned Folder Layout
+## Root Files
 
-```text
-C:\dev\observatory\
-
-  README.md
-  LLM_START_HERE.md
-  REPO_MAP.md
-  ROADMAP.md
-  ROADMAP_RULES.md
-  ACTIVE_CONTEXT.md
-  NEXT_SESSION_HANDOFF.md
-  00-project-overview.md
-  01-harvest-register.md
-  02-boundaries.md
-
-  docs\
-    README.md
-    boundaries\
-      README.md
-    architecture\
-      README.md
-    operations\
-      README.md
-
-  research\
-    README.md
-    dataforseo\
-      README.md
-    geo-ai-citation\
-      README.md
-    serp-weakness\
-      README.md
-    provider-comparison\
-      README.md
-    marketplace-evidence\
-      README.md
-
-  contracts\
-    README.md
-    capture-package\
-      README.md
-    evidence-id\
-      README.md
-    mcp-tools\
-      README.md
-    query-panels\
-      README.md
-    rights-retention\
-      README.md
-
-  schema\
-    README.md
-
-  testing\
-    README.md
-    hammer\
-      README.md
-
-  proofs\
-    README.md
-
-  planning-inbox\
-    README.md
-
-  decisions\
-    README.md
-
-  archive\
-    README.md
-```
-
-This layout is planned, not fully built. Create folders only when needed by the active roadmap milestone.
+| File | Purpose | Authority label |
+|---|---|---|
+| `README.md` | Public entrypoint and LLM-first read path pointer | authority |
+| `LLM_START_HERE.md` | Model-neutral first read file for LLMs | authority |
+| `ACTIVE_CONTEXT.md` | Current phase, active milestone, current non-goals | authority |
+| `ROADMAP.md` | Roadmap operating document and milestone memory | authority |
+| `ROADMAP_RULES.md` | Rules for roadmap edits, required reading, and gates | authority |
+| `REPO_MAP.md` | Repository layout and placement rules | authority |
+| `FOLDER_README_TEMPLATE.md` | Template for folder README files | contract |
+| `NEXT_SESSION_HANDOFF.md` | Current handoff for fresh sessions | authority |
+| `00-project-overview.md` | Project identity, goal, telescope rule, relationships | authority |
+| `01-harvest-register.md` | Inherited concepts and keep/adapt/kill/defer dispositions | authority |
+| `02-boundaries.md` | Boundary law and anti-drift rules | authority |
+| `.gitignore` | Git ignore rules | maintenance |
+| `.gitattributes` | Git text normalization rules to reduce cross-tool line-ending noise | maintenance |
 
 ---
 
-## 6. What Goes Where
+## Current Folders
 
-### Root
+| Folder | Purpose | Current status |
+|---|---|---|
+| `planning-inbox/` | Working notes, triage, historical/model-specific context, unpromoted planning material | active working area |
+| `decisions/` | Accepted owner/project decisions and decision templates | active authority-support folder |
+| `archive/` | Superseded, historical, or model-specific material retained for context | active archive folder |
+| `research/` | Future research gate specs and source-grounded research outputs | active research folder; no research execution until M5/M6 |
 
-Project identity, onboarding, roadmap, active context, and boundary authority.
-
-Do not dump working notes in root.
-
-### `planning-inbox/`
-
-Early notes, triage, rough ideas, and non-authoritative exploration.
-
-Everything here must be treated as working material unless promoted elsewhere.
-
-### `docs/`
-
-Stable explanatory docs that are not contracts, research outputs, tests, or roadmap control files.
-
-### `research/`
-
-Research outputs that answer blockers or support milestone decisions.
-
-Research docs must identify which milestone/blocker they inform.
-
-### `contracts/`
-
-Precise shapes and rules for future system behavior: capture packages, evidence IDs, MCP tool responses, query panels, rights/retention vocabularies.
-
-Contracts are stronger than working notes, but do not authorize implementation unless the roadmap gate says so.
-
-### `schema/`
-
-Schema designs, migrations, family maps, and forbidden schema patterns.
-
-Schema work starts only after research and contract gates are satisfied.
-
-### `testing/`
-
-Test doctrine, hammer matrix, hostile-path cases, acceptance test plans.
-
-Hammer tests are a hard gate, not decoration.
-
-### `proofs/`
-
-Small end-to-end proofs: sample evidence packs, report-section proofs, provider disagreement proofs, first evidence slice proof.
-
-### `decisions/`
-
-Earned decision records for changes to project law. Do not create decision ceremony until friction earns it.
-
-### `archive/`
-
-Superseded material preserved for history. Archived docs must not be treated as current authority.
+`planning-inbox/` is not authority. It stores useful material before promotion, pruning, or rejection.
 
 ---
 
-## 7. Authority Labels
+## Planned Folder Layout
 
-Use these labels in docs and folder indexes:
+These folders are not automatically approved for creation. Create them only when the roadmap says the folder is earned.
+
+| Planned folder | Intended purpose | Gate |
+|---|---|---|
+| `contracts/` | API/MCP/capture/evidence contracts once planning earns them | deferred until M7 |
+| `providers/` | Provider admission notes and provider-specific plans | provider planning milestone |
+| `capture/` | CapturePackage, capture recipe, raw archive planning | capture planning milestone |
+| `schemas/` | Schema design docs only, not migrations | schema planning milestone |
+| `hammers/` | Hammer-test matrix and hostile-path test plans | deferred until M8 |
+
+Do not create implementation folders, migrations, app scaffolds, dashboards, or MCP code until the roadmap explicitly opens that gate.
+
+---
+
+## Authority Labels
+
+Use these labels in document headers when practical.
 
 | Label | Meaning |
 |---|---|
-| authority | Current project law or boundary. |
-| contract | Precise rule/shape for later implementation. |
-| research | Research output; informs decisions. |
-| planning | Directional but not implementation approval. |
-| working note | Rough/non-authoritative; must not be treated as law. |
-| draft | Current but not accepted as final. |
-| deferred | Owned future concern; no tables/code yet. |
-| killed | Explicitly forbidden from re-entering under a new name. |
-| superseded | Replaced by newer doc; historical only. |
+| authority | Current project law or required operating context |
+| contract | A binding format, interface, template, or procedure once accepted |
+| research | Source-grounded investigation; informs decisions but is not itself law |
+| planning | Proposed structure, sequence, or design not yet binding |
+| working note | Useful scratch/planning material; not authority |
+| draft | Incomplete or not yet accepted |
+| deferred | Owned future concern; no implementation or schema yet |
+| killed | Explicitly rejected; must not re-enter under a new name |
+| superseded | Replaced by newer authority but preserved for history |
+
+When in doubt, label a new planning document `working note` or `draft`, not `authority`. Authority is earned, not assumed.
 
 ---
 
-## 8. LLM Notes
+## What Goes Where
 
-Before creating or moving files, check this map.
+### Root
 
-If the right location is unclear, stop and propose placement. Do not create random folders because the names feel cool.
+Root is for current operating documents that a fresh LLM must understand quickly.
 
-If a doc could change boundary law, roadmap scope, or implementation gates, it needs owner approval before being treated as accepted.
+Allowed at root:
+
+- onboarding
+- active context
+- roadmap and roadmap rules
+- repo map
+- project overview
+- harvest/boundary authority docs
+- handoff
+- templates used repo-wide
+
+Not allowed at root without approval:
+
+- random research dumps
+- provider notes
+- schema sketches
+- implementation scratch files
+- model-specific instructions when model-neutral alternatives exist
+
+### `planning-inbox/`
+
+Use for:
+
+- working notes
+- rough planning material
+- Claude/GPT review notes
+- unpromoted ideas
+- deep research prompts
+- historical/model-specific context
+
+Do not use for:
+
+- final authority
+- hidden decisions
+- schema implementation
+- provider credentials
+- customer data
+- raw provider payloads
 
 ---
 
-## Final Rule
+## Folder README Requirement
 
-```text
-The repo map is the anti-amnesia layer.
-```
+Any folder listed as required reading in a roadmap milestone must contain a `README.md`.
+
+That README must summarize what each important document in the folder is for.
+
+Use `FOLDER_README_TEMPLATE.md`.
+
+If a folder has no README, do not list the folder as required reading. List exact files instead.
+
+---
+
+## Notes for LLMs
+
+Before creating a file, answer:
+
+1. Does this belong at root or in an existing folder?
+2. Is this authority, contract, research, planning, or working note?
+3. Is there an existing file that should be updated instead?
+4. Does the roadmap currently allow this work?
+5. Would this accidentally promote strategy/recommendation/customer data into Observatory?
+
+If the answer smells like raccoon architecture, stop.

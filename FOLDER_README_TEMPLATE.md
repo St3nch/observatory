@@ -1,99 +1,103 @@
 # Folder README Template
 
-Status: draft 1  
-Date: 2026-07-07  
-Purpose: standard template for any folder README used as milestone required reading.
+Status: contract
+Authority: reusable folder README structure
+Purpose: standardize folder indexes for required-reading folders
 
 ---
 
-Copy this structure into folder `README.md` files.
+Copy this structure into any folder `README.md` that becomes part of a roadmap required-reading path.
 
-```markdown
-# Folder Name
+---
 
-Status:
-Purpose:
-Owner:
-Last updated:
+# [Folder Name]
+
+Status: [authority / contract / research / planning / working note / draft / deferred / killed / superseded]
+Authority: [what authority this folder has, if any]
+Purpose: [one-sentence purpose]
 
 ---
 
 ## Purpose
 
-What this folder is for.
+Explain why this folder exists.
 
 ---
 
 ## What Belongs Here
 
-- Item type 1.
-- Item type 2.
-- Item type 3.
+List the kinds of files that belong in this folder.
+
+Examples:
+
+- source-grounded research notes
+- accepted contracts
+- planning drafts
+- historical/archive material
 
 ---
 
 ## What Does Not Belong Here
 
-- Common wrong placement 1.
-- Common wrong placement 2.
-- Common wrong placement 3.
+List what must not be placed here.
+
+Examples:
+
+- customer private data
+- credentials or secrets
+- raw provider payloads unless this folder is explicitly for them
+- implementation code unless the roadmap says so
+- authority decisions hidden as working notes
 
 ---
 
 ## Reading Order
 
-1. `first-file.md` — why to read it first.
-2. `second-file.md` — why to read it second.
-3. `third-file.md` — why to read it third.
+List the recommended read order for this folder.
+
+1. `example-first-file.md` — why to read it first
+2. `example-second-file.md` — what it adds
+
+If there is no fixed reading order, say so.
 
 ---
 
 ## File Index
 
-| File | Status | Authority | Summary |
+| File | Status | Purpose | Notes |
 |---|---|---|---|
-| `example.md` | draft | planning | One-sentence summary. |
-
-Authority labels:
-
-- authority
-- contract
-- research
-- planning
-- working note
-- draft
-- deferred
-- killed
-- superseded
+| `example.md` | draft | Example purpose | Replace this row |
 
 ---
 
 ## Related Roadmap Milestones
 
-- M0 — example relation.
-- M1 — example relation.
+List any roadmap milestones that require or affect this folder.
+
+- M0 — example
 
 ---
 
-## Notes For LLMs
+## Notes for LLMs
 
-- Boundary warning 1.
-- Required context 1.
-- Common mistake to avoid.
+Explain how an LLM should treat this folder.
+
+Include warnings such as:
+
+- this folder is not authority
+- do not promote working notes without owner ruling
+- do not implement from this folder directly
+- read the file index before reading individual docs
 
 ---
 
 ## Last Review Notes
 
-Date:
+Record the latest review state.
+
+```text
+Last reviewed:
 Reviewer:
-Notes:
+Result:
+Open issues:
 ```
-
----
-
-## Rule
-
-A folder may not be listed as milestone required reading unless it has a README using this structure or equivalent content.
-
-No folder mystery meat.

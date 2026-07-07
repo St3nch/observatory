@@ -1,186 +1,167 @@
-# The Observatory — LLM Start Here
+# LLM Start Here — The Observatory
 
-Status: draft 1  
-Date: 2026-07-07  
-Purpose: first file every LLM should read before working in this repo.
+Status: authority
+Authority: root onboarding
+Purpose: first read path for every LLM or human steward before recommendations, edits, or implementation
 
 ---
 
-## 1. Stop and Read This First
+## Purpose
 
-You are working in **The Observatory** repo.
+This is the model-neutral first file for The Observatory.
 
-Do not treat this as:
+Every new LLM session must read this file before making recommendations or editing the repo. Do not rely on chat history, stale handoffs, or prior connector claims when the live repo disagrees. Read the repo, then answer. Wild concept, apparently.
 
-- a generic SEO tool;
-- a dashboard project;
-- a strategy engine;
-- a customer CRM;
-- a random database experiment;
-- a Kaizen replacement;
-- a Neon Ronin subsystem;
-- a SearchClarity customer database;
-- a place to freestyle schema from vibes.
+---
 
-The Observatory is an evidence-only, LLM-first project for external SEO/GEO/SERP visibility observations and typed read tools.
+## What The Observatory Is
+
+The Observatory is a standalone evidence-only SEO / GEO / SERP / visibility observation project.
 
 Core rule:
 
 ```text
 The Observatory stores what was observed.
-The connected LLM interprets at read time.
+The connected LLM interprets what it means at read time.
 Accepted conclusions promote out to the owning consumer.
 ```
 
+The Observatory is the telescope. The connected LLM is the astronomer.
+
+The database must never become the astronomer.
+
+The project exists to preserve historical, provenance-complete observations such as:
+
+- SERP results
+- keyword demand observations
+- ranking observations
+- AI answer-surface mentions and citations
+- public page or listing snapshots
+- provider responses
+- capture metadata
+- rights, retention, freshness, and source labels
+
 ---
 
-## 2. Required Root Reading Order
+## What The Observatory Is Not
 
-Before doing any project work, read:
+The Observatory is not:
+
+- a generic SEO tool
+- a dashboard project
+- a strategy engine
+- a recommendation store
+- a customer database
+- a SearchClarity customer database
+- a Neon Ronin subsystem
+- a Kaizen replacement
+- a random Postgres experiment
+- a place for scores-as-truth
+- a place for customer first-party analytics
+- a direct SQL playground for LLMs or agents
+
+Strategy is compute-on-read by the connected LLM. Strategy is not stored in Observatory tables.
+
+---
+
+## Required Read Order
+
+Read these files in order before making recommendations or edits:
+
+1. `README.md`
+2. `LLM_START_HERE.md`
+3. `ACTIVE_CONTEXT.md`
+4. `ROADMAP.md`
+5. `ROADMAP_RULES.md`
+6. `REPO_MAP.md`
+7. `00-project-overview.md`
+8. `01-harvest-register.md`
+9. `02-boundaries.md`
+10. `NEXT_SESSION_HANDOFF.md`
+
+If a referenced file is missing, stop and report the missing file. Do not improvise around dangling authority.
+
+---
+
+## Current Hard Boundaries
+
+Unless the owner explicitly changes project law:
+
+- Store observations, not conclusions.
+- Store provider testimony, not fake truth.
+- Preserve provider disagreement.
+- No recommendation store.
+- No strategy table.
+- No score-as-truth table.
+- No customer database.
+- No customer first-party data in Observatory.
+- Customer first-party data may only be supplied as read-time overlays unless a future explicit owner ruling changes this.
+- Owned internal first-party telemetry requires explicit internal-scope boundary handling before any storage.
+- LLMs and agents receive no direct SQL access and no direct credentials.
+- Future LLM access must go through typed API / MCP read tools.
+- Rights and retention fail closed.
+- Hammer tests are a hard gate for implementation.
+- Killed ancestor concepts stay killed.
+- No VEDA Brain resurrection under a new name.
+
+---
+
+## Current Non-Implementation Rule
+
+The current phase is early planning / doctrine / roadmap shaping.
+
+Do not start:
+
+- schema design
+- migrations
+- provider pulls
+- DataForSEO work
+- Ahrefs or Semrush work
+- API implementation
+- MCP implementation
+- dashboard or operator console work
+- customer-data handling
+- strategy or recommendation storage
+
+If you are about to build instead of preserving the roadmap/navigation system, stop. You are probably trying to summon the goblin jazz.
+
+---
+
+## Roadmap Required-Reading Rule
+
+Every roadmap milestone must list required reading before implementation.
+
+Required reading may name exact files or folders.
+
+If a milestone lists a folder as required reading, that folder must contain a `README.md` summarizing what each important document in that folder is for.
+
+No implementation work begins until required reading has been completed and reported.
+
+---
+
+## Access Direction
+
+Future LLM-facing access is typed API / MCP only:
 
 ```text
-README.md
-ACTIVE_CONTEXT.md
-ROADMAP.md
-ROADMAP_RULES.md
-REPO_MAP.md
-00-project-overview.md
-01-harvest-register.md
-02-boundaries.md
-NEXT_SESSION_HANDOFF.md
+LLM
+  -> MCP tools
+  -> Observatory API
+  -> validation / authorization / rights / provenance layer
+  -> PostgreSQL
 ```
 
-Then read the active milestone's required reading from `ROADMAP.md`.
+MCP tools are not database clients.
 
-If a milestone lists a folder as required reading, that folder must have a `README.md`. Read the folder README first.
+The API owns database access.
 
----
-
-## 3. Current Hard Boundaries
-
-These are not suggestions.
-
-- The Observatory stores observations, not strategy.
-- No stored recommendations, scores-as-truth, business decisions, plans, or strategy records.
-- No customer records.
-- No customer first-party analytics in Observatory.
-- Customer first-party data may only appear through read-time overlay contracts unless a future explicit owner ruling says otherwise.
-- Owner-internal first-party performance may be considered only under internal scope and explicit boundary rules.
-- LLMs and agents never receive SQL or direct credentials.
-- Typed API/MCP read tools are the only door.
-- Provider data is observed testimony, not truth.
-- Provider disagreement is preserved.
-- Rights and retention must fail closed.
-- Hammer tests are a hard gate for schema/API/tool/provider/capture behavior.
-- Killed concepts stay killed.
-
----
-
-## 4. Current Project Voice
-
-The stewardship stance is:
-
-```text
-not yet — earn it
-```
-
-That means:
-
-- do not create tables before contracts/research justify them;
-- do not create folders without a reason;
-- do not promote working notes into authority;
-- do not turn future ideas into active implementation;
-- do not mistake ambition for approval.
-
-Be useful, but stay fenced.
-
----
-
-## 5. What To Do Before Any Work
-
-Before planning, editing, or implementing, summarize:
-
-1. what files you read;
-2. what the active milestone is;
-3. what boundaries affect the work;
-4. what you are not allowed to change;
-5. what blocker or next action you are addressing.
-
-If you cannot answer those five things, you are not ready to work.
-
----
-
-## 6. Where Things Go
-
-Use `REPO_MAP.md`.
-
-Quick version:
-
-| Need | Location |
-|---|---|
-| project overview | root docs |
-| roadmap and active state | root docs |
-| boundary law | `02-boundaries.md` and future `docs/boundaries/` |
-| rough notes | `planning-inbox/` |
-| research outputs | `research/` |
-| contracts | `contracts/` |
-| schema planning | `schema/` |
-| hammer tests | `testing/` |
-| proof workflows | `proofs/` |
-| project-law decisions | `decisions/` once earned |
-| old/superseded docs | `archive/` |
-
-Do not create random locations because they sound neat.
-
----
-
-## 7. If You Are Asked To Implement
-
-Implementation includes schema, migrations, provider calls, paid capture, APIs, MCP tools, persistence behavior, or customer-facing output behavior.
-
-Before implementation:
-
-1. read the milestone required reading;
-2. verify gates in `ROADMAP.md`;
-3. verify rights/retention status;
-4. verify hammer-test expectations;
-5. verify owner approval where required.
-
-If any of those are missing, stop at planning.
-
----
-
-## 8. What To Avoid
-
-Do not:
-
-- invent a Strategy Layer store;
-- create an opportunity/recommendation table;
-- create a customer table;
-- put GA/customer private data into Observatory;
-- average providers into fake truth;
-- create an MCP tool that hides uncertainty;
-- create a dashboard side quest;
-- skip roadmap required reading;
-- silently change roadmap scope;
-- bury important context in chat only.
-
----
-
-## 9. Useful Mental Model
-
-```text
-The Observatory is the telescope.
-The connected LLM is the astronomer.
-Kaizen / Neon Ronin / SearchClarity own accepted action, reports, decisions, or operations.
-```
-
-If the telescope starts writing business plans, something went wrong.
+The LLM receives evidence packs, comparison outputs, freshness warnings, blind-spot warnings, and stable evidence IDs — not raw mystery rows.
 
 ---
 
 ## Final Rule
 
 ```text
-Read the map. Read the roadmap. Read the boundaries. Then work.
+The Observatory makes the astronomer dangerous.
+It never becomes the astronomer.
 ```
