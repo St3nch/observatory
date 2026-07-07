@@ -25,7 +25,7 @@ This is still not implementation authorization.
 M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
 ```
 
-M0, M0.1, M1, and M2 are complete locally. The local repo is ahead of `origin/main`; push is still recommended before handing work to another tool or clone.
+M0, M0.1, M1, and M2 are complete and committed.
 
 ---
 
