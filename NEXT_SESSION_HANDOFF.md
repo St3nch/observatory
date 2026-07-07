@@ -2,14 +2,14 @@
 
 Status: authority
 Authority: fresh-session handoff
-Purpose: preserve current state after M2 closure and M3 activation
+Purpose: preserve current state after M3 closure and M4 activation
 Last updated: 2026-07-07
 
 ---
 
 ## Current State
 
-The Observatory is in knowledge-doc preservation / pre-boundary-reconciliation planning.
+The Observatory is in boundary reconciliation and doctrine-hardening planning.
 
 Closed milestones:
 
@@ -17,19 +17,20 @@ Closed milestones:
 - M0.1 - Knowledgebase-to-repo reconciliation and candidate decision pass
 - M1 - Roadmap Content Draft and Milestone Sequencing
 - M2 - Folder Structure and Folder README Indexes
+- M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
 
 Active milestone:
 
 ```text
-M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
+M4 - Boundary Reconciliation and Doctrine Hardening
 ```
 
-M1 created the detailed roadmap sequence through Observatory v1, and M2 created the approved folders/indexes. The repo is still not ready for schema, provider, API, MCP, dashboard, or customer-data work.
+M1 created the detailed roadmap sequence through Observatory v1, M2 created the approved folders/indexes, and M3 preserved the approved planning-inbox source docs. The repo is still not ready for schema, provider, API, MCP, dashboard, or customer-data work.
 
-The next milestone after M3 is:
+The next milestone after M4 is:
 
 ```text
-M4 - Boundary Reconciliation and Doctrine Hardening
+M5 - Research Gate Plan
 ```
 
 ---
@@ -92,8 +93,8 @@ Future `ob-dev` hardening should make no-op mutation calls harder to spam by ret
 - M0 / M0.1 closure
 - M1 closed roadmap sequencing
 - M2 closed folder structure and folder README indexes
-- M3 active knowledge doc preservation
-- M4 boundary reconciliation
+- M3 closed knowledge doc preservation
+- M4 active boundary reconciliation
 - M5/M6 research gate planning and execution
 - M7 contracts
 - M8 hammer matrix
@@ -113,19 +114,15 @@ Future `ob-dev` hardening should make no-op mutation calls harder to spam by ret
 
 ## Immediate Next Steps
 
-Proceed with active M3:
+Proceed with active M4:
 
 ```text
-M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
+M4 - Boundary Reconciliation and Doctrine Hardening
 ```
 
-M3 should add these classified project knowledge docs to `planning-inbox/` with labels, without promoting them into authority:
+M4 should compare repo-visible boundary/context material against live root `02-boundaries.md`, classify deltas, and harden project law only where owner-approved.
 
-- `strategy-layer-dangerous-design.md`
-- `deep-research-danger-agenda.md`
-- `steward-context-dump.md`
-
-Then update `planning-inbox/README.md`.
+Do not start research execution, schema, provider work, API/MCP implementation, dashboard work, customer-data handling, or dangerous-idea activation.
 
 ---
 
@@ -133,8 +130,9 @@ Then update `planning-inbox/README.md`.
 
 Open questions to carry forward:
 
-- Should M3 immediately add `strategy-layer-dangerous-design.md`, `deep-research-danger-agenda.md`, and `steward-context-dump.md` to `planning-inbox/`?
-- Should M4 boundary reconciliation happen before or after adding the Claude docs?
+- Which boundary deltas from M3 planning/context docs should be accepted, rejected, or deferred?
+- Does root `02-boundaries.md` need stronger Strategy Layer / IMI language before M5?
+- Does root `02-boundaries.md` need stronger provider-disagreement / proprietary-score language before M5?
 - Which M5 research gate should execute first once research begins?
 - Should Provider Cross-Check get its own standalone planning doc before M5, or wait for M5/M7?
 

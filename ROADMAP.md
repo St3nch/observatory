@@ -111,8 +111,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M0.1 | Knowledgebase-to-Repo Reconciliation and Candidate Decision Pass | closed | Classify Claude/GPT docs and candidate ideas without activating them blindly |
 | M1 | Roadmap Content Draft and Milestone Sequencing | closed | Turn planning inputs into the real staged project roadmap |
 | M2 | Folder Structure and Folder README Indexes | closed | Create only earned folders and folder indexes |
-| M3 | Knowledge Doc Preservation and Planning-Inbox Expansion | active | Add classified Claude docs to planning-inbox with labels |
-| M4 | Boundary Reconciliation and Doctrine Hardening | planned | Reconcile richer boundary material and harden project law |
+| M3 | Knowledge Doc Preservation and Planning-Inbox Expansion | closed | Add classified Claude docs to planning-inbox with labels |
+| M4 | Boundary Reconciliation and Doctrine Hardening | active | Reconcile richer boundary material and harden project law |
 | M5 | Research Gate Plan | planned | Define research questions, outputs, and gates before design/build |
 | M6 | Research Gate Execution | planned | Complete required research before contracts/schema/provider work |
 | M7 | Core Contract Planning | planned | Draft non-schema contracts for evidence, scope, provider, query panels, capture packages |
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M3
+M4
 
 ### Name
 
-Knowledge Doc Preservation and Planning-Inbox Expansion
+Boundary Reconciliation and Doctrine Hardening
 
 ### Status
 
@@ -148,9 +148,9 @@ active
 
 ### Purpose
 
-Add classified Claude/project knowledge docs to the repo with labels, without promoting them into authority.
+Compare richer uploaded/project-knowledge boundary material against live root `02-boundaries.md` and harden project law before design work.
 
-M3 preserves serious project source material so M4 boundary reconciliation and M5 research planning can work from repo-visible context.
+M4 is boundary reconciliation only. It does not authorize schema, provider work, API/MCP implementation, dashboard work, research execution, or dangerous-idea activation.
 
 ### Required Reading
 
@@ -160,53 +160,84 @@ M3 preserves serious project source material so M4 boundary reconciliation and M
 - `ROADMAP.md`
 - `ROADMAP_RULES.md`
 - `REPO_MAP.md`
+- `00-project-overview.md`
+- `01-harvest-register.md`
+- `02-boundaries.md`
+- `NEXT_SESSION_HANDOFF.md`
 - `planning-inbox/README.md`
 - `planning-inbox/knowledgebase-reconciliation.md`
 - `planning-inbox/audit-response-2026-07-07.md`
+- `planning-inbox/strategy-layer-dangerous-design.md`
+- `planning-inbox/deep-research-danger-agenda.md`
+- `planning-inbox/steward-context-dump.md`
 
 ### Allowed Work
 
-- add `planning-inbox/strategy-layer-dangerous-design.md`
-- add `planning-inbox/deep-research-danger-agenda.md`
-- add `planning-inbox/steward-context-dump.md`
-- update `planning-inbox/README.md`
-- preserve labels and authority posture
+- compare uploaded/project-knowledge boundary material against live root `02-boundaries.md`
+- identify boundary deltas without automatically accepting them
+- add missing boundary rules only when owner-approved
+- clarify customer first-party data boundary
+- clarify internal owned telemetry boundary
+- clarify Strategy Layer boundary
+- clarify provider disagreement / proprietary score rule
+- clarify forbidden/killed concepts
 
 ### Forbidden Work
 
-- promoting these docs to root authority without review
-- activating dangerous ideas
-- adding all uploaded docs blindly
-- overwriting live root authority docs
+- weakening boundaries
+- admitting customer first-party storage without owner ruling
+- allowing strategy/recommendation tables
+- allowing direct SQL/credentials
 - schema design
 - provider calls or purchases
+- research execution
 - MCP/API implementation
 - dashboard work
+- activating dangerous ideas
 
 ### Blockers
 
-- Source contents must come from uploaded/project-knowledge docs, not reconstruction.
-- Any missing knowledge doc must be reported instead of invented.
+- Boundary deltas must be classified before edits.
+- Any doctrine change requires explicit owner ruling.
+- Dangerous feature lists are candidate material, not activation authority.
 - Local commits should be pushed before another tool or clone relies on GitHub state.
 
 ### Exit Criteria
 
-M3 may close when:
+M4 may close when:
 
-- classified Claude/project knowledge docs are added with labels;
-- `planning-inbox/README.md` indexes them;
-- no doc is promoted to authority accidentally;
-- M4 has sufficient repo-visible context for boundary reconciliation;
+- root `02-boundaries.md` is strong enough to gate research/contracts;
+- known boundary deltas are resolved or explicitly deferred;
+- Strategy Layer / IMI boundary posture is clear;
+- customer first-party and internal telemetry boundary posture is clear;
+- provider disagreement / proprietary score treatment is clear;
 - `ACTIVE_CONTEXT.md` and `NEXT_SESSION_HANDOFF.md` point to the correct next milestone;
 - changes are committed.
 
 ### Next Milestone
 
-M4 - Boundary Reconciliation and Doctrine Hardening
+M5 - Research Gate Plan
 
 ---
 
 ## Closed Milestones
+
+### M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
+
+Status: closed
+
+Purpose:
+Add classified Claude/project knowledge docs to the repo with labels, without promoting them into authority.
+
+Completed outputs:
+
+- `planning-inbox/strategy-layer-dangerous-design.md`
+- `planning-inbox/deep-research-danger-agenda.md`
+- `planning-inbox/steward-context-dump.md`
+- `planning-inbox/README.md` updated to index the M3 docs with authority-none labels
+
+Closure note:
+M3 preserved the approved source docs as planning-inbox material only. The added docs remain planning artifact / research agenda / advisory context, not authority and not implementation approval. M4 is now active for boundary reconciliation and doctrine hardening.
 
 ### M0 - LLM-First Repo Navigation and Roadmap Preservation
 
@@ -292,7 +323,7 @@ M2 created the owner-approved folder subset: `decisions/`, `archive/`, and `rese
 
 ### M4 - Boundary Reconciliation and Doctrine Hardening
 
-Status: planned
+Status: active; full active-milestone details live in the Active Milestone section above
 
 Purpose:
 Compare richer uploaded/project-knowledge boundary material against live root `02-boundaries.md` and harden project law before design work.
