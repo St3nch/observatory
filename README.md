@@ -6,7 +6,7 @@ It stores observations, not strategy.
 
 The connected LLM interprets at read time; the database does not store strategy, recommendations, or scores-as-truth.
 
-Current status: M4 — Boundary Reconciliation and Doctrine Hardening. No schema, provider, MCP, dashboard, research execution, or customer-data work is currently active.
+Current status: M5 — Research Gate Plan. Research planning is active; research execution, provider pulls, schema, MCP/API, dashboard, and customer-data work are not active.
 
 ## Start here
 

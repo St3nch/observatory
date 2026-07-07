@@ -112,8 +112,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M1 | Roadmap Content Draft and Milestone Sequencing | closed | Turn planning inputs into the real staged project roadmap |
 | M2 | Folder Structure and Folder README Indexes | closed | Create only earned folders and folder indexes |
 | M3 | Knowledge Doc Preservation and Planning-Inbox Expansion | closed | Add classified Claude docs to planning-inbox with labels |
-| M4 | Boundary Reconciliation and Doctrine Hardening | active | Reconcile richer boundary material and harden project law |
-| M5 | Research Gate Plan | planned | Define research questions, outputs, and gates before design/build |
+| M4 | Boundary Reconciliation and Doctrine Hardening | closed | Reconcile richer boundary material and harden project law |
+| M5 | Research Gate Plan | active | Define research questions, outputs, and gates before design/build |
 | M6 | Research Gate Execution | planned | Complete required research before contracts/schema/provider work |
 | M7 | Core Contract Planning | planned | Draft non-schema contracts for evidence, scope, provider, query panels, capture packages |
 | M8 | Hammer Matrix and Acceptance Gates | planned | Define hostile-path tests and hard gates before implementation |
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M4
+M5
 
 ### Name
 
-Boundary Reconciliation and Doctrine Hardening
+Research Gate Plan
 
 ### Status
 
@@ -148,9 +148,9 @@ active
 
 ### Purpose
 
-Compare richer uploaded/project-knowledge boundary material against live root `02-boundaries.md` and harden project law before design work.
+Define the research gates that must be completed before contracts, schema, provider admission, or API/MCP implementation.
 
-M4 is boundary reconciliation only. It does not authorize schema, provider work, API/MCP implementation, dashboard work, research execution, or dangerous-idea activation.
+M5 is research planning only. It does not authorize research execution, provider purchases, paid pulls, schema design, API/MCP implementation, dashboard work, or customer-data handling.
 
 ### Required Reading
 
@@ -165,62 +165,73 @@ M4 is boundary reconciliation only. It does not authorize schema, provider work,
 - `02-boundaries.md`
 - `NEXT_SESSION_HANDOFF.md`
 - `planning-inbox/README.md`
+- `planning-inbox/repo-first-research-triage.md`
 - `planning-inbox/knowledgebase-reconciliation.md`
 - `planning-inbox/audit-response-2026-07-07.md`
-- `planning-inbox/strategy-layer-dangerous-design.md`
+- `planning-inbox/m4-boundary-reconciliation.md`
 - `planning-inbox/deep-research-danger-agenda.md`
-- `planning-inbox/steward-context-dump.md`
 
 ### Allowed Work
 
-- compare uploaded/project-knowledge boundary material against live root `02-boundaries.md`
-- identify boundary deltas without automatically accepting them
-- add missing boundary rules only when owner-approved
-- clarify customer first-party data boundary
-- clarify internal owned telemetry boundary
-- clarify Strategy Layer boundary
-- clarify provider disagreement / proprietary score rule
-- clarify forbidden/killed concepts
+- define research gate questions
+- define research output docs
+- define required sources and source priority
+- define completion rules for each research gate
+- define M6 execution order
+- preserve M4 boundary constraints in each gate
+- update `research/README.md` if research docs are planned or created later
 
 ### Forbidden Work
 
-- weakening boundaries
-- admitting customer first-party storage without owner ruling
-- allowing strategy/recommendation tables
-- allowing direct SQL/credentials
+- executing research gates
+- paid provider pulls
+- provider purchases
 - schema design
-- provider calls or purchases
-- research execution
-- MCP/API implementation
+- migrations
+- API/MCP implementation
 - dashboard work
-- activating dangerous ideas
+- customer data handling
+- strategy/recommendation storage
 
 ### Blockers
 
-- Boundary deltas must be classified before edits.
-- Any doctrine change requires explicit owner ruling.
-- Dangerous feature lists are candidate material, not activation authority.
+- M5 must plan research before M6 executes it.
+- Research gates must not weaken M4 boundary law.
+- Provider/cost/right questions must be answered before provider admission or paid pulls.
 - Local commits should be pushed before another tool or clone relies on GitHub state.
 
 ### Exit Criteria
 
-M4 may close when:
+M5 may close when:
 
-- root `02-boundaries.md` is strong enough to gate research/contracts;
-- known boundary deltas are resolved or explicitly deferred;
-- Strategy Layer / IMI boundary posture is clear;
-- customer first-party and internal telemetry boundary posture is clear;
-- provider disagreement / proprietary score treatment is clear;
+- each research gate has a question, output doc, required sources, and completion rule;
+- research order for M6 is clear;
+- provider spend remains blocked until research and admission gates clear;
 - `ACTIVE_CONTEXT.md` and `NEXT_SESSION_HANDOFF.md` point to the correct next milestone;
 - changes are committed.
 
 ### Next Milestone
 
-M5 - Research Gate Plan
+M6 - Research Gate Execution
 
 ---
 
 ## Closed Milestones
+
+### M4 - Boundary Reconciliation and Doctrine Hardening
+
+Status: closed
+
+Purpose:
+Compare richer uploaded/project-knowledge boundary material against live root `02-boundaries.md` and harden project law before design work.
+
+Completed outputs:
+
+- `planning-inbox/m4-boundary-reconciliation.md`
+- `02-boundaries.md` hardened with safe boundary clarifications
+
+Closure note:
+M4 classified boundary deltas, strengthened root boundary law, and did not admit new capabilities. Strategy / IMI remains read-time/process only, provider scores remain provider-attributed observations, workspace-derived signals remain out, hidden candidate stores remain forbidden, and cross-scope aggregate analysis remains forbidden by default unless future owner ruling creates a governed exception. M5 is now active for research gate planning only.
 
 ### M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
 
@@ -323,7 +334,7 @@ M2 created the owner-approved folder subset: `decisions/`, `archive/`, and `rese
 
 ### M4 - Boundary Reconciliation and Doctrine Hardening
 
-Status: active; full active-milestone details live in the Active Milestone section above
+Status: closed; closure details live in the Closed Milestones section above
 
 Purpose:
 Compare richer uploaded/project-knowledge boundary material against live root `02-boundaries.md` and harden project law before design work.
@@ -365,7 +376,7 @@ Next milestone: M5
 
 ### M5 - Research Gate Plan
 
-Status: planned
+Status: active; full active-milestone details live in the Active Milestone section above
 
 Purpose:
 Define the research gates that must be completed before contracts, schema, provider admission, or API/MCP implementation.

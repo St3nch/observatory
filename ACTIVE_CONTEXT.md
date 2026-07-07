@@ -12,7 +12,7 @@ Last updated: 2026-07-07
 The Observatory is in:
 
 ```text
-boundary reconciliation and doctrine hardening
+research gate planning
 ```
 
 This is still not implementation authorization.
@@ -22,25 +22,26 @@ This is still not implementation authorization.
 ## Active Milestone
 
 ```text
-M4 - Boundary Reconciliation and Doctrine Hardening
+M5 - Research Gate Plan
 ```
 
-M0, M0.1, M1, and M2 are complete and committed.
+M0, M0.1, M1, M2, M3, and M4 are complete and committed.
 
 ---
 
 ## Current Task
 
-Execute M4 as bounded boundary reconciliation and doctrine-hardening work.
+Execute M5 as bounded research-gate planning work.
 
-Current M4 work is allowed to:
+Current M5 work is allowed to:
 
-- compare uploaded/project-knowledge boundary material against live root `02-boundaries.md`;
-- identify boundary deltas without automatically accepting them;
-- clarify customer first-party, internal telemetry, Strategy Layer, provider-disagreement, and killed-concept boundaries;
-- update boundary authority only where owner-approved.
+- define research gate questions;
+- define output docs and required sources for each gate;
+- define completion rules;
+- define M6 execution order;
+- preserve M4 boundary constraints in every gate.
 
-M4 is about hardening project law before research/contracts/schema. It is not schema work, provider work, research execution, API/MCP implementation, dashboard work, or dangerous-idea activation.
+M5 is about planning research, not executing it. It is not provider work, paid pulls, schema work, migrations, API/MCP implementation, dashboard work, customer-data handling, or strategy/recommendation storage.
 
 ---
 
@@ -62,6 +63,7 @@ Do not start:
 - strategy storage
 - recommendation storage
 - provider admission
+- research execution
 - capture runner implementation
 - automated recurring capture
 
@@ -98,15 +100,16 @@ Closed:
 - M1 - Roadmap Content Draft and Milestone Sequencing
 - M2 - Folder Structure and Folder README Indexes
 - M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
+- M4 - Boundary Reconciliation and Doctrine Hardening
 
 Active:
 
-- M4 - Boundary Reconciliation and Doctrine Hardening
+- M5 - Research Gate Plan
 
-Next after M4:
+Next after M5:
 
 ```text
-M5 - Research Gate Plan
+M6 - Research Gate Execution
 ```
 
 M2 folder ruling completed:

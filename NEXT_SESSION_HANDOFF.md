@@ -2,14 +2,14 @@
 
 Status: authority
 Authority: fresh-session handoff
-Purpose: preserve current state after M3 closure and M4 activation
+Purpose: preserve current state after M4 closure and M5 activation
 Last updated: 2026-07-07
 
 ---
 
 ## Current State
 
-The Observatory is in boundary reconciliation and doctrine-hardening planning.
+The Observatory is in research gate planning.
 
 Closed milestones:
 
@@ -18,19 +18,20 @@ Closed milestones:
 - M1 - Roadmap Content Draft and Milestone Sequencing
 - M2 - Folder Structure and Folder README Indexes
 - M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
+- M4 - Boundary Reconciliation and Doctrine Hardening
 
 Active milestone:
 
 ```text
-M4 - Boundary Reconciliation and Doctrine Hardening
+M5 - Research Gate Plan
 ```
 
-M1 created the detailed roadmap sequence through Observatory v1, M2 created the approved folders/indexes, and M3 preserved the approved planning-inbox source docs. The repo is still not ready for schema, provider, API, MCP, dashboard, or customer-data work.
+M1 created the detailed roadmap sequence through Observatory v1, M2 created the approved folders/indexes, M3 preserved the approved planning-inbox source docs, and M4 hardened boundary law. The repo is still not ready for schema, provider, API, MCP, dashboard, research execution, or customer-data work.
 
-The next milestone after M4 is:
+The next milestone after M5 is:
 
 ```text
-M5 - Research Gate Plan
+M6 - Research Gate Execution
 ```
 
 ---
@@ -94,8 +95,9 @@ Future `ob-dev` hardening should make no-op mutation calls harder to spam by ret
 - M1 closed roadmap sequencing
 - M2 closed folder structure and folder README indexes
 - M3 closed knowledge doc preservation
-- M4 active boundary reconciliation
-- M5/M6 research gate planning and execution
+- M4 closed boundary reconciliation and doctrine hardening
+- M5 active research gate planning
+- M6 planned research gate execution
 - M7 contracts
 - M8 hammer matrix
 - M9 first evidence slice definition
@@ -114,15 +116,15 @@ Future `ob-dev` hardening should make no-op mutation calls harder to spam by ret
 
 ## Immediate Next Steps
 
-Proceed with active M4:
+Proceed with active M5:
 
 ```text
-M4 - Boundary Reconciliation and Doctrine Hardening
+M5 - Research Gate Plan
 ```
 
-M4 should compare repo-visible boundary/context material against live root `02-boundaries.md`, classify deltas, and harden project law only where owner-approved.
+M5 should define the research gates, required sources, output docs, completion rules, and M6 execution order.
 
-Do not start research execution, schema, provider work, API/MCP implementation, dashboard work, customer-data handling, or dangerous-idea activation.
+Do not start research execution, provider pulls, schema, migrations, API/MCP implementation, dashboard work, customer-data handling, or strategy/recommendation storage.
 
 ---
 
@@ -130,11 +132,11 @@ Do not start research execution, schema, provider work, API/MCP implementation, 
 
 Open questions to carry forward:
 
-- Which boundary deltas from M3 planning/context docs should be accepted, rejected, or deferred?
-- Does root `02-boundaries.md` need stronger Strategy Layer / IMI language before M5?
-- Does root `02-boundaries.md` need stronger provider-disagreement / proprietary-score language before M5?
-- Which M5 research gate should execute first once research begins?
-- Should Provider Cross-Check get its own standalone planning doc before M5, or wait for M5/M7?
+- What exact research gates should M5 define before M6 execution?
+- Which research gate should run first in M6?
+- Which research outputs need current web/source checks versus repo-only synthesis?
+- Should Provider Cross-Check get its own standalone planning doc during M5, or wait for M7?
+- How should the DataForSEO rights / retention / cost gate be scoped so no paid pull happens prematurely?
 
 ---
 
