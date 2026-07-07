@@ -106,6 +106,8 @@ The Observatory may later store customer-scoped public search observations only 
 
 Customer-scoped observation does not mean customer database.
 
+Workspace-derived operational signals, sanitized signals, customer engagement artifacts, and downstream workflow outputs do not become Observatory evidence merely because they describe public surfaces. Observatory observations must come from approved Observatory capture methods or admitted provider/capture instruments.
+
 ---
 
 ## Customer First-Party Data Boundary
@@ -181,11 +183,17 @@ Accepted outputs must promote out to the owning consumer, such as:
 
 Temporary LLM reasoning is not Observatory data.
 
+A Strategy / IMI layer, if discussed, is a read-time process boundary over Observatory evidence. It is not an Observatory storage system. Its durable outputs must live in the owning consumer, not in Observatory.
+
+Temporary candidate caches, scratch schemas, session-note tables, or hidden side stores are strategy/recommendation storage if they preserve interpretive outputs. They are forbidden inside Observatory.
+
 ---
 
 ## Provider Evidence Boundary
 
 Provider data is observed testimony, not truth.
+
+Provider scores, difficulty metrics, authority metrics, confidence scores, or proprietary scoring fields are observations of provider model output. They are not facts about the web and must remain provider-attributed.
 
 The Observatory must preserve:
 
@@ -318,6 +326,8 @@ Deferred/future concepts include:
 Naming a future layer does not approve it.
 
 Deferred means remembered, not built.
+
+Cross-scope aggregate analysis is forbidden by default. Any exception requires an explicit owner ruling, scope restrictions, privacy/re-identification review, anonymization or aggregation rules where applicable, access controls, and hammer tests proving customer or workspace leakage does not occur.
 
 ---
 

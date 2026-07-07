@@ -2,7 +2,7 @@
 
 Status: planning / reconciliation note
 Authority: none
-Purpose: classify boundary deltas before any root boundary-law edit
+Purpose: classify boundary deltas before and after root boundary-law hardening
 Date: 2026-07-07
 
 ---
@@ -297,9 +297,30 @@ Owner-ruling candidates before activation:
 
 ---
 
+## M4 hardening applied
+
+Applied to root `02-boundaries.md` during M4:
+
+- Strategy / IMI layer clarified as read-time process boundary, not Observatory storage.
+- Hidden candidate caches, scratch schemas, session-note tables, and side stores clarified as forbidden if they preserve interpretive outputs.
+- Proprietary provider scores clarified as provider-attributed observations, not facts about the web.
+- Workspace-derived operational signals / sanitized signals clarified as not Observatory evidence.
+- Cross-scope aggregate analysis clarified as forbidden by default unless owner ruling grants a governed exception.
+
+Still not admitted:
+
+- TacticCapture family or workflow.
+- Tactic triage verdict storage.
+- Cross-scope aggregate exceptions.
+- Persistent strategy records / V21-style future layer.
+- Owned or customer first-party storage beyond current boundaries.
+- Provider work, schema work, API/MCP work, dashboard work, recurring scans, or research execution.
+
+---
+
 ## Suggested next move
 
-Update `02-boundaries.md` with only the safe clarification candidates that strengthen existing law.
+M4 can proceed toward closure review after verifying `02-boundaries.md`, `ACTIVE_CONTEXT.md`, `ROADMAP.md`, and `NEXT_SESSION_HANDOFF.md` remain aligned and no new capabilities were admitted.
 
 Do not admit TacticCapture, cross-scope aggregate exceptions, persistent strategy records, provider work, schema work, or recurring scans during M4 without explicit owner ruling.
 
