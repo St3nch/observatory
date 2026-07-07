@@ -64,6 +64,9 @@ Root authority files take priority over this folder.
 | `knowledgebase-reconciliation.md` | planning | Reconciles project knowledge docs against the live repo and classifies Claude/GPT candidate ideas into now, next, research, later, defer, forbidden, or killed buckets | M0.1 artifact; not implementation approval |
 | `audit-response-2026-07-07.md` | planning / audit response backlog | Tracks Claude's repo audit findings, assigns each to a milestone/file, and prevents partial audit cherry-picking | M1 closure/M2 planning input; not implementation approval |
 | `CLAUDE_START_HERE.md` | historical / model-specific context | Prior Claude-specific onboarding note | Model-specific; do not treat as active root authority now that `LLM_START_HERE.md` exists |
+| `strategy-layer-dangerous-design.md` | planning artifact | Preserves dangerous Strategy Layer / IMI design candidates for later classification and reconciliation | M3 preservation artifact; authority none; do not activate dangerous ideas |
+| `deep-research-danger-agenda.md` | research agenda | Preserves future deep-research questions and danger-map topics for later research gate planning | M3 preservation artifact; authority none; not research execution approval |
+| `steward-context-dump.md` | advisory context | Preserves steward/context material for future reconciliation without promoting it into doctrine | M3 preservation artifact; authority none; advisory only |
 
 ---
 
