@@ -53,6 +53,20 @@ For planning notes, read `planning-inbox/README.md` first.
 
 ---
 
+## Tool Discipline
+
+When using `ob-dev`:
+
+- Do not retry the exact same failed tool call more than once.
+- Do not repeat a mutation call when SHA or diff evidence shows no meaningful change.
+- If a mutation returns no diff, stop mutating and inspect with read, status, or diff tools.
+- If a safety block occurs, do not hammer the same call. Try one safe read/status/diff check, then report the blocker.
+- For edits, use this sequence: read -> one mutation -> diff -> diff_check -> stage exact paths -> commit.
+
+Future `ob-dev` hardening should make no-op mutation calls harder to spam by returning `changed: false` when before/after SHA is identical and by rejecting `find == replace` unless explicitly allowed.
+
+---
+
 ## Boundaries to Preserve
 
 - Observatory stores observations, not conclusions.
