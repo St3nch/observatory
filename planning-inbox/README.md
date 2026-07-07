@@ -67,6 +67,7 @@ Root authority files take priority over this folder.
 | `strategy-layer-dangerous-design.md` | planning artifact | Preserves dangerous Strategy Layer / IMI design candidates for later classification and reconciliation | M3 preservation artifact; authority none; do not activate dangerous ideas |
 | `deep-research-danger-agenda.md` | research agenda | Preserves future deep-research questions and danger-map topics for later research gate planning | M3 preservation artifact; authority none; not research execution approval |
 | `steward-context-dump.md` | advisory context | Preserves steward/context material for future reconciliation without promoting it into doctrine | M3 preservation artifact; authority none; advisory only |
+| `m4-boundary-reconciliation.md` | planning / reconciliation note | Classifies M4 boundary deltas before any root boundary-law edit | Authority none; identifies safe clarifications and owner-ruling candidates |
 
 ---
 
