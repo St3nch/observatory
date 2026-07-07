@@ -12,7 +12,7 @@ Last updated: 2026-07-07
 The Observatory is in:
 
 ```text
-research gate planning
+research gate execution
 ```
 
 This is still not implementation authorization.
@@ -22,26 +22,27 @@ This is still not implementation authorization.
 ## Active Milestone
 
 ```text
-M5 - Research Gate Plan
+M6 - Research Gate Execution
 ```
 
-M0, M0.1, M1, M2, M3, and M4 are complete and committed.
+M0, M0.1, M1, M2, M3, M4, and M5 are complete and committed.
 
 ---
 
 ## Current Task
 
-Execute M5 as bounded research-gate planning work.
+Execute M6 as bounded research-gate execution work.
 
-Current M5 work is allowed to:
+Current M6 work is allowed to:
 
-- define research gate questions;
-- define output docs and required sources for each gate;
-- define completion rules;
-- define M6 execution order;
-- preserve M4 boundary constraints in every gate.
+- execute the M5-planned research gates in order;
+- read local repo sources named by each gate;
+- use current official/provider/platform sources where required;
+- create source-grounded research docs under `research/`;
+- update `research/README.md`;
+- preserve uncertainty, citations, and M4 boundary constraints.
 
-M5 is about planning research, not executing it. It is not provider work, paid pulls, schema work, migrations, API/MCP implementation, dashboard work, customer-data handling, or strategy/recommendation storage.
+M6 starts with RG1: DataForSEO Rights / Retention / Cost. M6 does not authorize provider purchases, paid pulls, schema work, migrations, API/MCP implementation, dashboard work, customer-data handling, or strategy/recommendation storage.
 
 ---
 
@@ -63,7 +64,6 @@ Do not start:
 - strategy storage
 - recommendation storage
 - provider admission
-- research execution
 - capture runner implementation
 - automated recurring capture
 
@@ -101,15 +101,16 @@ Closed:
 - M2 - Folder Structure and Folder README Indexes
 - M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
 - M4 - Boundary Reconciliation and Doctrine Hardening
+- M5 - Research Gate Plan
 
 Active:
 
-- M5 - Research Gate Plan
+- M6 - Research Gate Execution
 
-Next after M5:
+Next after M6:
 
 ```text
-M6 - Research Gate Execution
+M7 - Core Contract Planning
 ```
 
 M2 folder ruling completed:

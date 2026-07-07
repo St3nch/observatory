@@ -6,7 +6,7 @@ It stores observations, not strategy.
 
 The connected LLM interprets at read time; the database does not store strategy, recommendations, or scores-as-truth.
 
-Current status: M5 — Research Gate Plan. Research planning is active; research execution, provider pulls, schema, MCP/API, dashboard, and customer-data work are not active.
+Current status: M6 — Research Gate Execution. Source-grounded research execution is active; provider pulls, provider purchases, schema, MCP/API, dashboard, and customer-data work are not active.
 
 ## Start here
 

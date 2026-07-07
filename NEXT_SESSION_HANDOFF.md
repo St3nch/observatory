@@ -2,14 +2,14 @@
 
 Status: authority
 Authority: fresh-session handoff
-Purpose: preserve current state after M4 closure and M5 activation
+Purpose: preserve current state after M5 closure and M6 activation
 Last updated: 2026-07-07
 
 ---
 
 ## Current State
 
-The Observatory is in research gate planning.
+The Observatory is in research gate execution.
 
 Closed milestones:
 
@@ -19,19 +19,20 @@ Closed milestones:
 - M2 - Folder Structure and Folder README Indexes
 - M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
 - M4 - Boundary Reconciliation and Doctrine Hardening
+- M5 - Research Gate Plan
 
 Active milestone:
 
 ```text
-M5 - Research Gate Plan
+M6 - Research Gate Execution
 ```
 
-M1 created the detailed roadmap sequence through Observatory v1, M2 created the approved folders/indexes, M3 preserved the approved planning-inbox source docs, and M4 hardened boundary law. The repo is still not ready for schema, provider, API, MCP, dashboard, research execution, or customer-data work.
+M1 created the detailed roadmap sequence through Observatory v1, M2 created the approved folders/indexes, M3 preserved the approved planning-inbox source docs, M4 hardened boundary law, and M5 planned the research gates. The repo is still not ready for schema, provider pulls, provider purchases, API, MCP, dashboard, or customer-data work.
 
-The next milestone after M5 is:
+The next milestone after M6 is:
 
 ```text
-M6 - Research Gate Execution
+M7 - Core Contract Planning
 ```
 
 ---
@@ -96,9 +97,9 @@ Future `ob-dev` hardening should make no-op mutation calls harder to spam by ret
 - M2 closed folder structure and folder README indexes
 - M3 closed knowledge doc preservation
 - M4 closed boundary reconciliation and doctrine hardening
-- M5 active research gate planning
-- M6 planned research gate execution
-- M7 contracts
+- M5 closed research gate planning
+- M6 active research gate execution
+- M7 planned contracts
 - M8 hammer matrix
 - M9 first evidence slice definition
 - M10 schema planning only
@@ -116,15 +117,19 @@ Future `ob-dev` hardening should make no-op mutation calls harder to spam by ret
 
 ## Immediate Next Steps
 
-Proceed with active M5:
+Proceed with active M6:
 
 ```text
-M5 - Research Gate Plan
+M6 - Research Gate Execution
 ```
 
-M5 should define the research gates, required sources, output docs, completion rules, and M6 execution order.
+Start with RG1 from `research/m5-research-gate-plan.md`:
 
-Do not start research execution, provider pulls, schema, migrations, API/MCP implementation, dashboard work, customer-data handling, or strategy/recommendation storage.
+```text
+RG1 - DataForSEO Rights / Retention / Cost
+```
+
+Use current official DataForSEO sources where possible. Do not make provider purchases, paid pulls, schema, migrations, API/MCP implementation, dashboard work, customer-data handling, or strategy/recommendation storage.
 
 ---
 
@@ -132,11 +137,11 @@ Do not start research execution, provider pulls, schema, migrations, API/MCP imp
 
 Open questions to carry forward:
 
-- What exact research gates should M5 define before M6 execution?
-- Which research gate should run first in M6?
-- Which research outputs need current web/source checks versus repo-only synthesis?
-- Should Provider Cross-Check get its own standalone planning doc during M5, or wait for M7?
-- How should the DataForSEO rights / retention / cost gate be scoped so no paid pull happens prematurely?
+- What do current official DataForSEO terms and docs allow for storage, retention, reuse, and raw payload handling?
+- What exact DataForSEO endpoint families belong in the first validation plan later?
+- What tiny validation pull budget/ceiling should be proposed later, if RG1 clears rights and cost posture?
+- What unresolved RG1 blockers should stop provider admission in M13?
+- Which RG2 research gate should follow after RG1 completes?
 
 ---
 

@@ -113,8 +113,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M2 | Folder Structure and Folder README Indexes | closed | Create only earned folders and folder indexes |
 | M3 | Knowledge Doc Preservation and Planning-Inbox Expansion | closed | Add classified Claude docs to planning-inbox with labels |
 | M4 | Boundary Reconciliation and Doctrine Hardening | closed | Reconcile richer boundary material and harden project law |
-| M5 | Research Gate Plan | active | Define research questions, outputs, and gates before design/build |
-| M6 | Research Gate Execution | planned | Complete required research before contracts/schema/provider work |
+| M5 | Research Gate Plan | closed | Define research questions, outputs, and gates before design/build |
+| M6 | Research Gate Execution | active | Complete required research before contracts/schema/provider work |
 | M7 | Core Contract Planning | planned | Draft non-schema contracts for evidence, scope, provider, query panels, capture packages |
 | M8 | Hammer Matrix and Acceptance Gates | planned | Define hostile-path tests and hard gates before implementation |
 | M9 | First Evidence Slice Definition | planned | Choose the smallest useful evidence slice to build first |
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M5
+M6
 
 ### Name
 
-Research Gate Plan
+Research Gate Execution
 
 ### Status
 
@@ -148,9 +148,9 @@ active
 
 ### Purpose
 
-Define the research gates that must be completed before contracts, schema, provider admission, or API/MCP implementation.
+Execute the planned research gates and produce source-grounded docs before contract/schema work.
 
-M5 is research planning only. It does not authorize research execution, provider purchases, paid pulls, schema design, API/MCP implementation, dashboard work, or customer-data handling.
+M6 executes research only. It does not authorize provider purchases, paid pulls, schema design, migrations, API/MCP implementation, dashboard work, customer-data handling, or strategy/recommendation storage.
 
 ### Required Reading
 
@@ -164,59 +164,72 @@ M5 is research planning only. It does not authorize research execution, provider
 - `01-harvest-register.md`
 - `02-boundaries.md`
 - `NEXT_SESSION_HANDOFF.md`
-- `planning-inbox/README.md`
+- `research/README.md`
+- `research/m5-research-gate-plan.md`
 - `planning-inbox/repo-first-research-triage.md`
-- `planning-inbox/knowledgebase-reconciliation.md`
-- `planning-inbox/audit-response-2026-07-07.md`
 - `planning-inbox/m4-boundary-reconciliation.md`
-- `planning-inbox/deep-research-danger-agenda.md`
 
 ### Allowed Work
 
-- define research gate questions
-- define research output docs
-- define required sources and source priority
-- define completion rules for each research gate
-- define M6 execution order
-- preserve M4 boundary constraints in each gate
-- update `research/README.md` if research docs are planned or created later
+- execute the M5-planned research gates in order
+- read local repo sources named by each gate
+- use current official/provider/platform sources where required
+- create source-grounded research docs under `research/`
+- update `research/README.md`
+- preserve uncertainty, citations, and boundary constraints
 
 ### Forbidden Work
 
-- executing research gates
-- paid provider pulls
 - provider purchases
+- paid provider pulls
 - schema design
 - migrations
 - API/MCP implementation
 - dashboard work
 - customer data handling
 - strategy/recommendation storage
+- provider admission
+- capture runner implementation
 
 ### Blockers
 
-- M5 must plan research before M6 executes it.
-- Research gates must not weaken M4 boundary law.
-- Provider/cost/right questions must be answered before provider admission or paid pulls.
+- RG1 must not trigger provider spend.
+- Any current external facts must be sourced, preferably from official docs.
+- If a research gate reveals a doctrine change is needed, stop and request owner ruling before promoting it.
 - Local commits should be pushed before another tool or clone relies on GitHub state.
 
 ### Exit Criteria
 
-M5 may close when:
+M6 may close when:
 
-- each research gate has a question, output doc, required sources, and completion rule;
-- research order for M6 is clear;
-- provider spend remains blocked until research and admission gates clear;
+- required research outputs exist and are indexed;
+- blockers and owner-ruling candidates are explicit;
+- contract planning can begin without guessing;
 - `ACTIVE_CONTEXT.md` and `NEXT_SESSION_HANDOFF.md` point to the correct next milestone;
 - changes are committed.
 
 ### Next Milestone
 
-M6 - Research Gate Execution
+M7 - Core Contract Planning
 
 ---
 
 ## Closed Milestones
+
+### M5 - Research Gate Plan
+
+Status: closed
+
+Purpose:
+Define the research gates that must be completed before contracts, schema, provider admission, or API/MCP implementation.
+
+Completed outputs:
+
+- `research/m5-research-gate-plan.md`
+- `research/README.md` indexed the gate plan
+
+Closure note:
+M5 defined 13 M6 research gates, output doc names, source priorities, completion rules, owner-ruling candidates, and execution order. It did not execute research, spend provider budget, design schema, or open implementation. M6 is now active for source-grounded research execution.
 
 ### M4 - Boundary Reconciliation and Doctrine Hardening
 
@@ -376,7 +389,7 @@ Next milestone: M5
 
 ### M5 - Research Gate Plan
 
-Status: active; full active-milestone details live in the Active Milestone section above
+Status: closed; closure details live in the Closed Milestones section above
 
 Purpose:
 Define the research gates that must be completed before contracts, schema, provider admission, or API/MCP implementation.
@@ -420,7 +433,7 @@ Next milestone: M6
 
 ### M6 - Research Gate Execution
 
-Status: planned
+Status: active; full active-milestone details live in the Active Milestone section above
 
 Purpose:
 Execute the planned research gates and produce source-grounded docs before contract/schema work.
