@@ -64,6 +64,7 @@ When M5 activates, read:
 | `rg4-query-panel-model.md` | research output | Proposes named/versioned query panel model for longitudinal observation sets by scope, surface, locale, device, language, and intent | M6/RG4 output; contract-planning input only, not schema approval |
 | `rg5-freshness-staleness-volatility.md` | research output | Proposes freshness status, volatility class, age bands, update-window handling, and claim-use rules for evidence packs | M6/RG5 output; contract-planning input only, not schema approval |
 | `rg6-geo-ai-citation-methodology.md` | research output | Proposes GEO / AI answer-surface methodology for sampled mentions, citations, fan-out, absence, volatility, and claim-safe language | M6/RG6 output; contract-planning input only, not schema approval |
+| `rg7-marketplace-evidence-ceiling.md` | research output | Classifies marketplace evidence ceilings for Etsy/Fiverr/public marketplace observations, private seller data, capture methods, and retention posture | M6/RG7 output; contract-planning input only, not schema approval |
 
 ---
 
