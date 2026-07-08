@@ -67,6 +67,7 @@ When M5 activates, read:
 | `rg7-marketplace-evidence-ceiling.md` | research output | Classifies marketplace evidence ceilings for Etsy/Fiverr/public marketplace observations, private seller data, capture methods, and retention posture | M6/RG7 output; contract-planning input only, not schema approval |
 | `rg8-claim-safety-report-language.md` | research output | Proposes claim-safety matrix, report-safe language patterns, forbidden claims, and claim-support checklist | M6/RG8 output; contract-planning input only, not schema approval |
 | `rg9-provider-cross-check-disagreement-model.md` | research output | Proposes provider disagreement and cross-check model | M6/RG9 output; contract-planning input only, not schema approval |
+| `rg10-capturepackage-v0-1-inputs.md` | research output | Proposes CapturePackage v0.1 required inputs, validation groups, invalid examples, and approval hooks | M6/RG10 output; contract-planning input only, not schema approval |
 
 ---
 
