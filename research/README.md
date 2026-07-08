@@ -65,6 +65,7 @@ When M5 activates, read:
 | `rg5-freshness-staleness-volatility.md` | research output | Proposes freshness status, volatility class, age bands, update-window handling, and claim-use rules for evidence packs | M6/RG5 output; contract-planning input only, not schema approval |
 | `rg6-geo-ai-citation-methodology.md` | research output | Proposes GEO / AI answer-surface methodology for sampled mentions, citations, fan-out, absence, volatility, and claim-safe language | M6/RG6 output; contract-planning input only, not schema approval |
 | `rg7-marketplace-evidence-ceiling.md` | research output | Classifies marketplace evidence ceilings for Etsy/Fiverr/public marketplace observations, private seller data, capture methods, and retention posture | M6/RG7 output; contract-planning input only, not schema approval |
+| `rg8-claim-safety-report-language.md` | research output | Proposes claim-safety matrix, report-safe language patterns, forbidden claims, and claim-support checklist | M6/RG8 output; contract-planning input only, not schema approval |
 
 ---
 
