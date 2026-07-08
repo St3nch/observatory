@@ -71,6 +71,7 @@ When M5 activates, read:
 | `rg10-capturepackage-v0-1-inputs.md` | research output | Proposes CapturePackage v0.1 required inputs, validation groups, invalid examples, and approval hooks | M6/RG10 output; contract-planning input only, not schema approval |
 | `rg11-raw-archive-provider-drift.md` | research output | Proposes raw archive, raw manifest, retention posture, shape fingerprint, drift status, and parser-safety rules | M6/RG11 output; contract-planning input only, not schema approval |
 | `rg12-consumer-contract-inputs.md` | research output | Proposes consumer request/response, overlay, promotion, and read-tool boundary inputs | M6/RG12 output; contract-planning input only, not schema approval |
+| `rg13-hammer-matrix-inputs.md` | research output | Proposes hostile-path hammer categories, proof requirements, and M8 minimum hammer suite inputs | M6/RG13 output; hammer-planning input only, not test implementation |
 
 ---
 
