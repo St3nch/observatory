@@ -58,6 +58,7 @@ When M5 activates, read:
 | File | Status | Purpose | Notes |
 |---|---|---|---|
 | `m5-research-gate-plan.md` | research gate plan | Defines M6 research gates, output docs, source priorities, completion rules, and execution order | M5 artifact; planning only; does not execute research |
+| `deep-research-backlog.md` | research backlog | Preserves deeper research topics that remain after M6 gate outputs and before provider admission, customer-facing proof, schema, or implementation | Planning support only; does not activate work |
 | `rg1-dataforseo-rights-retention-cost.md` | research output | Records current DataForSEO rights, retention, pricing, endpoint, and stop-condition findings for RG1 | M6/RG1 output; does not admit provider or authorize spend |
 | `rg2-scope-rights-retention-model.md` | research output | Proposes pre-contract scope, rights_class, and retention_class model from live boundary law and harvest register | M6/RG2 output; contract-planning input only, not schema approval |
 | `rg3-evidence-id-citation-model.md` | research output | Proposes layered capture, provider, raw payload, observation, evidence, citation, and report-safe identifier concepts | M6/RG3 output; contract-planning input only, not schema approval |
