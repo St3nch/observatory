@@ -69,6 +69,7 @@ When M5 activates, read:
 | `rg8-claim-safety-report-language.md` | research output | Proposes claim-safety matrix, report-safe language patterns, forbidden claims, and claim-support checklist | M6/RG8 output; contract-planning input only, not schema approval |
 | `rg9-provider-cross-check-disagreement-model.md` | research output | Proposes provider disagreement and cross-check model | M6/RG9 output; contract-planning input only, not schema approval |
 | `rg10-capturepackage-v0-1-inputs.md` | research output | Proposes CapturePackage v0.1 required inputs, validation groups, invalid examples, and approval hooks | M6/RG10 output; contract-planning input only, not schema approval |
+| `rg11-raw-archive-provider-drift.md` | research output | Proposes raw archive, raw manifest, retention posture, shape fingerprint, drift status, and parser-safety rules | M6/RG11 output; contract-planning input only, not schema approval |
 
 ---
 
