@@ -12,37 +12,37 @@ Last updated: 2026-07-07
 The Observatory is in:
 
 ```text
-research gate execution
+core contract planning
 ```
 
-This is still not implementation authorization.
+This is still not schema, provider, API/MCP, dashboard, or implementation authorization.
 
 ---
 
 ## Active Milestone
 
 ```text
-M6 - Research Gate Execution
+M7 - Core Contract Planning
 ```
 
-M0, M0.1, M1, M2, M3, M4, and M5 are complete and committed.
+M0, M0.1, M1, M2, M3, M4, M5, and M6 are complete and committed.
 
 ---
 
 ## Current Task
 
-Execute M6 as bounded research-gate execution work.
+Execute M7 as bounded core contract planning work.
 
-Current M6 work is allowed to:
+Current M7 work is allowed to:
 
-- execute the M5-planned research gates in order;
-- read local repo sources named by each gate;
-- use current official/provider/platform sources where required;
-- create source-grounded research docs under `research/`;
-- update `research/README.md`;
-- preserve uncertainty, citations, and M4 boundary constraints.
+- audit completed M6 research outputs before contract drafting;
+- create a contract document template if needed;
+- create earned `contracts/` folder/index if M7 work proceeds;
+- draft non-schema contracts from M6 research outputs;
+- preserve owner-ruling candidates and deeper research blockers;
+- keep all contracts aligned with `02-boundaries.md`.
 
-M6 starts with RG1: DataForSEO Rights / Retention / Cost. M6 does not authorize provider purchases, paid pulls, schema work, migrations, API/MCP implementation, dashboard work, customer-data handling, or strategy/recommendation storage.
+M7 begins with an audit of the completed M6 research set. M7 does not authorize provider purchases, paid pulls, provider admission, schema work, migrations, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage.
 
 ---
 
@@ -102,15 +102,16 @@ Closed:
 - M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
 - M4 - Boundary Reconciliation and Doctrine Hardening
 - M5 - Research Gate Plan
+- M6 - Research Gate Execution
 
 Active:
 
-- M6 - Research Gate Execution
+- M7 - Core Contract Planning
 
-Next after M6:
+Next after M7:
 
 ```text
-M7 - Core Contract Planning
+M8 - Hammer Matrix and Acceptance Gates
 ```
 
 M2 folder ruling completed:

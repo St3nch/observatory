@@ -114,8 +114,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M3 | Knowledge Doc Preservation and Planning-Inbox Expansion | closed | Add classified Claude docs to planning-inbox with labels |
 | M4 | Boundary Reconciliation and Doctrine Hardening | closed | Reconcile richer boundary material and harden project law |
 | M5 | Research Gate Plan | closed | Define research questions, outputs, and gates before design/build |
-| M6 | Research Gate Execution | active | Complete required research before contracts/schema/provider work |
-| M7 | Core Contract Planning | planned | Draft non-schema contracts for evidence, scope, provider, query panels, capture packages |
+| M6 | Research Gate Execution | closed | Complete required research before contracts/schema/provider work |
+| M7 | Core Contract Planning | active | Draft non-schema contracts for evidence, scope, provider, query panels, capture packages |
 | M8 | Hammer Matrix and Acceptance Gates | planned | Define hostile-path tests and hard gates before implementation |
 | M9 | First Evidence Slice Definition | planned | Choose the smallest useful evidence slice to build first |
 | M10 | Schema Planning Only | planned | Design schema after contracts and research; no migrations yet |
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M6
+M7
 
 ### Name
 
-Research Gate Execution
+Core Contract Planning
 
 ### Status
 
@@ -148,9 +148,9 @@ active
 
 ### Purpose
 
-Execute the planned research gates and produce source-grounded docs before contract/schema work.
+Draft non-schema contracts that define Observatory evidence behavior before database design, provider admission, API/MCP implementation, dashboard work, or customer-facing workflow work.
 
-M6 executes research only. It does not authorize provider purchases, paid pulls, schema design, migrations, API/MCP implementation, dashboard work, customer-data handling, or strategy/recommendation storage.
+M7 uses the completed M6 research outputs as contract-planning input. It does not authorize schema design, migrations, provider pulls, implementation, customer data handling, or strategy/recommendation storage.
 
 ### Required Reading
 
@@ -165,56 +165,86 @@ M6 executes research only. It does not authorize provider purchases, paid pulls,
 - `02-boundaries.md`
 - `NEXT_SESSION_HANDOFF.md`
 - `research/README.md`
-- `research/m5-research-gate-plan.md`
-- `planning-inbox/repo-first-research-triage.md`
-- `planning-inbox/m4-boundary-reconciliation.md`
+- all M6 research outputs in `research/`
+- `research/deep-research-backlog.md`
 
 ### Allowed Work
 
-- execute the M5-planned research gates in order
-- read local repo sources named by each gate
-- use current official/provider/platform sources where required
-- create source-grounded research docs under `research/`
-- update `research/README.md`
-- preserve uncertainty, citations, and boundary constraints
+- audit completed M6 research outputs before contract drafting
+- create a contract document template if needed
+- create earned `contracts/` folder/index if M7 work proceeds
+- draft non-schema contracts from M6 research outputs
+- preserve owner-ruling candidates and deeper research blockers
+- keep all contracts aligned with `02-boundaries.md`
 
 ### Forbidden Work
 
+- physical schema design
+- migrations
 - provider purchases
 - paid provider pulls
-- schema design
-- migrations
+- provider admission
 - API/MCP implementation
 - dashboard work
 - customer data handling
 - strategy/recommendation storage
-- provider admission
 - capture runner implementation
+- automated recurring capture
 
 ### Blockers
 
-- RG1 must not trigger provider spend.
-- Any current external facts must be sourced, preferably from official docs.
-- If a research gate reveals a doctrine change is needed, stop and request owner ruling before promoting it.
-- Local commits should be pushed before another tool or clone relies on GitHub state.
+- M6 research outputs must exist and be indexed.
+- Contract template must exist before drafting contract docs.
+- Claude audit or steward audit should review M6 outputs before broad M7 contract drafting.
+- Any doctrine change requires explicit owner ruling before promotion.
 
 ### Exit Criteria
 
-M6 may close when:
+M7 may close when:
 
-- required research outputs exist and are indexed;
-- blockers and owner-ruling candidates are explicit;
-- contract planning can begin without guessing;
+- core contracts are drafted and indexed;
+- contracts clearly separate observations from conclusions;
+- forbidden storage patterns remain excluded;
+- owner-ruling candidates and deeper-research blockers are explicit;
+- M8 can define hammer tests without guessing;
 - `ACTIVE_CONTEXT.md` and `NEXT_SESSION_HANDOFF.md` point to the correct next milestone;
 - changes are committed.
 
 ### Next Milestone
 
-M7 - Core Contract Planning
+M8 - Hammer Matrix and Acceptance Gates
 
 ---
 
 ## Closed Milestones
+
+### M6 - Research Gate Execution
+
+Status: closed
+
+Purpose:
+Execute the planned research gates and produce source-grounded docs before contract/schema work.
+
+Completed outputs:
+
+- `research/rg1-dataforseo-rights-retention-cost.md`
+- `research/rg2-scope-rights-retention-model.md`
+- `research/rg3-evidence-id-citation-model.md`
+- `research/rg4-query-panel-model.md`
+- `research/rg5-freshness-staleness-volatility.md`
+- `research/rg6-geo-ai-citation-methodology.md`
+- `research/rg7-marketplace-evidence-ceiling.md`
+- `research/rg8-claim-safety-report-language.md`
+- `research/rg9-provider-cross-check-disagreement-model.md`
+- `research/rg10-capturepackage-v0-1-inputs.md`
+- `research/rg11-raw-archive-provider-drift.md`
+- `research/rg12-consumer-contract-inputs.md`
+- `research/rg13-hammer-matrix-inputs.md`
+- `research/deep-research-backlog.md`
+- `research/README.md` indexed the completed M6 outputs
+
+Closure note:
+M6 executed all 13 planned research gates and added a deep-research backlog so unresolved deeper questions are preserved without blocking M7 contract planning. M6 did not authorize provider purchases, paid pulls, schema design, migrations, API/MCP implementation, dashboard work, customer-data handling, provider admission, capture runner implementation, or strategy/recommendation storage. M7 is now active for audit and non-schema core contract planning.
 
 ### M5 - Research Gate Plan
 
@@ -433,7 +463,7 @@ Next milestone: M6
 
 ### M6 - Research Gate Execution
 
-Status: active; full active-milestone details live in the Active Milestone section above
+Status: closed; closure details live in the Closed Milestones section above
 
 Purpose:
 Execute the planned research gates and produce source-grounded docs before contract/schema work.
@@ -478,7 +508,7 @@ Next milestone: M7
 
 ### M7 - Core Contract Planning
 
-Status: planned
+Status: active; full active-milestone details live in the Active Milestone section above
 
 Purpose:
 Draft non-schema contracts that define evidence behavior before database design.

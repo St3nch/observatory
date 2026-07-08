@@ -108,7 +108,7 @@ Unless the owner explicitly changes project law:
 
 ## Current Non-Implementation Rule
 
-The current phase is early planning / doctrine / roadmap shaping.
+The current phase is M7 core contract planning after M6 research closure.
 
 Do not start:
 
