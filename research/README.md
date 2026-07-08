@@ -62,6 +62,7 @@ When M5 activates, read:
 | `rg2-scope-rights-retention-model.md` | research output | Proposes pre-contract scope, rights_class, and retention_class model from live boundary law and harvest register | M6/RG2 output; contract-planning input only, not schema approval |
 | `rg3-evidence-id-citation-model.md` | research output | Proposes layered capture, provider, raw payload, observation, evidence, citation, and report-safe identifier concepts | M6/RG3 output; contract-planning input only, not schema approval |
 | `rg4-query-panel-model.md` | research output | Proposes named/versioned query panel model for longitudinal observation sets by scope, surface, locale, device, language, and intent | M6/RG4 output; contract-planning input only, not schema approval |
+| `rg5-freshness-staleness-volatility.md` | research output | Proposes freshness status, volatility class, age bands, update-window handling, and claim-use rules for evidence packs | M6/RG5 output; contract-planning input only, not schema approval |
 
 ---
 
