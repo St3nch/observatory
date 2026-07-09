@@ -3,8 +3,10 @@
 Status: planning
 Authority: none
 Purpose: track every Claude audit finding, route it to the right milestone/file, and prevent partial audit cherry-picking
-Source: `observatory-repo-audit-2026-07-07.md` uploaded project knowledge
+Source: `observatory-repo-audit-2026-07-07.md` — the M1-era Claude repo audit, which exists only as external uploaded project knowledge and is NOT preserved in this repo (see `audits/README.md` missing-ancestor note)
 Created: 2026-07-07
+Disambiguation: this file responds to the M1-era audit only. The later 2026-07-07 audits in `audits/` (M6/M7-readiness audit and full repo audit) are tracked separately in `planning-inbox/m7-audit-response-2026-07-07.md`. Same date, different audits.
+Status refresh: 2026-07-07 M7 audit-fix pass — statuses below updated through M6 closure.
 
 ---
 
@@ -67,18 +69,18 @@ The audit found process and roadmap hygiene issues, not project-collapse issues.
 | AUD-010 | README/LLM_START_HERE read-order circularity | during M2 | M2 | `README.md`, `LLM_START_HERE.md` | Make one canonical order; likely LLM_START_HERE owns full path | done in M2 | README now defers to `LLM_START_HERE.md` as canonical read order and includes `README.md` in the list. |
 | AUD-011 | Sibling repos optional context note missing | during M2 | M2 | `README.md` | Add note that ancestor repos are optional context; current repo is authority | done in M2 | Added note to README. |
 | AUD-012 | Go8 term is undefined | during M2 or later glossary | M2 / glossary | `planning-inbox/README.md`, future glossary | Define briefly or avoid unexplained term | done in M2 | Added a brief Go8 note to planning-inbox README. |
-| AUD-013 | Classified Claude docs absent from repo | before M5 | M3 | `planning-inbox/strategy-layer-dangerous-design.md`, `planning-inbox/deep-research-danger-agenda.md`, `planning-inbox/steward-context-dump.md` | Add with labels, no authority promotion | assigned | Must happen before boundary/research use. |
-| AUD-014 | Cross-scope aggregation denial is not authority law | before M5 | M4 | `02-boundaries.md` | Add denial-by-default section | assigned | Prevent customer-engagement leakage. |
-| AUD-015 | Scope / scope_class model absent from boundary law | before M5 | M4 | `02-boundaries.md` | Add `scope` + `scope_class` boundary section | assigned | Must connect rights/retention to scope. |
-| AUD-016 | Proprietary-score sentence not in `02-boundaries.md` | before M5 | M4 | `02-boundaries.md` | Promote exact rule and examples | assigned | Provider scores are model outputs, not web facts. |
-| AUD-017 | Anti-cache strategy loophole only in non-authority doc | before M5 | M4 | `02-boundaries.md` | Add no fake scratch/candidate strategy storage clause | assigned | Closes likely strategy leakage path. |
-| AUD-018 | Read-time derived outputs need no-persist clarification | before M5 | M4 | `02-boundaries.md` | Add no persisted derived read-tool outputs rule | assigned | Prevent read tools from creating strategy result tables. |
-| AUD-019 | OBR-01 / DataForSEO rights-retention-cost blocker not named on M13 | before M5/M13 | M5/M13 | `ROADMAP.md`, research docs | Add named blocker and research gate | assigned | $50 stays holstered until gate clears. |
-| AUD-020 | Provider Cross-Check needs standalone gate-spec doc | before M7 | M5 | future `research/` doc | Create research gate spec | assigned | Already early in roadmap; needs focused doc. |
-| AUD-021 | Promotion / conclusion-handoff contract missing | before M7 | M7 | `ROADMAP.md`, future `contracts/` doc | Add to M7 contract list and later draft | open | Doctrine says conclusions promote out; shape must exist. |
-| AUD-022 | Consumer contracts underrepresented | before M7 | M7 / M15 | `ROADMAP.md`, future contracts | Add SearchClarity consumer-contract placeholder; defer Neon Ronin/Kaizen if needed | open | Avoid vague consumer boundary. |
-| AUD-023 | Contract document template missing | before M7 | M7 or M2 if contracts folder early | future `contracts/` | Create before drafting contracts | assigned | Deferred with contracts folder unless owner pulls earlier. |
-| AUD-024 | M7 contract priority not explicit | before M7 | M7 | `ROADMAP.md`, future contracts README | Prioritize scope/rights/retention, evidence ID, CapturePackage, provider testimony/disagreement | assigned | Prevents 14-contract pileup. |
+| AUD-013 | Classified Claude docs absent from repo | before M5 | M3 | `planning-inbox/strategy-layer-dangerous-design.md`, `planning-inbox/deep-research-danger-agenda.md`, `planning-inbox/steward-context-dump.md` | Add with labels, no authority promotion | done in M3 | All three docs added and indexed with authority-none labels. |
+| AUD-014 | Cross-scope aggregation denial is not authority law | before M5 | M4 | `02-boundaries.md` | Add denial-by-default section | done in M4 | Forbidden-by-default clause added per M4 hardening. |
+| AUD-015 | Scope / scope_class model absent from boundary law | before M5 | M4/M6 | `02-boundaries.md`, `research/rg2-*` | Add `scope` + `scope_class` boundary section | done in M4/M6 | Boundary law covers scope posture; full model defined in RG2 and contracted in M7. |
+| AUD-016 | Proprietary-score sentence not in `02-boundaries.md` | before M5 | M4 | `02-boundaries.md` | Promote exact rule and examples | done in M4 | Provider Evidence Boundary now names proprietary scores explicitly. |
+| AUD-017 | Anti-cache strategy loophole only in non-authority doc | before M5 | M4 | `02-boundaries.md` | Add no fake scratch/candidate strategy storage clause | done in M4 | Hidden candidate caches/scratch stores clause added. |
+| AUD-018 | Read-time derived outputs need no-persist clarification | before M5 | M4 | `02-boundaries.md` | Add no persisted derived read-tool outputs rule | done in M4 | Covered by scratch/side-store clause + Strategy/IMI read-time wording; V6 materialization test governs any exception. |
+| AUD-019 | OBR-01 / DataForSEO rights-retention-cost blocker not named on M13 | before M5/M13 | M5/M13 | `ROADMAP.md`, research docs | Add named blocker and research gate | done in M5/M6 | OBR-01 named on M13; RG1 executed. $50 still holstered. |
+| AUD-020 | Provider Cross-Check needs standalone gate-spec doc | before M7 | M5/M6 | `research/rg9-*` | Create research gate spec | done in M5/M6 | RG9 planned and executed. |
+| AUD-021 | Promotion / conclusion-handoff contract missing | before M7 | M7 | `ROADMAP.md`, `contracts/` | Add to M7 contract list and later draft | in roadmap; drafting pending | On M7 contract list (consumer-promotion contract). |
+| AUD-022 | Consumer contracts underrepresented | before M7 | M7 / M15 | `ROADMAP.md`, `contracts/` | Add SearchClarity consumer-contract placeholder; defer Neon Ronin/Kaizen if needed | in roadmap; drafting pending | SearchClarity placeholder on M7 list; RG12 covers all consumers. |
+| AUD-023 | Contract document template missing | before M7 | M7 | `contracts/contract-template.md` | Create before drafting contracts | done 2026-07-07 | Template + contracts/README created in M7 audit-fix pass. |
+| AUD-024 | M7 contract priority not explicit | before M7 | M7 | `contracts/README.md` | Prioritize spine contracts first | done 2026-07-07 | Sequenced planned-contract list in contracts/README. |
 | AUD-025 | Evidence ID and scope models must settle before schema | before M10 | M7-M10 | contracts, `ROADMAP.md` | Ensure schema blocked until settled | assigned | Schema must not guess. |
 | AUD-026 | M9 first slice must name contract coverage and hammer set | before M10 | M9 | `ROADMAP.md`, future first-slice doc | Add to M9 expectations | assigned | Prevents vague first slice. |
 | AUD-027 | M11/M12 deliverables too vague for later implementation | before implementation | M9-M12 | `ROADMAP.md`, future implementation docs | Re-spec during M9/M10 | assigned | Fine now, dangerous later. |

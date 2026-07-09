@@ -592,6 +592,29 @@ M5 can close when:
 
 ---
 
+## M7 audit addendum (2026-07-07) — planned topics to executed gates mapping
+
+ROADMAP's planned-M5 section listed 12 research gate topics; this plan defined 13 gates cut differently. So future stewards do not think topics were silently dropped, the mapping is:
+
+| ROADMAP M5 topic | Where it landed |
+|---|---|
+| DataForSEO rights / retention / cost | RG1 |
+| marketplace evidence ceiling | RG7 |
+| GEO / AI citation methodology | RG6 |
+| Provider Cross-Check & Disagreement Model | RG9 |
+| provider personality profiles / proprietary score treatment | folded into RG9 (and RG8 provider-metric claim rules) |
+| freshness / staleness / volatility | RG5 |
+| claim-safety language | RG8 |
+| negative evidence / absence rules | folded into RG6 (absence methodology) + RG8 (absence claim class); M7 folds the absence-rules contract into the claim-safety contract |
+| surface coverage / blind spots | NOT given a dedicated gate. Passing mentions in RG4/RG5 read-tool output lists only. Disposition per M7 audits: NC5 coverage/blind-spot output fields belong in the typed read-tool contract skeleton (ruling OR-A5 in the owner-ruling tracker) |
+| owned property telemetry boundary | folded into RG2 (internal scope) + RG12 (internal consumer) + DR11 (deferred deep research) |
+| CapturePackage v0.1 inputs | RG10 |
+| evidence ID / citation model needs | RG3 |
+
+Gates added beyond the original 12 topics: RG2 (scope/rights/retention model), RG4 (query panel model), RG11 (raw archive / provider drift), RG12 (consumer contract inputs), RG13 (hammer matrix inputs). RG13 later gained an M7 addendum adding H19–H22.
+
+---
+
 ## Final rule
 
 ```text

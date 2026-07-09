@@ -473,6 +473,65 @@ Feeds:
 
 ---
 
+### DR16 — Consumer authentication / authorization model
+
+Added 2026-07-07 during the M7 audit-fix pass (both 2026-07-07 audits).
+
+Why it matters:
+RG12 names consumer authentication/authorization as an owner-ruling candidate, but no research topic owned it. Without it, M14 would improvise access control as an implementation detail.
+
+Questions to answer later:
+
+- How do consumers (SearchClarity, Neon Ronin, Kaizen, internal) authenticate to the Observatory API?
+- How is per-consumer, per-scope authorization enforced at the API layer?
+- How do consumer identities map to scopes without becoming customer records or foreign keys?
+- What audit records must consumer requests produce?
+- How are read-tool permissions scoped so no consumer can read another consumer's engagement scopes?
+- What token/credential lifecycle rules apply, and where do secrets live (never with LLMs/agents)?
+
+Blocks:
+
+- M14 typed read API / MCP contract and prototype;
+- consumer-facing read-tool exposure;
+- M15 SearchClarity proof workflow access path.
+
+Feeds:
+
+- M14 typed read API / MCP contract;
+- M8 access-boundary and scope-isolation hammers (H1, H17);
+- M7 consumer contract (as a named blocker section).
+
+---
+
+### DR17 — Provider credential and secret handling posture
+
+Added 2026-07-07 during the M7 audit-fix pass (both 2026-07-07 audits).
+
+Why it matters:
+No research topic covered provider API key storage or secret management. M11 only says "local config pattern without secrets." Provider admission (M13) practically requires this answered.
+
+Questions to answer later:
+
+- Where do provider API keys live (env, OS keystore, secret manager), and what is forbidden (repo, planning docs, prompts, LLM context)?
+- How does the capture path access credentials without exposing them to LLMs/agents (boundary law: no credentials to LLMs)?
+- What rotation, revocation, and compromise-response expectations apply?
+- What audit trail exists for credential use and provider spend attribution?
+- What hammers prove secrets cannot leak into raw payloads, manifests, evidence packs, logs, or read-tool output?
+
+Blocks:
+
+- M13 provider admission and any funded provider account;
+- capture runner planning;
+- M19 operations hardening for secret exposure checks.
+
+Feeds:
+
+- M13 provider admission plan;
+- M8 hostile-path hammers (H7, H17, H18);
+- M19 secret exposure checks.
+
+---
+
 ## Backlog use rule
 
 This backlog is a parking lot for deeper research, not permission to build.

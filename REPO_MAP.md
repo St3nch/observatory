@@ -43,7 +43,9 @@ Do not create random folders from vibes. That is how repos turn into haunted fil
 | `planning-inbox/` | Working notes, triage, historical/model-specific context, unpromoted planning material | active working area |
 | `decisions/` | Accepted owner/project decisions and decision templates | active authority-support folder |
 | `archive/` | Superseded, historical, or model-specific material retained for context | active archive folder |
-| `research/` | Future research gate specs and source-grounded research outputs | active research folder; no research execution until M5/M6 |
+| `research/` | Research gate specs and source-grounded research outputs | active; M6 research corpus complete (RG1–RG13 + deep-research backlog); feeds M7 contracts |
+| `audits/` | Audit reports preserved as planning input / advisory context, never authority | active; earned by owner ruling 2026-07-07 (`decisions/2026-07-07-audits-folder.md`) |
+| `contracts/` | Non-schema evidence-behavior contracts and contract template | active as of M7; earned per M2 decision's deferred-until-M7 ruling |
 
 `planning-inbox/` is not authority. It stores useful material before promotion, pruning, or rejection.
 
@@ -55,7 +57,6 @@ These folders are not automatically approved for creation. Create them only when
 
 | Planned folder | Intended purpose | Gate |
 |---|---|---|
-| `contracts/` | API/MCP/capture/evidence contracts once planning earns them | deferred until M7 |
 | `providers/` | Provider admission notes and provider-specific plans | provider planning milestone |
 | `capture/` | CapturePackage, capture recipe, raw archive planning | capture planning milestone |
 | `schemas/` | Schema design docs only, not migrations | schema planning milestone |

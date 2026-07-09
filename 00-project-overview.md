@@ -1,6 +1,6 @@
 # The Observatory — Project Overview
 
-Status: draft
+Status: authority (promoted from draft 2026-07-07, M7 audit-fix pass; matches REPO_MAP authority label)
 Date: 2026-07-06
 Owner: Project owner
 Steward: The Observatory Project Steward (LLM-assisted)

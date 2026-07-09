@@ -181,8 +181,9 @@ A closure edit must:
 5. update `ACTIVE_CONTEXT.md`;
 6. update `NEXT_SESSION_HANDOFF.md`;
 7. record unresolved audit findings or blockers in the appropriate planning/control doc;
-8. commit the exact changed paths;
-9. push before handing work to another tool or clone when push tooling is available.
+8. refresh the status columns of any tracker files (audit-response backlogs, owner-ruling tracker, decision-record follow-up tables) and the `Last Review Notes` of any folder READMEs touched by the milestone — stale trackers train agents to ignore trackers;
+9. commit the exact changed paths;
+10. push before handing work to another tool or clone when push tooling is available.
 
 Do not leave a completed milestone marked active just because the work feels done. If it is not closed in the repo, it is not closed.
 

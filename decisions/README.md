@@ -51,6 +51,7 @@ This folder is for explicit decisions, not casual suggestions.
 |---|---|---|---|
 | `decision-record-template.md` | template | Reusable decision record shape | Use for future owner rulings and accepted choices |
 | `2026-07-07-m2-folder-subset.md` | accepted decision | Records the M2 folder subset ruling | Create `decisions/`, `archive/`, `research/`; defer `contracts/`, `hammers` |
+| `2026-07-07-audits-folder.md` | accepted decision | Records the owner ruling earning `audits/` as a governed folder | Audit reports are planning input, never authority |
 
 ---
 
@@ -78,7 +79,7 @@ Decision records can change project authority only when they explicitly say so a
 
 ```text
 Last reviewed: 2026-07-07
-Reviewer: GPT-5.5 Thinking via Go8
-Result: Created during M2 folder structure work
-Open issues: First actual decision record still needed for the M2 folder subset ruling
+Reviewer: Claude (Observatory Project Steward role), M7 audit-fix pass
+Result: Audits-folder decision added and indexed; stale open issue cleared (the M2 folder-subset record exists and is indexed above)
+Open issues: none
 ```

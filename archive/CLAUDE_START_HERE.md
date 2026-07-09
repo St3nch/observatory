@@ -1,5 +1,12 @@
 # Claude Start Here — The Observatory
 
+Status: historical / superseded
+Authority: none
+Superseded by: `LLM_START_HERE.md` (canonical read order) and `ACTIVE_CONTEXT.md` (current phase)
+Archived: 2026-07-07 during the M7 audit-fix pass. The read order below is the pre-M0 original and is stale — do not follow it. Preserved for lineage only.
+
+---
+
 Read these files in order before reviewing or proposing changes:
 
 1. `README.md`

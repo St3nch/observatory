@@ -85,9 +85,9 @@ This narrows M2 folder creation relative to the earlier candidate set in `ROADMA
 | Follow-up | Target milestone | Target file(s) | Status |
 |---|---|---|---|
 | Create folder READMEs for accepted M2 folders | M2 | `decisions/README.md`, `archive/README.md`, `research/README.md` | done |
-| Update repo map to match actual folders | M2 | `REPO_MAP.md` | pending |
-| Add classified Claude docs | M3 | `planning-inbox/` | pending |
-| Create contracts folder when earned | M7 | `contracts/README.md` | deferred |
+| Update repo map to match actual folders | M2 | `REPO_MAP.md` | done in M2 |
+| Add classified Claude docs | M3 | `planning-inbox/` | done in M3 |
+| Create contracts folder when earned | M7 | `contracts/README.md` | done 2026-07-07 (M7 audit-fix pass; template included) |
 | Create hammers folder when earned | M8 | `hammers/README.md` | deferred |
 
 ---

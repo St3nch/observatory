@@ -167,6 +167,10 @@ M7 uses the completed M6 research outputs as contract-planning input. It does no
 - `research/README.md`
 - all M6 research outputs in `research/`
 - `research/deep-research-backlog.md`
+- `audits/README.md` and the 2026-07-07 audit reports
+- `planning-inbox/m7-audit-response-2026-07-07.md`
+- `planning-inbox/owner-ruling-tracker.md`
+- `contracts/README.md` and `contracts/contract-template.md`
 
 ### Allowed Work
 
@@ -193,10 +197,25 @@ M7 uses the completed M6 research outputs as contract-planning input. It does no
 
 ### Blockers
 
-- M6 research outputs must exist and be indexed.
-- Contract template must exist before drafting contract docs.
-- Claude audit or steward audit should review M6 outputs before broad M7 contract drafting.
+- M6 research outputs must exist and be indexed. — met
+- Contract template must exist before drafting contract docs. — met 2026-07-07 (`contracts/contract-template.md`)
+- Claude audit or steward audit should review M6 outputs before broad M7 contract drafting. — met 2026-07-07 (two audits preserved in `audits/`; findings routed in `planning-inbox/m7-audit-response-2026-07-07.md`)
 - Any doctrine change requires explicit owner ruling before promotion.
+
+### M7 Progress Log
+
+2026-07-07 — M7 first move complete: M6 research set audited (M6/M7-readiness audit) and full repo audited; both reports preserved in `audits/`. Audit-fix pass executed with owner approval:
+
+- `audits/` earned and governed (`decisions/2026-07-07-audits-folder.md`, `audits/README.md`, REPO_MAP row)
+- `contracts/` created with README and contract template (drafting blocker cleared)
+- `planning-inbox/m7-audit-response-2026-07-07.md` routes all findings (ISS-01..22, SEQ-01)
+- `planning-inbox/owner-ruling-tracker.md` consolidates all open owner-ruling candidates (groups A–G)
+- RG13 gained H19–H22 (append-only, concurrency, audit-first, migration rollback) via dated addendum
+- `research/deep-research-backlog.md` gained DR16 (consumer authn/authz) and DR17 (provider secrets)
+- M5 plan gained the planned-topics-to-executed-gates mapping addendum
+- stale references fixed across `research/README.md`, REPO_MAP, decisions, archive, planning-inbox; `CLAUDE_START_HERE.md` archived; 00/01 headers promoted to authority; closure convention now requires tracker/review-note refreshes
+
+Next M7 work: resolve owner-ruling group A (see tracker), then draft contracts in the sequence recorded in `contracts/README.md` (spine first: scope/rights/retention, evidence ID/citation).
 
 ### Exit Criteria
 
@@ -525,24 +544,21 @@ Blockers:
 - M6 research outputs must exist.
 - Contract template must exist before drafting contract docs.
 
-Contracts to draft:
+Contracts to draft (annotated 2026-07-07 per audit routing SEQ-01; sequencing lives in `contracts/README.md`):
 
 - scope / scope_class / rights / retention contract
 - evidence ID and citation contract
 - provider registry / provider testimony contract
-- Provider Cross-Check & Disagreement Model contract
-- Provider Disagreement Ledger candidate contract
+- Provider Cross-Check & Disagreement Model contract (absorbs the Provider Disagreement Ledger as an open-question section — ledger persistence requires the V6 materialization test and owner ruling OR-A1; no standalone ledger contract)
 - query panel contract
 - CapturePackage v0.1 contract
-- raw archive / payload pointer contract
-- provider payload diff / drift contract
+- raw archive / payload pointer / provider drift contract (merged: raw pointer + payload diff/drift are one contract)
 - freshness / staleness / volatility contract
-- claim language matrix contract
-- negative evidence / absence rules contract
-- owned telemetry overlay contract
+- claim language matrix contract (absorbs negative evidence / absence rules; includes predictive_claim class)
+- owned telemetry overlay contract (placeholder only until DR11; covers customer first-party overlays and NC3 intervention-timeline ephemeral inputs)
 - promotion / conclusion-handoff contract
-- SearchClarity consumer-contract placeholder
-- typed API/MCP read-tool contract
+- SearchClarity consumer-contract placeholder (placeholder only until DR9)
+- typed API/MCP read-tool contract (skeleton only — M14 owns the real contract; includes NC5 coverage/blind-spot output fields)
 
 Forbidden work:
 
@@ -591,7 +607,10 @@ Hammer categories:
 - no strategy/recommendation storage
 - no fake scratch/candidate strategy cache
 - overlay no-persistence
-- schema migration rollback/recovery expectations
+- append-only observation behavior (RG13 H19)
+- concurrency safety (RG13 H20)
+- audit-first enforcement (RG13 H21)
+- schema migration rollback/recovery expectations (RG13 H22)
 - capture package validation
 - read-tool scope isolation
 

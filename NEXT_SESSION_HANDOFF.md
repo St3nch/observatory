@@ -124,13 +124,18 @@ Proceed with active M7:
 M7 - Core Contract Planning
 ```
 
-Immediate first move:
+Status 2026-07-07: M7's first move (audit M6 outputs) is COMPLETE. Two audits live in `audits/` (M6/M7-readiness + full repo); findings are routed in `planning-inbox/m7-audit-response-2026-07-07.md`; the audit-fix pass is done (see the M7 Progress Log in `ROADMAP.md`). `contracts/` exists with README and template. Open owner rulings are consolidated in `planning-inbox/owner-ruling-tracker.md`.
+
+Immediate next moves:
 
 ```text
-Audit completed M6 research outputs before drafting contracts.
+1. Owner: resolve ruling group A in planning-inbox/owner-ruling-tracker.md (OR-A1..A6)
+2. Owner: delete the tombstone at planning-inbox/CLAUDE_START_HERE.md (steward tools cannot delete files)
+3. Owner: git status / commit / push (steward tools cannot run git)
+4. Draft the spine contracts per contracts/README.md: scope/rights/retention (RG2), then evidence ID/citation (RG3)
 ```
 
-Use `research/README.md` as the index to the completed M6 research set, including `research/deep-research-backlog.md`. Do not make provider purchases, paid pulls, schema, migrations, API/MCP implementation, dashboard work, capture runner work, customer-data handling, or strategy/recommendation storage.
+Use `research/README.md` as the index to the completed M6 research set, including `research/deep-research-backlog.md` (now DR1–DR17). Do not make provider purchases, paid pulls, schema, migrations, API/MCP implementation, dashboard work, capture runner work, customer-data handling, or strategy/recommendation storage.
 
 ---
 
@@ -138,11 +143,9 @@ Use `research/README.md` as the index to the completed M6 research set, includin
 
 Open questions to carry forward:
 
-- Do the completed M6 research outputs cohere as contract inputs?
-- Are any M6 outputs too weak, too broad, or inconsistent with `02-boundaries.md`?
-- Which M7 contracts should be drafted first?
-- Which owner-ruling candidates must be resolved before contract drafting?
-- Which deep-research backlog items should stay deferred versus become explicit blockers?
+- Owner-ruling group A outcomes (OR-A1..A6): Disagreement Ledger persistence, RG6 sentiment, sample-summary storage, citation handle shape, NC3/NC5 disposition confirmation, minimum M7 contract set.
+- Which drafted contracts, once reviewed, are strong enough to mark accepted before M7 closes?
+- Do any contract drafts surface new deep-research blockers beyond DR1–DR17?
 
 ---
 

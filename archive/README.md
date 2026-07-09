@@ -48,7 +48,7 @@ Read archived files only when current authority docs, handoffs, or roadmap miles
 
 | File | Status | Purpose | Notes |
 |---|---|---|---|
-| _none yet_ |  |  | Archive exists before first move |
+| `CLAUDE_START_HERE.md` | historical / superseded | Pre-M0 Claude-specific onboarding note with the original (now stale) read order | Superseded by `LLM_START_HERE.md`; moved here 2026-07-07 (M7 audit-fix pass, ISS-06) |
 
 ---
 
@@ -76,7 +76,7 @@ If an archived file conflicts with a root authority file, root authority wins un
 
 ```text
 Last reviewed: 2026-07-07
-Reviewer: GPT-5.5 Thinking via Go8
-Result: Created during M2 folder structure work
-Open issues: Decide later whether planning-inbox/CLAUDE_START_HERE.md should move here after M3
+Reviewer: Claude (Observatory Project Steward role), M7 audit-fix pass
+Result: First archive move completed (CLAUDE_START_HERE.md); open issue resolved
+Open issues: Owner must manually delete the tombstone at planning-inbox/CLAUDE_START_HERE.md (steward tools cannot delete files)
 ```

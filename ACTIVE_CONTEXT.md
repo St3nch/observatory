@@ -42,7 +42,9 @@ Current M7 work is allowed to:
 - preserve owner-ruling candidates and deeper research blockers;
 - keep all contracts aligned with `02-boundaries.md`.
 
-M7 begins with an audit of the completed M6 research set. M7 does not authorize provider purchases, paid pulls, provider admission, schema work, migrations, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage.
+M7 begins with an audit of the completed M6 research set. Status 2026-07-07: the audit first move is COMPLETE — two audits (M6/M7-readiness + full repo) are preserved in `audits/`, all findings are routed in `planning-inbox/m7-audit-response-2026-07-07.md`, the contract template exists (`contracts/contract-template.md`), and open owner rulings are consolidated in `planning-inbox/owner-ruling-tracker.md`. Current M7 work is contract drafting per the sequence in `contracts/README.md`, starting with the spine (scope/rights/retention, then evidence ID/citation), with owner-ruling group A resolution in parallel.
+
+M7 does not authorize provider purchases, paid pulls, provider admission, schema work, migrations, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage.
 
 ---
 
@@ -120,3 +122,5 @@ M2 folder ruling completed:
 Created: decisions/, archive/, research/
 Deferred: contracts/ until M7, hammers/ until M8
 ```
+
+Folder state update 2026-07-07: `contracts/` created (M7 earned it per the M2 ruling) and `audits/` earned by owner ruling (`decisions/2026-07-07-audits-folder.md`). `hammers/` remains deferred until M8.

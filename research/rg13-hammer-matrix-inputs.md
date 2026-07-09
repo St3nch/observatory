@@ -670,6 +670,52 @@ Feeds:
 
 ---
 
+## M7 audit addendum (2026-07-07) — H19–H22
+
+Added during the M7 audit-fix pass. The 2026-07-07 audits found four hammer categories required by ROADMAP's M8 category list and inherited doctrine (V13 hammer law: concurrency scenarios and rollback probes non-optional; V9/N4 audit-first invariant; V3/V9 append-only posture) that were missing from H1–H18. They are hammer-matrix inputs on equal footing with the original set.
+
+### H19 — Append-only observation hammers
+
+Risk: admitted observations get silently overwritten, mutated, or backdated, destroying historical truth.
+
+Must test: UPDATE/overwrite of an admitted observation rejected; mutation of `captured_at` or provenance fields rejected; mutation of raw-linked fields rejected; correction paths create superseding records, never in-place edits; deletion allowed only through governed retention/purge paths.
+
+Proof needed: rejected mutation attempts; before/after integrity check; supersession path works; purge path distinct from mutation.
+
+Feeds: M8 core hammers; M10 schema planning; M12 first slice.
+
+### H20 — Concurrency hammers
+
+Risk: races corrupt evidence, double-spend providers, or bypass single-threaded validation.
+
+Must test: concurrent identical capture submissions cannot both pass the duplicate-fingerprint check; concurrent admission of the same CapturePackage cannot double-admit; purge racing a read leaves consistent state (read fails closed or completes on pre-purge state, never partial); concurrent panel-version creation cannot fork the same version label.
+
+Proof needed: real concurrent execution, not sequential simulation; deterministic outcomes; no partial writes.
+
+Feeds: M8 hammers; M12 build acceptance; M13 spend safety.
+
+### H21 — Audit-first hammers
+
+Risk: consequential changes persist without their required audit/event record (violates V9/N4: no required audit record means no persisted consequential change).
+
+Must test: admission, purge, supersession, withdrawal, and rights/retention-status changes each require a same-transaction audit record; audit-record failure rolls back the change; read paths create no events (V9: no read events).
+
+Proof needed: injected audit-write failure aborts the whole change; audit log matches persisted state exactly; read paths verified write-free.
+
+Feeds: M8 hammers; M11/M12 implementation; M19 operations.
+
+### H22 — Migration rollback / recovery hammers
+
+Risk: schema migrations (once M10+ permits them) cannot be rolled back or recovered, turning evidence into fragile glassware.
+
+Must test: every migration has a tested rollback; rollback preserves admitted observations and evidence-ID resolution; restore-from-backup proves evidence/raw-pointer/hash integrity; failed mid-migration state is recoverable.
+
+Proof needed: executed rollback, not documented intention; post-restore hash verification; evidence IDs still resolve after rollback/restore.
+
+Feeds: M8 hammer matrix; M10 schema planning; M12 build; M19 hardening.
+
+---
+
 ## Minimum M8 hammer suite proposal
 
 M8 should not try to test everything forever. It should build a first hammer matrix covering at minimum:
@@ -690,6 +736,10 @@ raw hash/pointer integrity
 provider drift quarantine
 consumer overlay no-storage
 LLM/agent access boundary
+append-only observation behavior (H19)
+concurrency safety (H20)
+audit-first enforcement (H21)
+migration rollback/recovery expectations (H22)
 ```
 
 This minimum suite should run against real implementation surfaces once implementation exists. Mock-only proof is insufficient for acceptance.

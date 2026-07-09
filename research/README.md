@@ -42,14 +42,12 @@ Research informs later contracts and decisions. Research does not directly autho
 
 ## Reading Order
 
-No full research corpus exists yet.
+The M6 research corpus is complete. For M7 contract work, read:
 
-When M5 activates, read:
-
-1. `../ROADMAP.md` — M5/M6 sections
-2. `../planning-inbox/audit-response-2026-07-07.md` — audit-assigned research and boundary gaps
-3. `../planning-inbox/repo-first-research-triage.md` — known local-repo answers and open research lanes
-4. future research gate specs in the order M5 defines
+1. `m5-research-gate-plan.md` — how the gates were defined (includes the M7 addendum mapping planned topics to executed gates)
+2. `rg1-dataforseo-rights-retention-cost.md` through `rg13-hammer-matrix-inputs.md` — in M6 execution order (RG1, RG2, RG3, RG4, RG5, RG6, RG7, RG8, RG9, RG10, RG11, RG12, RG13)
+3. `deep-research-backlog.md` — DR1–DR17: what still needs deeper proof before providers, captures, reports, schema, or implementation
+4. `../audits/README.md` — index of the 2026-07-07 audits of this research set and their response tracker
 
 ---
 
@@ -100,7 +98,7 @@ Do not treat research findings as accepted doctrine until promoted by decision, 
 
 ```text
 Last reviewed: 2026-07-07
-Reviewer: GPT-5.5 Thinking via Go8
-Result: Created during M2 folder structure work
-Open issues: M5 must create a research gate template before research execution
+Reviewer: Claude (Observatory Project Steward role), M7 audit-fix pass
+Result: Reading order updated to reflect completed M6 corpus; stale M5-era text removed; RG13 gained M7 addendum (H19–H22); backlog gained DR16/DR17
+Open issues: none
 ```

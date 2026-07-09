@@ -1,6 +1,6 @@
 # The Observatory — Harvest Register
 
-Status: draft 1 — dispositions owner-walked and confirmed 2026-07-06
+Status: authority — dispositions owner-walked and confirmed 2026-07-06 (promoted from draft 2026-07-07, M7 audit-fix pass; matches REPO_MAP authority label)
 Date: 2026-07-06
 
 ---
