@@ -33,7 +33,7 @@ The review goal is to identify what the reports establish, what remains uncertai
 | R9 | `SEO Tool Pricing and ROI Research Report for The Observatory.md` | reviewed |
 | R10 | `Public Page Snapshot and Archival Evidence Research Report for The Observatory.md` | reviewed |
 
-Small hygiene issue: `planning-inbox/research/` does not currently have its own `README.md` index.
+Small hygiene issue: `planning-inbox/research/` does not currently have its own `README.md` index. Some source-report citations and access dates need later cleanup before promotion.
 
 ---
 
@@ -65,7 +65,7 @@ Provider/surface P showed or reported value X for target T under context C at ti
 
 This is the safe observation unit. Unsafe conversions include universal rank, true demand, objective authority, AI trust, marketplace-wide rank, guaranteed improvement, or causal claims from timing alone.
 
-Classification: accepted repo doctrine already / candidate contract input / claim-safety input.
+Classification: consistent with existing repo doctrine / candidate contract input / claim-safety input.
 
 ---
 
@@ -75,7 +75,7 @@ R2 makes this explicit, and R1/R3/R5/R6/R7/R9 all reinforce it. Ahrefs, Semrush,
 
 The correct response is not to crown a winner or average disagreement into fake truth. The correct response is to preserve provider identity, metric definition, capture context, freshness, and caveats.
 
-Classification: accepted repo doctrine already / candidate contract input / hammer-test input.
+Classification: consistent with existing repo doctrine / candidate contract input / hammer-test input.
 
 ---
 
@@ -102,6 +102,8 @@ Classification: candidate contract input / freshness-volatility input / hammer-t
 ### CF5 — Public visibility is not storage or automation permission
 
 R4, R5A, R5, R6, and R10 repeat this in different domains. Manual public observation may be lower risk, but scraping, API warehousing, platform automation, raw HTML retention, comment harvesting, and customer-facing redistribution all require source-specific rights review.
+
+Google Maps / Business Profile content carries express anti-scraping and anti-storage concerns in R10. Local-pack evidence must come through licensed SERP-provider payloads or minimal manual capture, not Maps/GBP content warehousing.
 
 Classification: rights/retention blocker / provider admission blocker / candidate contract input.
 
@@ -466,13 +468,13 @@ Main findings:
 Highest-confidence facts:
 
 - Etsy API has strict 6/24-hour display freshness/caching limits and prohibits API use for analytics/ML unless authorized.
-- Fiverr has no official general public API found; scraping is prohibited.
+- Fiverr has no official general public API found; automated collection remains manual-only by default pending terms confirmation.
 - Pinterest API storage is barred except campaign analytics.
 - Shopify public storefronts differ from marketplaces; Admin/customer/order/analytics data is private.
 
 Uncertainties:
 
-- Fiverr official programmatic access, if any.
+- Fiverr official programmatic access, if any, and current terms posture for automated collection.
 - Legal position on repeated manual screenshots at operational scale.
 - eBay/Reddit current terms before admission.
 
@@ -612,6 +614,7 @@ Highest-confidence facts:
 - GSC/Bing/Google Trends/Keyword Planner/YouTube Data API provide major free/first-party evidence layers.
 - Ahrefs/Semrush subscriptions and AI add-ons create high recurring rent.
 - Some vendor terms restrict redistribution, caching, AI/ML use, or competitive dataset creation.
+- DataForSEO terms place upstream search-engine terms exposure and related indemnity risk on the user.
 
 Uncertainties:
 
@@ -704,7 +707,7 @@ Potential later candidates, not admitted now:
 
 | Provider/surface | Current posture | Needed before admission |
 |---|---|---|
-| DataForSEO | strongest first paid provider candidate | endpoint list, rights/retention/display answers, pricing confirmation, spend caps, stop conditions, raw-payload policy |
+| DataForSEO | strongest first paid provider candidate | endpoint list, rights/retention/display answers, pricing confirmation, spend caps, stop conditions, raw-payload policy, indemnity-exposure ruling |
 | Ahrefs | defer | use case, pricing/API package, rights/export/display, unique evidence justification |
 | Semrush | defer | rights/API/cache/AI-use terms, cost justification, customer report display rules |
 | SerpApi/SearchApi | alternate SERP providers | cost/reliability/rights comparison against DataForSEO |
@@ -732,7 +735,9 @@ Read tools must return shaped evidence packs, not raw mystery rows. Required war
 - recapture recommendation;
 - customer-private overlay warning;
 - consumer-promotion-required warning;
-- coverage/blind-spot warning.
+- coverage/blind-spot warning;
+- provider-cadence-unknown warning;
+- preliminary-data warning.
 
 M14 dependency topics likely real:
 
@@ -762,7 +767,10 @@ Claims to avoid:
 - exact Etsy/Pinterest/YouTube demand from tool estimates;
 - AI trust/authority from citation;
 - marketplace-wide/global rank from point-in-time observation;
-- causal claims from before/after timing alone.
+- causal claims from before/after timing alone;
+- tool metric display without source-specific rights confirmation.
+
+M15 note: Ahrefs Domain Rating is called out by source research as displayable with attribution under a separate license; other Ahrefs/Semrush client-display rights remain unconfirmed.
 
 M15 dependency topics likely real:
 
@@ -789,12 +797,13 @@ The review supports preserving the owner-ruling Group A items and adds source-sp
 
 Additional owner/source rulings likely later:
 
-- DataForSEO raw retention and customer display rights.
+- DataForSEO raw retention, customer display rights, and indemnity exposure.
 - Whether/when DataForSEO first paid pull budget is released.
 - YouTube Data API public metadata retention policy inside Observatory.
 - Whether public comments/UGC are excluded by default.
 - Manual screenshot retention and report redistribution rules.
 - Whether any vendor subscription is allowed before customer revenue.
+- Collector context envelope for geo, device, language, and other capture conditions before absence/position claims are scoped precisely.
 
 ---
 
