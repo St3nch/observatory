@@ -65,6 +65,9 @@ Folder earned at M7 per `decisions/2026-07-07-m2-folder-subset.md` (deferred-unt
 | `provider-testimony.md` | draft | Governs provider output as attributed testimony, not truth; preserves provider attribution, admission blocks, metric caveats, and no-winner/no-average rules | Eighth M7 contract; drafted from RG1 and RG9 |
 | `provider-cross-check.md` | draft | Governs provider disagreement comparison without truth-provider, winner-provider, fake averaging, or strategy storage | Ninth M7 contract; drafted from RG9 with provider-testimony support |
 | `consumer-promotion.md` | draft | Governs consumer requests/responses and promotion of meaning, recommendations, tasks, reports, and accepted conclusions out to the owning consumer | Tenth M7 contract; drafted from RG12 |
+| `overlay.md` | draft | Governs read-time overlays, no-storage customer/private inputs, intervention timelines, overlay freshness, and discard/no-evidence-ID rules | Eleventh M7 contract; drafted from RG12/DR10 boundary inputs |
+| `searchclarity-consumer-placeholder.md` | draft placeholder | Preserves SearchClarity consumer boundaries without approving customer-facing reports, report-safe references, customer data, or service workflow implementation | Twelfth M7 contract; placeholder drafted from RG12 and deferred to M15/DR9 |
+| `typed-read-tool-skeleton.md` | draft skeleton | Defines future shaped evidence-pack read-tool expectations, warnings, coverage/blind-spot output, and forbidden direct SQL/raw row access | Thirteenth M7 contract; skeleton drafted from RG3/RG5/RG8/RG12 and deferred to M14 |
 
 Planned M7 contracts (remaining after first draft; sequencing per the 2026-07-07 audits):
 
@@ -79,9 +82,9 @@ Planned M7 contracts (remaining after first draft; sequencing per the 2026-07-07
 8. provider-testimony            (RG1 + RG9 + V7; skeleton until M13 bindings) - drafted 2026-07-10
 9. provider-cross-check          (RG9; Disagreement Ledger persistence is an open-question section, not presumed) - drafted 2026-07-10
 10. consumer-promotion           (RG12) - drafted 2026-07-10
-11. overlay                      (RG12/DR10; covers customer first-party overlays AND NC3 intervention-timeline ephemeral inputs)
-12. searchclarity-consumer-placeholder (RG12; placeholder only until DR9)
-13. typed-read-tool-skeleton     (RG3/RG5/RG8/RG12; skeleton only — M14 owns the real contract; includes NC5 coverage/blind-spot output fields)
+11. overlay                      (RG12/DR10; covers customer first-party overlays AND NC3 intervention-timeline ephemeral inputs) - drafted 2026-07-10
+12. searchclarity-consumer-placeholder (RG12; placeholder only until DR9) - drafted 2026-07-10
+13. typed-read-tool-skeleton     (RG3/RG5/RG8/RG12; skeleton only — M14 owns the real contract; includes NC5 coverage/blind-spot output fields) - drafted 2026-07-10
 ```
 
 ---
@@ -110,6 +113,6 @@ If a contract draft would store meaning, strategy, recommendations, customer dat
 ```text
 Last reviewed: 2026-07-10
 Reviewer: ChatGPT / Observatory Steward
-Result: First ten M7 contracts drafted and indexed (`scope-rights-retention.md`, `evidence-id-citation.md`, `freshness-staleness-volatility.md`, `claim-safety.md`, `query-panel.md`, `capturepackage-v0-1.md`, `raw-archive-provider-drift.md`, `provider-testimony.md`, `provider-cross-check.md`, `consumer-promotion.md`)
-Open issues: Draft next contract (`overlay.md`)
+Result: All thirteen planned M7 contracts drafted and indexed (`scope-rights-retention.md`, `evidence-id-citation.md`, `freshness-staleness-volatility.md`, `claim-safety.md`, `query-panel.md`, `capturepackage-v0-1.md`, `raw-archive-provider-drift.md`, `provider-testimony.md`, `provider-cross-check.md`, `consumer-promotion.md`, `overlay.md`, `searchclarity-consumer-placeholder.md`, `typed-read-tool-skeleton.md`)
+Open issues: Review M7 draft set for owner-ruling closure, consistency, and readiness for M8 hammer planning
 ```
