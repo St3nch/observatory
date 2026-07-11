@@ -60,6 +60,7 @@ Folder earned at M7 per `decisions/2026-07-07-m2-folder-subset.md` (deferred-unt
 | `freshness-staleness-volatility.md` | draft | Governs evidence age, freshness status, volatility class, update-window caveats, claim-use fitness, and recapture warnings | Third M7 contract; drafted from RG5 with supporting RG6/RG7/RG8/RG10/RG12 inputs |
 | `claim-safety.md` | draft | Governs claim classes, caveat requirements, absence rules, predictive/causal/recommendation boundaries, and forbidden overclaims | Fourth M7 contract; drafted from RG8 with supporting RG5/RG6/RG7/RG9/RG10/RG12 inputs |
 | `query-panel.md` | draft | Governs named/versioned query, prompt, target, and surface measurement programs before execution or provider/capture admission | Fifth M7 contract; drafted from RG4 with supporting RG2/RG3/RG5/RG6/RG7/RG8/RG10 inputs |
+| `capturepackage-v0-1.md` | draft | Governs the proof envelope around capture attempts, validation groups, source/cost controls, raw support posture, and candidate observation admission gates | Sixth M7 contract; drafted from RG10 with supporting existing M7 contracts and RG11 inputs |
 
 Planned M7 contracts (remaining after first draft; sequencing per the 2026-07-07 audits):
 
@@ -69,7 +70,7 @@ Planned M7 contracts (remaining after first draft; sequencing per the 2026-07-07
 3. freshness-staleness-volatility (RG5) - drafted 2026-07-10
 4. claim-safety                  (RG8 + RG6; absorbs negative-evidence/absence rules; includes predictive_claim class) - drafted 2026-07-10
 5. query-panel                   (RG4) - drafted 2026-07-10
-6. capturepackage-v0-1           (RG10)
+6. capturepackage-v0-1           (RG10) - drafted 2026-07-10
 7. raw-archive-provider-drift    (RG11; merged raw pointer + drift)
 8. provider-testimony            (RG1 + RG9 + V7; skeleton until M13 bindings)
 9. provider-cross-check          (RG9; Disagreement Ledger persistence is an open-question section, not presumed)
@@ -105,6 +106,6 @@ If a contract draft would store meaning, strategy, recommendations, customer dat
 ```text
 Last reviewed: 2026-07-10
 Reviewer: ChatGPT / Observatory Steward
-Result: First five M7 contracts drafted and indexed (`scope-rights-retention.md`, `evidence-id-citation.md`, `freshness-staleness-volatility.md`, `claim-safety.md`, `query-panel.md`)
-Open issues: Draft next contract (`capturepackage-v0-1.md`)
+Result: First six M7 contracts drafted and indexed (`scope-rights-retention.md`, `evidence-id-citation.md`, `freshness-staleness-volatility.md`, `claim-safety.md`, `query-panel.md`, `capturepackage-v0-1.md`)
+Open issues: Draft next contract (`raw-archive-provider-drift.md`)
 ```
