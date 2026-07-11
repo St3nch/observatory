@@ -55,11 +55,12 @@ Folder earned at M7 per `decisions/2026-07-07-m2-folder-subset.md` (deferred-unt
 | File | Status | Purpose | Notes |
 |---|---|---|---|
 | `contract-template.md` | template | Required structure for all Observatory contracts | Created during M7 audit-fix pass |
+| `scope-rights-retention.md` | draft | Governs scope, source-admission posture, rights classes, and retention classes before observation admission | First M7 spine contract; drafted from RG2 and boundary law |
 
-Planned M7 contracts (not yet drafted; sequencing per the 2026-07-07 audits):
+Planned M7 contracts (remaining after first draft; sequencing per the 2026-07-07 audits):
 
 ```text
-1. scope-rights-retention        (RG2)
+1. scope-rights-retention        (RG2) - drafted 2026-07-10
 2. evidence-id-citation          (RG3)
 3. freshness-staleness-volatility (RG5)
 4. claim-safety                  (RG8 + RG6; absorbs negative-evidence/absence rules; includes predictive_claim class)
@@ -98,8 +99,8 @@ If a contract draft would store meaning, strategy, recommendations, customer dat
 ## Last Review Notes
 
 ```text
-Last reviewed: 2026-07-07
-Reviewer: Claude (Observatory Project Steward role)
-Result: Folder + template created during M7 audit-fix pass; no contracts drafted yet
-Open issues: Draft spine contracts (scope/rights/retention, evidence ID/citation) next
+Last reviewed: 2026-07-10
+Reviewer: ChatGPT / Observatory Steward
+Result: First M7 spine contract drafted and indexed (`scope-rights-retention.md`)
+Open issues: Draft next spine contract (`evidence-id-citation.md`)
 ```
