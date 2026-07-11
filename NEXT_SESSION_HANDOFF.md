@@ -2,14 +2,14 @@
 
 Status: authority
 Authority: fresh-session handoff
-Purpose: preserve current state after M6 closure and M7 activation
-Last updated: 2026-07-07
+Purpose: preserve current state after M7 closure and M8 activation
+Last updated: 2026-07-10
 
 ---
 
 ## Current State
 
-The Observatory is in core contract planning.
+The Observatory is in hammer matrix and acceptance-gate planning.
 
 Closed milestones:
 
@@ -21,19 +21,20 @@ Closed milestones:
 - M4 - Boundary Reconciliation and Doctrine Hardening
 - M5 - Research Gate Plan
 - M6 - Research Gate Execution
+- M7 - Core Contract Planning
 
 Active milestone:
 
 ```text
-M7 - Core Contract Planning
+M8 - Hammer Matrix and Acceptance Gates
 ```
 
-M1 created the detailed roadmap sequence through Observatory v1, M2 created the approved folders/indexes, M3 preserved the approved planning-inbox source docs, M4 hardened boundary law, M5 planned the research gates, and M6 executed all 13 research gates plus the deep-research backlog. The repo is still not ready for schema, provider pulls, provider purchases, API, MCP, dashboard, capture runners, or customer-data work.
+M1 created the detailed roadmap sequence through Observatory v1, M2 created the approved folders/indexes, M3 preserved the approved planning-inbox source docs, M4 hardened boundary law, M5 planned the research gates, M6 executed all 13 research gates plus the deep-research backlog, and M7 drafted/indexed all 13 planned non-schema contracts. The repo is still not ready for schema, provider pulls, provider purchases, API, MCP, dashboard, capture runners, or customer-data work.
 
-The next milestone after M7 is:
+The next milestone after M8 is:
 
 ```text
-M8 - Hammer Matrix and Acceptance Gates
+M9 - First Evidence Slice Definition
 ```
 
 ---
@@ -52,6 +53,10 @@ Fresh sessions must read:
 8. `01-harvest-register.md`
 9. `02-boundaries.md`
 10. `NEXT_SESSION_HANDOFF.md`
+11. `contracts/README.md`
+12. `planning-inbox/m7-contract-draft-set-review.md`
+13. `planning-inbox/owner-ruling-tracker.md`
+14. `research/rg13-hammer-matrix-inputs.md`
 
 For planning notes, read `planning-inbox/README.md` first.
 
@@ -66,8 +71,6 @@ When using `ob-dev`:
 - If a mutation returns no diff, stop mutating and inspect with read, status, or diff tools.
 - If a safety block occurs, do not hammer the same call. Try one safe read/status/diff check, then report the blocker.
 - For edits, use this sequence: read -> one mutation -> diff -> diff_check -> stage exact paths -> commit.
-
-Future `ob-dev` hardening should make no-op mutation calls harder to spam by returning `changed: false` when before/after SHA is identical and by rejecting `find == replace` unless explicitly allowed.
 
 ---
 
@@ -100,8 +103,8 @@ Future `ob-dev` hardening should make no-op mutation calls harder to spam by ret
 - M4 closed boundary reconciliation and doctrine hardening
 - M5 closed research gate planning
 - M6 closed research gate execution
-- M7 active core contract planning
-- M8 hammer matrix
+- M7 closed core contract planning
+- M8 active hammer matrix and acceptance-gate planning
 - M9 first evidence slice definition
 - M10 schema planning only
 - M11-M12 implementation foundation and first slice build after gates
@@ -118,24 +121,25 @@ Future `ob-dev` hardening should make no-op mutation calls harder to spam by ret
 
 ## Immediate Next Steps
 
-Proceed with active M7:
+Proceed with active M8:
 
 ```text
-M7 - Core Contract Planning
+M8 - Hammer Matrix and Acceptance Gates
 ```
 
-Status 2026-07-07: M7's first move (audit M6 outputs) is COMPLETE. Two audits live in `audits/` (M6/M7-readiness + full repo); findings are routed in `planning-inbox/m7-audit-response-2026-07-07.md`; the audit-fix pass is done (see the M7 Progress Log in `ROADMAP.md`). `contracts/` exists with README and template. Open owner rulings are consolidated in `planning-inbox/owner-ruling-tracker.md`.
+Status 2026-07-10: M7 is closed by `decisions/2026-07-10-m7-closure.md`. All thirteen planned M7 contracts are drafted and indexed in `contracts/README.md`. The M7 draft-set review lives at `planning-inbox/m7-contract-draft-set-review.md`. M8 is active for hammer matrix and acceptance-gate planning only.
 
 Immediate next moves:
 
 ```text
-1. Owner: resolve ruling group A in planning-inbox/owner-ruling-tracker.md (OR-A1..A6)
-2. Owner: delete the tombstone at planning-inbox/CLAUDE_START_HERE.md (steward tools cannot delete files)
-3. Owner: git status / commit / push (steward tools cannot run git)
-4. Draft the spine contracts per contracts/README.md: scope/rights/retention (RG2), then evidence ID/citation (RG3)
+1. Create/earn hammers/ with README/index if M8 work proceeds.
+2. Draft the M8 hammer matrix from the M7 contract set and RG13.
+3. Map each hammer to contract source, failure mode, owner-ruling dependency, and milestone gate.
+4. Keep unresolved owner rulings fail-closed.
+5. Do not start M9 first-slice selection until M8 hammer expectations are clear enough.
 ```
 
-Use `research/README.md` as the index to the completed M6 research set, including `research/deep-research-backlog.md` (now DR1–DR17). Do not make provider purchases, paid pulls, schema, migrations, API/MCP implementation, dashboard work, capture runner work, customer-data handling, or strategy/recommendation storage.
+Use `contracts/README.md` as the index to the completed M7 contract draft set and `research/rg13-hammer-matrix-inputs.md` as the primary M8 research input. Do not make provider purchases, paid pulls, schema, migrations, API/MCP implementation, dashboard work, capture runner work, customer-data handling, or strategy/recommendation storage.
 
 ---
 
@@ -143,9 +147,12 @@ Use `research/README.md` as the index to the completed M6 research set, includin
 
 Open questions to carry forward:
 
-- Owner-ruling group A outcomes (OR-A1..A6): Disagreement Ledger persistence, RG6 sentiment, sample-summary storage, citation handle shape, NC3/NC5 disposition confirmation, minimum M7 contract set.
-- Which drafted contracts, once reviewed, are strong enough to mark accepted before M7 closes?
-- Do any contract drafts surface new deep-research blockers beyond DR1–DR17?
+- OR-A1: persisted Disagreement Ledger vs compute-on-read only.
+- OR-A2: RG6 sentiment/tone provider-attributed-only vs mechanically derived sentiment.
+- OR-A3: `ai_visibility_sample_summary` read-time output only vs storable under materialization test.
+- OR-A4: citation handles global vs artifact-local; report-safe references separate or derived.
+- OR-B1 through OR-B3: hammer acceptance criteria, hard gates by milestone, and freshness/report-use blockers.
+- Which M8 hammers are hard gates for M9, M10, M11, M12, M13, M14, M15, M16, M17, and M18.
 
 ---
 
@@ -165,5 +172,6 @@ Do not start:
 - customer data handling
 - strategy/recommendation storage
 - automated recurring capture
+- M9 first-slice selection before M8 gates exist
 
 The project now has rails. Stay on them. No schema goblin jazz.

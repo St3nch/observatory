@@ -3,7 +3,7 @@
 Status: authority
 Authority: current operating context
 Purpose: tell fresh sessions what phase the repo is in and what work is currently allowed
-Last updated: 2026-07-07
+Last updated: 2026-07-10
 
 ---
 
@@ -12,39 +12,39 @@ Last updated: 2026-07-07
 The Observatory is in:
 
 ```text
-core contract planning
+hammer matrix and acceptance-gate planning
 ```
 
-This is still not schema, provider, API/MCP, dashboard, or implementation authorization.
+This is still not schema, provider, API/MCP, dashboard, customer workflow, or implementation authorization.
 
 ---
 
 ## Active Milestone
 
 ```text
-M7 - Core Contract Planning
+M8 - Hammer Matrix and Acceptance Gates
 ```
 
-M0, M0.1, M1, M2, M3, M4, M5, and M6 are complete and committed.
+M0, M0.1, M1, M2, M3, M4, M5, M6, and M7 are complete and committed.
 
 ---
 
 ## Current Task
 
-Execute M7 as bounded core contract planning work.
+Execute M8 as bounded hammer matrix and acceptance-gate planning work.
 
-Current M7 work is allowed to:
+Current M8 work is allowed to:
 
-- audit completed M6 research outputs before contract drafting;
-- create a contract document template if needed;
-- create earned `contracts/` folder/index if M7 work proceeds;
-- draft non-schema contracts from M6 research outputs;
-- preserve owner-ruling candidates and deeper research blockers;
-- keep all contracts aligned with `02-boundaries.md`.
+- create earned `hammers/` folder/index if M8 work proceeds;
+- define hammer categories from the M7 contract draft set;
+- draft hostile-path tests and acceptance gates;
+- map hammer tests to contract sections and owner-ruling blockers;
+- preserve fail-closed behavior for unresolved rulings;
+- identify which hammers gate M9 through later implementation/admission milestones.
 
-M7 begins with an audit of the completed M6 research set. Status 2026-07-07: the audit first move is COMPLETE — two audits (M6/M7-readiness + full repo) are preserved in `audits/`, all findings are routed in `planning-inbox/m7-audit-response-2026-07-07.md`, the contract template exists (`contracts/contract-template.md`), and open owner rulings are consolidated in `planning-inbox/owner-ruling-tracker.md`. Current M7 work is contract drafting per the sequence in `contracts/README.md`, starting with the spine (scope/rights/retention, then evidence ID/citation), with owner-ruling group A resolution in parallel.
+M7 is closed by `decisions/2026-07-10-m7-closure.md`. All thirteen planned M7 contracts are drafted and indexed in `contracts/README.md`, and the M7 draft-set review lives at `planning-inbox/m7-contract-draft-set-review.md`. M8 now turns those contracts into testable hammers before schema, provider admission, or implementation can begin.
 
-M7 does not authorize provider purchases, paid pulls, provider admission, schema work, migrations, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage.
+M8 does not authorize provider purchases, paid pulls, provider admission, schema work, migrations, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage.
 
 ---
 
@@ -105,22 +105,23 @@ Closed:
 - M4 - Boundary Reconciliation and Doctrine Hardening
 - M5 - Research Gate Plan
 - M6 - Research Gate Execution
+- M7 - Core Contract Planning
 
 Active:
 
-- M7 - Core Contract Planning
+- M8 - Hammer Matrix and Acceptance Gates
 
-Next after M7:
+Next after M8:
 
 ```text
-M8 - Hammer Matrix and Acceptance Gates
+M9 - First Evidence Slice Definition
 ```
 
 M2 folder ruling completed:
 
 ```text
 Created: decisions/, archive/, research/
-Deferred: contracts/ until M7, hammers/ until M8
+Deferred at M2: contracts/ until M7, hammers/ until M8
 ```
 
-Folder state update 2026-07-07: `contracts/` created (M7 earned it per the M2 ruling) and `audits/` earned by owner ruling (`decisions/2026-07-07-audits-folder.md`). `hammers/` remains deferred until M8.
+Folder state update 2026-07-10: `contracts/` exists and all planned M7 contracts are drafted/indexed. `audits/` is governed by owner ruling (`decisions/2026-07-07-audits-folder.md`). `hammers/` is now eligible to be created during M8 work.

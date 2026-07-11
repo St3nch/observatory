@@ -24,8 +24,8 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 | OR-A2 | RG6 sentiment/tone: provider-attributed-only, or is any "mechanically derived" sentiment permitted? | RG6; audits ISS-17 | open |
 | OR-A3 | `ai_visibility_sample_summary`: read-time output only, or storable under materialization test? | RG6; audits ISS-17 | open |
 | OR-A4 | Citation handles: global vs artifact-local; report-safe references separate class or derived? | RG3; DR14 | open — delegable to contract decision |
-| OR-A5 | NC3 (intervention timeline) and NC5 (coverage/blind-spot) disposition: contract sections vs DR items. Audit recommendation: NC3 → overlay contract; NC5 → typed read-tool skeleton | harvest register NC3/NC5; audits ISS-13 | open — audit recommendation recorded in contracts/README planned list; confirm or override |
-| OR-A6 | Minimum M7 contract set required for M7 closure (which of the 13 planned contracts are mandatory vs optional) | ROADMAP M7; audits | open |
+| OR-A5 | NC3 (intervention timeline) and NC5 (coverage/blind-spot) disposition: contract sections vs DR items. Audit recommendation: NC3 → overlay contract; NC5 → typed read-tool skeleton | harvest register NC3/NC5; audits ISS-13 | ruled — see `decisions/2026-07-10-m7-closure.md`; NC3 routed to `contracts/overlay.md`, NC5 routed to `contracts/typed-read-tool-skeleton.md` |
+| OR-A6 | Minimum M7 contract set required for M7 closure (which of the 13 planned contracts are mandatory vs optional) | ROADMAP M7; audits | ruled — see `decisions/2026-07-10-m7-closure.md`; all 13 planned M7 contracts drafted and indexed for closure |
 | OR-A7 | audits/ folder earned and governed | owner statement 2026-07-07 | ruled — see `decisions/2026-07-07-audits-folder.md` |
 
 ## Group B — Needed before M8 hammers close

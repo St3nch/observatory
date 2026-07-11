@@ -3,7 +3,7 @@
 Status: authority
 Authority: roadmap operating document
 Purpose: preserve milestone memory, required reading, gates, and execution sequence from planning through Observatory v1
-Last updated: 2026-07-07
+Last updated: 2026-07-10
 
 ---
 
@@ -115,8 +115,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M4 | Boundary Reconciliation and Doctrine Hardening | closed | Reconcile richer boundary material and harden project law |
 | M5 | Research Gate Plan | closed | Define research questions, outputs, and gates before design/build |
 | M6 | Research Gate Execution | closed | Complete required research before contracts/schema/provider work |
-| M7 | Core Contract Planning | active | Draft non-schema contracts for evidence, scope, provider, query panels, capture packages |
-| M8 | Hammer Matrix and Acceptance Gates | planned | Define hostile-path tests and hard gates before implementation |
+| M7 | Core Contract Planning | closed | Draft non-schema contracts for evidence, scope, provider, query panels, capture packages |
+| M8 | Hammer Matrix and Acceptance Gates | active | Define hostile-path tests and hard gates before implementation |
 | M9 | First Evidence Slice Definition | planned | Choose the smallest useful evidence slice to build first |
 | M10 | Schema Planning Only | planned | Design schema after contracts and research; no migrations yet |
 | M11 | Implementation Foundation | planned | Create project implementation skeleton only after gates open |
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M7
+M8
 
 ### Name
 
-Core Contract Planning
+Hammer Matrix and Acceptance Gates
 
 ### Status
 
@@ -148,9 +148,9 @@ active
 
 ### Purpose
 
-Draft non-schema contracts that define Observatory evidence behavior before database design, provider admission, API/MCP implementation, dashboard work, or customer-facing workflow work.
+Define hostile-path tests and hard acceptance gates before implementation starts.
 
-M7 uses the completed M6 research outputs as contract-planning input. It does not authorize schema design, migrations, provider pulls, implementation, customer data handling, or strategy/recommendation storage.
+M8 consumes the M7 contract draft set and turns the boundaries into testable hammer expectations. It does not authorize schema design, migrations, provider pulls, implementation, customer data handling, dashboard work, or strategy/recommendation storage.
 
 ### Required Reading
 
@@ -164,22 +164,21 @@ M7 uses the completed M6 research outputs as contract-planning input. It does no
 - `01-harvest-register.md`
 - `02-boundaries.md`
 - `NEXT_SESSION_HANDOFF.md`
-- `research/README.md`
-- all M6 research outputs in `research/`
-- `research/deep-research-backlog.md`
-- `audits/README.md` and the 2026-07-07 audit reports
-- `planning-inbox/m7-audit-response-2026-07-07.md`
+- `contracts/README.md`
+- all M7 contract drafts in `contracts/`
+- `planning-inbox/m7-contract-draft-set-review.md`
 - `planning-inbox/owner-ruling-tracker.md`
-- `contracts/README.md` and `contracts/contract-template.md`
+- `research/rg13-hammer-matrix-inputs.md`
+- M6 research outputs as needed for hammer source context
 
 ### Allowed Work
 
-- audit completed M6 research outputs before contract drafting
-- create a contract document template if needed
-- create earned `contracts/` folder/index if M7 work proceeds
-- draft non-schema contracts from M6 research outputs
-- preserve owner-ruling candidates and deeper research blockers
-- keep all contracts aligned with `02-boundaries.md`
+- create earned `hammers/` folder/index if M8 work proceeds
+- define hammer categories from M7 contracts
+- draft hostile-path tests and acceptance gates
+- map hammer tests to contract sections and owner-ruling blockers
+- preserve fail-closed behavior for unresolved rulings
+- identify which hammers gate M9, M10, M11, M12, M13, M14, M15, M16, M17, and M18
 
 ### Forbidden Work
 
@@ -194,48 +193,93 @@ M7 uses the completed M6 research outputs as contract-planning input. It does no
 - strategy/recommendation storage
 - capture runner implementation
 - automated recurring capture
+- accepting implementation without hammer evidence
 
 ### Blockers
 
-- M6 research outputs must exist and be indexed. — met
-- Contract template must exist before drafting contract docs. — met 2026-07-07 (`contracts/contract-template.md`)
-- Claude audit or steward audit should review M6 outputs before broad M7 contract drafting. — met 2026-07-07 (two audits preserved in `audits/`; findings routed in `planning-inbox/m7-audit-response-2026-07-07.md`)
-- Any doctrine change requires explicit owner ruling before promotion.
+- M7 contract draft set must exist and be indexed. — met
+- M7 draft-set review must exist. — met (`planning-inbox/m7-contract-draft-set-review.md`)
+- Any hammer that touches an open owner ruling must fail closed until the ruling is recorded.
 
-### M7 Progress Log
+### M8 Progress Log
 
-2026-07-07 — M7 first move complete: M6 research set audited (M6/M7-readiness audit) and full repo audited; both reports preserved in `audits/`. Audit-fix pass executed with owner approval:
+2026-07-10 — M8 activated by `decisions/2026-07-10-m7-closure.md` after all thirteen planned M7 contracts were drafted, indexed, reviewed, committed, and pushed.
 
-- `audits/` earned and governed (`decisions/2026-07-07-audits-folder.md`, `audits/README.md`, REPO_MAP row)
-- `contracts/` created with README and contract template (drafting blocker cleared)
-- `planning-inbox/m7-audit-response-2026-07-07.md` routes all findings (ISS-01..22, SEQ-01)
-- `planning-inbox/owner-ruling-tracker.md` consolidates all open owner-ruling candidates (groups A–G)
-- RG13 gained H19–H22 (append-only, concurrency, audit-first, migration rollback) via dated addendum
-- `research/deep-research-backlog.md` gained DR16 (consumer authn/authz) and DR17 (provider secrets)
-- M5 plan gained the planned-topics-to-executed-gates mapping addendum
-- stale references fixed across `research/README.md`, REPO_MAP, decisions, archive, planning-inbox; `CLAUDE_START_HERE.md` archived; 00/01 headers promoted to authority; closure convention now requires tracker/review-note refreshes
+### Hammer Categories
 
-Next M7 work: resolve owner-ruling group A (see tracker), then draft contracts in the sequence recorded in `contracts/README.md` (spine first: scope/rights/retention, evidence ID/citation).
+M8 should define hammers for:
+
+- observation vs conclusion separation
+- no customer records
+- no customer first-party storage
+- rights fail-closed
+- retention fail-closed
+- provider disagreement preservation
+- proprietary score treatment
+- raw payload support, pointer integrity, and purge behavior
+- provider drift handling
+- no direct SQL or credentials for LLMs
+- no strategy/recommendation storage
+- no fake scratch/candidate strategy cache
+- overlay no-persistence
+- append-only observation behavior
+- concurrency safety
+- audit-first enforcement
+- schema migration rollback/recovery expectations
+- CapturePackage validation
+- read-tool scope isolation
+- consumer promotion boundaries
+- SearchClarity placeholder boundaries
 
 ### Exit Criteria
 
-M7 may close when:
+M8 may close when:
 
-- core contracts are drafted and indexed;
-- contracts clearly separate observations from conclusions;
-- forbidden storage patterns remain excluded;
-- owner-ruling candidates and deeper-research blockers are explicit;
-- M8 can define hammer tests without guessing;
+- hammer matrix is drafted and indexed;
+- hostile-path tests are mapped to the M7 contract set;
+- hard gates are named for the first evidence slice and later implementation milestones;
+- unresolved owner rulings remain fail-closed;
+- M9 can choose a first evidence slice without guessing acceptance criteria;
 - `ACTIVE_CONTEXT.md` and `NEXT_SESSION_HANDOFF.md` point to the correct next milestone;
 - changes are committed.
 
 ### Next Milestone
 
-M8 - Hammer Matrix and Acceptance Gates
+M9 - First Evidence Slice Definition
 
 ---
 
 ## Closed Milestones
+
+### M7 - Core Contract Planning
+
+Status: closed
+
+Purpose:
+Draft non-schema contracts that define Observatory evidence behavior before database design, provider admission, API/MCP implementation, dashboard work, or customer-facing workflow work.
+
+Completed outputs:
+
+- `contracts/contract-template.md`
+- `contracts/README.md`
+- `contracts/scope-rights-retention.md`
+- `contracts/evidence-id-citation.md`
+- `contracts/freshness-staleness-volatility.md`
+- `contracts/claim-safety.md`
+- `contracts/query-panel.md`
+- `contracts/capturepackage-v0-1.md`
+- `contracts/raw-archive-provider-drift.md`
+- `contracts/provider-testimony.md`
+- `contracts/provider-cross-check.md`
+- `contracts/consumer-promotion.md`
+- `contracts/overlay.md`
+- `contracts/searchclarity-consumer-placeholder.md`
+- `contracts/typed-read-tool-skeleton.md`
+- `planning-inbox/m7-contract-draft-set-review.md`
+- `decisions/2026-07-10-m7-closure.md`
+
+Closure note:
+M7 drafted and indexed all thirteen planned non-schema contracts, created a draft-set review, and preserved unresolved owner rulings as fail-closed constraints rather than silently resolving them. M7 did not authorize schema design, migrations, provider admission, provider purchases, paid pulls, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage. M8 is now active for hammer matrix and acceptance-gate planning only.
 
 ### M6 - Research Gate Execution
 
@@ -527,7 +571,7 @@ Next milestone: M7
 
 ### M7 - Core Contract Planning
 
-Status: active; full active-milestone details live in the Active Milestone section above
+Status: closed; closure details live in the Closed Milestones section above
 
 Purpose:
 Draft non-schema contracts that define evidence behavior before database design.
@@ -578,7 +622,7 @@ Next milestone: M8
 
 ### M8 - Hammer Matrix and Acceptance Gates
 
-Status: planned
+Status: active; full active-milestone details live in the Active Milestone section above
 
 Purpose:
 Define hard tests and hostile-path gates before implementation starts.
