@@ -62,6 +62,7 @@ Folder earned at M7 per `decisions/2026-07-07-m2-folder-subset.md` (deferred-unt
 | `query-panel.md` | draft | Governs named/versioned query, prompt, target, and surface measurement programs before execution or provider/capture admission | Fifth M7 contract; drafted from RG4 with supporting RG2/RG3/RG5/RG6/RG7/RG8/RG10 inputs |
 | `capturepackage-v0-1.md` | draft | Governs the proof envelope around capture attempts, validation groups, source/cost controls, raw support posture, and candidate observation admission gates | Sixth M7 contract; drafted from RG10 with supporting existing M7 contracts and RG11 inputs |
 | `raw-archive-provider-drift.md` | draft | Governs raw payload support, manifest/hash requirements, raw retention posture, parser safety, purge behavior, and provider drift visibility | Seventh M7 contract; drafted from RG11 with supporting RG10 and existing M7 contracts |
+| `provider-testimony.md` | draft | Governs provider output as attributed testimony, not truth; preserves provider attribution, admission blocks, metric caveats, and no-winner/no-average rules | Eighth M7 contract; drafted from RG1 and RG9 |
 
 Planned M7 contracts (remaining after first draft; sequencing per the 2026-07-07 audits):
 
@@ -73,7 +74,7 @@ Planned M7 contracts (remaining after first draft; sequencing per the 2026-07-07
 5. query-panel                   (RG4) - drafted 2026-07-10
 6. capturepackage-v0-1           (RG10) - drafted 2026-07-10
 7. raw-archive-provider-drift    (RG11; merged raw pointer + drift) - drafted 2026-07-10
-8. provider-testimony            (RG1 + RG9 + V7; skeleton until M13 bindings)
+8. provider-testimony            (RG1 + RG9 + V7; skeleton until M13 bindings) - drafted 2026-07-10
 9. provider-cross-check          (RG9; Disagreement Ledger persistence is an open-question section, not presumed)
 10. consumer-promotion           (RG12)
 11. overlay                      (RG12/DR10; covers customer first-party overlays AND NC3 intervention-timeline ephemeral inputs)
@@ -107,6 +108,6 @@ If a contract draft would store meaning, strategy, recommendations, customer dat
 ```text
 Last reviewed: 2026-07-10
 Reviewer: ChatGPT / Observatory Steward
-Result: First seven M7 contracts drafted and indexed (`scope-rights-retention.md`, `evidence-id-citation.md`, `freshness-staleness-volatility.md`, `claim-safety.md`, `query-panel.md`, `capturepackage-v0-1.md`, `raw-archive-provider-drift.md`)
-Open issues: Draft next contract (`provider-testimony.md`)
+Result: First eight M7 contracts drafted and indexed (`scope-rights-retention.md`, `evidence-id-citation.md`, `freshness-staleness-volatility.md`, `claim-safety.md`, `query-panel.md`, `capturepackage-v0-1.md`, `raw-archive-provider-drift.md`, `provider-testimony.md`)
+Open issues: Draft next contract (`provider-cross-check.md`)
 ```
