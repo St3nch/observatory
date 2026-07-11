@@ -56,12 +56,13 @@ Folder earned at M7 per `decisions/2026-07-07-m2-folder-subset.md` (deferred-unt
 |---|---|---|---|
 | `contract-template.md` | template | Required structure for all Observatory contracts | Created during M7 audit-fix pass |
 | `scope-rights-retention.md` | draft | Governs scope, source-admission posture, rights classes, and retention classes before observation admission | First M7 spine contract; drafted from RG2 and boundary law |
+| `evidence-id-citation.md` | draft | Governs capture IDs, provider job IDs, raw payload IDs, observation IDs, evidence IDs, citation handles, and report-safe reference boundaries | Second M7 spine contract; drafted from RG3 and supporting boundary inputs |
 
 Planned M7 contracts (remaining after first draft; sequencing per the 2026-07-07 audits):
 
 ```text
 1. scope-rights-retention        (RG2) - drafted 2026-07-10
-2. evidence-id-citation          (RG3)
+2. evidence-id-citation          (RG3) - drafted 2026-07-10
 3. freshness-staleness-volatility (RG5)
 4. claim-safety                  (RG8 + RG6; absorbs negative-evidence/absence rules; includes predictive_claim class)
 5. query-panel                   (RG4)
@@ -101,6 +102,6 @@ If a contract draft would store meaning, strategy, recommendations, customer dat
 ```text
 Last reviewed: 2026-07-10
 Reviewer: ChatGPT / Observatory Steward
-Result: First M7 spine contract drafted and indexed (`scope-rights-retention.md`)
-Open issues: Draft next spine contract (`evidence-id-citation.md`)
+Result: First two M7 spine contracts drafted and indexed (`scope-rights-retention.md`, `evidence-id-citation.md`)
+Open issues: Draft next contract (`freshness-staleness-volatility.md`)
 ```
