@@ -57,6 +57,7 @@ Read the most recent audit first unless investigating history. Always read the m
 |---|---|---|---|
 | `m7-audit-report-2026-07-07.md` | audit report / planning input | M6 research set + M7-readiness audit (Claude). Verdict: yes with caveats | Scope was M6/M7-readiness, not full repo. Findings routed via `planning-inbox/m7-audit-response-2026-07-07.md` |
 | `full-repo-audit-2026-07-07.md` | audit report / planning input | Full repository consistency/authority/index audit post-M6 closure (Claude). Verdict: clean enough after small cleanup | Placed by owner. Findings ISS-01..22 routed via `planning-inbox/m7-audit-response-2026-07-07.md` |
+| `observatory-post-m13-deep-audit-2026-07-12.md` | audit report / planning input | Full post-M13 / pre-M14 doctrine, implementation, provider-control, hammer, capability, and commercial-boundary audit (Claude) | All findings, requirements, opportunities, and decision candidates are routed through `planning-inbox/post-m13-deep-audit-response-2026-07-12.md`; no partial cherry-pick counts as closure |
 
 Note on a missing ancestor: the original 2026-07-07 M1-era repo audit (`observatory-repo-audit-2026-07-07.md`, referenced as source by `planning-inbox/audit-response-2026-07-07.md`) exists only as external uploaded project knowledge and is not preserved in this repo. If its export is recovered, it belongs here.
 
