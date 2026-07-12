@@ -1,7 +1,7 @@
 # M17 Owned Telemetry Overlay Fixture-Backed Proof Task Proposal
 
-Status: exact implementation task proposal; not implementation authority
-Authority: none until owner explicitly approves this exact task after contract and ruling gates
+Status: authorized exact implementation task
+Authority: `decisions/2026-07-12-m17-owned-telemetry-overlay-fixture-proof-authorization.md`; implementation remains bounded to this exact task
 Milestone: M17 - Owned Telemetry Overlay Proof
 Date: 2026-07-12
 

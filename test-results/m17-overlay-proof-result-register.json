@@ -1,0 +1,29 @@
+{
+  "register_version": "1",
+  "contract_version": "0.1",
+  "status": "not_executed",
+  "entries": [
+    {
+      "result_id": "m17-overlay-full-suite-owner-local-pending",
+      "commit": "pending-implementation-commit",
+      "proof_class": "mixed_suite",
+      "execution_surface": "synthetic_fixture_in_memory_local",
+      "proof_strength": "not_executed",
+      "test_command": "$env:PYTHONPATH = (Join-Path $PWD \"src\"); python -m unittest discover -s tests",
+      "result": "owner_local_execution_required",
+      "executed_at": null,
+      "evidence_path": "planning-inbox/m17-overlay-local-test-evidence.md",
+      "limitations": [
+        "synthetic fixture-backed",
+        "in-memory",
+        "code-path discard only; no secure memory wiping proof",
+        "no real private telemetry proof",
+        "no file, screenshot, export, or connector proof",
+        "no production infrastructure logging proof",
+        "no persistence or database proof",
+        "no production API/MCP proof",
+        "no consumer integration or deployment proof"
+      ]
+    }
+  ]
+}
