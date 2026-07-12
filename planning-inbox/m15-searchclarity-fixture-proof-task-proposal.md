@@ -1,7 +1,7 @@
 # M15 SearchClarity Fixture-Backed Proof Task Proposal
 
-Status: exact implementation task proposal; not implementation authority
-Authority: none until owner explicitly approves this exact task after contract and ruling gates
+Status: authorized exact implementation task
+Authority: `decisions/2026-07-12-m15-searchclarity-fixture-proof-authorization.md`; implementation remains bounded to this exact task
 Milestone: M15 - SearchClarity Proof Workflow
 Date: 2026-07-12
 
