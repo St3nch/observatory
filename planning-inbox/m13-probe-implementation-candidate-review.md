@@ -44,24 +44,37 @@ No HTTP library or provider client is present.
 
 `tests/test_dataforseo_probe.py` covers recipe immutability, missing/extra/cost-bearing fields, authority gates, price ceiling, duplicate detection, evidence-root enforcement, credential redaction, request/task/retry/polling ceilings, response/error classification, shape fingerprinting, raw hashing/purge, retention deadlines, CLI blocking, and permanent no-network behavior.
 
-## Verification Limitation
+## Verification Result
 
-The `ob-dev` package-import check could not run because the repository has no interpreter at:
-
-```text
-C:\dev\observatory\.venv\Scripts\python.exe
-```
-
-Therefore no claim is made that the new tests passed in this session.
-
-Required owner-local command:
+The owner ran:
 
 ```powershell
 cd C:\dev\observatory
 python -m unittest discover -s tests
 ```
 
-A passing local run must be recorded before implementation-readiness acceptance, credits, credentials, or provider execution.
+Final result after the dynamic evidence-root regression fix:
+
+```text
+Ran 67 tests in 0.070s
+OK
+```
+
+The first run correctly exposed one fixture defect involving a Python default argument that captured the original evidence root before patching. Commit `98a796f` corrected the function to resolve the active root at call time. The separate outside-root purge test remains in place.
+
+Detailed evidence is recorded in:
+
+```text
+planning-inbox/m13-local-test-evidence-2026-07-12.md
+```
+
+Implementation-readiness disposition:
+
+```text
+fixture-only implementation accepted as passing local proof
+network execution remains disabled
+funding and provider execution remain separately gated
+```
 
 ## Still Forbidden
 
@@ -84,8 +97,9 @@ recurring capture
 ## Disposition
 
 ```text
-Implementation candidate created.
-Authority boundaries encoded.
-Local test evidence pending.
+Fixture-only implementation accepted as passing local proof.
+Authority boundaries encoded and regression-tested.
+67 tests passed.
+Next gate: owner-controlled funding, exact price verification, account controls, and separate one-request execution approval.
 Provider machine remains off.
 ```

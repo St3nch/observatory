@@ -3,7 +3,7 @@
 Status: authority
 Authority: current operating context
 Purpose: tell fresh sessions what phase the repo is in and what work is currently allowed
-Last updated: 2026-07-10
+Last updated: 2026-07-12
 
 ---
 
@@ -12,10 +12,10 @@ Last updated: 2026-07-10
 The Observatory is in:
 
 ```text
-provider admission and controlled pull planning
+M13 controlled-probe pre-funding gate
 ```
 
-This is provider-admission planning only. It is still not provider calls, provider purchases, paid pulls, API/MCP exposure, dashboard, customer workflow, customer-data, marketplace scraping, recurring capture, or broad implementation authorization.
+The narrow DataForSEO fixture-only safety cage is implemented and owner-local tests pass. The next allowed work is funding preparation, exact price verification, account-control review, credential-safe local setup, and preflight planning. Provider execution remains disabled until a separate explicit one-request owner ruling.
 
 ---
 
@@ -31,23 +31,21 @@ M0, M0.1, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, M11, and M12 are complete and
 
 ## Current Task
 
-Execute M13 as bounded provider admission and controlled pull planning only.
+Complete the M13 pre-funding and pre-submit gate without sending a provider request.
 
 Current M13 work is allowed to:
 
-- draft provider admission plan;
-- confirm rights/retention/cost gate requirements from existing research and contracts;
-- define controlled pull recipe;
-- define cost ceiling;
-- define stop conditions;
-- define raw payload handling plan;
-- define no-customer-data posture;
-- define no-recurring-capture posture;
-- define no-dashboard/report/API/MCP exposure posture.
+- preserve the accepted fixture-only implementation and passing 67-test evidence;
+- prepare the owner-controlled minimum-credit funding step;
+- verify the exact immutable request price after funding but before submission;
+- inspect and record available account-level duplicate/spend controls;
+- prepare credential-safe local environment setup without recording secret values;
+- run no-network preflight once all required owner-controlled inputs exist;
+- prepare the separate one-request execution ruling.
 
-M12 is closed by `decisions/2026-07-10-m12-first-slice-closure.md`. The bounded local C2 first evidence slice is accepted. M13 now plans provider admission and controlled pull gates only.
+The fixture-only DataForSEO probe implementation is accepted under `decisions/2026-07-11-m13-dataforseo-controlled-probe-approval.md`. Owner-local evidence records 67 tests passing after commit `98a796f` fixed the dynamic evidence-root regression.
 
-M13 does not authorize provider purchases, paid pulls, provider admission execution, provider calls, API/MCP exposure, dashboard work, customer-data handling, marketplace scraping, browser-extension capture, capture runner work, automated recurring capture, broad implementation, or strategy/recommendation storage.
+M13 still does not authorize a DataForSEO request, provider task, raw provider capture, second request, Postgres, schema, migrations, API/MCP exposure, dashboard work, customer data, recurring capture, or strategy/recommendation storage.
 
 ---
 
