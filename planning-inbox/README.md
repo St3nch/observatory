@@ -47,19 +47,20 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-1. `m12-first-slice-closure-readiness-review.md` — current M12 closure-readiness review for the bounded C2 first evidence slice
-2. `m12-local-test-evidence-2026-07-10.md` — M12 owner-local unittest execution evidence note
-3. `m11-foundation-readiness-review.md` — M11 closure-readiness review for the implementation foundation spec
-4. `m11-implementation-foundation-spec.md` — M11 implementation-foundation specification for the accepted C2 first slice
-5. `m10-schema-plan-review.md` — M10 review and closure-readiness note for the C2 logical schema plan
-6. `m10-logical-schema-plan-c2.md` — M10 logical schema planning draft for the accepted C2 first slice
-7. `m9-first-slice-definition-proposal.md` — M9 proposed first-slice definition accepted by owner decision
-8. `m9-first-slice-candidate-comparison.md` — M9 first-slice candidate comparison and recommendation
-9. `m8-hammer-planning-review.md` — M8 closure-readiness and M9 entry review
-10. `owner-ruling-tracker.md` — all open owner-ruling candidates, grouped by blocking milestone
-11. `m7-audit-response-2026-07-07.md` — audit-finding routing and status
-12. `observatory-working-notes.md`
-13. `repo-first-research-triage.md`
+1. `m13-dataforseo-admission-and-probe-plan.md` — current M13 DataForSEO admission/probe planning draft; does not authorize credits or calls
+2. `m12-first-slice-closure-readiness-review.md` — M12 closure-readiness review for the bounded C2 first evidence slice
+3. `m12-local-test-evidence-2026-07-10.md` — M12 owner-local unittest execution evidence note
+4. `m11-foundation-readiness-review.md` — M11 closure-readiness review for the implementation foundation spec
+5. `m11-implementation-foundation-spec.md` — M11 implementation-foundation specification for the accepted C2 first slice
+6. `m10-schema-plan-review.md` — M10 review and closure-readiness note for the C2 logical schema plan
+7. `m10-logical-schema-plan-c2.md` — M10 logical schema planning draft for the accepted C2 first slice
+8. `m9-first-slice-definition-proposal.md` — M9 proposed first-slice definition accepted by owner decision
+9. `m9-first-slice-candidate-comparison.md` — M9 first-slice candidate comparison and recommendation
+10. `m8-hammer-planning-review.md` — M8 closure-readiness and M9 entry review
+11. `owner-ruling-tracker.md` — all open owner-ruling candidates, grouped by blocking milestone
+12. `m7-audit-response-2026-07-07.md` — audit-finding routing and status
+13. `observatory-working-notes.md`
+14. `repo-first-research-triage.md`
 
 Root authority files take priority over this folder.
 
@@ -84,6 +85,7 @@ Root authority files take priority over this folder.
 | `m11-foundation-readiness-review.md` | planning review | Reviews M11 foundation readiness, closure defaults, and M12 handoff boundaries | Advisory note; not authority |
 | `m12-local-test-evidence-2026-07-10.md` | execution evidence note | Records owner-local M12 unittest run output and reported push verification | Evidence note only; not M12 closure and not connector-executed proof |
 | `m12-first-slice-closure-readiness-review.md` | planning review | Reviews M12 C2 first-slice implementation, hammer coverage, and closure caveats | Advisory note; not authority |
+| `m13-dataforseo-admission-and-probe-plan.md` | planning draft | Drafts DataForSEO admission/probe controls, credit gate, endpoint ceiling, raw payload handling, and CLI requirements | M13 planning only; does not authorize credits, calls, provider admission, schema, or DB creation |
 | `strategy-layer-dangerous-design.md` | planning artifact | Preserves dangerous Strategy Layer / IMI design candidates for later classification and reconciliation | M3 preservation artifact; authority none; do not activate dangerous ideas |
 | `deep-research-danger-agenda.md` | research agenda | Preserves future deep-research questions and danger-map topics for later research gate planning | M3 preservation artifact; authority none; not research execution approval |
 | `steward-context-dump.md` | advisory context | Preserves steward/context material for future reconciliation without promoting it into doctrine | M3 preservation artifact; authority none; advisory only |
