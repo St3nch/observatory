@@ -89,24 +89,24 @@ The audit remains advisory. This tracker records routing and review outcomes; ac
 
 | Item | Audit claim | Status | Disposition / evidence |
 |---|---|---|---|
-| H4/H5 adversarial depth | Marker-based tests lack bypass corpus and may test the wrong mechanism | pending | pending |
-| H13 fingerprint identity | Drift hammer lacks canonical algorithm/version/parameter requirement | pending | pending |
-| H7 authority provenance | Spend hammer does not require clone-stable, decision-linked, non-self-satisfiable authority | pending | pending |
-| H21 proof scope | Audit-first cannot be considered proven without a transaction/persistence boundary | pending | pending |
+| H4/H5 adversarial depth | Marker-based tests lack bypass corpus and may test the wrong mechanism | accepted | structural allow-lists become the primary mechanism; marker/bypass corpora remain supplemental semantic-safety tests; see `m14-read-boundary-hostile-path-plan.md` |
+| H13 fingerprint identity | Drift hammer lacks canonical algorithm/version/parameter requirement | accepted | canonical version, normalization, and truncation parameters required before comparison; see `m14-read-boundary-hostile-path-plan.md` |
+| H7 authority provenance | Spend hammer does not require clone-stable, decision-linked, non-self-satisfiable authority | accepted | future-provider hammer requires fresh-clone rejection and decision-linked authority; not part of read prototype |
+| H21 proof scope | Audit-first cannot be considered proven without a transaction/persistence boundary | accepted | in-memory tuples are contract demonstrations only; substrate proof remains `blocked_not_implemented` until a real transaction boundary exists |
 
 ### Proposed missing hammers to adjudicate
 
 | Proposed hammer | Status | Disposition / owner |
 |---|---|---|
-| Evidence-handle guessing/enumeration and existence-oracle resistance | pending | pending |
-| Pagination abuse, wildcard/filter explosion, and exhaustive extraction ceilings | pending | pending |
-| Non-detachable caveats in LLM context packs | pending | pending |
-| Prompt injection through stored observation/web content | pending | pending |
-| Read concurrent with purge/supersession | pending | pending |
-| Semantic provider drift with unchanged shape | pending | pending |
-| Rights downgrade after admission and read-time blocking | pending | pending |
-| Fresh-clone paid-request rejection | pending | pending |
-| Machine-readable hammer-results register | pending | pending |
+| Evidence-handle guessing/enumeration and existence-oracle resistance | accepted | M14-H1/H2 in `m14-read-boundary-hostile-path-plan.md` |
+| Pagination abuse, wildcard/filter explosion, and exhaustive extraction ceilings | accepted | M14-H3 |
+| Non-detachable caveats in LLM context packs | accepted | M14-H4 |
+| Prompt injection through stored observation/web content | accepted | M14-H5 |
+| Read concurrent with purge/supersession | accepted with surface gate | M14-H7; `blocked_not_implemented` until a real coherent-state/concurrency surface exists |
+| Semantic provider drift with unchanged shape | accepted as future provider requirement | provider-doc/version capture and semantic-review evidence required before future drift claims |
+| Rights downgrade after admission and read-time blocking | accepted | M14-H6 |
+| Fresh-clone paid-request rejection | accepted as future provider hammer | retained outside M14 read prototype; gates any later provider execution |
+| Machine-readable hammer-results register | proposal prepared | `m14-owner-ruling-proposals.md`; repository proof metadata only |
 
 ---
 
@@ -147,25 +147,25 @@ Each requirement must be verified against current contracts and then accepted, a
 
 | # | Requirement | Status | Disposition / owning output |
 |---:|---|---|---|
-| 1 | Bounded typed read surfaces | pending | pending |
-| 2 | Closed filter vocabulary; no free-text/regex/caveat-dropping projection | pending | pending |
-| 3 | Scope and authorization model with uniform not-found | pending | pending |
-| 4 | Evidence handles separated from provider IDs and raw pointers | pending | pending |
-| 5 | Pagination, result ceilings, opaque bound cursors, read-rate budgets | pending | pending |
-| 6 | Freshness/staleness/volatility and claim-fitness metadata | pending | pending |
-| 7 | Provider attribution and disagreement without averaging/winners | pending | pending |
-| 8 | Required claim intent and claim-safety metadata | pending | pending |
-| 9 | Rights/retention visibility and downgrade behavior | pending | pending |
-| 10 | Field-level outbound allow-lists and hard private-data failures | pending | pending |
-| 11 | Safe tool descriptions and untrusted-content treatment | pending | pending |
-| 12 | LLM-context assembly with inline caveats and safe truncation | pending | pending |
-| 13 | Deterministic non-leaking error taxonomy | pending | pending |
-| 14 | Reconcile no-read-evidence-events with access/security logging | pending | pending |
-| 15 | Reads never trigger capture, spend, or writes | pending | pending |
-| 16 | Confused/malicious-agent resistance cases | pending | pending |
-| 17 | Deterministic response requirements | pending | pending |
-| 18 | Fixture-backed local-only prototype acceptance criteria | pending | pending |
-| 19 | Explicitly deferred production/persistence/overlay/report/cross-check/provider work | pending | pending |
+| 1 | Bounded typed read surfaces | accepted for contract planning | M14-R1 in `m14-typed-read-contract-requirements.md` |
+| 2 | Closed filter vocabulary; no free-text/regex/caveat-dropping projection | accepted | M14-R2 |
+| 3 | Scope and authorization model with uniform not-found | accepted pending owner ruling | M14-R3; OR-D1 proposal in `m14-owner-ruling-proposals.md` |
+| 4 | Evidence handles separated from provider IDs and raw pointers | accepted pending owner ruling | M14-R4; OR-D2 and OR-A4-M14 proposals |
+| 5 | Pagination, result ceilings, opaque bound cursors, read-rate budgets | accepted | M14-R5 |
+| 6 | Freshness/staleness/volatility and claim-fitness metadata | accepted | M14-R6 |
+| 7 | Provider attribution and disagreement without averaging/winners | accepted | M14-R7; OR-A1 remains open for persistence |
+| 8 | Required claim intent and claim-safety metadata | accepted | M14-R8 |
+| 9 | Rights/retention visibility and downgrade behavior | accepted pending owner ruling | M14-R9; OR-D3 proposal |
+| 10 | Field-level outbound allow-lists and hard private-data failures | accepted | M14-R10 |
+| 11 | Safe tool descriptions and untrusted-content treatment | accepted | M14-R11 |
+| 12 | LLM-context assembly with inline caveats and safe truncation | accepted | M14-R12 |
+| 13 | Deterministic non-leaking error taxonomy | accepted | M14-R13 |
+| 14 | Reconcile no-read-evidence-events with access/security logging | proposal prepared | M14-R14 and read-security logging proposal |
+| 15 | Reads never trigger capture, spend, or writes | accepted | M14-R15 |
+| 16 | Confused/malicious-agent resistance cases | accepted | M14-R16 and hostile-path plan |
+| 17 | Deterministic response requirements | accepted | M14-R17 |
+| 18 | Fixture-backed local-only prototype acceptance criteria | accepted as future gate, not implementation authority | M14-R18 and prototype-scope proposal |
+| 19 | Explicitly deferred production/persistence/overlay/report/cross-check/provider work | accepted | M14-R19 |
 
 ---
 

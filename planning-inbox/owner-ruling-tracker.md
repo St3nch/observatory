@@ -56,10 +56,12 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
-| OR-D1 | Consumer authentication/authorization model | RG12; DR16 | open — active M14 proposal required before prototype implementation |
-| OR-D2 | Raw payload pointer exposure outside internal tools | RG3 | open — active M14 proposal required; fail-closed default remains internal-only |
-| OR-D3 | Evidence withdrawal/deprecation/supersession behavior finalization | RG3; DR14 | open — active M14 proposal required before evidence-handle contract acceptance |
-| OR-D4 | Update-window feeds as a read-tool dependency | RG5 | open — active M14 proposal required; missing feed behavior must fail closed |
+| OR-D1 | Consumer authentication/authorization model | RG12; DR16; `planning-inbox/m14-owner-ruling-proposals.md` | open — concrete M14 proposal prepared; owner ruling required before prototype implementation |
+| OR-D2 | Raw payload pointer exposure outside internal tools | RG3; `planning-inbox/m14-owner-ruling-proposals.md` | open — internal-only fail-closed proposal prepared; owner ruling required before contract acceptance |
+| OR-D3 | Evidence withdrawal/deprecation/supersession behavior finalization | RG3; DR14; `planning-inbox/m14-owner-ruling-proposals.md` | open — status-aware read proposal prepared; owner ruling required before evidence-handle contract acceptance |
+| OR-D4 | Update-window feeds as a read-tool dependency | RG5; `planning-inbox/m14-owner-ruling-proposals.md` | open — fail-closed unknown/caveated proposal prepared; owner ruling required before contract acceptance |
+| OR-D5 | Ordinary-read event posture versus separate security/access logging | post-M13 audit; V9; `planning-inbox/m14-owner-ruling-proposals.md` | open — proposal keeps ordinary reads out of evidence events while allowing bounded security logs outside the evidence corpus |
+| OR-D6 | Machine-readable implementation-test result register as repository proof metadata | post-M13 audit; `planning-inbox/m14-read-boundary-hostile-path-plan.md`; `planning-inbox/m14-owner-ruling-proposals.md` | open — proposal prepared; not an Observatory observation or database requirement |
 
 ## Group E — Needed before M15 SearchClarity proof
 

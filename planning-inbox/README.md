@@ -47,6 +47,14 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
+Active M14 package:
+
+- `m14-typed-read-contract-requirements.md` — complete 19-requirement read-boundary planning specification
+- `m14-read-boundary-hostile-path-plan.md` — high-consequence hammer and contract-acceptance test plan
+- `m14-owner-ruling-proposals.md` — OR-D1 through OR-D6 and M14 scope proposals
+
+Then read:
+
 1. `post-m13-deep-audit-response-2026-07-12.md` — full finding, hammer, M14 requirement, opportunity, and owner-ruling response ledger
 2. `m14-contract-set-acceptance-readiness-review.md` — owner-ruling proposal for accepting the M7 contract set as v0.1
 3. `m14-hammer-proof-classification-note.md` — proof-class, execution-surface, and proof-strength clarification without reopening milestones
