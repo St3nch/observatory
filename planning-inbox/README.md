@@ -47,11 +47,12 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-1. `m13-dataforseo-first-pull-campaign-plan.md` — accepted staged pull order, $50 budget allocation, and per-pull review method
-2. `m13-serp-usage-sheet-reconciliation-spec.md` — read-only provider usage workbook reconciliation contract
-3. `m13-serp-usage-baseline-2026-07-12.md` — empty workbook baseline hash and zero-row before-image
-4. `m13-campaign-cli-expansion-review.md` — immutable campaign catalog and CLI/test expansion boundary
-5. `m13-funding-and-pre-submit-owner-checklist.md` — owner-controlled credential, account, pricing, and preflight gate
+1. `m13-authenticated-dashboard-pricing-evidence-2026-07-12.md` — authenticated balance, zero-expense baseline, live/advanced pricing, and account navigation evidence
+2. `m13-dataforseo-first-pull-campaign-plan.md` — accepted staged pull order, $50 budget allocation, and per-pull review method
+3. `m13-serp-usage-sheet-reconciliation-spec.md` — read-only provider usage workbook reconciliation contract
+4. `m13-serp-usage-baseline-2026-07-12.md` — empty workbook baseline hash and zero-row before-image
+5. `m13-campaign-cli-expansion-review.md` — immutable campaign catalog and CLI/test expansion boundary
+6. `m13-funding-and-pre-submit-owner-checklist.md` — owner-controlled credential, account, pricing, and preflight gate
 6. `m13-local-test-evidence-2026-07-12.md` — owner-local proof that 67 tests pass after the evidence-root regression fix
 7. `m13-probe-implementation-candidate-review.md` — accepted fixture-only implementation review and next-gate disposition
 8. `m13-probe-implementation-preparation-review.md` — implementation-preparation disposition and credits timing
@@ -113,7 +114,8 @@ Root authority files take priority over this folder.
 | `m13-probe-implementation-preparation-review.md` | planning review | Reviews implementation-preparation completeness, credits timing, remaining authority gates, and recommended next batch | Credits not needed until no-network implementation and hostile-path proof pass |
 | `m13-probe-implementation-candidate-review.md` | implementation review | Records the bounded fixture-only implementation, regression fix, and passing owner-local test disposition | 67 tests passed; network execution, funding, and provider request remain gated |
 | `m13-local-test-evidence-2026-07-12.md` | owner-local execution evidence | Records the final 67-test passing run and fail-closed CLI output after the dynamic-root fix | Evidence only; not provider execution proof or funding approval |
-| `m13-funding-and-pre-submit-owner-checklist.md` | owner action checklist | Defines the minimum-credit funding, exact pricing, account controls, credential safety, preflight, and separate execution ruling sequence | Checklist only; funding is not execution authority |
+| `m13-funding-and-pre-submit-owner-checklist.md` | owner action checklist | Defines the minimum-credit funding, exact pricing, account controls, credential safety, preflight, and separate execution ruling sequence | Authenticated funding and C00 pricing are resolved; credentials, settings review, preflight, and execution confirmation remain |
+| `m13-authenticated-dashboard-pricing-evidence-2026-07-12.md` | authenticated account evidence | Records $50.289579 balance, $0.0000 expense baseline, live/advanced first-page price of $0.0020, and available account navigation surfaces | Minimum necessary facts only; no credentials or full private dashboard HTML preserved |
 | `m13-dataforseo-first-pull-campaign-plan.md` | accepted campaign plan | Defines the staged $50 learning campaign, first eight recipe candidates, budget ceilings, and review cadence | C00 is first; later recipes require promotion after review |
 | `m13-serp-usage-sheet-reconciliation-spec.md` | planning specification | Defines read-only matching of provider usage rows against local manifests and response cost witnesses | Raw IP values remain private; disagreements fail closed |
 | `m13-serp-usage-baseline-2026-07-12.md` | provider usage baseline evidence | Records the empty workbook header schema, SHA-256, size, and zero-row baseline | Future uploads are compared to this before-image |

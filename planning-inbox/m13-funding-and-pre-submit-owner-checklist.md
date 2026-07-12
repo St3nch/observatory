@@ -13,37 +13,36 @@ Provide one bounded checklist for the next owner-controlled M13 actions after fi
 
 This checklist does not authorize any action by itself.
 
-## Gate A — Before Funding
+## Gate A — Funding Status
 
-Confirm:
+Authenticated dashboard evidence supplied by the owner confirms:
 
 ```text
-[ ] Fixture-only implementation commit is pushed.
-[ ] Dynamic evidence-root fix commit is pushed.
-[ ] M13 local test evidence records 67 tests passed.
-[ ] DataForSEO minimum payment is freshly rechecked in the official interface.
-[ ] Owner explicitly approves adding only the current official minimum payment.
-[ ] No provider request will be sent during account setup or funding.
-[ ] No credentials will be pasted into chat, Git, planning files, or MCP output.
+[x] Fixture-only implementation commit is pushed.
+[x] Dynamic evidence-root fix commit is pushed.
+[x] M13 local test evidence records 67 tests passed.
+[x] DataForSEO account is funded.
+[x] Current balance observed: $50.289579.
+[x] Expenses observed for 2026-06-12 through 2026-07-12: $0.0000.
+[x] No provider request was sent during setup or funding.
+[x] No credentials were preserved in the repo evidence note.
 ```
 
-If any box is false:
+Evidence:
 
 ```text
-Do not fund yet.
+planning-inbox/m13-authenticated-dashboard-pricing-evidence-2026-07-12.md
 ```
 
-## Gate B — Immediately After Funding, Before Credentials Are Used by the CLI
+## Gate B — Funding Evidence Preserved
 
-Record without exposing secrets:
+The repo preserves only:
 
 ```text
-funding date and local time
-amount funded
-currency
-official interface used
-minimum-payment value shown
-owner confirmation
+authenticated balance
+zero-expense baseline
+pricing evidence
+available account navigation/control surfaces
 ```
 
 Do not record:
@@ -59,36 +58,37 @@ account identifiers beyond what is required locally
 
 ## Gate C — Exact Pricing Verification
 
-Using the official DataForSEO calculator or authenticated account interface, verify the exact immutable request:
+Authenticated dashboard pricing evidence now resolves the C00 base price:
 
 ```text
 endpoint: /v3/serp/google/organic/live/advanced
-keyword: observatory test page
-location_code: 2840
-language_code: en
-device: desktop
-os: windows
-depth: 10
-optional cost-bearing fields: none
+pricing row: live/advanced
+pricing unit: first page
+normal priority: $0.0020
+high priority: $0.0020
+C00 depth: 10
+expected pages: one
+expected base request price: $0.0020
 ```
 
-Record:
+Confirmed:
 
 ```text
-[ ] Exact calculated price is shown.
-[ ] Exact price is at or below $0.10.
-[ ] No depth-above-10 surcharge applies.
-[ ] No AI Overview loading surcharge applies.
-[ ] No People Also Ask click surcharge applies.
-[ ] No extra crawl-page surcharge applies.
-[ ] No search-operator multiplier applies.
-[ ] One live request is sufficient.
+[x] Authenticated exact endpoint-family price is shown.
+[x] Expected price is below the $0.10 hard ceiling.
+[x] No second-page charge is expected at depth 10.
+[x] No optional AI summary or screenshot feature is present.
+[x] No extra click or crawl feature is present.
+[x] No search-operator multiplier is present.
+[x] One live request is sufficient.
 ```
 
-If the exact price is unclear or exceeds `$0.10`:
+Pre-submit rule:
 
 ```text
-Stop. Do not submit. Amend the decision or seek provider clarification.
+Expected cost: $0.0020.
+Any higher provider or usage-sheet cost requires review.
+Any cost above $0.10 blocks the campaign.
 ```
 
 ## Gate D — Account Controls
