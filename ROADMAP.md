@@ -197,6 +197,7 @@ M20 is an acceptance review, not a production-launch or implementation-expansion
 ### M20 Progress Log
 
 2026-07-12 — M20 acceptance planning activated by `decisions/2026-07-12-m19-closure-and-m20-activation.md` after the bounded repository archive/restore proof passed with 184 restored tests and encryption readiness honestly blocked.
+2026-07-12 — Final v1 acceptance review, known-limit/deferred-capability register, and exact owner-acceptance proposal drafted. Recommendation: accept Observatory v1 at the bounded local evidence-proof-system ceiling only.
 
 ---
 

@@ -47,15 +47,13 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-Active M19 package:
+Active M20 package:
 
-- `m19-hardening-reconciliation-review.md` — actual repository/evidence-footprint reconciliation against raw archive, retention, purge, secret, and restore boundaries
-- `m19-backup-restore-policy-v0-1.md` — repository-only manual encrypted-backup, retention-generation, and disposable-restore policy proposal
-- `m19-operations-risk-and-runbook-plan.md` — operational risk register, secret review, raw inventory, purge-proof, backup, restore, and incident-stop runbooks
-- `m19-owner-ruling-proposals.md` — protected-unit, manual-backup, restore-proof, secret-review, cleanup, and bounded-proof proposals
-- `m19-bounded-backup-restore-proof-task-proposal.md` — exact local repository archive/restore proof proposal; not implementation authority
+- `m20-v1-acceptance-review.md` — doctrine, evidence, hammer, consumer-usefulness, and recovery reconciliation with a bounded-v1 acceptance recommendation
+- `m20-known-limits-and-deferred-capabilities.md` — explicit production, provider, persistence, recurrence, consumer, overlay, and recovery ceilings
+- `m20-owner-acceptance-proposal.md` — exact owner acceptance language and post-acceptance boundary
 
-Completed M18, M17, M16, M15, and M14 packages remain available below for lineage and proof context.
+Completed M19, M18, M17, M16, M15, and M14 packages remain available below for lineage and proof context.
 
 Then read:
 
