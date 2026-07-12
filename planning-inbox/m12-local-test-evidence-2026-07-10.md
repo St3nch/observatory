@@ -4,7 +4,7 @@ Status: execution evidence note
 Authority: none — evidence note only; milestone closure requires separate decision if used
 Milestone: M12 — First Evidence Slice Build
 Evidence source: owner-provided PowerShell transcript pasted in project chat
-Related commit tested: `4d7609e` / pushed range `ff2f026..4d7609e`
+Related commits tested: `4d7609e` and `5cc2345` / pushed range `426874d..5cc2345`
 
 ---
 
@@ -39,9 +39,9 @@ python -m unittest discover -s tests
 Reported result:
 
 ```text
-............
+.............
 ----------------------------------------------------------------------
-Ran 12 tests in 0.003s
+Ran 13 tests in 0.004s
 
 OK
 ```
@@ -50,7 +50,7 @@ Reported push after test:
 
 ```text
 To https://github.com/St3nch/observatory.git
-   ff2f026..4d7609e  main -> main
+   426874d..5cc2345  main -> main
 ```
 
 ---
@@ -83,7 +83,7 @@ Current test file:
 tests/test_c2_first_slice.py
 ```
 
-Reported local execution covers 12 unittest tests currently intended to exercise:
+Reported local execution covers 13 unittest tests currently intended to exercise:
 
 | Hammer | Coverage posture |
 |---|---|
@@ -98,9 +98,10 @@ Reported local execution covers 12 unittest tests currently intended to exercise
 | H18 Hostile weird input | local test passed per owner transcript |
 | H19 Append-only observations | local test passed per owner transcript |
 | H21 Audit-first enforcement | local test passed per owner transcript |
+| H22 Rollback/recovery expectations | local test passed per owner transcript |
 | C2 happy path / admission spine | local test passed per owner transcript |
 
-H22 rollback/recovery expectations remain planning-level unless/until a specific executable proof is added.
+H22 now has owner-local executable proof for C2 recovery snapshot digest/tamper detection.
 
 ---
 
@@ -138,7 +139,7 @@ It should not, by itself, close M12.
 Before M12 closure, the project should still review:
 
 - whether the test assertions are sufficient for each claimed hammer;
-- whether H22 needs an executable proof or remains deferred/planning-level;
+- whether H22 C2 recovery digest/tamper proof is sufficient for M12 closure;
 - whether local test execution should be repeated through a repo-managed `.venv` if connector-side verification becomes necessary;
 - whether documentation should distinguish owner-local pass from connector-verified pass.
 
@@ -159,6 +160,6 @@ Do not infer from this note that:
 ## Result
 
 ```text
-Owner-local M12 unittest run reported: 12 tests passed.
+Owner-local M12 unittest run reported: 13 tests passed.
 Repo push verified clean/synced after the reported run.
 ```
