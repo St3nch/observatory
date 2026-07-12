@@ -67,17 +67,17 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
-| OR-E1 | SearchClarity report-safe language + evidence-handle exposure to customers | RG8; DR9; `planning-inbox/m15-owner-ruling-proposals.md` | open — concrete proposal prepared: separate synthetic artifact-local report-safe reference class for first proof; no internal-handle or public-resolution exposure |
-| OR-E2 | Marketplace evidence permitted in customer reports | RG7; RG8; `planning-inbox/m15-owner-ruling-proposals.md` | open — proposal prepared: fail closed until platform/surface/capture/rights/retention/claim ceiling admission |
-| OR-E3 | Report-safe AI visibility metrics + repeated-sampling thresholds | RG6; DR4; `planning-inbox/m15-owner-ruling-proposals.md` | open — proposal prepared: sampled point-in-time support only; no durable score or invented recurrence threshold |
-| OR-E4 | Provider disagreement shown in customer-facing reports | RG9; `planning-inbox/m15-owner-ruling-proposals.md` | open — proposal prepared: provider-attributed side-by-side only; no winner, average, or composite |
-| OR-E5 | Any claim status automatically blocking a downstream report | RG8; `planning-inbox/m15-owner-ruling-proposals.md` | open — explicit blocker/downgrade set prepared |
+| OR-E1 | SearchClarity report-safe language + evidence-handle exposure to customers | RG8; DR9; `decisions/2026-07-12-m15-searchclarity-contract-and-consumer-boundary-rulings.md` | ruled — separate synthetic artifact-local report-safe reference class for bounded proof; no internal-handle, public-resolution, or production-reference exposure |
+| OR-E2 | Marketplace evidence permitted in customer reports | RG7; RG8; `decisions/2026-07-12-m15-searchclarity-contract-and-consumer-boundary-rulings.md` | ruled — fail closed until platform/surface/capture/rights/retention/claim ceiling admission |
+| OR-E3 | Report-safe AI visibility metrics + repeated-sampling thresholds | RG6; DR4; `decisions/2026-07-12-m15-searchclarity-contract-and-consumer-boundary-rulings.md` | ruled — sampled point-in-time support only; no durable score or invented recurrence threshold |
+| OR-E4 | Provider disagreement shown in customer-facing reports | RG9; `decisions/2026-07-12-m15-searchclarity-contract-and-consumer-boundary-rulings.md` | ruled — provider-attributed side-by-side only; no winner, average, or composite |
+| OR-E5 | Any claim status automatically blocking a downstream report | RG8; `decisions/2026-07-12-m15-searchclarity-contract-and-consumer-boundary-rulings.md` | ruled — explicit blocker and historical-only downgrade set accepted |
 
 ## Group F — Needed before M17 overlay/internal telemetry proof
 
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
-| OR-F1 | Customer first-party overlay acceptance rules into read tools | RG12; DR10; `planning-inbox/m15-owner-ruling-proposals.md` | open — M15 proposal prepared to defer real overlays to M17 while proving only blocked-path/no-leak behavior |
+| OR-F1 | Customer first-party overlay acceptance rules into read tools | RG12; DR10; `decisions/2026-07-12-m15-searchclarity-contract-and-consumer-boundary-rulings.md` | ruled for M15 scope — real overlays deferred to M17; M15 may prove blocked-path and no-leak behavior only |
 | OR-F2 | Internal first-party telemetry admission + internal-scope handling | RG2; RG12; DR11 | open |
 | OR-F3 | Overlay freshness metadata used in customer-facing conclusions | RG5 | open |
 

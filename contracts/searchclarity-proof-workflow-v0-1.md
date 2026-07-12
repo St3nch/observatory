@@ -1,7 +1,7 @@
 # Contract - SearchClarity Proof Workflow v0.1
 
-Status: ready for owner acceptance
-Authority: proposed M15 consumer contract; does not authorize implementation, customer data, overlays, report generation, production integration, provider execution, or persistence
+Status: accepted v0.1 by `decisions/2026-07-12-m15-searchclarity-contract-and-consumer-boundary-rulings.md`
+Authority: binding M15 SearchClarity evidence-support contract within its declared scope; does not authorize proof implementation, customer data, overlays, report generation, production integration, provider execution, or persistence
 Version: 0.1
 Date: 2026-07-12
 Milestone: M15 - SearchClarity Proof Workflow
