@@ -223,6 +223,49 @@ class EvidenceTests(unittest.TestCase):
                 self.assertFalse(path.exists())
                 self.assertEqual(len(proof["pre_purge_sha256"]), 64)
 
+    def test_package_purge_requires_matching_hash_and_writes_08_proof(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence_root = Path(tmp) / "probe-evidence"
+            root = evidence_root / "probe-1"
+            raw = root / "02-raw-response.json"
+            root.mkdir(parents=True)
+            raw.write_text('{"ok": true}', encoding="utf-8")
+            expected_hash = core.hash_file(raw)
+            with (
+                patch.object(core, "EVIDENCE_ROOT", evidence_root),
+                patch("observatory_dataforseo_probe.cli.EVIDENCE_ROOT", evidence_root),
+            ):
+                result = main([
+                    "package-purge",
+                    "--probe-id", "probe-1",
+                    "--actor", "tester",
+                    "--confirm-raw-sha256", expected_hash,
+                ])
+            self.assertEqual(result, 0)
+            self.assertFalse(raw.exists())
+            self.assertTrue((root / "08-purge-proof.json").is_file())
+
+    def test_package_purge_wrong_hash_preserves_raw(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            evidence_root = Path(tmp) / "probe-evidence"
+            root = evidence_root / "probe-1"
+            raw = root / "02-raw-response.json"
+            root.mkdir(parents=True)
+            raw.write_text('{"ok": true}', encoding="utf-8")
+            with (
+                patch.object(core, "EVIDENCE_ROOT", evidence_root),
+                patch("observatory_dataforseo_probe.cli.EVIDENCE_ROOT", evidence_root),
+            ):
+                result = main([
+                    "package-purge",
+                    "--probe-id", "probe-1",
+                    "--actor", "tester",
+                    "--confirm-raw-sha256", "0" * 64,
+                ])
+            self.assertEqual(result, 2)
+            self.assertTrue(raw.is_file())
+            self.assertFalse((root / "08-purge-proof.json").exists())
+
     def test_naive_retention_timestamp_blocks(self):
         with self.assertRaises(core.ProbeBlocked):
             core.retention_deadline(datetime.now())

@@ -23,6 +23,7 @@ from .core import (
     build_preflight,
     canonical_request,
     execute_request,
+    hash_file,
     purge_raw_payload,
     recipe_summary,
     request_sha256,
@@ -86,6 +87,27 @@ def command_purge(args: argparse.Namespace) -> int:
     root = _probe_dir(args.probe_id)
     proof = purge_raw_payload(root / "raw-response.json", args.probe_id, args.actor)
     write_json(root / "purge-proof.json", proof)
+    _print(proof)
+    return 0
+
+
+def command_package_purge(args: argparse.Namespace) -> int:
+    root = _probe_dir(args.probe_id)
+    raw = root / "02-raw-response.json"
+    if not raw.is_file():
+        raise ProbeBlocked("package raw payload does not exist")
+    actual_sha256 = hash_file(raw)
+    if args.confirm_raw_sha256 != actual_sha256:
+        raise ProbeBlocked("raw payload confirmation hash does not match")
+    proof_path = root / "08-purge-proof.json"
+    if proof_path.exists():
+        raise ProbeBlocked("purge proof already exists")
+    proof = purge_raw_payload(raw, args.probe_id, args.actor)
+    proof["raw_filename"] = "02-raw-response.json"
+    proof["proof_filename"] = "08-purge-proof.json"
+    proof["path_containment_check_passed"] = True
+    proof["raw_file_absent_after_purge"] = not raw.exists()
+    write_json(proof_path, proof)
     _print(proof)
     return 0
 
@@ -202,6 +224,12 @@ def build_parser() -> argparse.ArgumentParser:
     purge.add_argument("--probe-id", required=True)
     purge.add_argument("--actor", required=True)
     purge.set_defaults(func=command_purge)
+
+    package_purge = sub.add_parser("package-purge")
+    package_purge.add_argument("--probe-id", required=True)
+    package_purge.add_argument("--actor", required=True)
+    package_purge.add_argument("--confirm-raw-sha256", required=True)
+    package_purge.set_defaults(func=command_package_purge)
 
     campaign_list = sub.add_parser("campaign-list")
     campaign_list.set_defaults(func=command_campaign_list)
