@@ -88,6 +88,8 @@ maximum duplicate tasks per hour: 1
 
 This is defense in depth only. The Observatory CLI must still refuse an already-recorded duplicate key before any network call.
 
+The owner clarified that the account-wide daily expense limit is configurable, while the displayed per-API daily figures are not user-configurable. The selected account-wide daily limit is `$5.00`. Therefore, per-recipe and per-stage spend controls must remain enforced by the Observatory CLI rather than assumed to exist in the provider account.
+
 This is useful for setup and independent verification, but Observatory execution should use its bounded CLI rather than the graphical Playground so request hashing, local manifests, duplicate controls, and raw evidence handling remain deterministic.
 
 ---
@@ -101,7 +103,7 @@ The remaining pre-submit blockers are:
 ```text
 credential-safe local environment setup
 confirmation that probe-evidence/ is Git-ignored
-account Settings review for available request/spend limits
+confirmation that the $5 account-wide limit and duplicate limit of 1 are saved
 fresh C00 request hash confirmation
 explicit one-request owner confirmation
 ```

@@ -97,8 +97,8 @@ Authenticated Settings evidence and owner clarification confirm these controls e
 
 ```text
 [x] Duplicate-task hourly limit
-[x] Daily account expense limit
-[x] Per-API daily expense limits
+[x] Configurable account-wide daily expense limit
+[i] Per-API daily figures are displayed but are not user-configurable
 [x] Spend-threshold email notification
 [x] Credential reset/rotation path
 ```
@@ -117,12 +117,13 @@ Recommended calibration controls:
 
 ```text
 duplicate tasks per hour: 1
-daily account expense limit: $5.00
-SERP API daily expense limit: $2.00
+account-wide daily expense limit: $5.00
 email notification threshold: 50%
 re-parsing: off
 webhooks: off
 ```
+
+No per-API spend limit is available to configure. The CLI campaign budget and per-recipe ceilings remain the only API-family-specific controls.
 
 Account controls are defense in depth. The CLI duplicate registry, one-request ceiling, and campaign budget remain mandatory.
 
