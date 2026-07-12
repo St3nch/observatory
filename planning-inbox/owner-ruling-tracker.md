@@ -20,7 +20,7 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
-| OR-A1 | Provider Cross-Check: is a *persisted* Disagreement Ledger permitted, or compute-on-read only? (V6 materialization test applies) | RG9; ROADMAP contract list; audits ISS-18 | open |
+| OR-A1 | Provider Cross-Check: is a *persisted* Disagreement Ledger permitted, or compute-on-read only? (V6 materialization test applies) | RG9; ROADMAP contract list; audits ISS-18; `planning-inbox/m16-owner-ruling-proposals.md` | open — concrete proposal prepared: compute-on-read only; no persistent ledger/cache/table without later V6 materialization proof and owner ruling |
 | OR-A2 | RG6 sentiment/tone: provider-attributed-only, or is any "mechanically derived" sentiment permitted? | RG6; audits ISS-17 | open |
 | OR-A3 | `ai_visibility_sample_summary`: read-time output only, or storable under materialization test? | RG6; audits ISS-17 | open |
 | OR-A4 | Citation handles: global vs artifact-local; report-safe references separate class or derived? | RG3; DR14; `decisions/2026-07-12-m14-contract-and-read-boundary-rulings.md` | ruled for M14 scope — internal, non-enumerable, status-aware evidence handles only; report-safe/customer-facing references remain deferred to M15 |

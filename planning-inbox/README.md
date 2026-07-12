@@ -47,14 +47,14 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-Active M15 package:
+Active M16 package:
 
-- `m15-consumer-boundary-reconciliation-review.md` — repo-first reconciliation of the accepted consumer, claim-safety, overlay, and typed-read boundaries
-- `m15-owner-ruling-proposals.md` — OR-E1 through OR-E5, OR-F1, consent, human-review, and bounded-proof proposals
-- `m15-searchclarity-hostile-path-plan.md` — high-consequence consumer-boundary hammers and ordinary acceptance-test separation
-- `m15-searchclarity-fixture-proof-task-proposal.md` — exact local synthetic fixture-only proof proposal; not implementation authority
+- `m16-provider-cross-check-reconciliation-review.md` — repo-first reconciliation of provider testimony, disagreement, freshness, claim-safety, typed-read, and consumer boundaries
+- `m16-owner-ruling-proposals.md` — OR-A1 and M16 comparability, proprietary-metric, time-distance, no-truth, profile-note, scope, and bounded-proof proposals
+- `m16-provider-cross-check-hostile-path-plan.md` — high-consequence hammers against attribution loss, winner logic, averaging, composites, time erasure, scope leaks, and persistence laundering
+- `m16-provider-cross-check-fixture-proof-task-proposal.md` — exact local synthetic fixture-only proof proposal; not implementation authority
 
-Completed M14 package remains available below for lineage and proof context.
+Completed M15 and M14 packages remain available below for lineage and proof context.
 
 Then read:
 

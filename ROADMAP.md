@@ -198,6 +198,7 @@ M16 consumes the accepted provider-testimony and provider-cross-check contracts,
 ### M16 Progress Log
 
 2026-07-12 — M16 planning activated by `decisions/2026-07-12-m15-closure-and-m16-activation.md` after bounded M15 closure proof.
+2026-07-12 — Full provider cross-check proof contract, owner-ruling proposals, hostile-path plan, exact synthetic fixture-proof task proposal, and reconciliation review drafted from accepted repo authority.
 
 ---
 
