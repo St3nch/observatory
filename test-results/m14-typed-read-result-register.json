@@ -1,18 +1,18 @@
 {
   "register_version": "1",
   "contract_version": "0.1",
-  "status": "not_executed",
+  "status": "passed_bounded_fixture_suite",
   "entries": [
     {
-      "result_id": "m14-typed-read-full-suite-owner-local-pending",
+      "result_id": "m14-typed-read-full-suite-owner-local-20260712",
       "contract_version": "0.1",
-      "commit": "pending-implementation-commit",
+      "commit": "5421c2d18417beaf6513b7b48a16a7531de0b023",
       "proof_class": "mixed_suite",
       "execution_surface": "fixture_in_memory_local",
-      "proof_strength": "not_executed",
+      "proof_strength": "bounded_enforcement_proof",
       "test_command": "$env:PYTHONPATH = (Join-Path $PWD \"src\"); python -m unittest discover -s tests",
-      "result": "not_executed_ob_dev_fixed_venv_missing",
-      "executed_at": null,
+      "result": "pass_141_tests",
+      "executed_at": "2026-07-12T18:21:40Z",
       "evidence_path": "planning-inbox/m14-typed-read-local-test-evidence-pending.md",
       "limitations": [
         "fixture-backed",
@@ -21,8 +21,7 @@
         "no transaction proof",
         "no production-auth proof",
         "no network/MCP proof",
-        "no deployment proof",
-        "owner-local test execution still required"
+        "no deployment proof"
       ]
     }
   ]

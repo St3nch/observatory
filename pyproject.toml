@@ -6,7 +6,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [tool.observatory]
-status = "m14-fixture-typed-read-prototype-implemented-pending-tests"
+status = "m14-fixture-typed-read-prototype-closure-ready"
 first_slice = "C2 Controlled Public Manual Observation Package"
 probe = "M13 DataForSEO one-shot tooling retained and disarmed"
 campaign = "M13 closed; no additional provider request authorized"
