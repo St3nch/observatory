@@ -193,6 +193,7 @@ M18 is planning only. It may define watch-panel membership, cadence policy, budg
 ### M18 Progress Log
 
 2026-07-12 — M18 planning activated by `decisions/2026-07-12-m17-closure-and-m18-activation.md` after bounded M17 overlay discard proof and owner-local confirmation that all 184 tests pass.
+2026-07-12 — Recurring watch-panel reconciliation review, bounded policy, and owner-ruling proposals drafted. Recommendation: accept the planning policy and reject recurring execution for Observatory v1.
 
 ---
 

@@ -47,14 +47,13 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-Active M17 package:
+Active M18 package:
 
-- `m17-owned-telemetry-overlay-reconciliation-review.md` — repo-first reconciliation of overlay, scope, claim-safety, typed-read, SearchClarity, and no-persistence boundaries
-- `m17-owner-ruling-proposals.md` — internal telemetry, discard proof, manifest retention, intervention-timeline, screenshot/file, scope, and bounded-proof proposals
-- `m17-owned-telemetry-overlay-hostile-path-plan.md` — high-consequence hammers against persistence, evidence-identity laundering, identity leakage, file smuggling, scope mixing, and false discard claims
-- `m17-owned-telemetry-overlay-fixture-proof-task-proposal.md` — exact local synthetic fixture-only proof proposal; not implementation authority
+- `m18-recurring-watch-panel-reconciliation-review.md` — repo-first reconciliation of provider, cost, rights, recipe, freshness, panel, and hammer gates
+- `m18-watch-panel-policy-v0-1.md` — bounded membership, cadence, budget, duplicate-prevention, stop-condition, review-gate, and warning policy
+- `m18-owner-ruling-proposals.md` — explicit v1 no-execution recommendation and minimum policy rulings
 
-Completed M16, M15, and M14 packages remain available below for lineage and proof context.
+Completed M17, M16, M15, and M14 packages remain available below for lineage and proof context.
 
 Then read:
 
