@@ -93,19 +93,38 @@ Any cost above $0.10 blocks the campaign.
 
 ## Gate D — Account Controls
 
-Inspect the account interface for available controls and record whether each exists:
+Authenticated Settings evidence and owner clarification confirm these controls exist:
 
 ```text
-repetitive-task limit
-spend/budget limit
-API usage limit
-alerting or low-balance notification
-credential rotation/revocation controls
+[x] Duplicate-task hourly limit
+[x] Daily account expense limit
+[x] Per-API daily expense limits
+[x] Spend-threshold email notification
+[x] Credential reset/rotation path
 ```
 
-Enable the narrowest useful controls available without expanding scope.
+Duplicate-task semantics:
 
-If no account-level controls exist, record that fact. The CLI ceilings remain mandatory.
+```text
+current value: 10 duplicate tasks per hour
+excess duplicate error: 40205
+calibration-phase target: 1 duplicate task per hour
+```
+
+The owner may raise or lower this setting. Keep it at `1` during C00 calibration. Raise it only for an explicitly reviewed repeatability experiment, then restore it afterward.
+
+Recommended calibration controls:
+
+```text
+duplicate tasks per hour: 1
+daily account expense limit: $5.00
+SERP API daily expense limit: $2.00
+email notification threshold: 50%
+re-parsing: off
+webhooks: off
+```
+
+Account controls are defense in depth. The CLI duplicate registry, one-request ceiling, and campaign budget remain mandatory.
 
 ## Gate E — Credential Setup
 

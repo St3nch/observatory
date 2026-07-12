@@ -78,6 +78,16 @@ The dashboard also states:
 - a free Sandbox feature exists for testing and larger request-volume configuration;
 - Postman examples and official documentation are available.
 
+The owner additionally confirmed the duplicate-task account control currently permits a maximum of 10 duplicate tasks within one hour. Duplicate tasks above that threshold return DataForSEO error `40205`.
+
+For the calibration phase, the recommended account setting is:
+
+```text
+maximum duplicate tasks per hour: 1
+```
+
+This is defense in depth only. The Observatory CLI must still refuse an already-recorded duplicate key before any network call.
+
 This is useful for setup and independent verification, but Observatory execution should use its bounded CLI rather than the graphical Playground so request hashing, local manifests, duplicate controls, and raw evidence handling remain deterministic.
 
 ---
