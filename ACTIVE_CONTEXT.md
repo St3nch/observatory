@@ -12,38 +12,37 @@ Last updated: 2026-07-12
 The Observatory is in:
 
 ```text
-M19 hardening, backup, recovery, and operations planning
+M20 Observatory v1 acceptance planning
 ```
 
-M18 is closed after acceptance of a bounded recurring watch-panel policy and an explicit rejection of recurring capture execution for Observatory v1. M19 is active for planning only: backup posture, restore-proof design, audit-log expectations, secret-exposure checks, retention-cleanup proof, operational runbooks, and operational-risk documentation. No scheduler, recurring capture, provider execution, autonomous spend, credentials, Postgres, physical schema, migrations, production API/MCP, customer data, reports, deployment, or production integration is authorized.
+M19 is closed after acceptance of repository-only protection and recovery rulings plus a bounded owner-local full-history Git bundle and disposable restore proof. Source and restored HEAD matched, Git integrity passed, prohibited ignored roots were absent, and 184 restored tests passed. Encryption/off-machine recovery remains unproven and explicitly blocked. M20 is active for acceptance review only; no production deployment or implementation widening is authorized.
 
 ---
 
 ## Active Milestone
 
 ```text
-M19 - Hardening, Backup, Recovery, and Operations
+M20 - Observatory v1 Acceptance
 ```
 
-M0, M0.1, and M1 through M18 are complete and committed.
+M0, M0.1, and M1 through M19 are complete and committed.
 
 ---
 
 ## Current Task
 
-Begin M19 with repo-first reconciliation of the existing evidence slice, raw archive/hash expectations, retention rules, hammer results, M18 no-execution posture, and current operational risks before any hardening implementation.
+Review Observatory v1 against accepted doctrine, contracts, hammer results, bounded evidence behavior, consumer usefulness, recovery proof, known limitations, and deferred capabilities.
 
-Current M19 work is allowed to:
+Current M20 work is allowed to:
 
-- define backup scope, frequency, encryption, and retention posture;
-- define a disposable restore-proof procedure;
-- define audit-log and operation-evidence expectations;
-- define secret-exposure inventory and checks;
-- define retention-cleanup and purge-proof procedures;
-- define bounded operational runbooks and risk registers;
-- propose exact implementation or proof tasks only after separate owner gates.
+- reconcile doctrine and boundary conformance;
+- review accepted proof and hammer evidence;
+- assess bounded consumer usefulness;
+- preserve known limitations and deferred capabilities;
+- issue an explicit v1 accept/reject recommendation;
+- propose post-v1 roadmap work only after acceptance.
 
-M19 does not authorize production deployment, live database creation, Postgres schema or migrations, provider execution, recurring capture, credentials or secret transfer, customer data, report generation, production API/MCP, destructive cleanup, automatic backup jobs, or broad operational automation.
+M20 does not authorize production deployment, provider execution, recurring capture, live Postgres/schema/migrations, customer data, report generation, production API/MCP, credentials or secret transfer, cloud backup upload, automatic backup jobs, destructive cleanup, strategy storage, or recommendation storage.
 
 ---
 
@@ -51,22 +50,20 @@ M19 does not authorize production deployment, live database creation, Postgres s
 
 Do not start:
 
-- provider calls
-- DataForSEO pulls
-- Ahrefs work
-- Semrush work
-- provider purchases
-- provider admission execution
-- API/MCP exposure
+- provider calls or new paid pulls
+- recurring capture
+- production API/MCP exposure
 - dashboard or operator console work
+- live Postgres/schema/migrations
 - customer data handling
 - customer-facing reports
 - marketplace scraping
 - browser-extension capture
-- strategy storage
-- recommendation storage
-- recurring capture
-- broad implementation beyond C2
+- strategy or recommendation storage
+- cloud backup upload
+- automatic backup jobs
+- destructive cleanup
+- production deployment
 
 No schema goblin jazz. No provider confetti cannon. No dashboard side quest.
 
@@ -80,15 +77,15 @@ The connected LLM interprets at read time.
 
 Accepted conclusions promote out to the owning consumer, such as SearchClarity, Neon Ronin, or Kaizen.
 
-Customer records stay outside Observatory.
+Customer records and customer first-party analytics stay outside Observatory durable storage.
 
-Customer first-party analytics stay outside Observatory unless a future explicit owner ruling changes the law. Current expected handling is read-time overlay only.
+LLMs and agents receive shaped evidence through typed boundaries, not direct SQL access or database credentials.
 
-LLMs and agents must not receive direct SQL access or database credentials. Future access is typed API / MCP read tools only.
-
-Provider disagreement is first-class evidence. Proprietary provider scores are observations of provider model output, not facts about the web.
+Provider disagreement is first-class evidence. Proprietary provider scores are provider-attributed testimony, not facts about the web.
 
 Hammer tests are a hard gate for implementation.
+
+Bounded repository recovery is proven. Encrypted/off-machine recovery is not yet proven.
 
 ---
 
@@ -116,15 +113,16 @@ Closed:
 - M16 - Provider Cross-Check Proof
 - M17 - Owned Telemetry Overlay Proof
 - M18 - Recurring Watch Panel Planning
+- M19 - Hardening, Backup, Recovery, and Operations
 
 Active:
 
-- M19 - Hardening, Backup, Recovery, and Operations
+- M20 - Observatory v1 Acceptance
 
-Next after M19:
+Next after M20:
 
 ```text
-Follow the accepted roadmap sequence; no later milestone is activated by this context file.
+No post-v1 milestone is activated until the owner accepts or rejects v1 and approves a new roadmap.
 ```
 
 M2 folder ruling completed:

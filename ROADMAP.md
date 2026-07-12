@@ -127,8 +127,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M16 | Provider Cross-Check Proof | complete | Accepted provider cross-check contract plus bounded synthetic fixture/in-memory proof |
 | M17 | Owned Telemetry Overlay Proof | complete | Accepted overlay contract plus bounded synthetic fixture/in-memory discard proof |
 | M18 | Recurring Watch Panel Planning | complete | Accepted bounded policy; recurring execution rejected for Observatory v1 |
-| M19 | Hardening, Backup, Recovery, and Operations | active for planning only | Make the system durable and recoverable |
-| M20 | Observatory v1 Acceptance | planned | Accept or reject v1 against doctrine, evidence, and hammers |
+| M19 | Hardening, Backup, Recovery, and Operations | complete | Repository archive/restore proof passed; encryption readiness remains blocked |
+| M20 | Observatory v1 Acceptance | active for planning only | Accept or reject v1 against doctrine, evidence, and hammers |
 
 ---
 
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M19
+M20
 
 ### Name
 
-Hardening, Backup, Recovery, and Operations
+Observatory v1 Acceptance
 
 ### Status
 
@@ -148,55 +148,55 @@ active for planning only
 
 ### Purpose
 
-Make the existing bounded evidence system durable, auditable, recoverable, and operationally understandable without widening into production deployment or unauthorized persistence.
+Accept or reject Observatory v1 against doctrine, evidence behavior, hammer results, consumer usefulness, recovery proof, known limitations, and explicitly deferred capabilities.
 
-M19 may plan backup posture, disposable restore proof, audit-log expectations, secret-exposure checks, retention-cleanup proof, operational runbooks, and an operational-risk register.
+M20 is an acceptance review, not a production-launch or implementation-expansion milestone.
 
 ### Required Reading
 
 - `ACTIVE_CONTEXT.md`
-- `decisions/2026-07-12-m18-watch-panel-policy-and-m19-activation.md`
-- M12 first-slice build and proof outputs
-- M13 raw capture, purge, and hash evidence
+- `decisions/2026-07-12-m19-closure-and-m20-activation.md`
+- M12 first-slice proof outputs
+- M14 typed-read proof outputs
+- M15 SearchClarity proof outputs
+- M16 provider cross-check proof outputs
+- M17 overlay discard proof outputs
 - M18 accepted no-execution watch-panel policy
-- `contracts/raw-archive-provider-drift.md`
-- `contracts/scope-rights-retention.md`
+- M19 recovery proof outputs
 - `hammers/hammer-matrix-v0-1.md`
-- `planning-inbox/audit-response-2026-07-07.md`
+- accepted contracts and owner-ruling tracker
 
 ### Allowed Work
 
-- backup scope, frequency, encryption, and retention planning;
-- disposable restore-proof design;
-- audit-log and operation-evidence expectations;
-- secret-exposure inventory and checks;
-- retention cleanup and purge-proof procedures;
-- operational runbooks and risk documentation;
-- exact bounded task proposals after separate owner gates.
+- doctrine and boundary conformance review;
+- evidence and hammer result reconciliation;
+- consumer-usefulness assessment;
+- known-limit and deferred-capability register;
+- explicit v1 accept/reject recommendation;
+- exact post-v1 roadmap proposals only after acceptance.
 
 ### Forbidden Work
 
 - production deployment;
-- automatic backup jobs or schedulers;
-- live Postgres creation, schema, or migrations;
 - provider execution or recurring capture;
+- live Postgres creation, schema, or migrations;
+- customer data or report generation;
+- production API/MCP;
 - credentials or secret transfer;
-- customer data or reports;
-- destructive cleanup without exact authorization;
-- production API/MCP or broad operational automation.
+- cloud backup upload;
+- automatic backup jobs;
+- destructive cleanup;
+- strategy/recommendation storage.
 
 ### Blockers
 
-- Backup and restore scope must be reconciled against the actual repository and evidence paths.
-- Raw archive, purge, hash, retention, and secret-handling expectations must fail closed.
-- Any implementation or restore execution requires a separately bounded owner authorization.
+- Acceptance must distinguish bounded proof from production readiness.
+- Encryption/off-machine recovery remains unproven and must remain visible.
+- Deferred capabilities must not be silently treated as v1 features.
 
-### M19 Progress Log
+### M20 Progress Log
 
-2026-07-12 — M19 planning activated by `decisions/2026-07-12-m18-watch-panel-policy-and-m19-activation.md` after M18 policy acceptance and rejection of recurring execution for Observatory v1.
-2026-07-12 — Repository/evidence-footprint reconciliation, repository-only backup/restore policy, operations risk/runbook plan, owner-ruling proposals, and exact bounded archive/restore proof task drafted.
-2026-07-12 — M19 repository-only protection, manual encrypted backup, mandatory disposable restore-proof, redacted secret-review, and no-destructive-cleanup rulings accepted; bounded archive/restore proof implementation remains separately gated.
-2026-07-12 — Exact owner-local repository bundle/restore proof authorized with fixed source/work/restore roots, fail-closed runbook, pending evidence register, and encryption honestly blocked pending a separately approved tool/key path.
+2026-07-12 — M20 acceptance planning activated by `decisions/2026-07-12-m19-closure-and-m20-activation.md` after the bounded repository archive/restore proof passed with 184 restored tests and encryption readiness honestly blocked.
 
 ---
 
