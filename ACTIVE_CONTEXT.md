@@ -12,42 +12,37 @@ Last updated: 2026-07-12
 The Observatory is in:
 
 ```text
-M13 funded exploratory campaign preparation
+M14 typed read API / MCP contract planning
 ```
 
-The owner reports an available $50 DataForSEO balance and has accepted a staged provider-validation campaign. The one-shot safety cage and campaign catalog remain fixture-only while tests are expanded. The immediate live candidate is C00 Google Organic desktop sentinel, but provider execution remains disabled until credential-safe setup, account review, exact preflight, and explicit one-request confirmation.
+M13 is closed after one bounded DataForSEO C00 live probe completed successfully, reconciled at $0.002, produced reviewed payload-shape evidence, and purged its raw response with durable proof. M14 is active for planning only: typed read boundaries, consumer-safe evidence access, authentication/authorization requirements, LLM-context assembly, tool guidance, and hostile-path acceptance criteria. No production API/MCP, Postgres, schema, migration, live ingestion, or additional paid provider request is authorized.
 
 ---
 
 ## Active Milestone
 
 ```text
-M13 - Provider Admission and Controlled Pull Plan
+M14 - Typed Read API / MCP Contract and Prototype
 ```
 
-M0, M0.1, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, M11, and M12 are complete and committed.
+M0, M0.1, and M1 through M13 are complete and committed.
 
 ---
 
 ## Current Task
 
-Complete and test the fixture-only campaign catalog and prepare C00 for an explicit one-request preflight.
+Begin M14 with repo-first audit and contract planning before any prototype implementation.
 
-Current M13 work is allowed to:
+Current M14 work is allowed to:
 
-- preserve the accepted one-shot implementation and passing 67-test evidence;
-- implement and fixture-test the immutable C00–C07 campaign catalog;
-- validate stage ceilings totaling exactly $50.00;
-- inspect the owner-uploaded SERP usage workbook read-only and preserve its zero-row baseline hash;
-- build privacy-safe workbook reconciliation tooling using synthetic fixtures;
-- inspect and record available account-level duplicate/spend controls;
-- prepare credential-safe local environment setup without recording secret values;
-- generate the exact no-network C00 preflight;
-- stop for explicit one-request confirmation before any provider call.
+- audit the existing contracts, hammers, C2 fixture slice, and M13 provider evidence for read-boundary requirements;
+- define typed observation, provenance, scope, rights, retention, freshness, attribution, disagreement, and evidence-handle reads;
+- define bounded filters, pagination, error behavior, redaction, authentication, and authorization requirements;
+- define safe LLM-context assembly and MCP/tool guidance metadata;
+- define hostile-path tests and a bounded prototype task proposal;
+- use the new Claude deep audit as advisory input after owner review.
 
-The campaign authority is recorded in `decisions/2026-07-12-m13-dataforseo-exploratory-campaign.md`. The first pull remains C00 Google Organic Live Advanced desktop sentinel. C01–C07 are candidates only and require review-based promotion.
-
-M13 still does not authorize unattended execution, bulk pulls, retries, silent endpoint substitution, customer data, recurring capture, Postgres, schema, migrations, API/MCP exposure, dashboard work, or strategy/recommendation storage.
+M14 does not authorize Postgres, schema, migrations, live provider ingestion, another paid request, customer data, direct SQL, production API/MCP deployment, dashboard work, reports, strategy storage, recommendation storage, or automatic conclusion promotion.
 
 ---
 
@@ -114,15 +109,16 @@ Closed:
 - M10 - Schema Planning Only
 - M11 - Implementation Foundation
 - M12 - First Evidence Slice Build
+- M13 - Provider Admission and Controlled Pull Plan
 
 Active:
 
-- M13 - Provider Admission and Controlled Pull Plan
+- M14 - Typed Read API / MCP Contract and Prototype
 
-Next after M13:
+Next after M14:
 
 ```text
-M14 - Typed Read API / MCP Contract and Prototype
+Follow the accepted roadmap sequence; no later milestone is activated by this context file.
 ```
 
 M2 folder ruling completed:

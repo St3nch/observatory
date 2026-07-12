@@ -60,6 +60,7 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-10-m12-first-slice-closure.md` | accepted decision | Records M12 first evidence slice closure and M13 activation | Bounded local C2 proof accepted; M13 provider admission planning is active |
 | `2026-07-11-m13-dataforseo-controlled-probe-approval.md` | accepted decision | Authorizes the bounded fixture-only DataForSEO probe safety cage and preserves separate funding/execution gates | Fixture-only implementation accepted; live execution remains separately controlled |
 | `2026-07-12-m13-dataforseo-exploratory-campaign.md` | accepted decision | Reserves the available $50 balance for staged DataForSEO provider validation and defines per-pull review gates | Campaign catalog/testing authorized; each live request still requires preflight and explicit owner confirmation |
+| `2026-07-12-m13-closure-and-m14-activation.md` | accepted decision | Closes M13 after the reviewed C00 probe and activates M14 planning | One paid probe accepted, raw payload purged with proof, no further provider or implementation authority granted |
 
 ---
 
