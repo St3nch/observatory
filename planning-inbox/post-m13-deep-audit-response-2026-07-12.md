@@ -175,16 +175,16 @@ These are not automatically roadmap items. Each receives a value/boundary/depend
 
 | ID | Opportunity | Status | Classification / route |
 |---|---|---|---|
-| O-1 | Multi-provider disagreement maps | pending | pending |
-| O-2 | SERP feature evolution and volatility evidence | pending | pending |
-| O-3 | AI-citation/GEO surface comparison and citation asymmetry | pending | pending |
-| O-4 | Entity/source recurrence across answer engines | pending | pending |
-| O-5 | Public-page change lineage | pending | pending |
-| O-6 | Marketplace visibility evidence at compliant ceiling | pending | pending |
-| O-7 | Query-panel coverage/blind-spot plus cost-to-close | pending | pending |
-| O-8 | Historical observation replay / as-of reads | pending | pending |
-| O-9 | Freshness-aware LLM context packs | pending | pending |
-| O-10 | Low-cost sentinel campaigns and rare-feature capture | pending | pending |
+| O-1 | Multi-provider disagreement maps | reviewed | future M16 candidate; preserve provider-attributed side-by-side testimony, no winners/averaging; DR3 and second-provider admission required |
+| O-2 | SERP feature evolution and volatility evidence | reviewed | future M18 candidate; mechanical longitudinal diffs only; DR12 cadence/cost and canonical fingerprint required |
+| O-3 | AI-citation/GEO surface comparison and citation asymmetry | reviewed | highest-value research/M15–M16 candidate; DR4/DR5, OR-C3, repeated-sampling, rights, and cost gates required |
+| O-4 | Entity/source recurrence across answer engines | reviewed | downstream mechanical recurrence capability after O-3; domain-first, no trust/influence score, V6 test before any materialization |
+| O-5 | Public-page change lineage | reviewed | deferred source-family candidate behind DR2/DR8/DR13, source rights, retention, and capture-instrument admission |
+| O-6 | Marketplace visibility evidence at compliant ceiling | reviewed | high-value SearchClarity candidate behind DR6/DR7/DR8/DR9 and OR-C5–C8; no scraping or automated capture |
+| O-7 | Query-panel coverage/blind-spot plus cost-to-close | accepted as M14 design input | coverage and observed cost facts may be read output; no recommendation, capture job, or spend |
+| O-8 | Historical observation replay / as-of reads | accepted as M14 design input | design now; implementation waits for OR-D3 and append-only/status-aware persistence |
+| O-9 | Freshness-aware LLM context packs | accepted as core M14 capability | inline non-detachable caveats, untrusted-content envelopes, safe whole-unit truncation, no conclusion persistence |
+| O-10 | Low-cost sentinel campaigns and rare-feature capture | reviewed | future M18+ candidate behind structural spend controls, recurring-capture authority, retention ruling, and explicit automated-trigger approval |
 
 For every accepted opportunity, record whether it is:
 
@@ -203,12 +203,12 @@ rejected boundary violation
 
 | Consumer / area | Audit proposal | Status | Disposition / boundary |
 |---|---|---|---|
-| SearchClarity | Evidence-cited SEO/GEO audits, citation asymmetry, before/after proof, compliant marketplace evidence | pending | pending |
-| Neon Ronin | Workspace-scoped reads and governed pull-request queue | pending | pending |
-| Kaizen | Durable evidence-handle resolution and as-of governance citations | pending | pending |
-| Internal products | Market-watch scopes, costed blind spots, future sentinels | pending | pending |
-| Corpus moat | Dated AI citations, SERP feature history, disagreement pairs, transient features, compliant marketplace observations | pending | pending |
-| Commercial contamination risk | Report pressure may push conclusions into Observatory | pending | pending |
+| SearchClarity | Evidence-cited SEO/GEO audits, citation asymmetry, before/after proof, compliant marketplace evidence | reviewed | strongest near-revenue consumer; Observatory supplies scope-safe evidence packs/handles only; SearchClarity owns customers, overlays, reports, recommendations, consent, and final claims |
+| Neon Ronin | Workspace-scoped reads and governed pull-request queue | reviewed | future scope-bounded consumer; may request/queue external work but cannot receive direct SQL, autonomous spend, or Observatory-stored workflow conclusions |
+| Kaizen | Durable evidence-handle resolution and as-of governance citations | reviewed | strong governance consumer; Observatory resolves evidence and historical state, while Kaizen owns decisions and implementation-return meaning |
+| Internal products | Market-watch scopes, costed blind spots, future sentinels | reviewed | useful internal evidence layer under the same rights, scope, retention, and spend gates; internal use grants no boundary waiver |
+| Corpus moat | Dated AI citations, SERP feature history, disagreement pairs, transient features, compliant marketplace observations | reviewed | accepted strategic thesis: longitudinal rights-clean observations and uncommon joins are the moat; not the LLM, dashboard, or stored strategy |
+| Commercial contamination risk | Report pressure may push conclusions into Observatory | accepted as continuing risk | M15 must prove report deadlines cannot create cached recommendations, report prose, customer records, or accepted conclusions inside Observatory |
 
 ---
 

@@ -52,6 +52,7 @@ Active M14 package:
 - `m14-typed-read-contract-requirements.md` — complete 19-requirement read-boundary planning specification
 - `m14-read-boundary-hostile-path-plan.md` — high-consequence hammer and contract-acceptance test plan
 - `m14-owner-ruling-proposals.md` — OR-D1 through OR-D6 and M14 scope proposals
+- `post-m13-capability-opportunity-review.md` — complete O-1 through O-10 value, boundary, dependency, milestone, research, and consumer routing
 
 Then read:
 
