@@ -122,8 +122,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M11 | Implementation Foundation | closed | Create project implementation skeleton only after gates open |
 | M12 | First Evidence Slice Build | closed | Build and test the first observation path |
 | M13 | Provider Admission and Controlled Pull Plan | closed | One controlled DataForSEO probe completed, reviewed, and purged with proof |
-| M14 | Typed Read API / MCP Contract and Prototype | active | Plan evidence access through bounded read tools, not raw SQL |
-| M15 | SearchClarity Proof Workflow | planned | Prove customer-facing evidence support without storing customer records |
+| M14 | Typed Read API / MCP Contract and Prototype | complete | Accepted typed-read contract plus bounded fixture/in-memory prototype proof |
+| M15 | SearchClarity Proof Workflow | active for planning only | Prove customer-facing evidence support without storing customer records |
 | M16 | Provider Cross-Check Proof | planned | Prove provider disagreement as first-class evidence |
 | M17 | Owned Telemetry Overlay Proof | planned | Prove read-time overlay without storing customer first-party data |
 | M18 | Recurring Watch Panel Planning | planned | Plan recurring capture only after provider/cost/hammers exist |
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M14
+M15
 
 ### Name
 
-Typed Read API / MCP Contract and Prototype
+SearchClarity Proof Workflow
 
 ### Status
 
@@ -148,50 +148,56 @@ active for planning only
 
 ### Purpose
 
-Define the typed, scope-safe, evidence-only read boundary that lets connected LLMs inspect Observatory evidence without direct SQL, raw credential access, customer-data leakage, provider-spend side effects, or stored strategy.
+Define how SearchClarity can consume Observatory evidence for human-reviewed SEO/GEO support without turning Observatory into a customer database, report system, CRM, strategy engine, or workflow store.
 
-M14 consumes the closed M13 provider evidence and the existing contract/hammer set. It may plan read contracts, authorization proposals, evidence-handle behavior, caveat-preserving context packs, error taxonomies, pagination/ceiling rules, tool guidance, and hostile-path acceptance criteria.
+M15 consumes the accepted typed-read contract and bounded M14 prototype proof. It may plan evidence-pack-to-report-support behavior, claim-safety propagation, public-observation scope handling, report-safe reference boundaries, no-storage overlay requirements, consumer promotion, and hostile-path acceptance criteria.
 
 ### Required Reading
 
 - `ACTIVE_CONTEXT.md`
-- `decisions/2026-07-12-m13-closure-and-m14-activation.md`
-- `planning-inbox/m13-closure-readiness-review-2026-07-12.md`
-- `planning-inbox/post-m13-deep-audit-response-2026-07-12.md`
-- `audits/observatory-post-m13-deep-audit-2026-07-12.md`
-- `contracts/README.md`
+- `decisions/2026-07-12-m14-closure-and-m15-activation.md`
+- `contracts/searchclarity-consumer-placeholder.md`
+- `contracts/consumer-promotion.md`
+- `contracts/claim-safety.md`
+- `contracts/overlay.md`
+- `contracts/typed-read-api-mcp-v0-1.md`
+- `planning-inbox/m14-fixture-read-prototype-closure-readiness-review.md`
+- `research/deep-research-backlog.md`
 - `hammers/hammer-matrix-v0-1.md`
-- `hammers/acceptance-gate-policy-v0-1.md`
 
 ### Allowed Work
 
-- typed read-contract planning;
-- consumer authentication/authorization proposals;
-- scope-safe evidence-handle and status-resolution planning;
-- pagination, ceilings, redaction, freshness, attribution, and disagreement rules;
-- LLM-context assembly and tool-guidance planning;
+- SearchClarity consumer-boundary reconciliation;
+- evidence-pack-to-report-support contract planning;
+- claim-safety and caveat-propagation requirements;
+- public-observation scope and report-safe reference planning;
+- no-storage overlay decision points and fail-closed behavior;
+- interpretation/recommendation/report promotion boundaries;
 - hostile-path and acceptance-test planning;
-- bounded local prototype task proposals after the required gates are satisfied.
+- exact bounded proof-task proposals after contract and owner gates are satisfied.
 
 ### Forbidden Work
 
+- customer records or customer-private analytics in Observatory;
+- report delivery records in Observatory;
+- customer-facing report generation or SearchClarity production integration;
+- overlay persistence or real overlay implementation;
 - production API/MCP deployment;
 - direct SQL or database credentials for LLMs or agents;
 - Postgres creation, physical schema, or migrations;
-- live provider ingestion or any additional paid provider request;
-- customer data or customer first-party analytics storage;
-- recurring capture, dashboards, reports, or strategy/recommendation storage.
+- provider calls, additional paid requests, or recurring capture;
+- strategy/recommendation storage or automatic conclusion promotion.
 
 ### Blockers
 
-- Batch A audit corrections must disarm the closed M13 paid path and restore one truthful phase authority.
-- Sanitized M13 evidence and contract-authority questions must be resolved before M14 read-contract acceptance.
-- OR-D1, OR-D2, OR-D3, and related read-boundary rulings must be proposed before prototype implementation.
+- The accepted SearchClarity placeholder must be reconciled into a full M15 consumer contract before proof implementation.
+- Report-safe reference behavior must be ruled without exposing internal evidence handles or raw support paths.
+- DR9 customer-facing report-language validation and DR10 no-storage overlay questions must be routed before customer-adjacent proof.
+- Any bounded proof task requires a separate exact owner authorization.
 
-### M14 Progress Log
+### M15 Progress Log
 
-2026-07-12 — M14 planning activated by `decisions/2026-07-12-m13-closure-and-m14-activation.md`.
-2026-07-12 — Post-M13 deep audit preserved and routed through a full response ledger; Batch A corrections started.
+2026-07-12 — M15 planning activated by `decisions/2026-07-12-m14-closure-and-m15-activation.md` after bounded M14 closure proof.
 
 ---
 
@@ -959,7 +965,7 @@ Next milestone: M14
 
 ### M14 - Typed Read API / MCP Contract and Prototype
 
-Status: active for planning only; full active-milestone details live in the Active Milestone section above
+Status: complete — closed by `decisions/2026-07-12-m14-closure-and-m15-activation.md`
 
 Purpose:
 Expose evidence through bounded typed read tools without giving LLMs SQL or credentials.
@@ -1003,7 +1009,7 @@ Next milestone: M15
 
 ### M15 - SearchClarity Proof Workflow
 
-Status: planned
+Status: active for planning only — activated by `decisions/2026-07-12-m14-closure-and-m15-activation.md`
 
 Purpose:
 Prove Observatory can support SearchClarity-style evidence without becoming a customer database.

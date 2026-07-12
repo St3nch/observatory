@@ -12,37 +12,38 @@ Last updated: 2026-07-12
 The Observatory is in:
 
 ```text
-M14 typed read API / MCP contract planning
+M15 SearchClarity proof-workflow planning
 ```
 
-M13 is closed after one bounded DataForSEO C00 live probe completed successfully, reconciled at $0.002, produced reviewed payload-shape evidence, and purged its raw response with durable proof. M14 is active for planning only: typed read boundaries, consumer-safe evidence access, authentication/authorization requirements, LLM-context assembly, tool guidance, and hostile-path acceptance criteria. No production API/MCP, Postgres, schema, migration, live ingestion, or additional paid provider request is authorized.
+M14 is closed after acceptance of the typed-read contract, direct review of the named Hermes lineage inputs, implementation of one bounded fixture-backed in-memory prototype, and owner-local proof that all 141 tests pass. M15 is active for planning only: SearchClarity consumer-boundary reconciliation, evidence-pack-to-report-support requirements, report-safe reference boundaries, no-storage overlay decision points, claim-safety propagation, and hostile-path acceptance criteria. No customer records, customer-private storage, report generation, production integration, Postgres, schema, migration, provider execution, or production API/MCP is authorized.
 
 ---
 
 ## Active Milestone
 
 ```text
-M14 - Typed Read API / MCP Contract and Prototype
+M15 - SearchClarity Proof Workflow
 ```
 
-M0, M0.1, and M1 through M13 are complete and committed.
+M0, M0.1, and M1 through M14 are complete and committed.
 
 ---
 
 ## Current Task
 
-Begin M14 with repo-first audit and contract planning before any prototype implementation.
+Begin M15 with repo-first consumer-boundary and contract reconciliation before any proof implementation.
 
-Current M14 work is allowed to:
+Current M15 work is allowed to:
 
-- audit the existing contracts, hammers, C2 fixture slice, and M13 provider evidence for read-boundary requirements;
-- define typed observation, provenance, scope, rights, retention, freshness, attribution, disagreement, and evidence-handle reads;
-- define bounded filters, pagination, error behavior, redaction, authentication, and authorization requirements;
-- define safe LLM-context assembly and MCP/tool guidance metadata;
-- define hostile-path tests and a bounded prototype task proposal;
-- use the new Claude deep audit as advisory input after owner review.
+- reconcile the accepted SearchClarity consumer placeholder with the accepted typed-read and consumer-promotion contracts;
+- define the evidence-pack-to-report-support workflow without generating customer reports;
+- define claim-safety, caveat propagation, report-safe reference, and public-observation scope requirements;
+- define customer/private first-party overlay requirements as no-storage read-time inputs only, if needed;
+- define how interpretations, recommendations, reports, and accepted conclusions promote out to SearchClarity;
+- define hostile-path tests and an exact bounded proof-task proposal;
+- route deeper research and owner rulings required before customer-facing proof.
 
-M14 does not authorize Postgres, schema, migrations, live provider ingestion, another paid request, customer data, direct SQL, production API/MCP deployment, dashboard work, reports, strategy storage, recommendation storage, or automatic conclusion promotion.
+M15 does not authorize customer records in Observatory, customer-private analytics storage, report delivery records, customer-facing report generation, SearchClarity production integration, overlay implementation, Postgres, schema, migrations, provider calls, recurring capture, production API/MCP deployment, strategy storage, recommendation storage, or automatic conclusion promotion.
 
 ---
 
@@ -110,12 +111,13 @@ Closed:
 - M11 - Implementation Foundation
 - M12 - First Evidence Slice Build
 - M13 - Provider Admission and Controlled Pull Plan
+- M14 - Typed Read API / MCP Contract and Prototype
 
 Active:
 
-- M14 - Typed Read API / MCP Contract and Prototype
+- M15 - SearchClarity Proof Workflow
 
-Next after M14:
+Next after M15:
 
 ```text
 Follow the accepted roadmap sequence; no later milestone is activated by this context file.

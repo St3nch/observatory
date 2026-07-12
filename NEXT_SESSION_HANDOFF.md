@@ -2,14 +2,14 @@
 
 Status: authority
 Authority: fresh-session handoff pointer; `ACTIVE_CONTEXT.md` owns current phase truth
-Purpose: preserve current state after M13 closure and M14 planning activation
+Purpose: preserve current state after M14 closure and M15 planning activation
 Last updated: 2026-07-12
 
 ---
 
 ## Current State
 
-The Observatory is in M14 typed read API / MCP contract planning.
+The Observatory is in M15 SearchClarity proof-workflow planning.
 
 Closed milestones:
 
@@ -28,19 +28,20 @@ Closed milestones:
 - M11 - Implementation Foundation
 - M12 - First Evidence Slice Build
 - M13 - Provider Admission and Controlled Pull Plan
+- M14 - Typed Read API / MCP Contract and Prototype
 
 Active milestone:
 
 ```text
-M14 - Typed Read API / MCP Contract and Prototype
+M15 - SearchClarity Proof Workflow
 ```
 
-M13 completed one tightly governed DataForSEO C00 pull, reconciled cost at $0.002, reviewed the payload shape, preserved the 401 incident, and purged raw payload evidence with proof. M14 is active for planning only. No production API/MCP, Postgres, schema, migrations, live ingestion, additional paid provider request, customer data, recurring capture, dashboard, report, or strategy/recommendation storage is authorized.
+M14 closed on an accepted typed-read contract plus one local fixture-backed in-memory prototype. The owner ran the full suite: 141 tests passed. M15 is active for planning only. No customer records, customer-private storage, report generation, production SearchClarity integration, overlays, Postgres, schema, migrations, provider execution, recurring capture, production API/MCP, or strategy/recommendation storage is authorized.
 
-Current audit-response authority:
+Current milestone-transition authority:
 
 ```text
-planning-inbox/post-m13-deep-audit-response-2026-07-12.md
+decisions/2026-07-12-m14-closure-and-m15-activation.md
 ```
 
 ---

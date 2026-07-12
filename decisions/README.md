@@ -61,6 +61,9 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-11-m13-dataforseo-controlled-probe-approval.md` | accepted decision | Authorizes the bounded fixture-only DataForSEO probe safety cage and preserves separate funding/execution gates | Fixture-only implementation accepted; live execution remains separately controlled |
 | `2026-07-12-m13-dataforseo-exploratory-campaign.md` | accepted decision | Reserves the available $50 balance for staged DataForSEO provider validation and defines per-pull review gates | Campaign catalog/testing authorized; each live request still requires preflight and explicit owner confirmation |
 | `2026-07-12-m13-closure-and-m14-activation.md` | accepted decision | Closes M13 after the reviewed C00 probe and activates M14 planning | One paid probe accepted, raw payload purged with proof, no further provider or implementation authority granted |
+| `2026-07-12-m14-contract-and-read-boundary-rulings.md` | accepted decision | Accepts contract set v0.1 and M14 read-boundary rulings | No production API/MCP, persistence, provider execution, or customer-data authority |
+| `2026-07-12-m14-typed-read-contract-acceptance-and-prototype-authorization.md` | accepted decision | Accepts the full M14 typed-read contract and authorizes one exact fixture-backed prototype | Local, in-memory proof only; no network, database, provider, customer, overlay, or report work |
+| `2026-07-12-m14-closure-and-m15-activation.md` | accepted decision | Closes M14 after bounded proof and activates M15 planning | SearchClarity consumer-boundary planning only; no customer records, reports, overlays, production integration, or persistence |
 
 ---
 
