@@ -14,6 +14,7 @@ from .live_execution import (
     build_live_preflight,
     duplicate_attempt_exists,
     execute_one_c00,
+    replacement_attempt_allowed,
 )
 from .core import (
     EVIDENCE_ROOT,
@@ -158,6 +159,7 @@ def command_live_preflight(args: argparse.Namespace) -> int:
         account_limits_recorded=args.account_limits_recorded,
         evidence_root_ignored=args.evidence_root_ignored,
         duplicate_exists=duplicate_attempt_exists(),
+        replacement_allowed=replacement_attempt_allowed(),
         owner_confirmation=args.owner_confirmation,
     )
     _print(result)
