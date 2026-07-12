@@ -6,11 +6,16 @@ requires-python = ">=3.11"
 dependencies = []
 
 [tool.observatory]
-status = "m12-local-fixture-only"
+status = "m13-dataforseo-probe-fixture-only"
 first_slice = "C2 Controlled Public Manual Observation Package"
+probe = "DataForSEO one-shot fixture-only safety cage"
 network = "disabled"
-providers = "disabled"
+provider_execution = "disabled"
+provider_funding = "disabled"
+providers = "candidate-only"
 customer_data = "disabled"
+postgres = "disabled"
+schema_migrations = "disabled"
 api_mcp = "disabled"
 dashboard = "disabled"
 strategy_storage = "disabled"

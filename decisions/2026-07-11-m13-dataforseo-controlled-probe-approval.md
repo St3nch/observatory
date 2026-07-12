@@ -1,8 +1,8 @@
 # Decision M13-D1 — DataForSEO Controlled Probe Approval
 
-Status: proposed
+Status: accepted — fixture-only implementation authority; funding and provider execution remain pending
 Date: 2026-07-11
-Owner ruling: pending — this file is not accepted and grants no authority
+Owner ruling: accepted 2026-07-12 for bounded no-network CLI implementation and fixture/mock testing only
 Related milestone: M13 — Provider Admission and Controlled Pull Plan
 Related files:
 
@@ -25,38 +25,32 @@ Related files:
 
 ## Decision
 
-Proposed owner ruling:
+Accepted owner ruling:
 
 ```text
-Approve one tightly bounded DataForSEO SERP API payload-inspection probe after all preflight gates in this decision are met.
+Authorize bounded fixture-only, no-network implementation and fixture/mock testing for the one-shot DataForSEO SERP probe described in this decision.
 
-Approve DataForSEO only for the single recipe named here. This is not broad provider admission.
+Bind the implementation to the single endpoint, request recipe, cost ceiling, task/request ceilings, duplicate controls, credential boundaries, and capture-and-purge posture named here.
 
-Approve account funding only at the current official minimum payment amount, expected to be $50 but requiring fresh official verification before funding.
+Do not authorize account funding, use of existing credits, real credentials, network execution, provider tasks, or raw provider capture yet.
 
-Approve a maximum actual provider-reported probe cost of $0.10.
-
-Approve one billable task and one API request only.
-
-Approve no retries, no polling, no repeat submission, no second pull, and no endpoint substitution.
-
-Approve temporary local raw-response retention only under the exact local-only and purge rules in this decision.
-
-Do not approve execution until the owner changes this decision from proposed to accepted after reviewing every binding value.
+Funding and one-request execution require a later explicit owner ruling after implementation and hostile-path evidence are reviewed.
 ```
 
-Until explicit owner acceptance:
+Current authority:
 
 ```text
-No credits.
-No use of existing credits.
-No CLI implementation.
-No API request.
-No provider task.
-No raw payload capture.
-No Postgres.
-No schema.
-No migrations.
+CLI source implementation: authorized, fixture-only and no-network.
+Fixture/mock hostile-path tests: authorized.
+Credits: not authorized.
+Use of existing credits: not authorized.
+Real credentials: not authorized.
+API request: not authorized.
+Provider task: not authorized.
+Raw provider payload capture: not authorized.
+Postgres: not authorized.
+Schema: not authorized.
+Migrations: not authorized.
 ```
 
 ---

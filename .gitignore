@@ -23,4 +23,5 @@ build/
 # Observatory future raw capture outputs
 captures/
 raw-captures/
+probe-evidence/
 *.local.json
