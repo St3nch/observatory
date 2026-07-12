@@ -59,6 +59,7 @@ Folder earned during M8 after M7 closure by `decisions/2026-07-10-m7-closure.md`
 1. `README.md` — this folder index
 2. `hammer-matrix-v0-1.md` — first M8 hammer matrix draft
 3. `acceptance-gate-policy-v0-1.md` — milestone gate policy and M9 entry filter
+4. `../planning-inbox/m8-hammer-planning-review.md` — advisory M8 review and closure-readiness note
 
 ---
 
@@ -69,6 +70,7 @@ Folder earned during M8 after M7 closure by `decisions/2026-07-10-m7-closure.md`
 | `README.md` | index | Explains hammer folder scope, rules, and reading order | Created when M8 activated |
 | `hammer-matrix-v0-1.md` | draft | First M8 hostile-path hammer matrix and milestone-gate mapping | Drafted from RG13 and M7 contract set |
 | `acceptance-gate-policy-v0-1.md` | draft | Defines M8 acceptance levels, milestone gate defaults, owner-ruling defaults, and M9 first-slice entry filter | Drafted from hammer matrix, RG13, roadmap, and owner-ruling tracker |
+| `../planning-inbox/m8-hammer-planning-review.md` | planning review | Reviews M8 readiness and closure posture without claiming hammer execution | Advisory note; not authority |
 
 ---
 

@@ -32,9 +32,9 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
-| OR-B1 | Hammer acceptance criteria + acceptable mock/stub level for pre-implementation hammers | RG13 | open |
-| OR-B2 | Which hammers are hard gates for which milestone | RG13 | open |
-| OR-B3 | Does any freshness class automatically block customer-facing report use? | RG5 | open |
+| OR-B1 | Hammer acceptance criteria + acceptable mock/stub level for pre-implementation hammers | RG13 | open — draft default recorded in `hammers/acceptance-gate-policy-v0-1.md`; mock/stub planning does not satisfy implementation acceptance unless later ruled |
+| OR-B2 | Which hammers are hard gates for which milestone | RG13 | open — draft milestone mapping recorded in `hammers/hammer-matrix-v0-1.md` and `hammers/acceptance-gate-policy-v0-1.md`; not binding until accepted |
+| OR-B3 | Does any freshness class automatically block customer-facing report use? | RG5 | open — draft fail-closed default recorded in `hammers/acceptance-gate-policy-v0-1.md`; M15 must revisit report-facing use |
 
 ## Group C — Needed before M13 provider/capture admission
 
