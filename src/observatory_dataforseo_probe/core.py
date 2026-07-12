@@ -145,9 +145,10 @@ def redact_text(value: str) -> str:
     return redacted
 
 
-def is_within_evidence_root(path: Path, root: Path = EVIDENCE_ROOT) -> bool:
+def is_within_evidence_root(path: Path, root: Path | None = None) -> bool:
+    active_root = EVIDENCE_ROOT if root is None else root
     try:
-        path.resolve().relative_to(root.resolve())
+        path.resolve().relative_to(active_root.resolve())
         return True
     except ValueError:
         return False
