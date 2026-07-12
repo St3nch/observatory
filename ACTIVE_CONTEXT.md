@@ -12,10 +12,10 @@ Last updated: 2026-07-12
 The Observatory is in:
 
 ```text
-M13 controlled-probe pre-funding gate
+M13 funded exploratory campaign preparation
 ```
 
-The narrow DataForSEO fixture-only safety cage is implemented and owner-local tests pass. The next allowed work is funding preparation, exact price verification, account-control review, credential-safe local setup, and preflight planning. Provider execution remains disabled until a separate explicit one-request owner ruling.
+The owner reports an available $50 DataForSEO balance and has accepted a staged provider-validation campaign. The one-shot safety cage and campaign catalog remain fixture-only while tests are expanded. The immediate live candidate is C00 Google Organic desktop sentinel, but provider execution remains disabled until credential-safe setup, account review, exact preflight, and explicit one-request confirmation.
 
 ---
 
@@ -31,21 +31,23 @@ M0, M0.1, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, M11, and M12 are complete and
 
 ## Current Task
 
-Complete the M13 pre-funding and pre-submit gate without sending a provider request.
+Complete and test the fixture-only campaign catalog and prepare C00 for an explicit one-request preflight.
 
 Current M13 work is allowed to:
 
-- preserve the accepted fixture-only implementation and passing 67-test evidence;
-- prepare the owner-controlled minimum-credit funding step;
-- verify the exact immutable request price after funding but before submission;
+- preserve the accepted one-shot implementation and passing 67-test evidence;
+- implement and fixture-test the immutable C00–C07 campaign catalog;
+- validate stage ceilings totaling exactly $50.00;
+- inspect the owner-uploaded SERP usage workbook read-only and preserve its zero-row baseline hash;
+- build privacy-safe workbook reconciliation tooling using synthetic fixtures;
 - inspect and record available account-level duplicate/spend controls;
 - prepare credential-safe local environment setup without recording secret values;
-- run no-network preflight once all required owner-controlled inputs exist;
-- prepare the separate one-request execution ruling.
+- generate the exact no-network C00 preflight;
+- stop for explicit one-request confirmation before any provider call.
 
-The fixture-only DataForSEO probe implementation is accepted under `decisions/2026-07-11-m13-dataforseo-controlled-probe-approval.md`. Owner-local evidence records 67 tests passing after commit `98a796f` fixed the dynamic evidence-root regression.
+The campaign authority is recorded in `decisions/2026-07-12-m13-dataforseo-exploratory-campaign.md`. The first pull remains C00 Google Organic Live Advanced desktop sentinel. C01–C07 are candidates only and require review-based promotion.
 
-M13 still does not authorize a DataForSEO request, provider task, raw provider capture, second request, Postgres, schema, migrations, API/MCP exposure, dashboard work, customer data, recurring capture, or strategy/recommendation storage.
+M13 still does not authorize unattended execution, bulk pulls, retries, silent endpoint substitution, customer data, recurring capture, Postgres, schema, migrations, API/MCP exposure, dashboard work, or strategy/recommendation storage.
 
 ---
 

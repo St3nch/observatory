@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from .campaign import campaign_budget_summary, get_recipe, list_recipes, validate_catalog
 from .core import (
     EVIDENCE_ROOT,
     ProbeBlocked,
@@ -79,6 +80,27 @@ def command_purge(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_campaign_list(_: argparse.Namespace) -> int:
+    _print(list_recipes())
+    return 0
+
+
+def command_campaign_show(args: argparse.Namespace) -> int:
+    _print(get_recipe(args.recipe_id).summary())
+    return 0
+
+
+def command_campaign_budget(_: argparse.Namespace) -> int:
+    _print(campaign_budget_summary())
+    return 0
+
+
+def command_campaign_validate(_: argparse.Namespace) -> int:
+    result = validate_catalog()
+    _print(result)
+    return 0 if result["valid"] else 2
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Fixture-only M13 DataForSEO probe safety cage")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -105,6 +127,19 @@ def build_parser() -> argparse.ArgumentParser:
     purge.add_argument("--probe-id", required=True)
     purge.add_argument("--actor", required=True)
     purge.set_defaults(func=command_purge)
+
+    campaign_list = sub.add_parser("campaign-list")
+    campaign_list.set_defaults(func=command_campaign_list)
+
+    campaign_show = sub.add_parser("campaign-show")
+    campaign_show.add_argument("--recipe-id", required=True)
+    campaign_show.set_defaults(func=command_campaign_show)
+
+    campaign_budget = sub.add_parser("campaign-budget")
+    campaign_budget.set_defaults(func=command_campaign_budget)
+
+    campaign_validate = sub.add_parser("campaign-validate")
+    campaign_validate.set_defaults(func=command_campaign_validate)
     return parser
 
 

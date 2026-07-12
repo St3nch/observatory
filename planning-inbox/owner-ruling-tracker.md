@@ -40,7 +40,7 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
-| OR-C1 | Fund/use a DataForSEO account; release the reserved validation budget; approve recipe/endpoint list/ceilings/stop conditions | RG1; DR1; `decisions/2026-07-11-m13-dataforseo-controlled-probe-approval.md` | open — fixture-only implementation accepted and 67 tests pass; exact pricing may be verified after credits but before submission; next owner gate is minimum funding, account controls, credential-safe setup, preflight, and separate one-request execution approval |
+| OR-C1 | Fund/use a DataForSEO account; release the reserved validation budget; approve recipe/endpoint list/ceilings/stop conditions | RG1; DR1; `decisions/2026-07-11-m13-dataforseo-controlled-probe-approval.md`; `decisions/2026-07-12-m13-dataforseo-exploratory-campaign.md` | ruled — owner reports $50 available and accepted the staged campaign budget, initial C00–C07 catalog, ceilings, and review gates; each live request still requires exact preflight and explicit confirmation |
 | OR-C2 | Long-term raw payload retention posture per source family (durable vs manifest-only vs capture-and-purge vs no-storage) | RG1 F6; RG11; DR2; `decisions/2026-07-11-m13-dataforseo-controlled-probe-approval.md` | open — first-probe capture-and-purge posture proposed only; no general or durable retention ruling |
 | OR-C3 | Use AI Optimization endpoint families for validation | RG1; RG6 | open |
 | OR-C4 | Raw archive layout: filesystem-first, object-storage-first, or hybrid | RG11; DR13 | open |
