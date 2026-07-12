@@ -53,6 +53,7 @@ Active M14 package:
 - `m14-read-boundary-hostile-path-plan.md` — high-consequence hammer and contract-acceptance test plan
 - `m14-owner-ruling-proposals.md` — OR-D1 through OR-D6 and M14 scope proposals
 - `post-m13-capability-opportunity-review.md` — complete O-1 through O-10 value, boundary, dependency, milestone, research, and consumer routing
+- `post-m13-audit-final-reconciliation.md` — final proof that every audit finding, claim, requirement, opportunity, decision candidate, correction step, and deferred boundary received a disposition
 
 Then read:
 

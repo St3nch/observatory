@@ -1,6 +1,6 @@
 # Post-M13 Deep Audit Response Tracker
 
-Status: active audit-response tracker
+Status: audit-response review complete; remaining items are explicit owner rulings or future milestone gates
 Authority: working review/routing record only; not doctrine, implementation authority, provider-spend authority, or roadmap authority
 Audit source: `audits/observatory-post-m13-deep-audit-2026-07-12.md`
 Audit SHA-256: `7b23ef8f8f31d7c3d18a3f065b1773724fa376fe118480928d141bde1bd64615`
@@ -46,19 +46,19 @@ The audit remains advisory. This tracker records routing and review outcomes; ac
 
 | Audit area | Items | Review status |
 |---|---:|---|
-| Numbered findings | F-01 through F-14 | pending full verification |
-| Hammer audit | existing-hammer critiques + missing hammers | pending full verification |
-| M9-M12 implementation audit | all claims and proof-scope warnings | pending full verification |
-| M13 provider-probe audit | all control/evidence/retention findings | pending full verification |
-| M14 planning requirements | 19 requirements | pending full verification |
-| Dangerous-capability opportunities | O-1 through O-10 | pending classification/routing |
-| Commercial leverage analysis | SearchClarity, Neon Ronin, Kaizen, internal products | pending boundary review |
-| Project hygiene | all stale-authority and lineage items | pending verification |
-| Recommended correction sequence | Steps 1 through 7 | pending dependency review |
-| Owner decisions required | 10 decision candidates | pending owner-routing review |
-| Deferred boundaries | all items in audit section 17 | pending confirmation against current authority |
-| Trust-before-expensive-evidence list | 7 requirements | pending mapping to milestones/hammers |
-| Final recommendation/gates | M14 planning, prototype, contract, future-provider gates | pending adjudication |
+| Numbered findings | F-01 through F-14 | complete — every finding verified and resolved, routed, owner-gated, or deliberately deferred |
+| Hammer audit | existing-hammer critiques + missing hammers | complete — classifications and hostile-path routes recorded |
+| M9-M12 implementation audit | all claims and proof-scope warnings | complete — bounded proof value and future substrate re-proof recorded |
+| M13 provider-probe audit | all control/evidence/retention findings | complete — all claims adjudicated without reopening M13 |
+| M14 planning requirements | 19 requirements | complete — all accepted/routed in the M14 requirements package |
+| Dangerous-capability opportunities | O-1 through O-10 | complete — every opportunity classified and routed |
+| Commercial leverage analysis | SearchClarity, Neon Ronin, Kaizen, internal products | complete — consumer boundaries recorded |
+| Project hygiene | all stale-authority and lineage items | complete — repaired or explicitly routed |
+| Recommended correction sequence | Steps 1 through 7 | complete — dependency/status review recorded |
+| Owner decisions required | 10 decision candidates | complete as routing — completed items distinguished from rulings still required |
+| Deferred boundaries | all items in audit section 17 | complete — confirmed against current authority |
+| Trust-before-expensive-evidence list | 7 requirements | complete — each mapped to a milestone or hard gate |
+| Final recommendation/gates | M14 planning, prototype, contract, future-provider gates | complete — final gate adjudication recorded |
 
 ---
 
@@ -114,12 +114,12 @@ The audit remains advisory. This tracker records routing and review outcomes; ac
 
 | Claim / warning | Status | Disposition / evidence |
 |---|---|---|
-| C2 proves validation logic, not storage semantics | pending | pending |
-| All C2 hammer results reopen at first persistence substrate | pending | pending |
-| C2 envelope may lack `provider_or_capture_instrument` alignment | pending | pending |
-| Freshness proof is only warning-presence, not status computation | pending | pending |
-| Bare UUID and provisional citation-handle formats need later design | pending | pending |
-| No premature abstraction; implementation remains appropriately small | pending | pending |
+| C2 proves validation logic, not storage semantics | accepted | bounded in-memory validation proof only; no database/transaction/concurrency claim |
+| All C2 hammer results reopen at first persistence substrate | accepted with clarification | old bounded results remain valid, but persistence-dependent invariants must be re-proven against the real substrate |
+| C2 envelope may lack `provider_or_capture_instrument` alignment | accepted | align before future schema/persistence planning where capture method and instrument differ |
+| Freshness proof is only warning-presence, not status computation | accepted | current result is contract-shape proof; computed freshness enforcement remains future work |
+| Bare UUID and provisional citation-handle formats need later design | accepted | local proof formats only; M14/OR-A4 owns internal handle scope and M15 owns report-safe references |
+| No premature abstraction; implementation remains appropriately small | accepted | preserve the small implementation; no framework expansion required by the audit |
 
 ---
 
@@ -127,17 +127,17 @@ The audit remains advisory. This tracker records routing and review outcomes; ac
 
 | Area | Audit conclusion | Status | Disposition / evidence |
 |---|---|---|---|
-| Credential handling | pass with bounded caveats | pending | pending |
-| Per-request spend controls | proven | pending | pending |
-| Cumulative/post-receipt spend controls | incomplete | pending | pending |
-| Duplicate design | sound but substrate is local-only | pending | pending |
-| Incident handling | strongest proof; no reusable replacement loophole | pending | pending |
-| Evidence packaging | strong except missing preflight snapshot | pending | pending |
-| Raw purge | pass | pending | pending |
-| Provider attribution | pass | pending | pending |
-| 162-path parser/drift implications | useful planning input | pending | pending |
-| Sanitized evidence sufficiency after purge | sufficient for shape planning if preserved durably | pending | pending |
-| Next-probe hardening list | F-01, F-02, F-05, F-06, F-07, F-12 | pending | pending |
+| Credential handling | pass with bounded caveats | accepted | environment-only use and committed-artifact review passed; future secret posture still gates future provider work |
+| Per-request spend controls | proven | accepted | proven for the exact authorized C00 request only |
+| Cumulative/post-receipt spend controls | incomplete | accepted gap | mandatory before any future provider execution |
+| Duplicate design | sound but substrate is local-only | accepted with boundary | sufficient for one-machine proof; clone-stable authority/ledger required before reuse |
+| Incident handling | strongest proof; no reusable replacement loophole | accepted | governance proof preserved; consumed replacement code retired |
+| Evidence packaging | strong except missing preflight snapshot | accepted with future gate | future package must preserve authorizing preflight; historical artifact not fabricated |
+| Raw purge | pass | accepted | hash, bytes, containment, absence, and proof artifact preserved |
+| Provider attribution | pass | accepted | DataForSEO remains attributed testimony, not truth |
+| 162-path parser/drift implications | useful planning input | accepted | supports parser/read/drift planning only; no schema authority |
+| Sanitized evidence sufficiency after purge | sufficient for shape planning if preserved durably | accepted | committed package is sufficient for structural planning; value questions require a new authorized sample |
+| Next-probe hardening list | F-01, F-02, F-05, F-06, F-07, F-12 | accepted in full | all unresolved structural controls plus OR-C2 and a new request-specific decision gate future provider execution |
 
 ---
 
@@ -216,16 +216,16 @@ rejected boundary violation
 
 | # | Candidate ruling | Status | Route |
 |---:|---|---|---|
-| 1 | Disarm live execution and adopt data-driven authority direction | pending | pending |
-| 2 | Approve sanitized C00 evidence commit and possible `providers/` folder | pending | pending |
-| 3 | Accept M7 contract set as v0.1 or define provisional-binding rule | pending | pending |
-| 4 | OR-D1 consumer authentication/authorization model | pending | pending |
-| 5 | OR-D2 raw-pointer exposure boundary | pending | pending |
-| 6 | OR-D3 withdrawal/supersession behavior and OR-A4 M14 scope-down | pending | pending |
-| 7 | Read-audit/access-log posture | pending | pending |
-| 8 | OR-C2 family-specific durable-vs-purge retention posture | pending | pending |
-| 9 | Machine-readable hammer-results register | pending | pending |
-| 10 | Consume or waive RG3/RG8 Kaizen Hermes inputs | pending | pending |
+| 1 | Disarm live execution and adopt data-driven authority direction | partially completed | immediate disarm completed; structural data-driven authority remains a future-provider hard gate |
+| 2 | Approve sanitized C00 evidence commit and possible `providers/` folder | completed | explicit decision and committed provider-evidence package |
+| 3 | Accept M7 contract set as v0.1 or define provisional-binding rule | owner ruling required | proposal prepared in `m14-contract-set-acceptance-readiness-review.md` |
+| 4 | OR-D1 consumer authentication/authorization model | owner ruling required | concrete proposal prepared in `m14-owner-ruling-proposals.md` |
+| 5 | OR-D2 raw-pointer exposure boundary | owner ruling required | internal-only fail-closed proposal prepared |
+| 6 | OR-D3 withdrawal/supersession behavior and OR-A4 M14 scope-down | owner ruling required | status-aware/internal-handle proposals prepared |
+| 7 | Read-audit/access-log posture | owner ruling required | OR-D5 proposal prepared; security logs remain outside evidence corpus |
+| 8 | OR-C2 family-specific durable-vs-purge retention posture | owner ruling required before future provider execution | not required to continue M14 planning |
+| 9 | Machine-readable hammer-results register | owner ruling required | OR-D6 proposal prepared as repository proof metadata, not Observatory evidence |
+| 10 | Consume or waive RG3/RG8 Kaizen Hermes inputs | explicit action required | lineage gap recorded; consume exact inputs or record owner waiver before dependent contract acceptance |
 
 ---
 
@@ -233,13 +233,13 @@ rejected boundary violation
 
 | Step | Audit recommendation | Status | Final sequence decision |
 |---:|---|---|---|
-| 1 | Disarm live execution and retire consumed replacement branch | pending | pending |
-| 2 | Preserve sanitized M13 evidence durably | pending | pending |
-| 3 | Create structural decision-linked provider authority and reconcile safety claims | pending | pending |
-| 4 | Repair authority-file and minor hygiene drift | pending | pending |
-| 5 | Resolve contract authority, owner tracker, and research lineage | pending | pending |
-| 6 | Harden provider tooling before any future pull | pending | pending |
-| 7 | Upgrade hammer system and add results register | pending | pending |
+| 1 | Disarm live execution and retire consumed replacement branch | completed | Batch A commit `241e90d` |
+| 2 | Preserve sanitized M13 evidence durably | completed | Batch B commit `70482d8` |
+| 3 | Create structural decision-linked provider authority and reconcile safety claims | partially complete | safety claims reconciled; structural authority remains a future-provider hard gate |
+| 4 | Repair authority-file and minor hygiene drift | completed | phase authority, indexes, and current test evidence repaired |
+| 5 | Resolve contract authority, owner tracker, and research lineage | routed | tracker and lineage dispositions complete; contract acceptance still requires owner ruling |
+| 6 | Harden provider tooling before any future pull | accepted/deferred | mandatory before future execution; disarmed closed-M13 code is not expanded merely to satisfy audit prose |
+| 7 | Upgrade hammer system and add results register | partially complete | proof labels and hostile-path plan complete; OR-D6 result-register ruling remains open |
 
 ---
 
@@ -269,7 +269,7 @@ cross-scope aggregation
 killed ancestor concepts
 ```
 
-Status: pending full confirmation.
+Status: confirmed against current M14 authority. All listed items remain forbidden or deferred.
 
 ---
 
