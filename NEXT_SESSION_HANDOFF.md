@@ -2,14 +2,14 @@
 
 Status: authority
 Authority: fresh-session handoff
-Purpose: preserve current state after M10 closure and M11 activation
+Purpose: preserve current state after M11 closure and M12 activation
 Last updated: 2026-07-10
 
 ---
 
 ## Current State
 
-The Observatory is in implementation foundation.
+The Observatory is in first evidence slice build.
 
 Closed milestones:
 
@@ -25,19 +25,20 @@ Closed milestones:
 - M8 - Hammer Matrix and Acceptance Gates
 - M9 - First Evidence Slice Definition
 - M10 - Schema Planning Only
+- M11 - Implementation Foundation
 
 Active milestone:
 
 ```text
-M11 - Implementation Foundation
+M12 - First Evidence Slice Build
 ```
 
-M1 created the roadmap, M2 created approved folders/indexes, M3 preserved planning source docs, M4 hardened boundary law, M5 planned research gates, M6 executed all 13 research gates, M7 drafted/indexed all 13 planned non-schema contracts, M8 drafted/indexed the hammer matrix and acceptance-gate policy, M9 accepted C2 as the first evidence slice, and M10 accepted logical schema planning for C2. The repo is still not ready for migrations, provider pulls, provider purchases, API, MCP, dashboard, capture runners, or customer-data work.
+M1 created the roadmap, M2 created approved folders/indexes, M3 preserved planning source docs, M4 hardened boundary law, M5 planned research gates, M6 executed all 13 research gates, M7 drafted/indexed all 13 planned non-schema contracts, M8 drafted/indexed the hammer matrix and acceptance-gate policy, M9 accepted C2 as the first evidence slice, M10 accepted logical schema planning for C2, and M11 accepted implementation foundation expectations. The repo is still not ready for provider pulls, provider purchases, API/MCP exposure, dashboard work, capture runners, customer-data work, marketplace scraping, recurring capture, or broad implementation beyond C2.
 
-The next milestone after M11 is:
+The next milestone after M12 is:
 
 ```text
-M12 - First Evidence Slice Build
+M13 - Provider Admission and Controlled Pull Plan
 ```
 
 ---
@@ -64,7 +65,10 @@ Fresh sessions must read:
 16. `planning-inbox/m10-logical-schema-plan-c2.md`
 17. `planning-inbox/m10-schema-plan-review.md`
 18. `decisions/2026-07-10-m10-schema-planning-closure.md`
-19. `planning-inbox/owner-ruling-tracker.md`
+19. `planning-inbox/m11-implementation-foundation-spec.md`
+20. `planning-inbox/m11-foundation-readiness-review.md`
+21. `decisions/2026-07-10-m11-foundation-closure.md`
+22. `planning-inbox/owner-ruling-tracker.md`
 
 For planning notes, read `planning-inbox/README.md` first.
 
@@ -115,8 +119,8 @@ When using `ob-dev`:
 - M8 closed hammer matrix and acceptance-gate planning
 - M9 closed first evidence slice definition
 - M10 closed schema planning only
-- M11 active implementation foundation
-- M12 first slice build after gates
+- M11 closed implementation foundation
+- M12 active first evidence slice build
 - M13 provider admission and controlled pull plan
 - M14 typed read API / MCP contract and prototype
 - M15 SearchClarity proof workflow
@@ -130,25 +134,25 @@ When using `ob-dev`:
 
 ## Immediate Next Steps
 
-Proceed with active M11:
+Proceed with active M12:
 
 ```text
-M11 - Implementation Foundation
+M12 - First Evidence Slice Build
 ```
 
-Status 2026-07-10: M10 is closed by `decisions/2026-07-10-m10-schema-planning-closure.md`. The accepted logical planning target is the Controlled Public Manual Observation Package. M11 is active for implementation foundation only.
+Status 2026-07-10: M11 is closed by `decisions/2026-07-10-m11-foundation-closure.md`. The accepted build target is the C2 Controlled Public Manual Observation Package. M12 is active for first evidence slice build only.
 
 Immediate next moves:
 
 ```text
-1. Specify M11 foundation deliverables concretely.
-2. Define repo/skeleton expectations for the accepted C2 first slice only.
-3. Define test-harness and initial hammer-test scaffold expectations.
-4. Define fixture/sample design expectations.
-5. Define migration-folder expectations without running migrations.
+1. Inspect repo structure before creating any build artifacts.
+2. Create only C2-bounded folders/files needed for the first slice.
+3. Create safe fixture-based tests for scope, rights, retention, envelope, strategy rejection, evidence ID, freshness, raw support, audit, append-only, and hostile input behavior.
+4. Keep all tests local with no provider calls, no customer data, no API/MCP exposure, and no dashboard.
+5. Record executable hammer outcomes before any M12 closure claim.
 ```
 
-Do not run migrations, make provider purchases, perform paid pulls, build API/MCP tools, create dashboard work, handle customer data, broaden implementation beyond the accepted first slice, or store strategy/recommendations.
+Do not make provider purchases, perform paid pulls, build API/MCP tools, create dashboard work, handle customer data, scrape marketplaces, create recurring capture, broaden implementation beyond C2, or store strategy/recommendations.
 
 ---
 
@@ -161,7 +165,7 @@ Open questions to carry forward:
 - OR-A3: `ai_visibility_sample_summary` read-time output only vs storable under materialization test.
 - OR-A4: citation handles global vs artifact-local; report-safe references separate or derived.
 - OR-B1 through OR-B3 remain open with M8 fail-closed defaults.
-- M11 foundation work must stay constrained to the accepted C2 first slice and must not broaden into provider, customer, dashboard, API/MCP, or strategy storage implementation.
+- M12 build work must stay constrained to the accepted C2 first slice and must not broaden into provider, customer, marketplace, dashboard, API/MCP, recurring capture, or strategy storage implementation.
 
 ---
 
@@ -169,17 +173,19 @@ Open questions to carry forward:
 
 Do not start:
 
-- running migrations
+- provider calls
 - DataForSEO pulls
 - Ahrefs/Semrush work
 - provider admission
-- capture runner implementation
-- API implementation
-- MCP implementation
+- marketplace scraping
+- browser-extension capture
+- API/MCP exposure
 - dashboard/operator console work
 - customer data handling
+- customer-facing reports
 - strategy/recommendation storage
-- automated recurring capture
-- M12 first-slice build before M11 foundation expectations are clear
+- recurring capture
+- broad implementation beyond C2
+- M13 provider admission before M12 proves the first slice
 
 The project now has rails. Stay on them. No schema goblin jazz.

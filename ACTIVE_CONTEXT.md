@@ -12,40 +12,41 @@ Last updated: 2026-07-10
 The Observatory is in:
 
 ```text
-implementation foundation
+first evidence slice build
 ```
 
-This is implementation foundation only. It is still not provider, API/MCP, dashboard, customer workflow, customer-data, provider-spend, or broad implementation authorization.
+This is first-slice build only. It is still not provider, API/MCP exposure, dashboard, customer workflow, customer-data, provider-spend, marketplace scraping, recurring capture, or broad implementation authorization.
 
 ---
 
 ## Active Milestone
 
 ```text
-M11 - Implementation Foundation
+M12 - First Evidence Slice Build
 ```
 
-M0, M0.1, M1, M2, M3, M4, M5, M6, M7, M8, M9, and M10 are complete and committed.
+M0, M0.1, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, and M11 are complete and committed.
 
 ---
 
 ## Current Task
 
-Execute M11 as bounded implementation foundation work for the accepted C2 first slice only.
+Execute M12 as bounded first evidence slice build work for the accepted C2 slice only.
 
-Current M11 work is allowed to:
+Current M12 work is allowed to:
 
-- plan implementation foundation for the Controlled Public Manual Observation Package only;
-- define repo/skeleton needs if still required;
-- define test harness strategy;
-- define migration-folder expectations without running migrations;
-- define fixture/sample design expectations;
-- define initial hammer-test scaffold expectations;
-- define local configuration patterns without secrets.
+- create C2-only build artifacts needed for the first evidence slice;
+- create safe non-customer, non-provider, non-marketplace fixtures;
+- implement or define fixture-based validation behavior for C2 only;
+- create executable hammer tests for the accepted C2 hammer set;
+- implement internal evidence identity behavior for C2 only;
+- implement raw support manifest/hash behavior if included;
+- implement minimum audit-event behavior for C2 consequential transitions;
+- run local tests that do not call providers, access customer data, expose API/MCP, or require external services.
 
-M10 is closed by `decisions/2026-07-10-m10-schema-planning-closure.md`. The accepted schema planning target is the Controlled Public Manual Observation Package. M11 now prepares the implementation foundation before the first slice build can begin.
+M11 is closed by `decisions/2026-07-10-m11-foundation-closure.md`. The accepted first-slice build target is the Controlled Public Manual Observation Package. M12 now builds and tests that slice only.
 
-M11 does not authorize provider purchases, paid pulls, provider admission, provider calls, API/MCP exposure, dashboard work, customer-data handling, capture runner work, automated recurring capture, broad implementation, or strategy/recommendation storage.
+M12 does not authorize provider purchases, paid pulls, provider admission, provider calls, API/MCP exposure, dashboard work, customer-data handling, marketplace scraping, browser-extension capture, capture runner work, automated recurring capture, broad implementation beyond C2, or strategy/recommendation storage.
 
 ---
 
@@ -53,21 +54,22 @@ M11 does not authorize provider purchases, paid pulls, provider admission, provi
 
 Do not start:
 
-- running migrations
-- broad Postgres implementation
+- provider calls
 - DataForSEO pulls
 - Ahrefs work
 - Semrush work
 - provider purchases
-- MCP implementation
-- API implementation
+- provider admission
+- API/MCP exposure
 - dashboard or operator console work
 - customer data handling
+- customer-facing reports
+- marketplace scraping
+- browser-extension capture
 - strategy storage
 - recommendation storage
-- provider admission
-- capture runner implementation
-- automated recurring capture
+- recurring capture
+- broad implementation beyond C2
 
 No schema goblin jazz. No provider confetti cannon. No dashboard side quest.
 
@@ -109,15 +111,16 @@ Closed:
 - M8 - Hammer Matrix and Acceptance Gates
 - M9 - First Evidence Slice Definition
 - M10 - Schema Planning Only
+- M11 - Implementation Foundation
 
 Active:
 
-- M11 - Implementation Foundation
+- M12 - First Evidence Slice Build
 
-Next after M11:
+Next after M12:
 
 ```text
-M12 - First Evidence Slice Build
+M13 - Provider Admission and Controlled Pull Plan
 ```
 
 M2 folder ruling completed:

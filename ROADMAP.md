@@ -119,8 +119,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M8 | Hammer Matrix and Acceptance Gates | closed | Define hostile-path tests and hard gates before implementation |
 | M9 | First Evidence Slice Definition | closed | Choose the smallest useful evidence slice to build first |
 | M10 | Schema Planning Only | closed | Design schema after contracts and research; no migrations yet |
-| M11 | Implementation Foundation | active | Create project implementation skeleton only after gates open |
-| M12 | First Evidence Slice Build | planned | Build and test the first observation path |
+| M11 | Implementation Foundation | closed | Create project implementation skeleton only after gates open |
+| M12 | First Evidence Slice Build | active | Build and test the first observation path |
 | M13 | Provider Admission and Controlled Pull Plan | planned | Admit first provider through rights/cost/recipe gates |
 | M14 | Typed Read API / MCP Contract and Prototype | planned | Expose evidence through bounded read tools, not raw SQL |
 | M15 | SearchClarity Proof Workflow | planned | Prove customer-facing evidence support without storing customer records |
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M11
+M12
 
 ### Name
 
-Implementation Foundation
+First Evidence Slice Build
 
 ### Status
 
@@ -148,9 +148,9 @@ active
 
 ### Purpose
 
-Plan and create the minimal implementation foundation only after M10 logical schema planning has closed.
+Build and test the accepted first evidence slice only: C2 Controlled Public Manual Observation Package.
 
-M11 consumes `decisions/2026-07-10-m10-schema-planning-closure.md` and prepares foundation expectations for the Controlled Public Manual Observation Package. M11 does not authorize provider calls, dashboards, strategy/recommendation storage, customer data handling, API/MCP exposure, or broad implementation beyond the bounded foundation tasks explicitly planned here.
+M12 consumes `decisions/2026-07-10-m11-foundation-closure.md` and may create concrete build artifacts for the C2 first slice. M12 does not authorize provider calls, provider admission, API/MCP exposure, dashboard work, customer-data handling, marketplace scraping, recurring capture, strategy/recommendation storage, report generation, or broad implementation beyond C2.
 
 ### Required Reading
 
@@ -173,16 +173,20 @@ M11 consumes `decisions/2026-07-10-m10-schema-planning-closure.md` and prepares 
 - `planning-inbox/m10-logical-schema-plan-c2.md`
 - `planning-inbox/m10-schema-plan-review.md`
 - `decisions/2026-07-10-m10-schema-planning-closure.md`
+- `planning-inbox/m11-implementation-foundation-spec.md`
+- `planning-inbox/m11-foundation-readiness-review.md`
+- `decisions/2026-07-10-m11-foundation-closure.md`
 
 ### Allowed Work
 
-- plan implementation foundation for the accepted C2 first slice only;
-- define project skeleton needs if still required;
-- define test harness strategy;
-- define migration-folder expectations without running migrations;
-- define fixture/sample design expectations;
-- define initial hammer-test scaffold expectations;
-- define local configuration patterns without secrets.
+- create C2-only build artifacts needed for the first evidence slice;
+- create safe non-customer, non-provider, non-marketplace fixtures;
+- implement or define fixture-based validation behavior for C2 only;
+- create executable hammer tests for the accepted C2 hammer set;
+- implement internal evidence identity behavior for C2 only;
+- implement raw support manifest/hash behavior if included;
+- implement minimum audit-event behavior for C2 consequential transitions;
+- run local tests that do not call providers, access customer data, expose API/MCP, or require external services.
 
 ### Forbidden Work
 
@@ -190,60 +194,95 @@ M11 consumes `decisions/2026-07-10-m10-schema-planning-closure.md` and prepares 
 - provider purchases
 - paid provider pulls
 - provider admission
-- dashboard work
-- strategy/recommendation storage
-- customer data handling
+- DataForSEO calls
+- Ahrefs/Semrush work
+- marketplace scraping
+- browser-extension capture
 - API/MCP exposure
-- direct SQL/credential exposure to LLMs or agents
-- broad implementation beyond the accepted first slice
-- accepting any hammer as passed
+- dashboard work
+- customer data handling
+- customer-facing reports
+- strategy/recommendation storage
+- recurring capture
+- broad implementation beyond C2
+- accepting hammer pass claims without executable evidence
 
 ### Blockers
 
-- M10 schema planning closure must exist. — met (`decisions/2026-07-10-m10-schema-planning-closure.md`)
-- M11 deliverables must be specified concretely before any foundation implementation begins.
-- No implementation foundation task may introduce provider, customer, dashboard, API/MCP, or strategy/recommendation scope.
+- M11 foundation closure must exist. — met (`decisions/2026-07-10-m11-foundation-closure.md`)
+- M12 deliverables must stay bounded to C2.
+- No M12 artifact may introduce provider, customer, dashboard, API/MCP, marketplace, recurring-capture, or strategy/recommendation scope.
 
-### M11 Progress Log
+### M12 Progress Log
 
-2026-07-10 — M11 activated by `decisions/2026-07-10-m10-schema-planning-closure.md` after M10 closed logical schema planning for C2.
+2026-07-10 — M12 activated by `decisions/2026-07-10-m11-foundation-closure.md` after M11 specified and reviewed foundation expectations for C2.
 
-### Foundation Target
+### Build Target
 
-M11 targets only:
+M12 targets only:
 
 ```text
-Implementation foundation for the C2 Controlled Public Manual Observation Package
+C2 Controlled Public Manual Observation Package
 ```
 
-### Required Foundation Mapping
+### Required Hammer Execution Focus
 
-M11 must plan against:
+M12 must build toward executable proof for:
 
-- accepted C2 first-slice boundary;
-- M10 logical schema responsibilities;
-- H1/H2/H3/H5/H6/H9/H12/H15/H18/H19/H21/H22 planning expectations;
-- no provider/customer/API/dashboard/strategy leakage.
+- H1 Scope isolation
+- H2 Rights fail-closed
+- H3 Retention enforcement
+- H5 No strategy/recommendation storage
+- H6 Observation envelope validation
+- H9 Freshness / point-in-time claim-use warning
+- H12 Raw archive integrity if raw support is included
+- H15 Evidence ID / citation integrity
+- H18 Hostile weird input
+- H19 Append-only observations
+- H21 Audit-first enforcement
+- H22 Rollback/recovery expectations
 
 ### Exit Criteria
 
-M11 may close when:
+M12 may close when:
 
-- foundation deliverables are specified concretely;
-- repo/skeleton/test-harness expectations are clear;
-- fixture/sample expectations are clear;
-- migration-folder expectations exist without running migrations;
-- M12 can build the first slice without guessing foundation intent;
+- the C2 first slice works under local fixture-based hammers;
+- required executable hammer outcomes are recorded;
+- raw support pointer/hash expectations are proven if raw support exists;
+- observations remain separate from interpretation;
+- no forbidden provider/customer/API/dashboard/strategy scope is introduced;
 - `ACTIVE_CONTEXT.md` and `NEXT_SESSION_HANDOFF.md` point to the correct next milestone;
 - changes are committed.
 
 ### Next Milestone
 
-M12 - First Evidence Slice Build
+M13 - Provider Admission and Controlled Pull Plan
 
 ---
 
 ## Closed Milestones
+
+### M11 - Implementation Foundation
+
+Status: closed
+
+Purpose:
+Create the minimal implementation foundation only after schema plan and gates are approved.
+
+Completed outputs:
+
+- `planning-inbox/m11-implementation-foundation-spec.md`
+- `planning-inbox/m11-foundation-readiness-review.md`
+- `decisions/2026-07-10-m11-foundation-closure.md`
+
+Accepted foundation target:
+
+```text
+C2 — Controlled Public Manual Observation Package
+```
+
+Closure note:
+M11 accepted foundation expectations only. It recorded closure defaults for deferring actual folder/file creation to M12, requiring no M11 migration folder, accepting test-harness strategy only, accepting safe fixture classes without fixture files, and accepting a no-secrets local/test config pattern. M11 did not create implementation output, run migrations, call providers, expose API/MCP, create dashboards, handle customer data, introduce broad implementation, store strategy/recommendations, or mark hammers passed. M12 is now active for first evidence slice build only.
 
 ### M10 - Schema Planning Only
 
@@ -820,7 +859,7 @@ Next milestone: M11
 
 ### M11 - Implementation Foundation
 
-Status: active; full active-milestone details live in the Active Milestone section above
+Status: closed; closure details live in the Closed Milestones section above
 
 Purpose:
 Create the minimal implementation foundation only after schema plan and gates are approved.
@@ -864,7 +903,7 @@ Next milestone: M12
 
 ### M12 - First Evidence Slice Build
 
-Status: planned
+Status: active; full active-milestone details live in the Active Milestone section above
 
 Purpose:
 Build the approved first evidence slice.
