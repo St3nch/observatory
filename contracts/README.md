@@ -69,6 +69,7 @@ Folder earned at M7 per `decisions/2026-07-07-m2-folder-subset.md` (deferred-unt
 | `searchclarity-consumer-placeholder.md` | accepted placeholder v0.1 | Preserves SearchClarity consumer boundaries without approving customer-facing reports, report-safe references, customer data, or service workflow implementation | Accepted only as an M15-bounded placeholder |
 | `typed-read-tool-skeleton.md` | accepted skeleton v0.1 | Defines future shaped evidence-pack read-tool expectations, warnings, coverage/blind-spot output, and forbidden direct SQL/raw row access | Accepted as M7 input; superseded for M14 behavior only after the full contract is accepted |
 | `typed-read-api-mcp-v0-1.md` | accepted v0.1 | Full M14 typed-read behavioral contract, authorization boundary, response envelope, hostile-path obligations, and prototype proof limits | Accepted after direct Hermes lineage review; production API/MCP and persistence remain unauthorized |
+| `searchclarity-proof-workflow-v0-1.md` | ready for owner acceptance | Full M15 SearchClarity evidence-support, report-safe reference, claim-safety, promotion, and customer-boundary contract | Planning complete; no customer data, overlays, report generation, production integration, provider execution, or persistence authorized |
 
 Planned M7 contracts (remaining after first draft; sequencing per the 2026-07-07 audits):
 

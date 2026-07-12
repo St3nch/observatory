@@ -47,15 +47,14 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-Active M14 package:
+Active M15 package:
 
-- `m14-typed-read-contract-requirements.md` — complete 19-requirement read-boundary planning specification
-- `m14-read-boundary-hostile-path-plan.md` — high-consequence hammer and contract-acceptance test plan
-- `m14-owner-ruling-proposals.md` — OR-D1 through OR-D6 and M14 scope proposals
-- `post-m13-capability-opportunity-review.md` — complete O-1 through O-10 value, boundary, dependency, milestone, research, and consumer routing
-- `post-m13-audit-final-reconciliation.md` — final proof that every audit finding, claim, requirement, opportunity, decision candidate, correction step, and deferred boundary received a disposition
-- `m14-typed-read-contract-reconciliation-review.md` — readiness review for the full M14 contract and exact prototype task, including the remaining Hermes lineage gate
-- `m14-fixture-read-prototype-task-proposal.md` — exact local fixture-only implementation task proposal; not implementation authority
+- `m15-consumer-boundary-reconciliation-review.md` — repo-first reconciliation of the accepted consumer, claim-safety, overlay, and typed-read boundaries
+- `m15-owner-ruling-proposals.md` — OR-E1 through OR-E5, OR-F1, consent, human-review, and bounded-proof proposals
+- `m15-searchclarity-hostile-path-plan.md` — high-consequence consumer-boundary hammers and ordinary acceptance-test separation
+- `m15-searchclarity-fixture-proof-task-proposal.md` — exact local synthetic fixture-only proof proposal; not implementation authority
+
+Completed M14 package remains available below for lineage and proof context.
 
 Then read:
 

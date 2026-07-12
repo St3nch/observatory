@@ -198,6 +198,7 @@ M15 consumes the accepted typed-read contract and bounded M14 prototype proof. I
 ### M15 Progress Log
 
 2026-07-12 — M15 planning activated by `decisions/2026-07-12-m14-closure-and-m15-activation.md` after bounded M14 closure proof.
+2026-07-12 — Full SearchClarity consumer contract, owner-ruling proposals, hostile-path plan, and exact synthetic fixture-proof task proposal drafted from accepted repo authority.
 
 ---
 
