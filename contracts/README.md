@@ -67,7 +67,8 @@ Folder earned at M7 per `decisions/2026-07-07-m2-folder-subset.md` (deferred-unt
 | `consumer-promotion.md` | accepted v0.1 | Governs consumer requests/responses and promotion of meaning, recommendations, tasks, reports, and accepted conclusions out to the owning consumer | Accepted within declared scope |
 | `overlay.md` | accepted v0.1 | Governs read-time overlays, no-storage customer/private inputs, intervention timelines, overlay freshness, and discard/no-evidence-ID rules | Accepted; overlay implementation remains deferred |
 | `searchclarity-consumer-placeholder.md` | accepted placeholder v0.1 | Preserves SearchClarity consumer boundaries without approving customer-facing reports, report-safe references, customer data, or service workflow implementation | Accepted only as an M15-bounded placeholder |
-| `typed-read-tool-skeleton.md` | accepted skeleton v0.1 | Defines future shaped evidence-pack read-tool expectations, warnings, coverage/blind-spot output, and forbidden direct SQL/raw row access | Accepted as M7 input; M14 owns the real contract |
+| `typed-read-tool-skeleton.md` | accepted skeleton v0.1 | Defines future shaped evidence-pack read-tool expectations, warnings, coverage/blind-spot output, and forbidden direct SQL/raw row access | Accepted as M7 input; superseded for M14 behavior only after the full contract is accepted |
+| `typed-read-api-mcp-v0-1.md` | ready for owner acceptance | Full M14 typed-read behavioral contract, authorization boundary, response envelope, hostile-path obligations, and prototype proof limits | Awaiting Hermes lineage disposition and owner acceptance; does not authorize implementation |
 
 Planned M7 contracts (remaining after first draft; sequencing per the 2026-07-07 audits):
 

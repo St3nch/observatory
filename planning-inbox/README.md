@@ -54,6 +54,8 @@ Active M14 package:
 - `m14-owner-ruling-proposals.md` — OR-D1 through OR-D6 and M14 scope proposals
 - `post-m13-capability-opportunity-review.md` — complete O-1 through O-10 value, boundary, dependency, milestone, research, and consumer routing
 - `post-m13-audit-final-reconciliation.md` — final proof that every audit finding, claim, requirement, opportunity, decision candidate, correction step, and deferred boundary received a disposition
+- `m14-typed-read-contract-reconciliation-review.md` — readiness review for the full M14 contract and exact prototype task, including the remaining Hermes lineage gate
+- `m14-fixture-read-prototype-task-proposal.md` — exact local fixture-only implementation task proposal; not implementation authority
 
 Then read:
 
