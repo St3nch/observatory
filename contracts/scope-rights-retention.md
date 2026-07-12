@@ -1,6 +1,6 @@
 # Contract — Scope / Rights / Retention
 
-Status: draft
+Status: accepted — contract set v0.1 by `decisions/2026-07-12-m14-contract-and-read-boundary-rulings.md`
 Authority: contract (binds only when accepted; subordinate to `02-boundaries.md`)
 Version: 0.1
 Date: 2026-07-10

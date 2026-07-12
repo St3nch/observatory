@@ -1,6 +1,6 @@
 # Contract - SearchClarity Consumer Placeholder
 
-Status: draft placeholder
+Status: accepted placeholder — contract set v0.1 by `decisions/2026-07-12-m14-contract-and-read-boundary-rulings.md`; remains limited to M15 planning
 Authority: placeholder contract (does not bind customer-facing behavior; subordinate to `02-boundaries.md` and future M15 owner approvals)
 Version: 0.1
 Date: 2026-07-10

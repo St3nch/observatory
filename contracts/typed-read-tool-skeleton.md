@@ -1,6 +1,6 @@
 # Contract - Typed Read Tool Skeleton
 
-Status: draft skeleton
+Status: accepted skeleton — contract set v0.1 by `decisions/2026-07-12-m14-contract-and-read-boundary-rulings.md`; M14 still owns the real typed-read contract
 Authority: skeleton contract (does not authorize API/MCP implementation; subordinate to `02-boundaries.md` and future M14 acceptance)
 Version: 0.1
 Date: 2026-07-10

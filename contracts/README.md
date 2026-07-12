@@ -1,7 +1,7 @@
 # Contracts
 
 Status: contract-folder index
-Authority: folder index; individual contracts become binding only when marked accepted
+Authority: folder index; contract set v0.1 accepted by `decisions/2026-07-12-m14-contract-and-read-boundary-rulings.md`
 Purpose: hold non-schema contracts that define Observatory evidence behavior before any database design, provider admission, API/MCP implementation, or consumer integration
 
 ---
@@ -55,19 +55,19 @@ Folder earned at M7 per `decisions/2026-07-07-m2-folder-subset.md` (deferred-unt
 | File | Status | Purpose | Notes |
 |---|---|---|---|
 | `contract-template.md` | template | Required structure for all Observatory contracts | Created during M7 audit-fix pass |
-| `scope-rights-retention.md` | draft | Governs scope, source-admission posture, rights classes, and retention classes before observation admission | First M7 spine contract; drafted from RG2 and boundary law |
-| `evidence-id-citation.md` | draft | Governs capture IDs, provider job IDs, raw payload IDs, observation IDs, evidence IDs, citation handles, and report-safe reference boundaries | Second M7 spine contract; drafted from RG3 and supporting boundary inputs |
-| `freshness-staleness-volatility.md` | draft | Governs evidence age, freshness status, volatility class, update-window caveats, claim-use fitness, and recapture warnings | Third M7 contract; drafted from RG5 with supporting RG6/RG7/RG8/RG10/RG12 inputs |
-| `claim-safety.md` | draft | Governs claim classes, caveat requirements, absence rules, predictive/causal/recommendation boundaries, and forbidden overclaims | Fourth M7 contract; drafted from RG8 with supporting RG5/RG6/RG7/RG9/RG10/RG12 inputs |
-| `query-panel.md` | draft | Governs named/versioned query, prompt, target, and surface measurement programs before execution or provider/capture admission | Fifth M7 contract; drafted from RG4 with supporting RG2/RG3/RG5/RG6/RG7/RG8/RG10 inputs |
-| `capturepackage-v0-1.md` | draft | Governs the proof envelope around capture attempts, validation groups, source/cost controls, raw support posture, and candidate observation admission gates | Sixth M7 contract; drafted from RG10 with supporting existing M7 contracts and RG11 inputs |
-| `raw-archive-provider-drift.md` | draft | Governs raw payload support, manifest/hash requirements, raw retention posture, parser safety, purge behavior, and provider drift visibility | Seventh M7 contract; drafted from RG11 with supporting RG10 and existing M7 contracts |
-| `provider-testimony.md` | draft | Governs provider output as attributed testimony, not truth; preserves provider attribution, admission blocks, metric caveats, and no-winner/no-average rules | Eighth M7 contract; drafted from RG1 and RG9 |
-| `provider-cross-check.md` | draft | Governs provider disagreement comparison without truth-provider, winner-provider, fake averaging, or strategy storage | Ninth M7 contract; drafted from RG9 with provider-testimony support |
-| `consumer-promotion.md` | draft | Governs consumer requests/responses and promotion of meaning, recommendations, tasks, reports, and accepted conclusions out to the owning consumer | Tenth M7 contract; drafted from RG12 |
-| `overlay.md` | draft | Governs read-time overlays, no-storage customer/private inputs, intervention timelines, overlay freshness, and discard/no-evidence-ID rules | Eleventh M7 contract; drafted from RG12/DR10 boundary inputs |
-| `searchclarity-consumer-placeholder.md` | draft placeholder | Preserves SearchClarity consumer boundaries without approving customer-facing reports, report-safe references, customer data, or service workflow implementation | Twelfth M7 contract; placeholder drafted from RG12 and deferred to M15/DR9 |
-| `typed-read-tool-skeleton.md` | draft skeleton | Defines future shaped evidence-pack read-tool expectations, warnings, coverage/blind-spot output, and forbidden direct SQL/raw row access | Thirteenth M7 contract; skeleton drafted from RG3/RG5/RG8/RG12 and deferred to M14 |
+| `scope-rights-retention.md` | accepted v0.1 | Governs scope, source-admission posture, rights classes, and retention classes before observation admission | Accepted by M14 contract-set decision; open rulings preserved |
+| `evidence-id-citation.md` | accepted v0.1 | Governs capture IDs, provider job IDs, raw payload IDs, observation IDs, evidence IDs, citation handles, and report-safe reference boundaries | Accepted; M14 internal-handle scope-down applies |
+| `freshness-staleness-volatility.md` | accepted v0.1 | Governs evidence age, freshness status, volatility class, update-window caveats, claim-use fitness, and recapture warnings | Accepted; missing update-window data fails closed |
+| `claim-safety.md` | accepted v0.1 | Governs claim classes, caveat requirements, absence rules, predictive/causal/recommendation boundaries, and forbidden overclaims | Accepted; Hermes lineage gap remains explicit |
+| `query-panel.md` | accepted v0.1 | Governs named/versioned query, prompt, target, and surface measurement programs before execution or provider/capture admission | Accepted within declared scope |
+| `capturepackage-v0-1.md` | accepted v0.1 | Governs the proof envelope around capture attempts, validation groups, source/cost controls, raw support posture, and candidate observation admission gates | Accepted; future provider hardening gates remain |
+| `raw-archive-provider-drift.md` | accepted v0.1 | Governs raw payload support, manifest/hash requirements, raw retention posture, parser safety, purge behavior, and provider drift visibility | Accepted; OR-C2 remains open |
+| `provider-testimony.md` | accepted v0.1 | Governs provider output as attributed testimony, not truth; preserves provider attribution, admission blocks, metric caveats, and no-winner/no-average rules | Accepted within declared scope |
+| `provider-cross-check.md` | accepted v0.1 | Governs provider disagreement comparison without truth-provider, winner-provider, fake averaging, or strategy storage | Accepted; persistence ruling remains open |
+| `consumer-promotion.md` | accepted v0.1 | Governs consumer requests/responses and promotion of meaning, recommendations, tasks, reports, and accepted conclusions out to the owning consumer | Accepted within declared scope |
+| `overlay.md` | accepted v0.1 | Governs read-time overlays, no-storage customer/private inputs, intervention timelines, overlay freshness, and discard/no-evidence-ID rules | Accepted; overlay implementation remains deferred |
+| `searchclarity-consumer-placeholder.md` | accepted placeholder v0.1 | Preserves SearchClarity consumer boundaries without approving customer-facing reports, report-safe references, customer data, or service workflow implementation | Accepted only as an M15-bounded placeholder |
+| `typed-read-tool-skeleton.md` | accepted skeleton v0.1 | Defines future shaped evidence-pack read-tool expectations, warnings, coverage/blind-spot output, and forbidden direct SQL/raw row access | Accepted as M7 input; M14 owns the real contract |
 
 Planned M7 contracts (remaining after first draft; sequencing per the 2026-07-07 audits):
 

@@ -23,7 +23,7 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 | OR-A1 | Provider Cross-Check: is a *persisted* Disagreement Ledger permitted, or compute-on-read only? (V6 materialization test applies) | RG9; ROADMAP contract list; audits ISS-18 | open |
 | OR-A2 | RG6 sentiment/tone: provider-attributed-only, or is any "mechanically derived" sentiment permitted? | RG6; audits ISS-17 | open |
 | OR-A3 | `ai_visibility_sample_summary`: read-time output only, or storable under materialization test? | RG6; audits ISS-17 | open |
-| OR-A4 | Citation handles: global vs artifact-local; report-safe references separate class or derived? | RG3; DR14 | open — delegable to contract decision |
+| OR-A4 | Citation handles: global vs artifact-local; report-safe references separate class or derived? | RG3; DR14; `decisions/2026-07-12-m14-contract-and-read-boundary-rulings.md` | ruled for M14 scope — internal, non-enumerable, status-aware evidence handles only; report-safe/customer-facing references remain deferred to M15 |
 | OR-A5 | NC3 (intervention timeline) and NC5 (coverage/blind-spot) disposition: contract sections vs DR items. Audit recommendation: NC3 → overlay contract; NC5 → typed read-tool skeleton | harvest register NC3/NC5; audits ISS-13 | ruled — see `decisions/2026-07-10-m7-closure.md`; NC3 routed to `contracts/overlay.md`, NC5 routed to `contracts/typed-read-tool-skeleton.md` |
 | OR-A6 | Minimum M7 contract set required for M7 closure (which of the 13 planned contracts are mandatory vs optional) | ROADMAP M7; audits | ruled — see `decisions/2026-07-10-m7-closure.md`; all 13 planned M7 contracts drafted and indexed for closure |
 | OR-A7 | audits/ folder earned and governed | owner statement 2026-07-07 | ruled — see `decisions/2026-07-07-audits-folder.md` |
@@ -56,12 +56,12 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
-| OR-D1 | Consumer authentication/authorization model | RG12; DR16; `planning-inbox/m14-owner-ruling-proposals.md` | open — concrete M14 proposal prepared; owner ruling required before prototype implementation |
-| OR-D2 | Raw payload pointer exposure outside internal tools | RG3; `planning-inbox/m14-owner-ruling-proposals.md` | open — internal-only fail-closed proposal prepared; owner ruling required before contract acceptance |
-| OR-D3 | Evidence withdrawal/deprecation/supersession behavior finalization | RG3; DR14; `planning-inbox/m14-owner-ruling-proposals.md` | open — status-aware read proposal prepared; owner ruling required before evidence-handle contract acceptance |
-| OR-D4 | Update-window feeds as a read-tool dependency | RG5; `planning-inbox/m14-owner-ruling-proposals.md` | open — fail-closed unknown/caveated proposal prepared; owner ruling required before contract acceptance |
-| OR-D5 | Ordinary-read event posture versus separate security/access logging | post-M13 audit; V9; `planning-inbox/m14-owner-ruling-proposals.md` | open — proposal keeps ordinary reads out of evidence events while allowing bounded security logs outside the evidence corpus |
-| OR-D6 | Machine-readable implementation-test result register as repository proof metadata | post-M13 audit; `planning-inbox/m14-read-boundary-hostile-path-plan.md`; `planning-inbox/m14-owner-ruling-proposals.md` | open — proposal prepared; not an Observatory observation or database requirement |
+| OR-D1 | Consumer authentication/authorization model | RG12; DR16; `decisions/2026-07-12-m14-contract-and-read-boundary-rulings.md` | ruled — authenticated caller classes with explicit scope/request grants; caller identity cannot be self-asserted; cross-scope forbidden by default |
+| OR-D2 | Raw payload pointer exposure outside internal tools | RG3; `decisions/2026-07-12-m14-contract-and-read-boundary-rulings.md` | ruled — raw pointers/paths internal-only; shaped reads expose status only |
+| OR-D3 | Evidence withdrawal/deprecation/supersession behavior finalization | RG3; DR14; `decisions/2026-07-12-m14-contract-and-read-boundary-rulings.md` | ruled — status-aware reads; no silent overwrite; blocked/expired/withdrawn evidence never returned as active |
+| OR-D4 | Update-window feeds as a read-tool dependency | RG5; `decisions/2026-07-12-m14-contract-and-read-boundary-rulings.md` | ruled — optional input; missing relevant feed fails closed to unknown/caveated status; no invented cadence |
+| OR-D5 | Ordinary-read event posture versus separate security/access logging | post-M13 audit; V9; `decisions/2026-07-12-m14-contract-and-read-boundary-rulings.md` | ruled — ordinary reads create no evidence events; bounded security/access logs may exist outside the evidence corpus |
+| OR-D6 | Machine-readable implementation-test result register as repository proof metadata | post-M13 audit; `decisions/2026-07-12-m14-contract-and-read-boundary-rulings.md` | ruled — allowed as committed repository proof metadata, not Observatory evidence or a database requirement |
 
 ## Group E — Needed before M15 SearchClarity proof
 
