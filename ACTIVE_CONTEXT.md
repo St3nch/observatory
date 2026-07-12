@@ -12,38 +12,37 @@ Last updated: 2026-07-12
 The Observatory is in:
 
 ```text
-M15 SearchClarity proof-workflow planning
+M16 provider cross-check proof planning
 ```
 
-M14 is closed after acceptance of the typed-read contract, direct review of the named Hermes lineage inputs, implementation of one bounded fixture-backed in-memory prototype, and owner-local proof that all 141 tests pass. M15 is active for planning only: SearchClarity consumer-boundary reconciliation, evidence-pack-to-report-support requirements, report-safe reference boundaries, no-storage overlay decision points, claim-safety propagation, and hostile-path acceptance criteria. No customer records, customer-private storage, report generation, production integration, Postgres, schema, migration, provider execution, or production API/MCP is authorized.
+M15 is closed after acceptance of the SearchClarity proof-workflow contract, explicit consumer-boundary rulings, one bounded synthetic fixture-backed implementation, and owner-local proof that all 156 tests pass. M16 is active for planning only: provider disagreement representation, comparability and incomparability rules, capture-time-distance warnings, provider attribution, proprietary metric caveats, hostile-path criteria, and an exact bounded fixture-proof proposal. No provider calls, purchases, recurring capture, truth scores, provider winner logic, customer data, reports, overlays, Postgres, schema, migrations, production API/MCP, or production integration is authorized.
 
 ---
 
 ## Active Milestone
 
 ```text
-M15 - SearchClarity Proof Workflow
+M16 - Provider Cross-Check Proof
 ```
 
-M0, M0.1, and M1 through M14 are complete and committed.
+M0, M0.1, and M1 through M15 are complete and committed.
 
 ---
 
 ## Current Task
 
-Begin M15 with repo-first consumer-boundary and contract reconciliation before any proof implementation.
+Begin M16 with repo-first reconciliation of provider-testimony, provider-cross-check, freshness, claim-safety, typed-read, and consumer contracts before any proof implementation.
 
-Current M15 work is allowed to:
+Current M16 work is allowed to:
 
-- reconcile the accepted SearchClarity consumer placeholder with the accepted typed-read and consumer-promotion contracts;
-- define the evidence-pack-to-report-support workflow without generating customer reports;
-- define claim-safety, caveat propagation, report-safe reference, and public-observation scope requirements;
-- define customer/private first-party overlay requirements as no-storage read-time inputs only, if needed;
-- define how interpretations, recommendations, reports, and accepted conclusions promote out to SearchClarity;
-- define hostile-path tests and an exact bounded proof-task proposal;
-- route deeper research and owner rulings required before customer-facing proof.
+- define provider disagreement and comparability proof requirements;
+- define capture-time-distance, context-alignment, and methodology warnings;
+- define provider-attributed side-by-side evidence output without winners or averages;
+- define proprietary metric labeling and provider-personality/profile notes as caveated testimony metadata;
+- define hostile-path tests for truth-provider claims, winner logic, averaging, composite scores, and disagreement erasure;
+- define one exact bounded fixture-backed proof-task proposal after contract and owner gates.
 
-M15 does not authorize customer records in Observatory, customer-private analytics storage, report delivery records, customer-facing report generation, SearchClarity production integration, overlay implementation, Postgres, schema, migrations, provider calls, recurring capture, production API/MCP deployment, strategy storage, recommendation storage, or automatic conclusion promotion.
+M16 does not authorize new provider calls, DataForSEO requests, Ahrefs or Semrush purchases, provider credentials, recurring cross-provider capture, truth scores, provider winner logic, composite scores, customer data, customer reports, real overlays, Postgres, schema, migrations, production API/MCP deployment, production integrations, strategy storage, recommendation storage, or automatic conclusion promotion.
 
 ---
 
@@ -112,12 +111,13 @@ Closed:
 - M12 - First Evidence Slice Build
 - M13 - Provider Admission and Controlled Pull Plan
 - M14 - Typed Read API / MCP Contract and Prototype
+- M15 - SearchClarity Proof Workflow
 
 Active:
 
-- M15 - SearchClarity Proof Workflow
+- M16 - Provider Cross-Check Proof
 
-Next after M15:
+Next after M16:
 
 ```text
 Follow the accepted roadmap sequence; no later milestone is activated by this context file.

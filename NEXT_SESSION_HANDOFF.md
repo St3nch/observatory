@@ -2,14 +2,14 @@
 
 Status: authority
 Authority: fresh-session handoff pointer; `ACTIVE_CONTEXT.md` owns current phase truth
-Purpose: preserve current state after M14 closure and M15 planning activation
+Purpose: preserve current state after M15 closure and M16 planning activation
 Last updated: 2026-07-12
 
 ---
 
 ## Current State
 
-The Observatory is in M15 SearchClarity proof-workflow planning.
+The Observatory is in M16 provider cross-check proof planning.
 
 Closed milestones:
 
@@ -29,19 +29,20 @@ Closed milestones:
 - M12 - First Evidence Slice Build
 - M13 - Provider Admission and Controlled Pull Plan
 - M14 - Typed Read API / MCP Contract and Prototype
+- M15 - SearchClarity Proof Workflow
 
 Active milestone:
 
 ```text
-M15 - SearchClarity Proof Workflow
+M16 - Provider Cross-Check Proof
 ```
 
-M14 closed on an accepted typed-read contract plus one local fixture-backed in-memory prototype. The owner ran the full suite: 141 tests passed. M15 is active for planning only. No customer records, customer-private storage, report generation, production SearchClarity integration, overlays, Postgres, schema, migrations, provider execution, recurring capture, production API/MCP, or strategy/recommendation storage is authorized.
+M15 closed on an accepted SearchClarity proof-workflow contract plus one local synthetic fixture-backed in-memory proof. The owner ran the full suite: 156 tests passed. M16 is active for planning only. No provider calls, purchases, recurring cross-provider capture, truth scores, winner logic, composite scores, customer data, reports, overlays, Postgres, schema, migrations, production API/MCP, or production integration is authorized.
 
 Current milestone-transition authority:
 
 ```text
-decisions/2026-07-12-m14-closure-and-m15-activation.md
+decisions/2026-07-12-m15-closure-and-m16-activation.md
 ```
 
 ---

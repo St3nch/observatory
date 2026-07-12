@@ -123,8 +123,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M12 | First Evidence Slice Build | closed | Build and test the first observation path |
 | M13 | Provider Admission and Controlled Pull Plan | closed | One controlled DataForSEO probe completed, reviewed, and purged with proof |
 | M14 | Typed Read API / MCP Contract and Prototype | complete | Accepted typed-read contract plus bounded fixture/in-memory prototype proof |
-| M15 | SearchClarity Proof Workflow | active for planning only | Prove customer-facing evidence support without storing customer records |
-| M16 | Provider Cross-Check Proof | planned | Prove provider disagreement as first-class evidence |
+| M15 | SearchClarity Proof Workflow | complete | Accepted SearchClarity contract plus bounded synthetic fixture/in-memory proof |
+| M16 | Provider Cross-Check Proof | active for planning only | Prove provider disagreement as first-class evidence |
 | M17 | Owned Telemetry Overlay Proof | planned | Prove read-time overlay without storing customer first-party data |
 | M18 | Recurring Watch Panel Planning | planned | Plan recurring capture only after provider/cost/hammers exist |
 | M19 | Hardening, Backup, Recovery, and Operations | planned | Make the system durable and recoverable |
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M15
+M16
 
 ### Name
 
-SearchClarity Proof Workflow
+Provider Cross-Check Proof
 
 ### Status
 
@@ -148,58 +148,56 @@ active for planning only
 
 ### Purpose
 
-Define how SearchClarity can consume Observatory evidence for human-reviewed SEO/GEO support without turning Observatory into a customer database, report system, CRM, strategy engine, or workflow store.
+Define how provider disagreement can be represented, compared, and read as evidence without making any provider truth, choosing a winner, averaging unlike values, or creating composite scores.
 
-M15 consumes the accepted typed-read contract and bounded M14 prototype proof. It may plan evidence-pack-to-report-support behavior, claim-safety propagation, public-observation scope handling, report-safe reference boundaries, no-storage overlay requirements, consumer promotion, and hostile-path acceptance criteria.
+M16 consumes the accepted provider-testimony and provider-cross-check contracts, freshness and claim-safety rules, M14 typed-read outputs, the closed M15 consumer boundary, and admitted sanitized provider evidence. It may plan comparability rules, capture-time-distance warnings, proprietary metric labels, provider-attributed side-by-side outputs, disagreement read shapes, hostile-path criteria, and one exact bounded fixture-proof proposal.
 
 ### Required Reading
 
 - `ACTIVE_CONTEXT.md`
-- `decisions/2026-07-12-m14-closure-and-m15-activation.md`
-- `contracts/searchclarity-consumer-placeholder.md`
-- `contracts/consumer-promotion.md`
+- `decisions/2026-07-12-m15-closure-and-m16-activation.md`
+- `contracts/provider-testimony.md`
+- `contracts/provider-cross-check.md`
+- `contracts/freshness-staleness-volatility.md`
 - `contracts/claim-safety.md`
-- `contracts/overlay.md`
 - `contracts/typed-read-api-mcp-v0-1.md`
-- `planning-inbox/m14-fixture-read-prototype-closure-readiness-review.md`
-- `research/deep-research-backlog.md`
+- `contracts/searchclarity-proof-workflow-v0-1.md`
+- `planning-inbox/m15-searchclarity-proof-closure-readiness-review.md`
+- `research/rg9-provider-cross-check-disagreement-model.md`
 - `hammers/hammer-matrix-v0-1.md`
 
 ### Allowed Work
 
-- SearchClarity consumer-boundary reconciliation;
-- evidence-pack-to-report-support contract planning;
-- claim-safety and caveat-propagation requirements;
-- public-observation scope and report-safe reference planning;
-- no-storage overlay decision points and fail-closed behavior;
-- interpretation/recommendation/report promotion boundaries;
-- hostile-path and acceptance-test planning;
-- exact bounded proof-task proposals after contract and owner gates are satisfied.
+- provider disagreement and comparability contract reconciliation;
+- capture-time-distance and context-alignment warning design;
+- provider-attributed side-by-side evidence output planning;
+- proprietary metric labels and methodology caveats;
+- provider personality/profile notes as caveated testimony metadata;
+- disagreement read-shape and consumer-warning planning;
+- hostile-path tests for truth-provider claims, winner logic, averaging, composite scores, and disagreement erasure;
+- exact bounded fixture-proof task proposals after contract and owner gates are satisfied.
 
 ### Forbidden Work
 
-- customer records or customer-private analytics in Observatory;
-- report delivery records in Observatory;
-- customer-facing report generation or SearchClarity production integration;
-- overlay persistence or real overlay implementation;
-- production API/MCP deployment;
-- direct SQL or database credentials for LLMs or agents;
+- new provider calls or DataForSEO requests;
+- Ahrefs or Semrush purchases, credentials, or execution;
+- recurring cross-provider capture;
+- truth scores, provider winner logic, averaging into truth, or composite scores;
+- customer data, customer reports, or real overlays;
+- production API/MCP deployment or production integrations;
 - Postgres creation, physical schema, or migrations;
-- provider calls, additional paid requests, or recurring capture;
 - strategy/recommendation storage or automatic conclusion promotion.
 
 ### Blockers
 
-- The accepted SearchClarity placeholder must be reconciled into a full M15 consumer contract before proof implementation.
-- Report-safe reference behavior must be ruled without exposing internal evidence handles or raw support paths.
-- DR9 customer-facing report-language validation and DR10 no-storage overlay questions must be routed before customer-adjacent proof.
+- The accepted provider contracts must be reconciled into an exact M16 proof contract before implementation.
+- Comparability and incomparability behavior must fail closed when method, scope, time, locale, device, metric definition, or source context do not align.
 - Any bounded proof task requires a separate exact owner authorization.
+- Any real provider work requires a separate provider-admission and spend decision.
 
-### M15 Progress Log
+### M16 Progress Log
 
-2026-07-12 — M15 planning activated by `decisions/2026-07-12-m14-closure-and-m15-activation.md` after bounded M14 closure proof.
-2026-07-12 — Full SearchClarity consumer contract, owner-ruling proposals, hostile-path plan, and exact synthetic fixture-proof task proposal drafted from accepted repo authority.
-2026-07-12 — M15 SearchClarity proof-workflow contract and consumer-boundary rulings accepted; exact synthetic proof implementation remains separately gated.
+2026-07-12 — M16 planning activated by `decisions/2026-07-12-m15-closure-and-m16-activation.md` after bounded M15 closure proof.
 
 ---
 
@@ -1011,7 +1009,7 @@ Next milestone: M15
 
 ### M15 - SearchClarity Proof Workflow
 
-Status: active for planning only — activated by `decisions/2026-07-12-m14-closure-and-m15-activation.md`
+Status: complete — closed by `decisions/2026-07-12-m15-closure-and-m16-activation.md`
 
 Purpose:
 Prove Observatory can support SearchClarity-style evidence without becoming a customer database.
@@ -1053,7 +1051,7 @@ Next milestone: M16
 
 ### M16 - Provider Cross-Check Proof
 
-Status: planned
+Status: active for planning only — activated by `decisions/2026-07-12-m15-closure-and-m16-activation.md`
 
 Purpose:
 Prove provider disagreement can be represented and read without making any provider truth.
