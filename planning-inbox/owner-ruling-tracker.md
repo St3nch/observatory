@@ -78,8 +78,8 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
 | OR-F1 | Customer first-party overlay acceptance rules into read tools | RG12; DR10; `decisions/2026-07-12-m15-searchclarity-contract-and-consumer-boundary-rulings.md` | ruled for M15 scope — real overlays deferred to M17; M15 may prove blocked-path and no-leak behavior only |
-| OR-F2 | Internal first-party telemetry admission + internal-scope handling | RG2; RG12; DR11 | open |
-| OR-F3 | Overlay freshness metadata used in customer-facing conclusions | RG5 | open |
+| OR-F2 | Internal first-party telemetry admission + internal-scope handling | RG2; RG12; DR11; `planning-inbox/m17-owner-ruling-proposals.md` | open — concrete proposal prepared: synthetic internal telemetry follows the same no-storage overlay law; real internal telemetry remains separately gated |
+| OR-F3 | Overlay freshness metadata used in customer-facing conclusions | RG5; `planning-inbox/m17-owner-ruling-proposals.md` | open — concrete proposal prepared: freshness supports bounded alignment warnings only; no customer-facing conclusion authorization in M17 |
 
 ## Group G — Deferred (do not resolve now)
 

@@ -47,14 +47,14 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-Active M16 package:
+Active M17 package:
 
-- `m16-provider-cross-check-reconciliation-review.md` — repo-first reconciliation of provider testimony, disagreement, freshness, claim-safety, typed-read, and consumer boundaries
-- `m16-owner-ruling-proposals.md` — OR-A1 and M16 comparability, proprietary-metric, time-distance, no-truth, profile-note, scope, and bounded-proof proposals
-- `m16-provider-cross-check-hostile-path-plan.md` — high-consequence hammers against attribution loss, winner logic, averaging, composites, time erasure, scope leaks, and persistence laundering
-- `m16-provider-cross-check-fixture-proof-task-proposal.md` — exact local synthetic fixture-only proof proposal; not implementation authority
+- `m17-owned-telemetry-overlay-reconciliation-review.md` — repo-first reconciliation of overlay, scope, claim-safety, typed-read, SearchClarity, and no-persistence boundaries
+- `m17-owner-ruling-proposals.md` — internal telemetry, discard proof, manifest retention, intervention-timeline, screenshot/file, scope, and bounded-proof proposals
+- `m17-owned-telemetry-overlay-hostile-path-plan.md` — high-consequence hammers against persistence, evidence-identity laundering, identity leakage, file smuggling, scope mixing, and false discard claims
+- `m17-owned-telemetry-overlay-fixture-proof-task-proposal.md` — exact local synthetic fixture-only proof proposal; not implementation authority
 
-Completed M15 and M14 packages remain available below for lineage and proof context.
+Completed M16, M15, and M14 packages remain available below for lineage and proof context.
 
 Then read:
 
