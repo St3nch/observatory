@@ -1,0 +1,29 @@
+{
+  "register_version": "1",
+  "contract_version": "0.1",
+  "status": "not_executed",
+  "entries": [
+    {
+      "result_id": "m14-typed-read-full-suite-owner-local-pending",
+      "contract_version": "0.1",
+      "commit": "pending-implementation-commit",
+      "proof_class": "mixed_suite",
+      "execution_surface": "fixture_in_memory_local",
+      "proof_strength": "not_executed",
+      "test_command": "$env:PYTHONPATH = (Join-Path $PWD \"src\"); python -m unittest discover -s tests",
+      "result": "not_executed_ob_dev_fixed_venv_missing",
+      "executed_at": null,
+      "evidence_path": "planning-inbox/m14-typed-read-local-test-evidence-pending.md",
+      "limitations": [
+        "fixture-backed",
+        "in-memory",
+        "no database proof",
+        "no transaction proof",
+        "no production-auth proof",
+        "no network/MCP proof",
+        "no deployment proof",
+        "owner-local test execution still required"
+      ]
+    }
+  ]
+}
