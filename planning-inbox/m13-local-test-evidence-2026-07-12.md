@@ -14,14 +14,30 @@ cd C:\dev\observatory
 python -m unittest discover -s tests
 ```
 
-## Owner-Reported Result
+## Owner-Reported Results
+
+Initial fixture-only proof:
 
 ```text
 Ran 67 tests in 0.070s
 OK
 ```
 
-The full run included both the existing C2 first-slice tests and the new DataForSEO probe fixture/mock tests.
+Expanded campaign-catalog proof:
+
+```text
+Ran 105 tests in 0.028s
+OK
+```
+
+Expanded paid-evidence review-package proof:
+
+```text
+Ran 114 tests in 0.110s
+OK
+```
+
+The latest full run includes the existing C2 first-slice tests, DataForSEO probe hostile paths, campaign catalog tests, and nine evidence-package organization tests.
 
 ## Observed Fail-Closed Output
 
@@ -93,10 +109,11 @@ raw provider evidence
 
 ```text
 Fixture-only implementation tests: passed locally
-Tests run: 67
+Latest tests run: 114
 Failures: 0
 Errors: 0
+Paid-evidence organization tests: passed
 Network execution: still disabled
-Funding: still not authorized
+Account funding and controls: evidenced separately
 Provider request: still not authorized
 ```
