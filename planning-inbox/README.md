@@ -47,8 +47,9 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-1. `m13-authenticated-dashboard-pricing-evidence-2026-07-12.md` — authenticated balance, zero-expense baseline, live/advanced pricing, and account navigation evidence
-2. `m13-dataforseo-first-pull-campaign-plan.md` — accepted staged pull order, $50 budget allocation, and per-pull review method
+1. `m13-paid-evidence-review-package.md` — implemented per-pull evidence package, cost reconciliation, review notes, and campaign index
+2. `m13-authenticated-dashboard-pricing-evidence-2026-07-12.md` — authenticated balance, zero-expense baseline, live/advanced pricing, and account navigation evidence
+3. `m13-dataforseo-first-pull-campaign-plan.md` — accepted staged pull order, $50 budget allocation, and per-pull review method
 3. `m13-serp-usage-sheet-reconciliation-spec.md` — read-only provider usage workbook reconciliation contract
 4. `m13-serp-usage-baseline-2026-07-12.md` — empty workbook baseline hash and zero-row before-image
 5. `m13-campaign-cli-expansion-review.md` — immutable campaign catalog and CLI/test expansion boundary
@@ -120,6 +121,7 @@ Root authority files take priority over this folder.
 | `m13-serp-usage-sheet-reconciliation-spec.md` | planning specification | Defines read-only matching of provider usage rows against local manifests and response cost witnesses | Raw IP values remain private; disagreements fail closed |
 | `m13-serp-usage-baseline-2026-07-12.md` | provider usage baseline evidence | Records the empty workbook header schema, SHA-256, size, and zero-row baseline | Future uploads are compared to this before-image |
 | `m13-campaign-cli-expansion-review.md` | implementation review | Defines immutable campaign catalog, budget validation, CLI preview commands, and fixture-test expectations | Generic provider framework and unattended execution remain forbidden |
+| `m13-paid-evidence-review-package.md` | implementation review | Defines the durable per-pull package, grouped field inventory, item-type summary, cost reconciliation, review notes, and campaign index | Organization only; no provider execution or cross-project export authority |
 | `strategy-layer-dangerous-design.md` | planning artifact | Preserves dangerous Strategy Layer / IMI design candidates for later classification and reconciliation | M3 preservation artifact; authority none; do not activate dangerous ideas |
 | `deep-research-danger-agenda.md` | research agenda | Preserves future deep-research questions and danger-map topics for later research gate planning | M3 preservation artifact; authority none; not research execution approval |
 | `steward-context-dump.md` | advisory context | Preserves steward/context material for future reconciliation without promoting it into doctrine | M3 preservation artifact; authority none; advisory only |

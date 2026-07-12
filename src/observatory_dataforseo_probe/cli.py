@@ -3,9 +3,12 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 from .campaign import campaign_budget_summary, get_recipe, list_recipes, validate_catalog
+from .evidence_package import create_review_package, update_campaign_index
 from .core import (
     EVIDENCE_ROOT,
     ProbeBlocked,
@@ -101,6 +104,44 @@ def command_campaign_validate(_: argparse.Namespace) -> int:
     return 0 if result["valid"] else 2
 
 
+def command_package_review(args: argparse.Namespace) -> int:
+    raw_path = Path(args.raw_json)
+    if not raw_path.is_file() or not raw_path.resolve().is_relative_to(EVIDENCE_ROOT.resolve()):
+        raise ProbeBlocked("raw JSON must exist within the approved evidence root")
+    try:
+        expected_price = Decimal(args.expected_price)
+        usage_cost = Decimal(args.usage_cost) if args.usage_cost is not None else None
+        captured_at = datetime.fromisoformat(args.captured_at.replace("Z", "+00:00"))
+    except (InvalidOperation, ValueError) as exc:
+        raise ProbeBlocked("invalid price or captured-at value") from exc
+    payload = json.loads(raw_path.read_text(encoding="utf-8"))
+    result = create_review_package(
+        args.recipe_id,
+        payload,
+        captured_at,
+        expected_price,
+        args.suffix,
+        usage_cost,
+    )
+    _print(result)
+    return 0
+
+
+def command_campaign_index_add(args: argparse.Namespace) -> int:
+    entry = {
+        "probe_id": args.probe_id,
+        "recipe_id": args.recipe_id,
+        "endpoint": get_recipe(args.recipe_id).endpoint,
+        "captured_at": args.captured_at,
+        "status": args.status,
+        "cost_usd": args.cost_usd,
+        "raw_state": args.raw_state,
+        "review_status": args.review_status,
+    }
+    _print(update_campaign_index(entry))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Fixture-only M13 DataForSEO probe safety cage")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -140,6 +181,25 @@ def build_parser() -> argparse.ArgumentParser:
 
     campaign_validate = sub.add_parser("campaign-validate")
     campaign_validate.set_defaults(func=command_campaign_validate)
+
+    package_review = sub.add_parser("package-review")
+    package_review.add_argument("--recipe-id", required=True)
+    package_review.add_argument("--raw-json", required=True)
+    package_review.add_argument("--captured-at", required=True)
+    package_review.add_argument("--expected-price", required=True)
+    package_review.add_argument("--usage-cost")
+    package_review.add_argument("--suffix", required=True)
+    package_review.set_defaults(func=command_package_review)
+
+    campaign_index = sub.add_parser("campaign-index-add")
+    campaign_index.add_argument("--probe-id", required=True)
+    campaign_index.add_argument("--recipe-id", required=True)
+    campaign_index.add_argument("--captured-at", required=True)
+    campaign_index.add_argument("--status", required=True)
+    campaign_index.add_argument("--cost-usd", required=True)
+    campaign_index.add_argument("--raw-state", required=True)
+    campaign_index.add_argument("--review-status", required=True)
+    campaign_index.set_defaults(func=command_campaign_index_add)
     return parser
 
 
