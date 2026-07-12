@@ -9,6 +9,12 @@ from pathlib import Path
 
 from .campaign import campaign_budget_summary, get_recipe, list_recipes, validate_catalog
 from .evidence_package import create_review_package, update_campaign_index
+from .live_execution import (
+    EXPECTED_PRICE_USD,
+    build_live_preflight,
+    duplicate_attempt_exists,
+    execute_one_c00,
+)
 from .core import (
     EVIDENCE_ROOT,
     ProbeBlocked,
@@ -142,6 +148,32 @@ def command_campaign_index_add(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_live_preflight(args: argparse.Namespace) -> int:
+    try:
+        exact_price = Decimal(args.exact_price)
+    except InvalidOperation as exc:
+        raise ProbeBlocked("invalid exact price") from exc
+    result = build_live_preflight(
+        exact_price_usd=exact_price,
+        account_limits_recorded=args.account_limits_recorded,
+        evidence_root_ignored=args.evidence_root_ignored,
+        duplicate_exists=duplicate_attempt_exists(),
+        owner_confirmation=args.owner_confirmation,
+    )
+    _print(result)
+    return 0 if result["status"] == "ready" else 2
+
+
+def command_live_execute(args: argparse.Namespace) -> int:
+    result = execute_one_c00(
+        owner_confirmation=args.owner_confirmation,
+        account_limits_recorded=args.account_limits_recorded,
+        evidence_root_ignored=args.evidence_root_ignored,
+    )
+    _print(result)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Fixture-only M13 DataForSEO probe safety cage")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -200,6 +232,19 @@ def build_parser() -> argparse.ArgumentParser:
     campaign_index.add_argument("--raw-state", required=True)
     campaign_index.add_argument("--review-status", required=True)
     campaign_index.set_defaults(func=command_campaign_index_add)
+
+    live_preflight = sub.add_parser("live-preflight")
+    live_preflight.add_argument("--exact-price", default=str(EXPECTED_PRICE_USD))
+    live_preflight.add_argument("--account-limits-recorded", action="store_true")
+    live_preflight.add_argument("--evidence-root-ignored", action="store_true")
+    live_preflight.add_argument("--owner-confirmation")
+    live_preflight.set_defaults(func=command_live_preflight)
+
+    live_execute = sub.add_parser("live-execute")
+    live_execute.add_argument("--account-limits-recorded", action="store_true")
+    live_execute.add_argument("--evidence-root-ignored", action="store_true")
+    live_execute.add_argument("--owner-confirmation", required=True)
+    live_execute.set_defaults(func=command_live_execute)
     return parser
 
 
