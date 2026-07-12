@@ -106,19 +106,18 @@ Authenticated Settings evidence and owner clarification confirm these controls e
 Duplicate-task semantics:
 
 ```text
-current value: 10 duplicate tasks per hour
+saved value: 1 duplicate task per hour
 excess duplicate error: 40205
-calibration-phase target: 1 duplicate task per hour
 ```
 
-The owner may raise or lower this setting. Keep it at `1` during C00 calibration. Raise it only for an explicitly reviewed repeatability experiment, then restore it afterward.
+The owner confirmed the calibration controls are saved. Raise the duplicate limit only for an explicitly reviewed repeatability experiment, then restore it afterward.
 
-Recommended calibration controls:
+Confirmed calibration controls:
 
 ```text
-duplicate tasks per hour: 1
-account-wide daily expense limit: $5.00
-email notification threshold: 50%
+[x] duplicate tasks per hour: 1
+[x] account-wide daily expense limit: $5.00
+email notification threshold: not required for C00 readiness
 re-parsing: off
 webhooks: off
 ```
