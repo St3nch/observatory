@@ -1,7 +1,7 @@
 # Contract - Owned Telemetry Overlay Proof v0.1
 
-Status: ready for owner acceptance
-Authority: proposed M17 proof contract; does not authorize real customer/private telemetry, files, screenshots, persistence, canonical ingestion, provider execution, Postgres, schema, migrations, production API/MCP, reports, or production integration
+Status: accepted v0.1 by `decisions/2026-07-12-m17-owned-telemetry-overlay-contract-and-rulings.md`
+Authority: binding M17 owned telemetry overlay proof contract within its declared scope; does not authorize proof implementation, real customer/private telemetry, files, screenshots, persistence, canonical ingestion, provider execution, Postgres, schema, migrations, production API/MCP, reports, or production integration
 Version: 0.1
 Date: 2026-07-12
 Milestone: M17 - Owned Telemetry Overlay Proof

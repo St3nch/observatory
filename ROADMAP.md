@@ -195,6 +195,7 @@ M17 consumes the accepted overlay, scope-rights-retention, claim-safety, typed-r
 
 2026-07-12 — M17 planning activated by `decisions/2026-07-12-m16-closure-and-m17-activation.md` after bounded M16 closure proof.
 2026-07-12 — Full owned-telemetry overlay proof contract, owner-ruling proposals, hostile-path plan, exact synthetic fixture-proof task proposal, and reconciliation review drafted from accepted repo authority.
+2026-07-12 — M17 owned telemetry overlay proof contract and rulings accepted; exact synthetic proof implementation remains separately gated.
 
 ---
 
