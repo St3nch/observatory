@@ -1,7 +1,7 @@
 # Contract - Typed Read API / MCP v0.1
 
-Status: ready for owner acceptance
-Authority: proposed M14 contract; does not authorize implementation until accepted by owner decision
+Status: accepted v0.1 by `decisions/2026-07-12-m14-typed-read-contract-acceptance-and-prototype-authorization.md`
+Authority: binding M14 typed-read behavioral contract within its declared scope; does not authorize production API/MCP, persistence, provider execution, customer data, overlays, or reports
 Version: 0.1
 Date: 2026-07-12
 Milestone: M14 - Typed Read API / MCP Contract and Prototype

@@ -1,7 +1,7 @@
 # M14 Fixture-Backed Typed-Read Prototype Task Proposal
 
-Status: exact implementation task proposal; not implementation authority
-Authority: none until owner explicitly approves this exact task
+Status: authorized exact implementation task
+Authority: `decisions/2026-07-12-m14-typed-read-contract-acceptance-and-prototype-authorization.md`; implementation remains bounded to this exact task
 Milestone: M14 - Typed Read API / MCP Contract and Prototype
 Date: 2026-07-12
 Depends on:
