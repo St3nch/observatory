@@ -1,6 +1,6 @@
 # M19 Backup and Restore Policy v0.1
 
-Status: planning proposal
+Status: accepted planning policy by `decisions/2026-07-12-m19-hardening-backup-recovery-rulings.md`; bounded proof implementation remains separately gated
 Milestone: M19
 Date: 2026-07-12
 

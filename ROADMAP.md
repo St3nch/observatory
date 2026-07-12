@@ -195,6 +195,7 @@ M19 may plan backup posture, disposable restore proof, audit-log expectations, s
 
 2026-07-12 — M19 planning activated by `decisions/2026-07-12-m18-watch-panel-policy-and-m19-activation.md` after M18 policy acceptance and rejection of recurring execution for Observatory v1.
 2026-07-12 — Repository/evidence-footprint reconciliation, repository-only backup/restore policy, operations risk/runbook plan, owner-ruling proposals, and exact bounded archive/restore proof task drafted.
+2026-07-12 — M19 repository-only protection, manual encrypted backup, mandatory disposable restore-proof, redacted secret-review, and no-destructive-cleanup rulings accepted; bounded archive/restore proof implementation remains separately gated.
 
 ---
 
