@@ -1,6 +1,6 @@
 # M19 Bounded Backup and Restore Proof Task Proposal
 
-Status: exact task proposal; not implementation authority
+Status: authorized exact owner-local proof task
 Milestone: M19
 Date: 2026-07-12
 

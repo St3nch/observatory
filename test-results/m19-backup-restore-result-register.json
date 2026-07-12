@@ -1,0 +1,30 @@
+{
+  "register_version": "1",
+  "status": "not_executed",
+  "entries": [
+    {
+      "result_id": "m19-repository-backup-restore-owner-local-pending",
+      "authorization": "decisions/2026-07-12-m19-bounded-backup-restore-proof-authorization.md",
+      "runbook": "planning-inbox/m19-backup-restore-owner-local-runbook.md",
+      "source_repository_label": "observatory",
+      "source_root": "C:\\dev\\observatory",
+      "work_root": "C:\\dev\\observatory-backup-work",
+      "restore_root": "C:\\dev\\observatory-restore-proof",
+      "proof_class": "repository_archive_restore",
+      "proof_strength": "not_executed",
+      "result": "owner_local_execution_required",
+      "encryption_status": "blocked_pending_owner_tool_and_key_path",
+      "executed_at": null,
+      "evidence_path": "planning-inbox/m19-backup-restore-local-evidence.md",
+      "limitations": [
+        "repository-only protected unit",
+        "no encrypted-backup pass without separately approved tool and key path",
+        "no cloud upload",
+        "no database backup",
+        "no customer/private-data backup",
+        "no automatic scheduling",
+        "no destructive cleanup"
+      ]
+    }
+  ]
+}

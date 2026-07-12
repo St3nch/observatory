@@ -75,6 +75,7 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-12-m17-closure-and-m18-activation.md` | accepted decision | Closes M17 after bounded overlay discard proof and activates M18 planning | Recurring watch-panel planning only; no scheduler, recurring execution, autonomous spend, provider calls, crawling, database, or production integration |
 | `2026-07-12-m18-watch-panel-policy-and-m19-activation.md` | accepted decision | Accepts the bounded M18 watch-panel policy, rejects recurring execution for v1, closes M18, and activates M19 planning | Hardening/backup/recovery planning only; no scheduler, recurring provider work, live database, deployment, credentials, or production integration |
 | `2026-07-12-m19-hardening-backup-recovery-rulings.md` | accepted decision | Accepts repository-only protection, manual encrypted backups, mandatory disposable restore proof, redacted secret checks, and no destructive cleanup | Bounded archive/restore proof implementation remains separately gated; no cloud upload, credential transfer, live database backup, scheduling, or deletion |
+| `2026-07-12-m19-bounded-backup-restore-proof-authorization.md` | accepted decision | Authorizes one exact owner-local repository bundle and disposable restore proof | Encryption remains blocked without a separately approved tool/key path; no cloud upload, credentials, database backup, scheduling, or cleanup |
 
 ---
 
