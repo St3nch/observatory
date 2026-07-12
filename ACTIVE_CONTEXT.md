@@ -12,39 +12,40 @@ Last updated: 2026-07-10
 The Observatory is in:
 
 ```text
-schema planning only
+implementation foundation
 ```
 
-This is schema planning only. It is still not migrations, implementation, provider, API/MCP, dashboard, customer workflow, or customer-data authorization.
+This is implementation foundation only. It is still not provider, API/MCP, dashboard, customer workflow, customer-data, provider-spend, or broad implementation authorization.
 
 ---
 
 ## Active Milestone
 
 ```text
-M10 - Schema Planning Only
+M11 - Implementation Foundation
 ```
 
-M0, M0.1, M1, M2, M3, M4, M5, M6, M7, M8, and M9 are complete and committed.
+M0, M0.1, M1, M2, M3, M4, M5, M6, M7, M8, M9, and M10 are complete and committed.
 
 ---
 
 ## Current Task
 
-Execute M10 as bounded schema planning work for the accepted first evidence slice only.
+Execute M11 as bounded implementation foundation work for the accepted C2 first slice only.
 
-Current M10 work is allowed to:
+Current M11 work is allowed to:
 
-- plan logical schema for the Controlled Public Manual Observation Package only;
-- define table responsibilities at planning level;
-- map schema concepts to M7 contracts and M8 hammers;
-- define migration expectations without running migrations;
-- define anti-pattern checks for strategy/recommendation/customer-data leakage;
-- define evidence/query examples needed for later M11/M12 planning.
+- plan implementation foundation for the Controlled Public Manual Observation Package only;
+- define repo/skeleton needs if still required;
+- define test harness strategy;
+- define migration-folder expectations without running migrations;
+- define fixture/sample design expectations;
+- define initial hammer-test scaffold expectations;
+- define local configuration patterns without secrets.
 
-M9 is closed by `decisions/2026-07-10-m9-first-slice-closure.md`. The accepted first slice is the Controlled Public Manual Observation Package. M10 now plans schema for that slice before implementation can begin.
+M10 is closed by `decisions/2026-07-10-m10-schema-planning-closure.md`. The accepted schema planning target is the Controlled Public Manual Observation Package. M11 now prepares the implementation foundation before the first slice build can begin.
 
-M10 does not authorize provider purchases, paid pulls, provider admission, migrations, implementation, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage.
+M11 does not authorize provider purchases, paid pulls, provider admission, provider calls, API/MCP exposure, dashboard work, customer-data handling, capture runner work, automated recurring capture, broad implementation, or strategy/recommendation storage.
 
 ---
 
@@ -53,7 +54,7 @@ M10 does not authorize provider purchases, paid pulls, provider admission, migra
 Do not start:
 
 - running migrations
-- Postgres implementation
+- broad Postgres implementation
 - DataForSEO pulls
 - Ahrefs work
 - Semrush work
@@ -107,15 +108,16 @@ Closed:
 - M7 - Core Contract Planning
 - M8 - Hammer Matrix and Acceptance Gates
 - M9 - First Evidence Slice Definition
+- M10 - Schema Planning Only
 
 Active:
 
-- M10 - Schema Planning Only
+- M11 - Implementation Foundation
 
-Next after M10:
+Next after M11:
 
 ```text
-M11 - Implementation Foundation
+M12 - First Evidence Slice Build
 ```
 
 M2 folder ruling completed:

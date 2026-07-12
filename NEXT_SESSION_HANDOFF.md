@@ -2,14 +2,14 @@
 
 Status: authority
 Authority: fresh-session handoff
-Purpose: preserve current state after M9 closure and M10 activation
+Purpose: preserve current state after M10 closure and M11 activation
 Last updated: 2026-07-10
 
 ---
 
 ## Current State
 
-The Observatory is in schema planning only.
+The Observatory is in implementation foundation.
 
 Closed milestones:
 
@@ -24,19 +24,20 @@ Closed milestones:
 - M7 - Core Contract Planning
 - M8 - Hammer Matrix and Acceptance Gates
 - M9 - First Evidence Slice Definition
+- M10 - Schema Planning Only
 
 Active milestone:
 
 ```text
-M10 - Schema Planning Only
+M11 - Implementation Foundation
 ```
 
-M1 created the roadmap, M2 created approved folders/indexes, M3 preserved planning source docs, M4 hardened boundary law, M5 planned research gates, M6 executed all 13 research gates, M7 drafted/indexed all 13 planned non-schema contracts, M8 drafted/indexed the hammer matrix and acceptance-gate policy, and M9 accepted C2 as the first evidence slice. The repo is still not ready for migrations, implementation, provider pulls, provider purchases, API, MCP, dashboard, capture runners, or customer-data work.
+M1 created the roadmap, M2 created approved folders/indexes, M3 preserved planning source docs, M4 hardened boundary law, M5 planned research gates, M6 executed all 13 research gates, M7 drafted/indexed all 13 planned non-schema contracts, M8 drafted/indexed the hammer matrix and acceptance-gate policy, M9 accepted C2 as the first evidence slice, and M10 accepted logical schema planning for C2. The repo is still not ready for migrations, provider pulls, provider purchases, API, MCP, dashboard, capture runners, or customer-data work.
 
-The next milestone after M10 is:
+The next milestone after M11 is:
 
 ```text
-M11 - Implementation Foundation
+M12 - First Evidence Slice Build
 ```
 
 ---
@@ -59,10 +60,11 @@ Fresh sessions must read:
 12. `hammers/README.md`
 13. `hammers/hammer-matrix-v0-1.md`
 14. `hammers/acceptance-gate-policy-v0-1.md`
-15. `planning-inbox/m9-first-slice-candidate-comparison.md`
-16. `planning-inbox/m9-first-slice-definition-proposal.md`
-17. `decisions/2026-07-10-m9-first-slice-closure.md`
-18. `planning-inbox/owner-ruling-tracker.md`
+15. `decisions/2026-07-10-m9-first-slice-closure.md`
+16. `planning-inbox/m10-logical-schema-plan-c2.md`
+17. `planning-inbox/m10-schema-plan-review.md`
+18. `decisions/2026-07-10-m10-schema-planning-closure.md`
+19. `planning-inbox/owner-ruling-tracker.md`
 
 For planning notes, read `planning-inbox/README.md` first.
 
@@ -112,8 +114,9 @@ When using `ob-dev`:
 - M7 closed core contract planning
 - M8 closed hammer matrix and acceptance-gate planning
 - M9 closed first evidence slice definition
-- M10 active schema planning only
-- M11-M12 implementation foundation and first slice build after gates
+- M10 closed schema planning only
+- M11 active implementation foundation
+- M12 first slice build after gates
 - M13 provider admission and controlled pull plan
 - M14 typed read API / MCP contract and prototype
 - M15 SearchClarity proof workflow
@@ -127,25 +130,25 @@ When using `ob-dev`:
 
 ## Immediate Next Steps
 
-Proceed with active M10:
+Proceed with active M11:
 
 ```text
-M10 - Schema Planning Only
+M11 - Implementation Foundation
 ```
 
-Status 2026-07-10: M9 is closed by `decisions/2026-07-10-m9-first-slice-closure.md`. The accepted first slice is the Controlled Public Manual Observation Package. M10 is active for schema planning only.
+Status 2026-07-10: M10 is closed by `decisions/2026-07-10-m10-schema-planning-closure.md`. The accepted logical planning target is the Controlled Public Manual Observation Package. M11 is active for implementation foundation only.
 
 Immediate next moves:
 
 ```text
-1. Draft the logical schema plan for the accepted first slice only.
-2. Map schema responsibilities to M7 contracts and M8 hammers.
-3. Explicitly exclude customer records, strategy/recommendation storage, provider truth, dashboards, and broad future-provider schema.
-4. Define migration expectations without running migrations.
-5. Prepare M11/M12 handoff expectations without implementing anything.
+1. Specify M11 foundation deliverables concretely.
+2. Define repo/skeleton expectations for the accepted C2 first slice only.
+3. Define test-harness and initial hammer-test scaffold expectations.
+4. Define fixture/sample design expectations.
+5. Define migration-folder expectations without running migrations.
 ```
 
-Do not run migrations, implement code, make provider purchases, perform paid pulls, build API/MCP tools, create dashboard work, handle customer data, or store strategy/recommendations.
+Do not run migrations, make provider purchases, perform paid pulls, build API/MCP tools, create dashboard work, handle customer data, broaden implementation beyond the accepted first slice, or store strategy/recommendations.
 
 ---
 
@@ -158,7 +161,7 @@ Open questions to carry forward:
 - OR-A3: `ai_visibility_sample_summary` read-time output only vs storable under materialization test.
 - OR-A4: citation handles global vs artifact-local; report-safe references separate or derived.
 - OR-B1 through OR-B3 remain open with M8 fail-closed defaults.
-- Schema planning must stay constrained to the accepted C2 first slice and must not broaden into provider, customer, dashboard, API/MCP, or strategy storage design.
+- M11 foundation work must stay constrained to the accepted C2 first slice and must not broaden into provider, customer, dashboard, API/MCP, or strategy storage implementation.
 
 ---
 
@@ -177,6 +180,6 @@ Do not start:
 - customer data handling
 - strategy/recommendation storage
 - automated recurring capture
-- M10 schema planning before M9 selects the first slice
+- M12 first-slice build before M11 foundation expectations are clear
 
 The project now has rails. Stay on them. No schema goblin jazz.

@@ -118,8 +118,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M7 | Core Contract Planning | closed | Draft non-schema contracts for evidence, scope, provider, query panels, capture packages |
 | M8 | Hammer Matrix and Acceptance Gates | closed | Define hostile-path tests and hard gates before implementation |
 | M9 | First Evidence Slice Definition | closed | Choose the smallest useful evidence slice to build first |
-| M10 | Schema Planning Only | active | Design schema after contracts and research; no migrations yet |
-| M11 | Implementation Foundation | planned | Create project implementation skeleton only after gates open |
+| M10 | Schema Planning Only | closed | Design schema after contracts and research; no migrations yet |
+| M11 | Implementation Foundation | active | Create project implementation skeleton only after gates open |
 | M12 | First Evidence Slice Build | planned | Build and test the first observation path |
 | M13 | Provider Admission and Controlled Pull Plan | planned | Admit first provider through rights/cost/recipe gates |
 | M14 | Typed Read API / MCP Contract and Prototype | planned | Expose evidence through bounded read tools, not raw SQL |
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M10
+M11
 
 ### Name
 
-Schema Planning Only
+Implementation Foundation
 
 ### Status
 
@@ -148,9 +148,9 @@ active
 
 ### Purpose
 
-Design the logical schema plan for the accepted first evidence slice only, after M7 contracts, M8 hammers, and the M9 first-slice decision.
+Plan and create the minimal implementation foundation only after M10 logical schema planning has closed.
 
-M10 consumes `decisions/2026-07-10-m9-first-slice-closure.md` and plans schema for the Controlled Public Manual Observation Package. M10 does not authorize migrations, implementation, provider pulls, provider admission, API/MCP work, dashboard work, customer-data handling, or strategy/recommendation storage.
+M11 consumes `decisions/2026-07-10-m10-schema-planning-closure.md` and prepares foundation expectations for the Controlled Public Manual Observation Package. M11 does not authorize provider calls, dashboards, strategy/recommendation storage, customer data handling, API/MCP exposure, or broad implementation beyond the bounded foundation tasks explicitly planned here.
 
 ### Required Reading
 
@@ -169,88 +169,103 @@ M10 consumes `decisions/2026-07-10-m9-first-slice-closure.md` and plans schema f
 - `hammers/README.md`
 - `hammers/hammer-matrix-v0-1.md`
 - `hammers/acceptance-gate-policy-v0-1.md`
-- `planning-inbox/m9-first-slice-candidate-comparison.md`
-- `planning-inbox/m9-first-slice-definition-proposal.md`
 - `decisions/2026-07-10-m9-first-slice-closure.md`
+- `planning-inbox/m10-logical-schema-plan-c2.md`
+- `planning-inbox/m10-schema-plan-review.md`
+- `decisions/2026-07-10-m10-schema-planning-closure.md`
 
 ### Allowed Work
 
-- logical schema planning for the accepted first slice only;
-- define table responsibilities at planning level;
-- map schema concepts to accepted contracts and applicable hammers;
-- define migration expectations without running migrations;
-- define anti-pattern checks for strategy/recommendation/customer-data leakage;
-- define evidence/query examples needed for later M11/M12 planning.
+- plan implementation foundation for the accepted C2 first slice only;
+- define project skeleton needs if still required;
+- define test harness strategy;
+- define migration-folder expectations without running migrations;
+- define fixture/sample design expectations;
+- define initial hammer-test scaffold expectations;
+- define local configuration patterns without secrets.
 
 ### Forbidden Work
 
-- running migrations
-- implementation
+- provider calls
 - provider purchases
 - paid provider pulls
 - provider admission
-- API/MCP implementation
 - dashboard work
-- customer data handling
 - strategy/recommendation storage
-- capture runner implementation
-- automated recurring capture
-- broad schema beyond the accepted first slice
+- customer data handling
+- API/MCP exposure
+- direct SQL/credential exposure to LLMs or agents
+- broad implementation beyond the accepted first slice
 - accepting any hammer as passed
 
 ### Blockers
 
-- M9 first-slice decision must exist. — met (`decisions/2026-07-10-m9-first-slice-closure.md`)
-- M10 schema planning must remain limited to the Controlled Public Manual Observation Package.
-- Any schema concept that stores meaning, strategy, recommendation, customer records, or provider truth must be rejected.
+- M10 schema planning closure must exist. — met (`decisions/2026-07-10-m10-schema-planning-closure.md`)
+- M11 deliverables must be specified concretely before any foundation implementation begins.
+- No implementation foundation task may introduce provider, customer, dashboard, API/MCP, or strategy/recommendation scope.
 
-### M10 Progress Log
+### M11 Progress Log
 
-2026-07-10 — M10 activated by `decisions/2026-07-10-m9-first-slice-closure.md` after owner accepted C2 and closed M9.
+2026-07-10 — M11 activated by `decisions/2026-07-10-m10-schema-planning-closure.md` after M10 closed logical schema planning for C2.
 
-### Schema Planning Target
+### Foundation Target
 
-M10 targets only:
+M11 targets only:
 
 ```text
-Controlled Public Manual Observation Package
+Implementation foundation for the C2 Controlled Public Manual Observation Package
 ```
 
-### Required Hammer Mapping
+### Required Foundation Mapping
 
-M10 must map the schema plan to:
+M11 must plan against:
 
-- H1 Scope isolation
-- H2 Rights fail-closed
-- H3 Retention enforcement
-- H5 No strategy/recommendation storage
-- H6 CapturePackage validation / observation envelope validation
-- H9 Freshness / point-in-time claim-use warning
-- H12 Raw archive integrity if raw support is included
-- H15 Evidence ID / citation integrity
-- H19 Append-only observations
-- H21 Audit-first enforcement
-- H22 Rollback/recovery expectations
+- accepted C2 first-slice boundary;
+- M10 logical schema responsibilities;
+- H1/H2/H3/H5/H6/H9/H12/H15/H18/H19/H21/H22 planning expectations;
+- no provider/customer/API/dashboard/strategy leakage.
 
 ### Exit Criteria
 
-M10 may close when:
+M11 may close when:
 
-- logical schema plan exists for the accepted first slice only;
-- schema responsibilities are mapped to M7 contracts and M8 hammers;
-- forbidden storage patterns are explicitly excluded;
-- migration plan expectations exist without running migrations;
-- M11 can plan implementation foundation without guessing schema intent;
+- foundation deliverables are specified concretely;
+- repo/skeleton/test-harness expectations are clear;
+- fixture/sample expectations are clear;
+- migration-folder expectations exist without running migrations;
+- M12 can build the first slice without guessing foundation intent;
 - `ACTIVE_CONTEXT.md` and `NEXT_SESSION_HANDOFF.md` point to the correct next milestone;
 - changes are committed.
 
 ### Next Milestone
 
-M11 - Implementation Foundation
+M12 - First Evidence Slice Build
 
 ---
 
 ## Closed Milestones
+
+### M10 - Schema Planning Only
+
+Status: closed
+
+Purpose:
+Design the logical schema plan for the accepted first evidence slice only, after M7 contracts, M8 hammers, and the M9 first-slice decision.
+
+Completed outputs:
+
+- `planning-inbox/m10-logical-schema-plan-c2.md`
+- `planning-inbox/m10-schema-plan-review.md`
+- `decisions/2026-07-10-m10-schema-planning-closure.md`
+
+Accepted planning target:
+
+```text
+C2 — Controlled Public Manual Observation Package
+```
+
+Closure note:
+M10 accepted logical schema responsibility planning only. It recorded closure defaults for deferred query/panel context, optional-but-first-class raw support, internal-only evidence identity while OR-A4 remains open, and minimum consequential audit-event concepts. M10 did not authorize physical DDL, migrations, implementation, provider admission, provider purchases, paid pulls, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage. M11 is now active for implementation foundation only.
 
 ### M9 - First Evidence Slice Definition
 
@@ -760,7 +775,7 @@ Next milestone: M10
 
 ### M10 - Schema Planning Only
 
-Status: active; full active-milestone details live in the Active Milestone section above
+Status: closed; closure details live in the Closed Milestones section above
 
 Purpose:
 Design schema for the approved first slice only, after research/contracts/hammers exist.
@@ -805,7 +820,7 @@ Next milestone: M11
 
 ### M11 - Implementation Foundation
 
-Status: planned
+Status: active; full active-milestone details live in the Active Milestone section above
 
 Purpose:
 Create the minimal implementation foundation only after schema plan and gates are approved.
