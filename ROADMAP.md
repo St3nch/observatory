@@ -125,8 +125,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M14 | Typed Read API / MCP Contract and Prototype | complete | Accepted typed-read contract plus bounded fixture/in-memory prototype proof |
 | M15 | SearchClarity Proof Workflow | complete | Accepted SearchClarity contract plus bounded synthetic fixture/in-memory proof |
 | M16 | Provider Cross-Check Proof | complete | Accepted provider cross-check contract plus bounded synthetic fixture/in-memory proof |
-| M17 | Owned Telemetry Overlay Proof | active for planning only | Prove read-time overlay without storing customer first-party data |
-| M18 | Recurring Watch Panel Planning | planned | Plan recurring capture only after provider/cost/hammers exist |
+| M17 | Owned Telemetry Overlay Proof | complete | Accepted overlay contract plus bounded synthetic fixture/in-memory discard proof |
+| M18 | Recurring Watch Panel Planning | active for planning only | Plan recurring capture only after provider/cost/hammers exist |
 | M19 | Hardening, Backup, Recovery, and Operations | planned | Make the system durable and recoverable |
 | M20 | Observatory v1 Acceptance | planned | Accept or reject v1 against doctrine, evidence, and hammers |
 
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M17
+M18
 
 ### Name
 
-Owned Telemetry Overlay Proof
+Recurring Watch Panel Planning
 
 ### Status
 
@@ -148,55 +148,51 @@ active for planning only
 
 ### Purpose
 
-Define how synthetic owned/internal or customer first-party telemetry may be supplied ephemerally at read time, aligned against Observatory evidence, and discarded without becoming canonical Observatory data.
+Plan whether recurring capture can be approved or rejected responsibly after provider, cost, rights, recipe, freshness, and hammer gates are examined.
 
-M17 consumes the accepted overlay, scope-rights-retention, claim-safety, typed-read, SearchClarity, and no-persistence boundaries. It may plan closed overlay request shapes, synthetic alignment behavior, discard guarantees, no-storage hammers, consumer-promotion rules, and one exact bounded fixture-proof proposal.
+M18 is planning only. It may define watch-panel membership, cadence policy, budget ceilings, duplicate prevention, stop conditions, failure budgets, manual review gates, and stale/coverage warnings. Recurring capture execution is not part of v1 unless the owner explicitly changes the roadmap.
 
 ### Required Reading
 
 - `ACTIVE_CONTEXT.md`
-- `decisions/2026-07-12-m16-closure-and-m17-activation.md`
-- `contracts/overlay.md`
+- `decisions/2026-07-12-m17-closure-and-m18-activation.md`
+- M13 provider admission and controlled-pull outputs
+- M16 provider cross-check proof outputs
+- `contracts/query-panel.md`
+- `contracts/freshness-staleness-volatility.md`
+- `contracts/provider-testimony.md`
 - `contracts/scope-rights-retention.md`
-- `contracts/claim-safety.md`
-- `contracts/typed-read-api-mcp-v0-1.md`
-- `contracts/searchclarity-proof-workflow-v0-1.md`
-- `planning-inbox/m16-provider-cross-check-closure-readiness-review.md`
 - `hammers/hammer-matrix-v0-1.md`
 
 ### Allowed Work
 
-- ephemeral overlay request and discard contract reconciliation;
-- synthetic owned/internal or customer first-party series modeling;
-- alignment against admitted Observatory evidence without promotion into canonical storage;
-- no-storage, no-cache, no-log, and no-evidence-ID behavior;
-- caveat and consumer-promotion requirements;
-- hostile-path tests for private-data persistence, identity leakage, file intake, overlay laundering, and cross-scope mixing;
-- exact bounded synthetic fixture-proof task proposals after contract and owner gates are satisfied.
+- watch-panel purpose and bounded membership design;
+- cadence policy by volatility, freshness, and claim need;
+- budget ceilings and duplicate-task prevention;
+- stop conditions, failure budgets, and manual review points;
+- stale, incomplete, coverage, and non-synchronous warnings;
+- explicit approval-or-rejection criteria for recurring capture.
 
 ### Forbidden Work
 
-- real customer first-party analytics or owned/private telemetry intake;
-- customer identity, account records, screenshots, CSV/PDF exports, or external files;
-- overlay persistence, caching, durable logs, evidence promotion, or canonical ingestion;
-- customer report generation or production consumer integration;
-- provider calls or recurring capture;
-- production API/MCP deployment;
+- scheduler implementation;
+- recurring capture execution;
+- autonomous spend or provider calls;
+- provider credentials;
+- broad crawling or scraping;
+- customer data or reports;
+- production API/MCP deployment or production integration;
 - Postgres creation, physical schema, or migrations;
 - strategy/recommendation storage or automatic conclusion promotion.
 
 ### Blockers
 
-- The accepted overlay and no-storage boundaries must be reconciled into an exact M17 proof contract before implementation.
-- Synthetic proof inputs must contain no real customer identity, private analytics, files, screenshots, exports, or external references.
-- Any bounded proof task requires a separate exact owner authorization.
+- Provider, cost, rights, recipe, freshness, and hammer gates must be reconciled before recurring-capture approval can be considered.
+- Any execution proposal requires a future explicit roadmap change and separate owner authorization.
 
-### M17 Progress Log
+### M18 Progress Log
 
-2026-07-12 — M17 planning activated by `decisions/2026-07-12-m16-closure-and-m17-activation.md` after bounded M16 closure proof.
-2026-07-12 — Full owned-telemetry overlay proof contract, owner-ruling proposals, hostile-path plan, exact synthetic fixture-proof task proposal, and reconciliation review drafted from accepted repo authority.
-2026-07-12 — M17 owned telemetry overlay proof contract and rulings accepted; exact synthetic proof implementation remains separately gated.
-2026-07-12 — Exact synthetic M17 overlay fixture proof authorized and implemented pending owner-local full-suite execution.
+2026-07-12 — M18 planning activated by `decisions/2026-07-12-m17-closure-and-m18-activation.md` after bounded M17 overlay discard proof and owner-local confirmation that all 184 tests pass.
 
 ---
 
@@ -1094,7 +1090,7 @@ Next milestone: M17
 
 ### M17 - Owned Telemetry Overlay Proof
 
-Status: active for planning only — activated by `decisions/2026-07-12-m16-closure-and-m17-activation.md`
+Status: complete — closed by `decisions/2026-07-12-m17-closure-and-m18-activation.md`
 
 Purpose:
 Prove read-time overlay behavior for owned/internal or customer first-party series without contaminating Observatory storage.
@@ -1134,7 +1130,7 @@ Next milestone: M18
 
 ### M18 - Recurring Watch Panel Planning
 
-Status: planned
+Status: active for planning only — activated by `decisions/2026-07-12-m17-closure-and-m18-activation.md`
 
 Purpose:
 Plan recurring capture only after provider, cost, rights, recipe, and hammer gates exist. M18 is planning only; recurring capture execution is not part of v1 unless the owner explicitly changes the roadmap.

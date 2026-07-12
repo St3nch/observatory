@@ -2,14 +2,14 @@
 
 Status: authority
 Authority: fresh-session handoff pointer; `ACTIVE_CONTEXT.md` owns current phase truth
-Purpose: preserve current state after M16 closure and M17 planning activation
+Purpose: preserve current state after M17 closure and M18 planning activation
 Last updated: 2026-07-12
 
 ---
 
 ## Current State
 
-The Observatory is in M17 owned telemetry overlay proof planning.
+The Observatory is in M18 recurring watch panel planning.
 
 Closed milestones:
 
@@ -31,19 +31,20 @@ Closed milestones:
 - M14 - Typed Read API / MCP Contract and Prototype
 - M15 - SearchClarity Proof Workflow
 - M16 - Provider Cross-Check Proof
+- M17 - Owned Telemetry Overlay Proof
 
 Active milestone:
 
 ```text
-M17 - Owned Telemetry Overlay Proof
+M18 - Recurring Watch Panel Planning
 ```
 
-M16 closed on an accepted provider cross-check contract plus one local synthetic fixture-backed in-memory proof. The owner ran the full suite: 167 tests passed. M17 is active for planning only. No real private analytics, customer identity, screenshots/files/exports, overlay persistence, canonical ingestion, provider calls, Postgres, schema, migrations, production API/MCP, report generation, or production integration is authorized.
+M17 closed on an accepted owned telemetry overlay contract plus one local synthetic fixture-backed in-memory discard proof. After correcting one false-positive safety test, the owner ran the full suite: 184 tests passed. M18 is active for planning only. No scheduler implementation, recurring capture execution, autonomous spend, provider calls, broad crawling/scraping, credentials, Postgres, schema, migrations, production API/MCP, customer data, reports, strategy, or production integration is authorized.
 
 Current milestone-transition authority:
 
 ```text
-decisions/2026-07-12-m16-closure-and-m17-activation.md
+decisions/2026-07-12-m17-closure-and-m18-activation.md
 ```
 
 ---
@@ -145,25 +146,23 @@ When using `ob-dev`:
 
 ## Immediate Next Steps
 
-Proceed with active M13:
+Proceed with active M18:
 
 ```text
-M13 - Provider Admission and Controlled Pull Plan
+M18 - Recurring Watch Panel Planning
 ```
-
-Status 2026-07-10: M12 is closed by `decisions/2026-07-10-m12-first-slice-closure.md`. The accepted local C2 first evidence slice is proven for the bounded fixture implementation. M13 is active for provider admission and controlled pull planning only.
 
 Immediate next moves:
 
 ```text
-1. Draft the provider admission plan.
-2. Confirm rights, retention, and cost gates from existing research/contracts.
-3. Define a controlled pull recipe as a proposal only.
-4. Define cost ceiling and stop conditions.
-5. Define raw payload handling, no-customer-data, no-recurring-capture, and no-API/MCP/dashboard/report posture.
+1. Reconcile M13 provider/cost/rights/recipe evidence with M16 disagreement proof and M8 hammers.
+2. Define bounded watch-panel purpose and membership rules.
+3. Define cadence policy by volatility, freshness, and claim need.
+4. Define budget ceilings, duplicate prevention, stop conditions, and manual review gates.
+5. Produce an explicit approve-or-reject recommendation for recurring capture planning.
 ```
 
-Do not make provider purchases, perform paid pulls, execute provider tasks, build API/MCP tools, create dashboard work, handle customer data, scrape marketplaces, create recurring capture, or store strategy/recommendations.
+Do not implement a scheduler, execute recurring capture, call providers, spend autonomously, add credentials, crawl broadly, create Postgres/schema/migrations, build production API/MCP, handle customer data, generate reports, or store strategy/recommendations.
 
 ---
 

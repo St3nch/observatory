@@ -12,37 +12,37 @@ Last updated: 2026-07-12
 The Observatory is in:
 
 ```text
-M17 owned telemetry overlay proof planning
+M18 recurring watch panel planning
 ```
 
-M16 is closed after acceptance of the provider cross-check contract and rulings, one bounded synthetic fixture-backed implementation, and owner-local proof that all 167 tests pass. M17 is active for planning only: ephemeral owned/internal or customer first-party overlay boundaries, alignment with Observatory evidence, no-storage behavior, hostile-path criteria, and an exact bounded synthetic proof proposal. No real private analytics, customer identity, screenshots/files/exports, overlay persistence, canonical ingestion, provider calls, Postgres, schema, migrations, production API/MCP, report generation, or production integration is authorized.
+M17 is closed after acceptance of the owned telemetry overlay contract and rulings, one bounded synthetic fixture-backed implementation, one corrected false-positive safety test, and owner-local proof that all 184 tests pass. M18 is active for planning only: recurring watch-panel design, cadence policy, budget policy, stop conditions, stale/coverage warnings, and responsible approval-or-rejection criteria. No scheduler implementation, recurring capture execution, autonomous spend, provider calls, broad crawling/scraping, credentials, Postgres, schema, migrations, production API/MCP, customer data, reports, strategy, or production integration is authorized.
 
 ---
 
 ## Active Milestone
 
 ```text
-M17 - Owned Telemetry Overlay Proof
+M18 - Recurring Watch Panel Planning
 ```
 
-M0, M0.1, and M1 through M16 are complete and committed.
+M0, M0.1, and M1 through M17 are complete and committed.
 
 ---
 
 ## Current Task
 
-Begin M17 with repo-first reconciliation of overlay, scope-rights-retention, claim-safety, typed-read, SearchClarity, and no-persistence boundaries before any proof implementation.
+Begin M18 with repo-first reconciliation of provider admission, cost, rights, recipe, freshness, query-panel, and hammer boundaries before any recurring-capture decision.
 
-Current M17 work is allowed to:
+Current M18 work is allowed to:
 
-- define ephemeral overlay request and discard behavior;
-- define alignment of synthetic owned/internal or customer first-party series against Observatory evidence;
-- define no-storage, no-cache, no-log, and no-evidence-promotion requirements;
-- define output caveats and consumer-promotion boundaries;
-- define hostile-path tests for private-data persistence, identity leakage, file intake, overlay laundering, and scope mixing;
-- define one exact bounded synthetic fixture-backed proof-task proposal after contract and owner gates.
+- define watch-panel purpose and bounded subject membership;
+- define cadence policy by volatility, freshness, and claim need;
+- define budget ceilings, duplicate prevention, and approval gates;
+- define stop conditions, failure budgets, and manual review points;
+- define stale, incomplete, coverage, and non-synchronous warnings;
+- define an explicit approve/reject recommendation for recurring capture planning.
 
-M17 does not authorize real customer first-party analytics, owned/private telemetry intake, customer identity, screenshots, CSV/PDF exports, external files, overlay persistence or caching, canonical ingestion, provider calls, recurring capture, customer reports, Postgres, schema, migrations, production API/MCP deployment, production integrations, strategy storage, recommendation storage, or automatic conclusion promotion.
+M18 does not authorize scheduler implementation, recurring capture execution, provider calls, autonomous spend, credentials, broad crawling or scraping, customer data, customer reports, Postgres, schema, migrations, production API/MCP deployment, production integrations, strategy storage, recommendation storage, or automatic conclusion promotion.
 
 ---
 
@@ -113,12 +113,13 @@ Closed:
 - M14 - Typed Read API / MCP Contract and Prototype
 - M15 - SearchClarity Proof Workflow
 - M16 - Provider Cross-Check Proof
+- M17 - Owned Telemetry Overlay Proof
 
 Active:
 
-- M17 - Owned Telemetry Overlay Proof
+- M18 - Recurring Watch Panel Planning
 
-Next after M17:
+Next after M18:
 
 ```text
 Follow the accepted roadmap sequence; no later milestone is activated by this context file.
