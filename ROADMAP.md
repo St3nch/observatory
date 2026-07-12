@@ -116,8 +116,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M5 | Research Gate Plan | closed | Define research questions, outputs, and gates before design/build |
 | M6 | Research Gate Execution | closed | Complete required research before contracts/schema/provider work |
 | M7 | Core Contract Planning | closed | Draft non-schema contracts for evidence, scope, provider, query panels, capture packages |
-| M8 | Hammer Matrix and Acceptance Gates | active | Define hostile-path tests and hard gates before implementation |
-| M9 | First Evidence Slice Definition | planned | Choose the smallest useful evidence slice to build first |
+| M8 | Hammer Matrix and Acceptance Gates | closed | Define hostile-path tests and hard gates before implementation |
+| M9 | First Evidence Slice Definition | active | Choose the smallest useful evidence slice to build first |
 | M10 | Schema Planning Only | planned | Design schema after contracts and research; no migrations yet |
 | M11 | Implementation Foundation | planned | Create project implementation skeleton only after gates open |
 | M12 | First Evidence Slice Build | planned | Build and test the first observation path |
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M8
+M9
 
 ### Name
 
-Hammer Matrix and Acceptance Gates
+First Evidence Slice Definition
 
 ### Status
 
@@ -148,9 +148,9 @@ active
 
 ### Purpose
 
-Define hostile-path tests and hard acceptance gates before implementation starts.
+Choose the smallest useful first evidence slice that proves Observatory behavior without overbuilding.
 
-M8 consumes the M7 contract draft set and turns the boundaries into testable hammer expectations. It does not authorize schema design, migrations, provider pulls, implementation, customer data handling, dashboard work, or strategy/recommendation storage.
+M9 consumes the M7 contract draft set and M8 hammer matrix/gate policy to select a bounded first slice. It does not authorize schema design, migrations, implementation, provider pulls, provider admission, API/MCP work, dashboard work, customer-data handling, or strategy/recommendation storage.
 
 ### Required Reading
 
@@ -166,24 +166,28 @@ M8 consumes the M7 contract draft set and turns the boundaries into testable ham
 - `NEXT_SESSION_HANDOFF.md`
 - `contracts/README.md`
 - all M7 contract drafts in `contracts/`
-- `planning-inbox/m7-contract-draft-set-review.md`
+- `hammers/README.md`
+- `hammers/hammer-matrix-v0-1.md`
+- `hammers/acceptance-gate-policy-v0-1.md`
+- `planning-inbox/m8-hammer-planning-review.md`
 - `planning-inbox/owner-ruling-tracker.md`
-- `research/rg13-hammer-matrix-inputs.md`
-- M6 research outputs as needed for hammer source context
+- M6 research outputs as needed for first-slice source context
 
 ### Allowed Work
 
-- create earned `hammers/` folder/index if M8 work proceeds
-- define hammer categories from M7 contracts
-- draft hostile-path tests and acceptance gates
-- map hammer tests to contract sections and owner-ruling blockers
-- preserve fail-closed behavior for unresolved rulings
-- identify which hammers gate M9, M10, M11, M12, M13, M14, M15, M16, M17, and M18
+- compare first-slice candidates;
+- choose the smallest useful evidence slice;
+- name applicable hammers from H1-H22;
+- name non-applicable or deferred hammers and why;
+- name M10 schema-planning gates;
+- name M12 implementation-execution gates;
+- reject candidates that require provider spend, customer private data, marketplace ambiguity, dashboard work, API/MCP implementation, or strategy/recommendation storage too early.
 
 ### Forbidden Work
 
 - physical schema design
 - migrations
+- implementation
 - provider purchases
 - paid provider pulls
 - provider admission
@@ -193,63 +197,69 @@ M8 consumes the M7 contract draft set and turns the boundaries into testable ham
 - strategy/recommendation storage
 - capture runner implementation
 - automated recurring capture
-- accepting implementation without hammer evidence
+- accepting any hammer as passed
 
 ### Blockers
 
 - M7 contract draft set must exist and be indexed. — met
-- M7 draft-set review must exist. — met (`planning-inbox/m7-contract-draft-set-review.md`)
-- Any hammer that touches an open owner ruling must fail closed until the ruling is recorded.
+- M8 hammer matrix must exist and be indexed. — met (`hammers/hammer-matrix-v0-1.md`)
+- M8 acceptance-gate policy must exist. — met (`hammers/acceptance-gate-policy-v0-1.md`)
+- Any first-slice candidate that touches an open owner ruling must fail closed until the ruling is recorded or the slice scopes around it.
 
-### M8 Progress Log
+### M9 Progress Log
 
-2026-07-10 — M8 activated by `decisions/2026-07-10-m7-closure.md` after all thirteen planned M7 contracts were drafted, indexed, reviewed, committed, and pushed.
+2026-07-10 — M9 activated by `decisions/2026-07-10-m8-closure.md` after M8 hammer matrix, acceptance-gate policy, and planning review were drafted, indexed, committed, and pushed.
 
-### Hammer Categories
+### Candidate Filter
 
-M8 should define hammers for:
+M9 should prefer a first slice that can:
 
-- observation vs conclusion separation
-- no customer records
-- no customer first-party storage
-- rights fail-closed
-- retention fail-closed
-- provider disagreement preservation
-- proprietary score treatment
-- raw payload support, pointer integrity, and purge behavior
-- provider drift handling
-- no direct SQL or credentials for LLMs
-- no strategy/recommendation storage
-- no fake scratch/candidate strategy cache
-- overlay no-persistence
-- append-only observation behavior
-- concurrency safety
-- audit-first enforcement
-- schema migration rollback/recovery expectations
-- CapturePackage validation
-- read-tool scope isolation
-- consumer promotion boundaries
-- SearchClarity placeholder boundaries
+- avoid customer private data;
+- avoid paid provider pulls;
+- avoid marketplace capture ambiguity;
+- avoid dashboard/API/MCP dependency;
+- exercise scope, rights, retention, provenance, evidence IDs, and observation/conclusion separation;
+- produce enough shape for M10 schema planning and M12 hammer execution.
 
 ### Exit Criteria
 
-M8 may close when:
+M9 may close when:
 
-- hammer matrix is drafted and indexed;
-- hostile-path tests are mapped to the M7 contract set;
-- hard gates are named for the first evidence slice and later implementation milestones;
-- unresolved owner rulings remain fail-closed;
-- M9 can choose a first evidence slice without guessing acceptance criteria;
+- one first evidence slice is chosen;
+- rejected candidate families are documented;
+- applicable and deferred hammers are named;
+- evidence ID behavior is named;
+- scope/rights/retention behavior is named;
+- raw-support expectations are named if applicable;
+- M10 can plan schema for the selected slice without guessing;
 - `ACTIVE_CONTEXT.md` and `NEXT_SESSION_HANDOFF.md` point to the correct next milestone;
 - changes are committed.
 
 ### Next Milestone
 
-M9 - First Evidence Slice Definition
+M10 - Schema Planning Only
 
 ---
 
 ## Closed Milestones
+
+### M8 - Hammer Matrix and Acceptance Gates
+
+Status: closed
+
+Purpose:
+Define hostile-path tests and hard acceptance gates before implementation starts.
+
+Completed outputs:
+
+- `hammers/README.md`
+- `hammers/hammer-matrix-v0-1.md`
+- `hammers/acceptance-gate-policy-v0-1.md`
+- `planning-inbox/m8-hammer-planning-review.md`
+- `decisions/2026-07-10-m8-closure.md`
+
+Closure note:
+M8 drafted and indexed the hostile-path hammer matrix and acceptance-gate policy, reviewed the M8 planning set, and carried OR-B1 through OR-B3 forward as open fail-closed defaults rather than silently resolving them. M8 did not execute hammers, mark hammers as passed, authorize schema design, migrations, implementation, provider admission, provider purchases, paid pulls, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage. M9 is now active for first evidence slice definition only.
 
 ### M7 - Core Contract Planning
 
@@ -622,7 +632,7 @@ Next milestone: M8
 
 ### M8 - Hammer Matrix and Acceptance Gates
 
-Status: active; full active-milestone details live in the Active Milestone section above
+Status: closed; closure details live in the Closed Milestones section above
 
 Purpose:
 Define hard tests and hostile-path gates before implementation starts.
@@ -669,7 +679,7 @@ Next milestone: M9
 
 ### M9 - First Evidence Slice Definition
 
-Status: planned
+Status: active; full active-milestone details live in the Active Milestone section above
 
 Purpose:
 Choose the smallest useful first slice that proves Observatory behavior without overbuilding.

@@ -12,7 +12,7 @@ Last updated: 2026-07-10
 The Observatory is in:
 
 ```text
-hammer matrix and acceptance-gate planning
+first evidence slice definition
 ```
 
 This is still not schema, provider, API/MCP, dashboard, customer workflow, or implementation authorization.
@@ -22,29 +22,30 @@ This is still not schema, provider, API/MCP, dashboard, customer workflow, or im
 ## Active Milestone
 
 ```text
-M8 - Hammer Matrix and Acceptance Gates
+M9 - First Evidence Slice Definition
 ```
 
-M0, M0.1, M1, M2, M3, M4, M5, M6, and M7 are complete and committed.
+M0, M0.1, M1, M2, M3, M4, M5, M6, M7, and M8 are complete and committed.
 
 ---
 
 ## Current Task
 
-Execute M8 as bounded hammer matrix and acceptance-gate planning work.
+Execute M9 as bounded first evidence slice definition work.
 
-Current M8 work is allowed to:
+Current M9 work is allowed to:
 
-- create earned `hammers/` folder/index if M8 work proceeds;
-- define hammer categories from the M7 contract draft set;
-- draft hostile-path tests and acceptance gates;
-- map hammer tests to contract sections and owner-ruling blockers;
-- preserve fail-closed behavior for unresolved rulings;
-- identify which hammers gate M9 through later implementation/admission milestones.
+- compare first-slice candidates;
+- choose the smallest useful evidence slice;
+- name applicable hammers from H1-H22;
+- name non-applicable or deferred hammers and why;
+- name M10 schema-planning gates;
+- name M12 implementation-execution gates;
+- reject candidates that require provider spend, customer private data, marketplace ambiguity, dashboard work, API/MCP implementation, or strategy/recommendation storage too early.
 
-M7 is closed by `decisions/2026-07-10-m7-closure.md`. All thirteen planned M7 contracts are drafted and indexed in `contracts/README.md`, and the M7 draft-set review lives at `planning-inbox/m7-contract-draft-set-review.md`. M8 now turns those contracts into testable hammers before schema, provider admission, or implementation can begin.
+M8 is closed by `decisions/2026-07-10-m8-closure.md`. The hammer matrix lives at `hammers/hammer-matrix-v0-1.md`, the gate policy lives at `hammers/acceptance-gate-policy-v0-1.md`, and the M8 review lives at `planning-inbox/m8-hammer-planning-review.md`. M9 now selects the first evidence slice before schema, provider admission, or implementation can begin.
 
-M8 does not authorize provider purchases, paid pulls, provider admission, schema work, migrations, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage.
+M9 does not authorize provider purchases, paid pulls, provider admission, schema work, migrations, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage.
 
 ---
 
@@ -106,15 +107,16 @@ Closed:
 - M5 - Research Gate Plan
 - M6 - Research Gate Execution
 - M7 - Core Contract Planning
+- M8 - Hammer Matrix and Acceptance Gates
 
 Active:
 
-- M8 - Hammer Matrix and Acceptance Gates
+- M9 - First Evidence Slice Definition
 
-Next after M8:
+Next after M9:
 
 ```text
-M9 - First Evidence Slice Definition
+M10 - Schema Planning Only
 ```
 
 M2 folder ruling completed:
@@ -124,4 +126,4 @@ Created: decisions/, archive/, research/
 Deferred at M2: contracts/ until M7, hammers/ until M8
 ```
 
-Folder state update 2026-07-10: `contracts/` exists and all planned M7 contracts are drafted/indexed. `audits/` is governed by owner ruling (`decisions/2026-07-07-audits-folder.md`). `hammers/` is now eligible to be created during M8 work.
+Folder state update 2026-07-10: `contracts/` exists and all planned M7 contracts are drafted/indexed. `hammers/` exists and M8 hammer planning outputs are drafted/indexed. `audits/` is governed by owner ruling (`decisions/2026-07-07-audits-folder.md`).
