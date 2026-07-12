@@ -67,6 +67,7 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-12-m15-searchclarity-contract-and-consumer-boundary-rulings.md` | accepted decision | Accepts the M15 SearchClarity proof-workflow contract and consumer-boundary rulings | Proof implementation remains separately gated; no customer data, overlays, report generation, production integration, provider execution, or persistence |
 | `2026-07-12-m15-searchclarity-fixture-proof-authorization.md` | accepted decision | Authorizes one exact synthetic fixture-backed M15 proof task | Local, in-memory proof only; no real customers, reports, overlays, integration, provider execution, or persistence |
 | `2026-07-12-m15-closure-and-m16-activation.md` | accepted decision | Closes M15 after bounded proof and activates M16 planning | Provider disagreement planning only; no new provider work, truth scores, winner logic, recurring capture, persistence, or production integration |
+| `2026-07-12-m16-provider-cross-check-contract-and-rulings.md` | accepted decision | Accepts the M16 provider cross-check proof contract and rulings | Proof implementation remains separately gated; no provider execution, purchases, recurring capture, persistence, truth/winner/composite logic, customer data, reports, or production integration |
 
 ---
 

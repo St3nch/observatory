@@ -1,7 +1,7 @@
 # Contract - Provider Cross-Check Proof v0.1
 
-Status: ready for owner acceptance
-Authority: proposed M16 proof contract; does not authorize provider execution, purchases, recurring capture, persistence, customer reports, production integration, Postgres, schema, migrations, or production API/MCP
+Status: accepted v0.1 by `decisions/2026-07-12-m16-provider-cross-check-contract-and-rulings.md`
+Authority: binding M16 provider cross-check proof contract within its declared scope; does not authorize proof implementation, provider execution, purchases, recurring capture, persistence, customer reports, production integration, Postgres, schema, migrations, or production API/MCP
 Version: 0.1
 Date: 2026-07-12
 Milestone: M16 - Provider Cross-Check Proof
