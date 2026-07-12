@@ -2,14 +2,14 @@
 
 Status: authority
 Authority: fresh-session handoff
-Purpose: preserve current state after M8 closure and M9 activation
+Purpose: preserve current state after M9 closure and M10 activation
 Last updated: 2026-07-10
 
 ---
 
 ## Current State
 
-The Observatory is in first evidence slice definition.
+The Observatory is in schema planning only.
 
 Closed milestones:
 
@@ -23,19 +23,20 @@ Closed milestones:
 - M6 - Research Gate Execution
 - M7 - Core Contract Planning
 - M8 - Hammer Matrix and Acceptance Gates
+- M9 - First Evidence Slice Definition
 
 Active milestone:
 
 ```text
-M9 - First Evidence Slice Definition
+M10 - Schema Planning Only
 ```
 
-M1 created the roadmap, M2 created approved folders/indexes, M3 preserved planning source docs, M4 hardened boundary law, M5 planned research gates, M6 executed all 13 research gates, M7 drafted/indexed all 13 planned non-schema contracts, and M8 drafted/indexed the hammer matrix and acceptance-gate policy. The repo is still not ready for schema, provider pulls, provider purchases, API, MCP, dashboard, capture runners, or customer-data work.
+M1 created the roadmap, M2 created approved folders/indexes, M3 preserved planning source docs, M4 hardened boundary law, M5 planned research gates, M6 executed all 13 research gates, M7 drafted/indexed all 13 planned non-schema contracts, M8 drafted/indexed the hammer matrix and acceptance-gate policy, and M9 accepted C2 as the first evidence slice. The repo is still not ready for migrations, implementation, provider pulls, provider purchases, API, MCP, dashboard, capture runners, or customer-data work.
 
-The next milestone after M9 is:
+The next milestone after M10 is:
 
 ```text
-M10 - Schema Planning Only
+M11 - Implementation Foundation
 ```
 
 ---
@@ -58,8 +59,10 @@ Fresh sessions must read:
 12. `hammers/README.md`
 13. `hammers/hammer-matrix-v0-1.md`
 14. `hammers/acceptance-gate-policy-v0-1.md`
-15. `planning-inbox/m8-hammer-planning-review.md`
-16. `planning-inbox/owner-ruling-tracker.md`
+15. `planning-inbox/m9-first-slice-candidate-comparison.md`
+16. `planning-inbox/m9-first-slice-definition-proposal.md`
+17. `decisions/2026-07-10-m9-first-slice-closure.md`
+18. `planning-inbox/owner-ruling-tracker.md`
 
 For planning notes, read `planning-inbox/README.md` first.
 
@@ -108,8 +111,8 @@ When using `ob-dev`:
 - M6 closed research gate execution
 - M7 closed core contract planning
 - M8 closed hammer matrix and acceptance-gate planning
-- M9 active first evidence slice definition
-- M10 schema planning only
+- M9 closed first evidence slice definition
+- M10 active schema planning only
 - M11-M12 implementation foundation and first slice build after gates
 - M13 provider admission and controlled pull plan
 - M14 typed read API / MCP contract and prototype
@@ -124,25 +127,25 @@ When using `ob-dev`:
 
 ## Immediate Next Steps
 
-Proceed with active M9:
+Proceed with active M10:
 
 ```text
-M9 - First Evidence Slice Definition
+M10 - Schema Planning Only
 ```
 
-Status 2026-07-10: M8 is closed by `decisions/2026-07-10-m8-closure.md`. The hammer matrix lives at `hammers/hammer-matrix-v0-1.md`, the gate policy lives at `hammers/acceptance-gate-policy-v0-1.md`, and the M8 review lives at `planning-inbox/m8-hammer-planning-review.md`. M9 is active for first evidence slice definition only.
+Status 2026-07-10: M9 is closed by `decisions/2026-07-10-m9-first-slice-closure.md`. The accepted first slice is the Controlled Public Manual Observation Package. M10 is active for schema planning only.
 
 Immediate next moves:
 
 ```text
-1. Compare candidate first evidence slices.
-2. Choose the smallest useful slice that exercises core Observatory behavior.
-3. Name applicable and deferred H1-H22 hammers.
-4. Name M10 schema-planning gates and M12 execution gates.
-5. Reject candidates that require paid provider pulls, customer private data, marketplace ambiguity, dashboard/API/MCP implementation, or strategy/recommendation storage too early.
+1. Draft the logical schema plan for the accepted first slice only.
+2. Map schema responsibilities to M7 contracts and M8 hammers.
+3. Explicitly exclude customer records, strategy/recommendation storage, provider truth, dashboards, and broad future-provider schema.
+4. Define migration expectations without running migrations.
+5. Prepare M11/M12 handoff expectations without implementing anything.
 ```
 
-Do not make provider purchases, paid pulls, schema, migrations, API/MCP implementation, dashboard work, capture runner work, customer-data handling, or strategy/recommendation storage.
+Do not run migrations, implement code, make provider purchases, perform paid pulls, build API/MCP tools, create dashboard work, handle customer data, or store strategy/recommendations.
 
 ---
 
@@ -155,7 +158,7 @@ Open questions to carry forward:
 - OR-A3: `ai_visibility_sample_summary` read-time output only vs storable under materialization test.
 - OR-A4: citation handles global vs artifact-local; report-safe references separate or derived.
 - OR-B1 through OR-B3 remain open with M8 fail-closed defaults.
-- Which first-slice candidate best avoids provider spend/customer data while proving scope, rights, retention, provenance, evidence IDs, and observation/conclusion separation.
+- Schema planning must stay constrained to the accepted C2 first slice and must not broaden into provider, customer, dashboard, API/MCP, or strategy storage design.
 
 ---
 
@@ -163,8 +166,7 @@ Open questions to carry forward:
 
 Do not start:
 
-- schema design
-- migrations
+- running migrations
 - DataForSEO pulls
 - Ahrefs/Semrush work
 - provider admission

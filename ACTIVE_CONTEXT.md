@@ -12,40 +12,39 @@ Last updated: 2026-07-10
 The Observatory is in:
 
 ```text
-first evidence slice definition
+schema planning only
 ```
 
-This is still not schema, provider, API/MCP, dashboard, customer workflow, or implementation authorization.
+This is schema planning only. It is still not migrations, implementation, provider, API/MCP, dashboard, customer workflow, or customer-data authorization.
 
 ---
 
 ## Active Milestone
 
 ```text
-M9 - First Evidence Slice Definition
+M10 - Schema Planning Only
 ```
 
-M0, M0.1, M1, M2, M3, M4, M5, M6, M7, and M8 are complete and committed.
+M0, M0.1, M1, M2, M3, M4, M5, M6, M7, M8, and M9 are complete and committed.
 
 ---
 
 ## Current Task
 
-Execute M9 as bounded first evidence slice definition work.
+Execute M10 as bounded schema planning work for the accepted first evidence slice only.
 
-Current M9 work is allowed to:
+Current M10 work is allowed to:
 
-- compare first-slice candidates;
-- choose the smallest useful evidence slice;
-- name applicable hammers from H1-H22;
-- name non-applicable or deferred hammers and why;
-- name M10 schema-planning gates;
-- name M12 implementation-execution gates;
-- reject candidates that require provider spend, customer private data, marketplace ambiguity, dashboard work, API/MCP implementation, or strategy/recommendation storage too early.
+- plan logical schema for the Controlled Public Manual Observation Package only;
+- define table responsibilities at planning level;
+- map schema concepts to M7 contracts and M8 hammers;
+- define migration expectations without running migrations;
+- define anti-pattern checks for strategy/recommendation/customer-data leakage;
+- define evidence/query examples needed for later M11/M12 planning.
 
-M8 is closed by `decisions/2026-07-10-m8-closure.md`. The hammer matrix lives at `hammers/hammer-matrix-v0-1.md`, the gate policy lives at `hammers/acceptance-gate-policy-v0-1.md`, and the M8 review lives at `planning-inbox/m8-hammer-planning-review.md`. M9 now selects the first evidence slice before schema, provider admission, or implementation can begin.
+M9 is closed by `decisions/2026-07-10-m9-first-slice-closure.md`. The accepted first slice is the Controlled Public Manual Observation Package. M10 now plans schema for that slice before implementation can begin.
 
-M9 does not authorize provider purchases, paid pulls, provider admission, schema work, migrations, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage.
+M10 does not authorize provider purchases, paid pulls, provider admission, migrations, implementation, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage.
 
 ---
 
@@ -53,8 +52,7 @@ M9 does not authorize provider purchases, paid pulls, provider admission, schema
 
 Do not start:
 
-- schema design
-- migrations
+- running migrations
 - Postgres implementation
 - DataForSEO pulls
 - Ahrefs work
@@ -108,15 +106,16 @@ Closed:
 - M6 - Research Gate Execution
 - M7 - Core Contract Planning
 - M8 - Hammer Matrix and Acceptance Gates
+- M9 - First Evidence Slice Definition
 
 Active:
 
-- M9 - First Evidence Slice Definition
+- M10 - Schema Planning Only
 
-Next after M9:
+Next after M10:
 
 ```text
-M10 - Schema Planning Only
+M11 - Implementation Foundation
 ```
 
 M2 folder ruling completed:

@@ -117,8 +117,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M6 | Research Gate Execution | closed | Complete required research before contracts/schema/provider work |
 | M7 | Core Contract Planning | closed | Draft non-schema contracts for evidence, scope, provider, query panels, capture packages |
 | M8 | Hammer Matrix and Acceptance Gates | closed | Define hostile-path tests and hard gates before implementation |
-| M9 | First Evidence Slice Definition | active | Choose the smallest useful evidence slice to build first |
-| M10 | Schema Planning Only | planned | Design schema after contracts and research; no migrations yet |
+| M9 | First Evidence Slice Definition | closed | Choose the smallest useful evidence slice to build first |
+| M10 | Schema Planning Only | active | Design schema after contracts and research; no migrations yet |
 | M11 | Implementation Foundation | planned | Create project implementation skeleton only after gates open |
 | M12 | First Evidence Slice Build | planned | Build and test the first observation path |
 | M13 | Provider Admission and Controlled Pull Plan | planned | Admit first provider through rights/cost/recipe gates |
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M9
+M10
 
 ### Name
 
-First Evidence Slice Definition
+Schema Planning Only
 
 ### Status
 
@@ -148,9 +148,9 @@ active
 
 ### Purpose
 
-Choose the smallest useful first evidence slice that proves Observatory behavior without overbuilding.
+Design the logical schema plan for the accepted first evidence slice only, after M7 contracts, M8 hammers, and the M9 first-slice decision.
 
-M9 consumes the M7 contract draft set and M8 hammer matrix/gate policy to select a bounded first slice. It does not authorize schema design, migrations, implementation, provider pulls, provider admission, API/MCP work, dashboard work, customer-data handling, or strategy/recommendation storage.
+M10 consumes `decisions/2026-07-10-m9-first-slice-closure.md` and plans schema for the Controlled Public Manual Observation Package. M10 does not authorize migrations, implementation, provider pulls, provider admission, API/MCP work, dashboard work, customer-data handling, or strategy/recommendation storage.
 
 ### Required Reading
 
@@ -169,24 +169,22 @@ M9 consumes the M7 contract draft set and M8 hammer matrix/gate policy to select
 - `hammers/README.md`
 - `hammers/hammer-matrix-v0-1.md`
 - `hammers/acceptance-gate-policy-v0-1.md`
-- `planning-inbox/m8-hammer-planning-review.md`
-- `planning-inbox/owner-ruling-tracker.md`
-- M6 research outputs as needed for first-slice source context
+- `planning-inbox/m9-first-slice-candidate-comparison.md`
+- `planning-inbox/m9-first-slice-definition-proposal.md`
+- `decisions/2026-07-10-m9-first-slice-closure.md`
 
 ### Allowed Work
 
-- compare first-slice candidates;
-- choose the smallest useful evidence slice;
-- name applicable hammers from H1-H22;
-- name non-applicable or deferred hammers and why;
-- name M10 schema-planning gates;
-- name M12 implementation-execution gates;
-- reject candidates that require provider spend, customer private data, marketplace ambiguity, dashboard work, API/MCP implementation, or strategy/recommendation storage too early.
+- logical schema planning for the accepted first slice only;
+- define table responsibilities at planning level;
+- map schema concepts to accepted contracts and applicable hammers;
+- define migration expectations without running migrations;
+- define anti-pattern checks for strategy/recommendation/customer-data leakage;
+- define evidence/query examples needed for later M11/M12 planning.
 
 ### Forbidden Work
 
-- physical schema design
-- migrations
+- running migrations
 - implementation
 - provider purchases
 - paid provider pulls
@@ -197,51 +195,84 @@ M9 consumes the M7 contract draft set and M8 hammer matrix/gate policy to select
 - strategy/recommendation storage
 - capture runner implementation
 - automated recurring capture
+- broad schema beyond the accepted first slice
 - accepting any hammer as passed
 
 ### Blockers
 
-- M7 contract draft set must exist and be indexed. — met
-- M8 hammer matrix must exist and be indexed. — met (`hammers/hammer-matrix-v0-1.md`)
-- M8 acceptance-gate policy must exist. — met (`hammers/acceptance-gate-policy-v0-1.md`)
-- Any first-slice candidate that touches an open owner ruling must fail closed until the ruling is recorded or the slice scopes around it.
+- M9 first-slice decision must exist. — met (`decisions/2026-07-10-m9-first-slice-closure.md`)
+- M10 schema planning must remain limited to the Controlled Public Manual Observation Package.
+- Any schema concept that stores meaning, strategy, recommendation, customer records, or provider truth must be rejected.
 
-### M9 Progress Log
+### M10 Progress Log
 
-2026-07-10 — M9 activated by `decisions/2026-07-10-m8-closure.md` after M8 hammer matrix, acceptance-gate policy, and planning review were drafted, indexed, committed, and pushed.
+2026-07-10 — M10 activated by `decisions/2026-07-10-m9-first-slice-closure.md` after owner accepted C2 and closed M9.
 
-### Candidate Filter
+### Schema Planning Target
 
-M9 should prefer a first slice that can:
+M10 targets only:
 
-- avoid customer private data;
-- avoid paid provider pulls;
-- avoid marketplace capture ambiguity;
-- avoid dashboard/API/MCP dependency;
-- exercise scope, rights, retention, provenance, evidence IDs, and observation/conclusion separation;
-- produce enough shape for M10 schema planning and M12 hammer execution.
+```text
+Controlled Public Manual Observation Package
+```
+
+### Required Hammer Mapping
+
+M10 must map the schema plan to:
+
+- H1 Scope isolation
+- H2 Rights fail-closed
+- H3 Retention enforcement
+- H5 No strategy/recommendation storage
+- H6 CapturePackage validation / observation envelope validation
+- H9 Freshness / point-in-time claim-use warning
+- H12 Raw archive integrity if raw support is included
+- H15 Evidence ID / citation integrity
+- H19 Append-only observations
+- H21 Audit-first enforcement
+- H22 Rollback/recovery expectations
 
 ### Exit Criteria
 
-M9 may close when:
+M10 may close when:
 
-- one first evidence slice is chosen;
-- rejected candidate families are documented;
-- applicable and deferred hammers are named;
-- evidence ID behavior is named;
-- scope/rights/retention behavior is named;
-- raw-support expectations are named if applicable;
-- M10 can plan schema for the selected slice without guessing;
+- logical schema plan exists for the accepted first slice only;
+- schema responsibilities are mapped to M7 contracts and M8 hammers;
+- forbidden storage patterns are explicitly excluded;
+- migration plan expectations exist without running migrations;
+- M11 can plan implementation foundation without guessing schema intent;
 - `ACTIVE_CONTEXT.md` and `NEXT_SESSION_HANDOFF.md` point to the correct next milestone;
 - changes are committed.
 
 ### Next Milestone
 
-M10 - Schema Planning Only
+M11 - Implementation Foundation
 
 ---
 
 ## Closed Milestones
+
+### M9 - First Evidence Slice Definition
+
+Status: closed
+
+Purpose:
+Choose the smallest useful first evidence slice that proves Observatory behavior without overbuilding.
+
+Completed outputs:
+
+- `planning-inbox/m9-first-slice-candidate-comparison.md`
+- `planning-inbox/m9-first-slice-definition-proposal.md`
+- `decisions/2026-07-10-m9-first-slice-closure.md`
+
+Accepted first slice:
+
+```text
+Controlled Public Manual Observation Package
+```
+
+Closure note:
+M9 accepted C2 as the first evidence slice and rejected/deferred provider, marketplace, customer-overlay, SearchClarity report, provider-disagreement, typed read API/MCP, and recurring watch candidates to their later milestones. M9 did not authorize migrations, implementation, provider admission, provider purchases, paid pulls, API/MCP implementation, dashboard work, customer-data handling, capture runner work, automated recurring capture, or strategy/recommendation storage. M10 is now active for schema planning only.
 
 ### M8 - Hammer Matrix and Acceptance Gates
 
@@ -679,7 +710,7 @@ Next milestone: M9
 
 ### M9 - First Evidence Slice Definition
 
-Status: active; full active-milestone details live in the Active Milestone section above
+Status: closed; closure details live in the Closed Milestones section above
 
 Purpose:
 Choose the smallest useful first slice that proves Observatory behavior without overbuilding.
@@ -729,7 +760,7 @@ Next milestone: M10
 
 ### M10 - Schema Planning Only
 
-Status: planned
+Status: active; full active-milestone details live in the Active Milestone section above
 
 Purpose:
 Design schema for the approved first slice only, after research/contracts/hammers exist.
