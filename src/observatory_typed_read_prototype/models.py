@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-CONTRACT_VERSION = "0.1"
+CONTRACT_VERSION = "0.1.1"
 REQUEST_TYPES = {
     "evidence_lookup", "observation_package_read", "freshness_check",
     "coverage_blind_spot_read",

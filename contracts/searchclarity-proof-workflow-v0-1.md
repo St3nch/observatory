@@ -1,8 +1,8 @@
-# Contract - SearchClarity Proof Workflow v0.1
+# Contract - SearchClarity Proof Workflow v0.1.1
 
-Status: accepted v0.1 by `decisions/2026-07-12-m15-searchclarity-contract-and-consumer-boundary-rulings.md`
+Status: accepted v0.1; DB-1 corrective amendment v0.1.1 pending owner acceptance
 Authority: binding M15 SearchClarity evidence-support contract within its declared scope; does not authorize proof implementation, customer data, overlays, report generation, production integration, provider execution, or persistence
-Version: 0.1
+Version: 0.1.1
 Date: 2026-07-12
 Milestone: M15 - SearchClarity Proof Workflow
 Source authority:
@@ -207,6 +207,15 @@ coverage_statement
 Predictive, causal, recommendation, guarantee, endorsement, universal-absence, winner-provider, and strategy intents are forbidden.
 
 The evidence-side claim intent does not authorize storage of the final customer-facing claim.
+
+The bounded prototype uses conservative adapter aliases for two M15 intents before calling the narrower M14 typed-read surface:
+
+```text
+provider_metric_statement -> historical_observation
+ai_geo_sampled_observation -> historical_observation
+```
+
+This translation is evidence-selection only. It does not erase the original M15 claim intent, strengthen the claim, authorize current-use language, or convert provider/AI testimony into fact. Future consumer adapters must declare any claim-intent translation explicitly in their contract and tests; silent translation is forbidden.
 
 ### R6. Report-support dispositions fail closed
 
@@ -509,5 +518,6 @@ automatic conclusion promotion
 ## Change log
 
 ```text
+0.1.1 - 2026-07-12 - DB-1 corrective amendment documenting conservative M15-to-M14 claim-intent translation and forbidding silent semantic remapping
 0.1 - 2026-07-12 - full M15 SearchClarity proof-workflow contract drafted from accepted consumer, claim-safety, overlay, and typed-read contracts
 ```

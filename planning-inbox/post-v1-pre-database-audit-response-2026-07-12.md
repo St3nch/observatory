@@ -75,6 +75,20 @@ database creation / DDL / migrations: not authorized
 8. Build disposable real-Postgres hammer harness before migration execution.
 ```
 
+## DB-1 correction progress
+
+| Finding | Current status | Evidence |
+|---|---|---|
+| N-01 | implemented; owner-local proof pending | `contracts/typed-read-api-mcp-v0-1.md`, `reader.py`, over-ceiling hostile test, `db1-typed-read-correction-proof.md` |
+| N-05 | complete | `README.md`, `LLM_START_HERE.md` now use authority pointers only |
+| N-08 | implemented; owner-local proof pending | expiring HMAC cursor plus expired-cursor hostile test |
+| N-09 | complete pending v0.1.1 acceptance | typed-read contract Section 24 and change log corrected |
+| N-11 | implemented; owner-local proof pending | internal lookup helper plus freshness-only grant test |
+| N-13 | implemented; owner-local proof pending | computed promotion requirement plus forcing test |
+| N-14 | complete pending v0.1.1 acceptance | SearchClarity contract records conservative adapter mapping |
+
+The bounded correction evidence is recorded in `planning-inbox/db1-typed-read-correction-proof.md`. The repo tool cannot execute the owner-local Windows suite, so these implementation findings remain open until the full suite result is pasted and committed.
+
 ## DB-1 exit criteria
 
 DB-1 may close only when:

@@ -1,7 +1,8 @@
 import unittest
+from dataclasses import replace
 
-from observatory_typed_read_prototype import ReadError, evidence_lookup, make_cursor, observation_package_read
-from observatory_typed_read_prototype.fixtures import SCOPE_A, SCOPE_B
+from observatory_typed_read_prototype import ReadError, evidence_lookup, freshness_check, make_cursor, observation_package_read
+from observatory_typed_read_prototype.fixtures import EVIDENCE, SCOPE_A, SCOPE_B
 
 
 class TypedReadHostilePathTests(unittest.TestCase):
@@ -29,6 +30,62 @@ class TypedReadHostilePathTests(unittest.TestCase):
         with self.assertRaises(ReadError) as ctx:
             observation_package_read(caller_class="internal_llm", scope_id=SCOPE_A, claim_intent="historical_observation", page_size=999)
         self.assertEqual(ctx.exception.code, "blocked_result_ceiling")
+
+    def test_total_result_ceiling_discloses_hidden_evidence(self) -> None:
+        template = EVIDENCE["ev_f19b6e40"]
+        added_ids = []
+        try:
+            for index in range(5):
+                evidence_id = f"ev_over_ceiling_{index}"
+                added_ids.append(evidence_id)
+                EVIDENCE[evidence_id] = replace(template, evidence_id=evidence_id, observation_id=f"obs_over_ceiling_{index}")
+            result = observation_package_read(
+                caller_class="internal_llm",
+                scope_id=SCOPE_A,
+                claim_intent="historical_observation",
+                page_size=2,
+            )
+            self.assertTrue(result["truncated"])
+            self.assertEqual(result["omitted_evidence_unit_count"], 6)
+        finally:
+            for evidence_id in added_ids:
+                EVIDENCE.pop(evidence_id, None)
+
+    def test_expired_cursor_is_rejected(self) -> None:
+        cursor = make_cursor(
+            caller_class="internal_llm",
+            scope_id=SCOPE_A,
+            request_type="observation_package_read",
+            claim_intent="historical_observation",
+            offset=1,
+            ttl_seconds=-1,
+        )
+        with self.assertRaises(ReadError) as ctx:
+            observation_package_read(
+                caller_class="internal_llm",
+                scope_id=SCOPE_A,
+                claim_intent="historical_observation",
+                cursor=cursor,
+            )
+        self.assertEqual(ctx.exception.code, "blocked_filter")
+
+    def test_freshness_only_grant_does_not_require_lookup_grant(self) -> None:
+        result = freshness_check(
+            caller_class="freshness_only",
+            scope_id=SCOPE_A,
+            evidence_id="ev_f19b6e40",
+            claim_intent="historical_observation",
+        )
+        self.assertEqual(result["request_type"], "freshness_check")
+
+    def test_meaning_bearing_claim_intent_requires_consumer_promotion(self) -> None:
+        result = evidence_lookup(
+            caller_class="internal_llm",
+            scope_id=SCOPE_A,
+            evidence_id="ev_f19b6e40",
+            claim_intent="comparative_observation",
+        )
+        self.assertTrue(result["consumer_promotion_required"])
 
 
 if __name__ == "__main__":

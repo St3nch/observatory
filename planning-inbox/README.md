@@ -47,13 +47,14 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-Active M20 package:
+Active DB-1 package:
 
-- `m20-v1-acceptance-review.md` — doctrine, evidence, hammer, consumer-usefulness, and recovery reconciliation with a bounded-v1 acceptance recommendation
-- `m20-known-limits-and-deferred-capabilities.md` — explicit production, provider, persistence, recurrence, consumer, overlay, and recovery ceilings
-- `m20-owner-acceptance-proposal.md` — exact owner acceptance language and post-acceptance boundary
+- `post-v1-pre-database-audit-response-2026-07-12.md` — complete N-01 through N-14 routing, opportunity parking, correction order, and DB-1 exit criteria
+- `db1-owner-ruling-proposals.md` — owner-ready OR-B1, OR-B2, OR-C2, and OR-C4 proposals
+- `db1-typed-read-correction-proof.md` — typed-read v0.1.1 correction scope and pending owner-local proof
+- root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence and separate permission gates
 
-Completed M19, M18, M17, M16, M15, and M14 packages remain available below for lineage and proof context.
+Completed M20 through M14 packages remain available below for lineage and proof context.
 
 Then read:
 

@@ -11,6 +11,7 @@ GRANTS = {
     "kaizen": CallerGrant("kaizen", frozenset({SCOPE_A}), frozenset({"evidence_lookup", "freshness_check", "coverage_blind_spot_read"})),
     "neon_ronin": CallerGrant("neon_ronin", frozenset({SCOPE_B}), frozenset({"evidence_lookup", "observation_package_read"})),
     "searchclarity_internal": CallerGrant("searchclarity_internal", frozenset({SCOPE_A}), frozenset({"evidence_lookup", "coverage_blind_spot_read"})),
+    "freshness_only": CallerGrant("freshness_only", frozenset({SCOPE_A}), frozenset({"freshness_check"})),
 }
 
 _COMMON = dict(

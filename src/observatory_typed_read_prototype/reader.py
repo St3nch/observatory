@@ -4,6 +4,7 @@ import base64
 import hashlib
 import hmac
 import json
+import time
 from typing import Any
 
 from .authorization import authorize
@@ -14,6 +15,14 @@ from .models import CLAIM_INTENTS, CONTRACT_VERSION, REQUEST_TYPES, EvidenceUnit
 _CURSOR_KEY = b"observatory-fixture-cursor-v0.1"
 MAX_PAGE_SIZE = 2
 MAX_TOTAL_RESULTS = 4
+CURSOR_TTL_SECONDS = 300
+
+_PROMOTION_REQUIRED_INTENTS = {
+    "comparative_observation",
+    "coverage_statement",
+    "absence_statement",
+    "internal_governance_support",
+}
 
 
 def _validate_request(scope_id: str, request_type: str, claim_intent: str) -> None:
@@ -54,18 +63,23 @@ def _response(request_type: str, caller_class: str, scope_id: str, claim_intent:
         "truncated": truncated,
         "omitted_evidence_unit_count": omitted,
         "warnings": sorted({w for unit in units for w in unit.warnings}),
-        "consumer_promotion_required": False,
+        "consumer_promotion_required": claim_intent in _PROMOTION_REQUIRED_INTENTS,
     }
 
 
-def evidence_lookup(*, caller_class: str, scope_id: str, evidence_id: str, claim_intent: str) -> dict[str, Any]:
-    _validate_request(scope_id, "evidence_lookup", claim_intent)
-    authorize(caller_class, scope_id, "evidence_lookup")
+def _lookup_visible_unit(*, scope_id: str, evidence_id: str, claim_intent: str) -> EvidenceUnit:
     unit = EVIDENCE.get(evidence_id)
     historical = claim_intent == "historical_observation"
     if unit is None or unit.scope_id != scope_id or not _visible(unit, historical):
         raise ReadError("not_found")
     _freshness_guard(unit, historical)
+    return unit
+
+
+def evidence_lookup(*, caller_class: str, scope_id: str, evidence_id: str, claim_intent: str) -> dict[str, Any]:
+    _validate_request(scope_id, "evidence_lookup", claim_intent)
+    authorize(caller_class, scope_id, "evidence_lookup")
+    unit = _lookup_visible_unit(scope_id=scope_id, evidence_id=evidence_id, claim_intent=claim_intent)
     return _response("evidence_lookup", caller_class, scope_id, claim_intent, [unit])
 
 
@@ -75,24 +89,24 @@ def observation_package_read(*, caller_class: str, scope_id: str, claim_intent: 
     if page_size < 1 or page_size > MAX_PAGE_SIZE:
         raise ReadError("blocked_result_ceiling")
     historical = claim_intent == "historical_observation"
-    units = sorted((u for u in EVIDENCE.values() if u.scope_id == scope_id and _visible(u, historical)), key=lambda u: u.evidence_id)
-    if len(units) > MAX_TOTAL_RESULTS:
-        units = units[:MAX_TOTAL_RESULTS]
+    visible_units = sorted((u for u in EVIDENCE.values() if u.scope_id == scope_id and _visible(u, historical)), key=lambda u: u.evidence_id)
+    total_visible = len(visible_units)
+    units = visible_units[:MAX_TOTAL_RESULTS]
     start = 0
     if cursor:
         start = _decode_cursor(cursor, caller_class, scope_id, "observation_package_read", claim_intent)
     page = units[start:start + page_size]
     for unit in page:
         _freshness_guard(unit, historical)
-    omitted = max(0, len(units) - (start + len(page)))
+    omitted = max(0, total_visible - (start + len(page)))
     return _response("observation_package_read", caller_class, scope_id, claim_intent, page, truncated=omitted > 0, omitted=omitted)
 
 
 def freshness_check(*, caller_class: str, scope_id: str, evidence_id: str, claim_intent: str) -> dict[str, Any]:
+    _validate_request(scope_id, "freshness_check", claim_intent)
     authorize(caller_class, scope_id, "freshness_check")
-    result = evidence_lookup(caller_class=caller_class, scope_id=scope_id, evidence_id=evidence_id, claim_intent=claim_intent)
-    result["request_type"] = "freshness_check"
-    return result
+    unit = _lookup_visible_unit(scope_id=scope_id, evidence_id=evidence_id, claim_intent=claim_intent)
+    return _response("freshness_check", caller_class, scope_id, claim_intent, [unit])
 
 
 def coverage_blind_spot_read(*, caller_class: str, scope_id: str, claim_intent: str) -> dict[str, Any]:
@@ -101,8 +115,9 @@ def coverage_blind_spot_read(*, caller_class: str, scope_id: str, claim_intent: 
     return _response("coverage_blind_spot_read", caller_class, scope_id, claim_intent, [], COVERAGE.get(scope_id, ["coverage unknown"]))
 
 
-def make_cursor(*, caller_class: str, scope_id: str, request_type: str, claim_intent: str, offset: int) -> str:
-    payload = json.dumps({"caller": caller_class, "scope": scope_id, "request_type": request_type, "claim_intent": claim_intent, "offset": offset, "contract": CONTRACT_VERSION}, sort_keys=True, separators=(",", ":")).encode()
+def make_cursor(*, caller_class: str, scope_id: str, request_type: str, claim_intent: str, offset: int, ttl_seconds: int = CURSOR_TTL_SECONDS, now_epoch: int | None = None) -> str:
+    issued_at = int(time.time()) if now_epoch is None else now_epoch
+    payload = json.dumps({"caller": caller_class, "scope": scope_id, "request_type": request_type, "claim_intent": claim_intent, "offset": offset, "contract": CONTRACT_VERSION, "expires_at": issued_at + ttl_seconds}, sort_keys=True, separators=(",", ":")).encode()
     sig = hmac.new(_CURSOR_KEY, payload, hashlib.sha256).hexdigest().encode()
     return base64.urlsafe_b64encode(payload + b"." + sig).decode()
 
@@ -119,6 +134,9 @@ def _decode_cursor(cursor: str, caller_class: str, scope_id: str, request_type: 
         raise ReadError("blocked_filter") from exc
     expected_bindings = {"caller": caller_class, "scope": scope_id, "request_type": request_type, "claim_intent": claim_intent, "contract": CONTRACT_VERSION}
     if any(data.get(k) != v for k, v in expected_bindings.items()):
+        raise ReadError("blocked_filter")
+    expires_at = data.get("expires_at")
+    if not isinstance(expires_at, int) or expires_at < int(time.time()):
         raise ReadError("blocked_filter")
     offset = data.get("offset")
     if not isinstance(offset, int) or offset < 0:

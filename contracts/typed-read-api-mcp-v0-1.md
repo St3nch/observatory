@@ -1,8 +1,8 @@
-# Contract - Typed Read API / MCP v0.1
+# Contract - Typed Read API / MCP v0.1.1
 
-Status: accepted v0.1 by `decisions/2026-07-12-m14-typed-read-contract-acceptance-and-prototype-authorization.md`
+Status: accepted v0.1; DB-1 corrective amendment v0.1.1 pending owner acceptance
 Authority: binding M14 typed-read behavioral contract within its declared scope; does not authorize production API/MCP, persistence, provider execution, customer data, overlays, or reports
-Version: 0.1
+Version: 0.1.1
 Date: 2026-07-12
 Milestone: M14 - Typed Read API / MCP Contract and Prototype
 Supersedes / superseded by: intended to supersede `contracts/typed-read-tool-skeleton.md` for M14 read-boundary behavior after acceptance
@@ -67,6 +67,8 @@ Every caller must have explicit:
 - field-level outbound grants where caller classes differ.
 
 Cross-scope reads are forbidden by default. Callers cannot alter their own grants.
+
+A composite request is authorized against its declared outer request type. Internal helper calls must not silently require additional caller grants unless the contract explicitly declares that implication. Reusing another public request handler as an internal helper must not create accidental authorization coupling.
 
 ### 3.4 Uniform non-disclosure
 
@@ -262,6 +264,8 @@ incomparability_warning
 
 Mandatory caveats cannot be removed by projection or caller preference.
 
+`consumer_promotion_required` must be computed from the declared claim intent and response use. It must be `true` when the request is comparative, coverage-bearing, absence-bearing, governance-supporting, recommendation-adjacent, report-adjacent, or otherwise likely to produce meaning beyond a direct observation lookup. It must not remain a hard-coded constant.
+
 ---
 
 ## 9. Evidence status and lifecycle behavior
@@ -392,6 +396,10 @@ Collection responses must enforce:
 - bounded per-caller read use.
 
 A request for all records must be rejected or bounded.
+
+Any evidence unit withheld by a page-size ceiling, total-result ceiling, authorization boundary, or other extraction ceiling must not be represented as if the result set were complete. When a ceiling withholds otherwise visible evidence, the response must set `truncated: true` and report an accurate `omitted_evidence_unit_count` or an equally explicit contract-approved ceiling indicator. Ceiling-hidden evidence must never produce a clean final page with `truncated: false` and zero omissions.
+
+Cursor payloads must carry an expiry bound. Expired cursors must fail closed as `blocked_filter`; cursor expiry must be tested independently from signature tampering and scope replay.
 
 ---
 
@@ -560,11 +568,11 @@ public exposure
 
 ---
 
-## 24. Open lineage note
+## 24. Lineage status
 
-The named RG3/RG8 Kaizen Hermes source inputs have not yet been consumed or explicitly waived.
+The named RG3/RG8 Kaizen Hermes source inputs were consumed and reconciled in `planning-inbox/m14-hermes-lineage-review-2026-07-12.md` before final M14 acceptance. That review recorded source hashes, principle-by-principle comparison, and no conflict requiring contract rollback.
 
-This contract therefore preserves the lineage gap as a review requirement before final M14 contract acceptance. No source claim is invented to fill it.
+The lineage gap is closed for this contract version. Future lineage changes still require explicit reconciliation rather than inferred compatibility.
 
 ---
 
@@ -583,5 +591,6 @@ This contract may be accepted when:
 ## 26. Change log
 
 ```text
+0.1.1 - 2026-07-12 - DB-1 corrective amendment: ceiling-hidden evidence disclosure, cursor expiry, outer-request authorization composition, computed consumer-promotion warning, and closed Hermes lineage status
 0.1 - 2026-07-12 - first full M14 typed-read API/MCP contract synthesized from accepted M7 contracts, post-M13 audit requirements, owner rulings, and hostile-path planning
 ```
