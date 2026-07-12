@@ -2,50 +2,33 @@
 
 Status: authority
 Authority: fresh-session handoff pointer; `ACTIVE_CONTEXT.md` owns current phase truth
-Purpose: preserve current state after M18 closure and M19 planning activation
+Purpose: preserve the accepted Observatory v1 bounded proof-system state
 Last updated: 2026-07-12
 
 ---
 
 ## Current State
 
-The Observatory is in M19 hardening, backup, recovery, and operations planning.
+The Observatory is accepted at the bounded v1 proof-system ceiling.
 
 Closed milestones:
 
-- M0 - LLM-first repo navigation and roadmap preservation
-- M0.1 - Knowledgebase-to-repo reconciliation and candidate decision pass
-- M1 - Roadmap Content Draft and Milestone Sequencing
-- M2 - Folder Structure and Folder README Indexes
-- M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
-- M4 - Boundary Reconciliation and Doctrine Hardening
-- M5 - Research Gate Plan
-- M6 - Research Gate Execution
-- M7 - Core Contract Planning
-- M8 - Hammer Matrix and Acceptance Gates
-- M9 - First Evidence Slice Definition
-- M10 - Schema Planning Only
-- M11 - Implementation Foundation
-- M12 - First Evidence Slice Build
-- M13 - Provider Admission and Controlled Pull Plan
-- M14 - Typed Read API / MCP Contract and Prototype
-- M15 - SearchClarity Proof Workflow
-- M16 - Provider Cross-Check Proof
-- M17 - Owned Telemetry Overlay Proof
-- M18 - Recurring Watch Panel Planning
+```text
+M0, M0.1, and M1 through M20
+```
 
 Active milestone:
 
 ```text
-M19 - Hardening, Backup, Recovery, and Operations
+none
 ```
 
-M18 closed on an accepted bounded watch-panel policy with recurring capture execution explicitly rejected for Observatory v1. M19 is active for planning only. No scheduler, recurring provider work, live Postgres/schema/migrations, credentials or secret transfer, customer data, reports, destructive cleanup, automatic backup jobs, production API/MCP, deployment, or production integration is authorized.
+The owner accepted Observatory v1 through `decisions/2026-07-12-observatory-v1-acceptance.md`. The accepted system is local, evidence-only, bounded, and not production-ready or feature-complete. The known-limit and deferred-capability register remains binding.
 
-Current milestone-transition authority:
+Current acceptance authority:
 
 ```text
-decisions/2026-07-12-m18-watch-panel-policy-and-m19-activation.md
+decisions/2026-07-12-observatory-v1-acceptance.md
 ```
 
 ---
@@ -147,23 +130,11 @@ When using `ob-dev`:
 
 ## Immediate Next Steps
 
-Proceed with active M19:
+There is no active milestone.
 
-```text
-M19 - Hardening, Backup, Recovery, and Operations
-```
+Preserve the accepted-v1 state. Do not begin production or post-v1 implementation unless the owner explicitly approves a new roadmap.
 
-Immediate next moves:
-
-```text
-1. Reconcile actual repository/evidence paths with raw archive, hash, retention, and purge expectations.
-2. Define backup scope, encryption, frequency, retention, and excluded sensitive material.
-3. Define a disposable restore-proof procedure and acceptance evidence.
-4. Define audit-log, secret-exposure, retention-cleanup, and operational-risk expectations.
-5. Prepare exact bounded implementation/proof proposals only after separate owner gates.
-```
-
-Do not deploy, create automatic backup jobs, create live Postgres/schema/migrations, execute providers or recurrence, transfer credentials, handle customer data, perform destructive cleanup, build production API/MCP, or automate operations broadly.
+Allowed next actions are limited to reviewing accepted evidence, correcting factual documentation defects, preserving proof artifacts, or drafting a new roadmap only when explicitly requested.
 
 ---
 

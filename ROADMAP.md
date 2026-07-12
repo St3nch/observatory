@@ -128,76 +128,19 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M17 | Owned Telemetry Overlay Proof | complete | Accepted overlay contract plus bounded synthetic fixture/in-memory discard proof |
 | M18 | Recurring Watch Panel Planning | complete | Accepted bounded policy; recurring execution rejected for Observatory v1 |
 | M19 | Hardening, Backup, Recovery, and Operations | complete | Repository archive/restore proof passed; encryption readiness remains blocked |
-| M20 | Observatory v1 Acceptance | active for planning only | Accept or reject v1 against doctrine, evidence, and hammers |
+| M20 | Observatory v1 Acceptance | closed | Observatory v1 accepted at the bounded proof-system ceiling |
 
 ---
 
 ## Active Milestone
 
-### Milestone ID
+```text
+none
+```
 
-M20
+Observatory v1 is accepted and M20 is closed by `decisions/2026-07-12-observatory-v1-acceptance.md`.
 
-### Name
-
-Observatory v1 Acceptance
-
-### Status
-
-active for planning only
-
-### Purpose
-
-Accept or reject Observatory v1 against doctrine, evidence behavior, hammer results, consumer usefulness, recovery proof, known limitations, and explicitly deferred capabilities.
-
-M20 is an acceptance review, not a production-launch or implementation-expansion milestone.
-
-### Required Reading
-
-- `ACTIVE_CONTEXT.md`
-- `decisions/2026-07-12-m19-closure-and-m20-activation.md`
-- M12 first-slice proof outputs
-- M14 typed-read proof outputs
-- M15 SearchClarity proof outputs
-- M16 provider cross-check proof outputs
-- M17 overlay discard proof outputs
-- M18 accepted no-execution watch-panel policy
-- M19 recovery proof outputs
-- `hammers/hammer-matrix-v0-1.md`
-- accepted contracts and owner-ruling tracker
-
-### Allowed Work
-
-- doctrine and boundary conformance review;
-- evidence and hammer result reconciliation;
-- consumer-usefulness assessment;
-- known-limit and deferred-capability register;
-- explicit v1 accept/reject recommendation;
-- exact post-v1 roadmap proposals only after acceptance.
-
-### Forbidden Work
-
-- production deployment;
-- provider execution or recurring capture;
-- live Postgres creation, schema, or migrations;
-- customer data or report generation;
-- production API/MCP;
-- credentials or secret transfer;
-- cloud backup upload;
-- automatic backup jobs;
-- destructive cleanup;
-- strategy/recommendation storage.
-
-### Blockers
-
-- Acceptance must distinguish bounded proof from production readiness.
-- Encryption/off-machine recovery remains unproven and must remain visible.
-- Deferred capabilities must not be silently treated as v1 features.
-
-### M20 Progress Log
-
-2026-07-12 — M20 acceptance planning activated by `decisions/2026-07-12-m19-closure-and-m20-activation.md` after the bounded repository archive/restore proof passed with 184 restored tests and encryption readiness honestly blocked.
-2026-07-12 — Final v1 acceptance review, known-limit/deferred-capability register, and exact owner-acceptance proposal drafted. Recommendation: accept Observatory v1 at the bounded local evidence-proof-system ceiling only.
+No post-v1 milestone, production launch, implementation package, or roadmap expansion is active. The accepted known-limit and deferred-capability register remains binding. A new roadmap requires explicit owner approval.
 
 ---
 
@@ -1176,7 +1119,7 @@ Next milestone: M19
 
 ### M19 - Hardening, Backup, Recovery, and Operations
 
-Status: active for planning only — activated by `decisions/2026-07-12-m18-watch-panel-policy-and-m19-activation.md`
+Status: complete — closed by `decisions/2026-07-12-m19-closure-and-m20-activation.md`
 
 Purpose:
 Make Observatory durable, auditable, and recoverable.
@@ -1214,7 +1157,7 @@ Next milestone: M20
 
 ### M20 - Observatory v1 Acceptance
 
-Status: planned
+Status: closed — accepted at the bounded proof-system ceiling by `decisions/2026-07-12-observatory-v1-acceptance.md`
 
 Purpose:
 Accept or reject Observatory v1 against doctrine, evidence behavior, hammers, and consumer usefulness.

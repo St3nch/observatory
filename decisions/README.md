@@ -77,6 +77,7 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-12-m19-hardening-backup-recovery-rulings.md` | accepted decision | Accepts repository-only protection, manual encrypted backups, mandatory disposable restore proof, redacted secret checks, and no destructive cleanup | Bounded archive/restore proof implementation remains separately gated; no cloud upload, credential transfer, live database backup, scheduling, or deletion |
 | `2026-07-12-m19-bounded-backup-restore-proof-authorization.md` | accepted decision | Authorizes one exact owner-local repository bundle and disposable restore proof | Encryption remains blocked without a separately approved tool/key path; no cloud upload, credentials, database backup, scheduling, or cleanup |
 | `2026-07-12-m19-closure-and-m20-activation.md` | accepted decision | Closes M19 after bounded repository recovery proof and activates M20 acceptance planning | Acceptance review only; encryption/off-machine recovery remains unproven and no production deployment or implementation widening is authorized |
+| `2026-07-12-observatory-v1-acceptance.md` | accepted decision | Accepts Observatory v1 at the bounded proof-system ceiling and closes M20 | Known limits remain binding; no production, post-v1 implementation, provider expansion, recurrence, live database, customer data, reports, or production API/MCP authority |
 
 ---
 

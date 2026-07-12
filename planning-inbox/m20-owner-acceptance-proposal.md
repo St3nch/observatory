@@ -1,6 +1,6 @@
 # M20 Owner Acceptance Proposal
 
-Status: final owner-decision proposal
+Status: accepted by `decisions/2026-07-12-observatory-v1-acceptance.md`
 Milestone: M20 - Observatory v1 Acceptance
 Date: 2026-07-12
 

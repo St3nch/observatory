@@ -12,37 +12,35 @@ Last updated: 2026-07-12
 The Observatory is in:
 
 ```text
-M20 Observatory v1 acceptance planning
+Observatory v1 accepted at the bounded proof-system ceiling
 ```
 
-M19 is closed after acceptance of repository-only protection and recovery rulings plus a bounded owner-local full-history Git bundle and disposable restore proof. Source and restored HEAD matched, Git integrity passed, prohibited ignored roots were absent, and 184 restored tests passed. Encryption/off-machine recovery remains unproven and explicitly blocked. M20 is active for acceptance review only; no production deployment or implementation widening is authorized.
+M20 is closed by `decisions/2026-07-12-observatory-v1-acceptance.md`. The accepted v1 is a bounded, local, evidence-only proof system. It is not production-ready or feature-complete. No production deployment, post-v1 implementation, provider expansion, recurring capture, live database work, customer data handling, report generation, production API/MCP, encrypted/off-machine recovery claim, or strategy storage is authorized.
 
 ---
 
 ## Active Milestone
 
 ```text
-M20 - Observatory v1 Acceptance
+none
 ```
 
-M0, M0.1, and M1 through M19 are complete and committed.
+M0, M0.1, and M1 through M20 are complete and committed.
 
 ---
 
 ## Current Task
 
-Review Observatory v1 against accepted doctrine, contracts, hammer results, bounded evidence behavior, consumer usefulness, recovery proof, known limitations, and deferred capabilities.
+Preserve the accepted-v1 state and its known-limit/deferred-capability register.
 
-Current M20 work is allowed to:
+Current work is limited to:
 
-- reconcile doctrine and boundary conformance;
-- review accepted proof and hammer evidence;
-- assess bounded consumer usefulness;
-- preserve known limitations and deferred capabilities;
-- issue an explicit v1 accept/reject recommendation;
-- propose post-v1 roadmap work only after acceptance.
+- reading and reviewing accepted v1 evidence;
+- correcting factual documentation defects without widening authority;
+- preserving proof artifacts and accepted limitations;
+- proposing a new roadmap only when the owner explicitly requests one.
 
-M20 does not authorize production deployment, provider execution, recurring capture, live Postgres/schema/migrations, customer data, report generation, production API/MCP, credentials or secret transfer, cloud backup upload, automatic backup jobs, destructive cleanup, strategy storage, or recommendation storage.
+No post-v1 milestone, implementation package, production launch, or roadmap expansion is active.
 
 ---
 
@@ -114,15 +112,18 @@ Closed:
 - M17 - Owned Telemetry Overlay Proof
 - M18 - Recurring Watch Panel Planning
 - M19 - Hardening, Backup, Recovery, and Operations
+- M20 - Observatory v1 Acceptance
 
 Active:
 
-- M20 - Observatory v1 Acceptance
+```text
+none
+```
 
-Next after M20:
+Post-v1 state:
 
 ```text
-No post-v1 milestone is activated until the owner accepts or rejects v1 and approves a new roadmap.
+No post-v1 milestone is active. A new roadmap requires explicit owner approval.
 ```
 
 M2 folder ruling completed:
