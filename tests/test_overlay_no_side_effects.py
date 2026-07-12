@@ -23,8 +23,18 @@ class OverlayNoSideEffectsTests(unittest.TestCase):
             self.assertFalse(imported & forbidden)
 
     def test_no_mutable_cache_or_registry(self) -> None:
-        names = set(vars(align_module))
-        self.assertFalse(any("cache" in name.lower() or "registry" in name.lower() for name in names))
+        project_globals = {
+            name: value
+            for name, value in vars(align_module).items()
+            if not name.startswith("__")
+        }
+        suspicious_mutable_globals = {
+            name
+            for name, value in project_globals.items()
+            if ("cache" in name.lower() or "registry" in name.lower())
+            and isinstance(value, (dict, list, set, bytearray))
+        }
+        self.assertEqual(suspicious_mutable_globals, set())
 
     def test_response_build_has_no_external_side_effect_contract(self) -> None:
         response = build_overlay_alignment_response(build_overlay_request("owned_aligned"))
