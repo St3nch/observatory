@@ -1,6 +1,6 @@
 # DB-1 Typed-Read Corrective Proof
 
-Status: implementation complete; owner-local full-suite proof pending
+Status: owner-local full-suite proof passed; corrective contract acceptance pending
 Date: 2026-07-12
 Authority: `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`
 Audit source: `audits/observatory-post-v1-pre-database-deep-audit-2026-07-12.md`
@@ -100,20 +100,25 @@ test_typed_read_contract.TypedReadContractTests.test_coverage_is_sorted_and_evid
 
 The stale assertion expected `consumer_promotion_required` to remain false for `coverage_statement`. The v0.1.1 contract now intentionally classifies coverage-bearing output as meaning-bearing, so the implementation's `true` result was correct and the old test expectation was wrong. The test was corrected to require `true`.
 
-### Required rerun
+### Attempt 2 — passed
 
-Run from `C:\dev\observatory`:
+After commit `8480e97221777cee1c34f50077f9852954dbe1dd`, the owner reran the complete suite from `C:\dev\observatory` with `src` on `PYTHONPATH`.
 
-```powershell
-$env:PYTHONPATH = (Join-Path $PWD "src")
-python -m unittest discover -s tests
-```
-
-Expected minimum:
+Result:
 
 ```text
-188 tests
+Ran 188 tests in 0.331s
 OK
+```
+
+The run included the expected blocked-path messages from the disarmed M13 provider tooling. No network request, provider spend, database action, or migration occurred.
+
+Proof classification:
+
+```text
+proof_class: owner_local_process_pass
+execution_surface: local Python fixture/in-memory suite
+proof_strength: contract and prototype behavior only
 ```
 
 The expected count is 184 prior tests plus four new hostile/corrective tests.

@@ -79,15 +79,15 @@ database creation / DDL / migrations: not authorized
 
 | Finding | Current status | Evidence |
 |---|---|---|
-| N-01 | implemented; owner-local proof pending | `contracts/typed-read-api-mcp-v0-1.md`, `reader.py`, over-ceiling hostile test, `db1-typed-read-correction-proof.md` |
+| N-01 | implemented and owner-local proven; v0.1.1 acceptance pending | over-ceiling hostile test plus 188-test owner-local pass in `db1-typed-read-correction-proof.md` |
 | N-05 | complete | `README.md`, `LLM_START_HERE.md` now use authority pointers only |
-| N-08 | implemented; owner-local proof pending | expiring HMAC cursor plus expired-cursor hostile test |
+| N-08 | implemented and owner-local proven; v0.1.1 acceptance pending | expiring HMAC cursor plus expired-cursor hostile test |
 | N-09 | complete pending v0.1.1 acceptance | typed-read contract Section 24 and change log corrected |
-| N-11 | implemented; owner-local proof pending | internal lookup helper plus freshness-only grant test |
-| N-13 | implemented; owner-local proof pending | computed promotion requirement plus forcing test |
+| N-11 | implemented and owner-local proven; v0.1.1 acceptance pending | internal lookup helper plus freshness-only grant test |
+| N-13 | implemented and owner-local proven; v0.1.1 acceptance pending | computed promotion requirement plus forcing test |
 | N-14 | complete pending v0.1.1 acceptance | SearchClarity contract records conservative adapter mapping |
 
-The bounded correction evidence is recorded in `planning-inbox/db1-typed-read-correction-proof.md`. The repo tool cannot execute the owner-local Windows suite, so these implementation findings remain open until the full suite result is pasted and committed.
+The bounded correction evidence is recorded in `planning-inbox/db1-typed-read-correction-proof.md`. Owner-local Attempt 2 passed all 188 tests in 0.331 seconds. The implementation findings are proven at the fixture/in-memory process level and now await explicit acceptance of the v0.1.1 contract corrections.
 
 ## DB-1 exit criteria
 
