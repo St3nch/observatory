@@ -2,14 +2,14 @@
 
 Status: authority
 Authority: fresh-session handoff
-Purpose: preserve current state after M11 closure and M12 activation
+Purpose: preserve current state after M12 closure and M13 activation
 Last updated: 2026-07-10
 
 ---
 
 ## Current State
 
-The Observatory is in first evidence slice build.
+The Observatory is in provider admission and controlled pull planning.
 
 Closed milestones:
 
@@ -26,19 +26,20 @@ Closed milestones:
 - M9 - First Evidence Slice Definition
 - M10 - Schema Planning Only
 - M11 - Implementation Foundation
+- M12 - First Evidence Slice Build
 
 Active milestone:
 
 ```text
-M12 - First Evidence Slice Build
+M13 - Provider Admission and Controlled Pull Plan
 ```
 
-M1 created the roadmap, M2 created approved folders/indexes, M3 preserved planning source docs, M4 hardened boundary law, M5 planned research gates, M6 executed all 13 research gates, M7 drafted/indexed all 13 planned non-schema contracts, M8 drafted/indexed the hammer matrix and acceptance-gate policy, M9 accepted C2 as the first evidence slice, M10 accepted logical schema planning for C2, and M11 accepted implementation foundation expectations. The repo is still not ready for provider pulls, provider purchases, API/MCP exposure, dashboard work, capture runners, customer-data work, marketplace scraping, recurring capture, or broad implementation beyond C2.
+M1 created the roadmap, M2 created approved folders/indexes, M3 preserved planning source docs, M4 hardened boundary law, M5 planned research gates, M6 executed all 13 research gates, M7 drafted/indexed all 13 planned non-schema contracts, M8 drafted/indexed the hammer matrix and acceptance-gate policy, M9 accepted C2 as the first evidence slice, M10 accepted logical schema planning for C2, M11 accepted implementation foundation expectations, and M12 accepted the bounded local C2 first evidence slice. The repo is still not ready for provider pulls, provider purchases, API/MCP exposure, dashboard work, capture runners, customer-data work, marketplace scraping, recurring capture, or broad implementation.
 
-The next milestone after M12 is:
+The next milestone after M13 is:
 
 ```text
-M13 - Provider Admission and Controlled Pull Plan
+M14 - Typed Read API / MCP Contract and Prototype
 ```
 
 ---
@@ -68,7 +69,13 @@ Fresh sessions must read:
 19. `planning-inbox/m11-implementation-foundation-spec.md`
 20. `planning-inbox/m11-foundation-readiness-review.md`
 21. `decisions/2026-07-10-m11-foundation-closure.md`
-22. `planning-inbox/owner-ruling-tracker.md`
+22. `planning-inbox/m12-local-test-evidence-2026-07-10.md`
+23. `planning-inbox/m12-first-slice-closure-readiness-review.md`
+24. `decisions/2026-07-10-m12-first-slice-closure.md`
+25. `research/rg1-dataforseo-rights-retention-cost.md`
+26. `research/rg10-capturepackage-v0-1-inputs.md`
+27. `research/rg11-raw-archive-provider-drift.md`
+28. `planning-inbox/owner-ruling-tracker.md`
 
 For planning notes, read `planning-inbox/README.md` first.
 
@@ -120,8 +127,8 @@ When using `ob-dev`:
 - M9 closed first evidence slice definition
 - M10 closed schema planning only
 - M11 closed implementation foundation
-- M12 active first evidence slice build
-- M13 provider admission and controlled pull plan
+- M12 closed first evidence slice build
+- M13 active provider admission and controlled pull planning
 - M14 typed read API / MCP contract and prototype
 - M15 SearchClarity proof workflow
 - M16 Provider Cross-Check proof
@@ -134,25 +141,25 @@ When using `ob-dev`:
 
 ## Immediate Next Steps
 
-Proceed with active M12:
+Proceed with active M13:
 
 ```text
-M12 - First Evidence Slice Build
+M13 - Provider Admission and Controlled Pull Plan
 ```
 
-Status 2026-07-10: M11 is closed by `decisions/2026-07-10-m11-foundation-closure.md`. The accepted build target is the C2 Controlled Public Manual Observation Package. M12 is active for first evidence slice build only.
+Status 2026-07-10: M12 is closed by `decisions/2026-07-10-m12-first-slice-closure.md`. The accepted local C2 first evidence slice is proven for the bounded fixture implementation. M13 is active for provider admission and controlled pull planning only.
 
 Immediate next moves:
 
 ```text
-1. Inspect repo structure before creating any build artifacts.
-2. Create only C2-bounded folders/files needed for the first slice.
-3. Create safe fixture-based tests for scope, rights, retention, envelope, strategy rejection, evidence ID, freshness, raw support, audit, append-only, and hostile input behavior.
-4. Keep all tests local with no provider calls, no customer data, no API/MCP exposure, and no dashboard.
-5. Record executable hammer outcomes before any M12 closure claim.
+1. Draft the provider admission plan.
+2. Confirm rights, retention, and cost gates from existing research/contracts.
+3. Define a controlled pull recipe as a proposal only.
+4. Define cost ceiling and stop conditions.
+5. Define raw payload handling, no-customer-data, no-recurring-capture, and no-API/MCP/dashboard/report posture.
 ```
 
-Do not make provider purchases, perform paid pulls, build API/MCP tools, create dashboard work, handle customer data, scrape marketplaces, create recurring capture, broaden implementation beyond C2, or store strategy/recommendations.
+Do not make provider purchases, perform paid pulls, execute provider tasks, build API/MCP tools, create dashboard work, handle customer data, scrape marketplaces, create recurring capture, or store strategy/recommendations.
 
 ---
 
@@ -165,7 +172,7 @@ Open questions to carry forward:
 - OR-A3: `ai_visibility_sample_summary` read-time output only vs storable under materialization test.
 - OR-A4: citation handles global vs artifact-local; report-safe references separate or derived.
 - OR-B1 through OR-B3 remain open with M8 fail-closed defaults.
-- M12 build work must stay constrained to the accepted C2 first slice and must not broaden into provider, customer, marketplace, dashboard, API/MCP, recurring capture, or strategy storage implementation.
+- M13 provider admission planning must stay document-only and must not broaden into provider execution, paid pulls, customer data, marketplace scraping, dashboard, API/MCP, recurring capture, or strategy storage implementation.
 
 ---
 
@@ -176,7 +183,7 @@ Do not start:
 - provider calls
 - DataForSEO pulls
 - Ahrefs/Semrush work
-- provider admission
+- provider admission execution
 - marketplace scraping
 - browser-extension capture
 - API/MCP exposure

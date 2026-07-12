@@ -57,6 +57,7 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-10-m9-first-slice-closure.md` | accepted decision | Records M9 first-slice selection, M9 closure, and M10 activation | C2 Controlled Public Manual Observation Package accepted; M10 schema planning is active |
 | `2026-07-10-m10-schema-planning-closure.md` | accepted decision | Records M10 logical schema planning closure and M11 activation | C2 logical responsibility planning accepted; M11 implementation foundation is active |
 | `2026-07-10-m11-foundation-closure.md` | accepted decision | Records M11 implementation foundation closure and M12 activation | C2 foundation expectations accepted; M12 first evidence slice build is active |
+| `2026-07-10-m12-first-slice-closure.md` | accepted decision | Records M12 first evidence slice closure and M13 activation | Bounded local C2 proof accepted; M13 provider admission planning is active |
 
 ---
 
@@ -85,6 +86,6 @@ Decision records can change project authority only when they explicitly say so a
 ```text
 Last reviewed: 2026-07-10
 Reviewer: ChatGPT / Observatory Steward
-Result: M11 foundation closure decision added and indexed; roadmap state moved from M11 to M12
+Result: M12 first-slice closure decision added and indexed; roadmap state moved from M12 to M13
 Open issues: none
 ```

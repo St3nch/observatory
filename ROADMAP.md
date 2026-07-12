@@ -120,8 +120,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M9 | First Evidence Slice Definition | closed | Choose the smallest useful evidence slice to build first |
 | M10 | Schema Planning Only | closed | Design schema after contracts and research; no migrations yet |
 | M11 | Implementation Foundation | closed | Create project implementation skeleton only after gates open |
-| M12 | First Evidence Slice Build | active | Build and test the first observation path |
-| M13 | Provider Admission and Controlled Pull Plan | planned | Admit first provider through rights/cost/recipe gates |
+| M12 | First Evidence Slice Build | closed | Build and test the first observation path |
+| M13 | Provider Admission and Controlled Pull Plan | active | Admit first provider through rights/cost/recipe gates |
 | M14 | Typed Read API / MCP Contract and Prototype | planned | Expose evidence through bounded read tools, not raw SQL |
 | M15 | SearchClarity Proof Workflow | planned | Prove customer-facing evidence support without storing customer records |
 | M16 | Provider Cross-Check Proof | planned | Prove provider disagreement as first-class evidence |
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M12
+M13
 
 ### Name
 
-First Evidence Slice Build
+Provider Admission and Controlled Pull Plan
 
 ### Status
 
@@ -148,9 +148,9 @@ active
 
 ### Purpose
 
-Build and test the accepted first evidence slice only: C2 Controlled Public Manual Observation Package.
+Plan admission for the first real provider through rights, retention, cost, recipe, and stop-condition gates before any provider call or paid pull.
 
-M12 consumes `decisions/2026-07-10-m11-foundation-closure.md` and may create concrete build artifacts for the C2 first slice. M12 does not authorize provider calls, provider admission, API/MCP exposure, dashboard work, customer-data handling, marketplace scraping, recurring capture, strategy/recommendation storage, report generation, or broad implementation beyond C2.
+M13 consumes `decisions/2026-07-10-m12-first-slice-closure.md` and may draft provider admission and controlled pull planning documents only. M13 does not authorize provider calls, provider purchases, paid pulls, API/MCP exposure, dashboard work, customer-data handling, marketplace scraping, recurring capture, report generation, or strategy/recommendation storage.
 
 ### Required Reading
 
@@ -169,98 +169,122 @@ M12 consumes `decisions/2026-07-10-m11-foundation-closure.md` and may create con
 - `hammers/README.md`
 - `hammers/hammer-matrix-v0-1.md`
 - `hammers/acceptance-gate-policy-v0-1.md`
-- `decisions/2026-07-10-m9-first-slice-closure.md`
-- `planning-inbox/m10-logical-schema-plan-c2.md`
-- `planning-inbox/m10-schema-plan-review.md`
-- `decisions/2026-07-10-m10-schema-planning-closure.md`
-- `planning-inbox/m11-implementation-foundation-spec.md`
-- `planning-inbox/m11-foundation-readiness-review.md`
-- `decisions/2026-07-10-m11-foundation-closure.md`
+- `research/rg1-dataforseo-rights-retention-cost.md`
+- `research/rg10-capturepackage-v0-1-inputs.md`
+- `research/rg11-raw-archive-provider-drift.md`
+- `decisions/2026-07-10-m12-first-slice-closure.md`
+- `planning-inbox/m12-first-slice-closure-readiness-review.md`
+- `planning-inbox/m12-local-test-evidence-2026-07-10.md`
 
 ### Allowed Work
 
-- create C2-only build artifacts needed for the first evidence slice;
-- create safe non-customer, non-provider, non-marketplace fixtures;
-- implement or define fixture-based validation behavior for C2 only;
-- create executable hammer tests for the accepted C2 hammer set;
-- implement internal evidence identity behavior for C2 only;
-- implement raw support manifest/hash behavior if included;
-- implement minimum audit-event behavior for C2 consequential transitions;
-- run local tests that do not call providers, access customer data, expose API/MCP, or require external services.
+- draft provider admission plan;
+- confirm rights/retention/cost gate requirements from existing research and contracts;
+- define controlled pull recipe;
+- define cost ceiling;
+- define stop conditions;
+- define raw payload handling plan;
+- define no-customer-data posture;
+- define no-recurring-capture posture;
+- define no-dashboard/report/API/MCP exposure posture.
 
 ### Forbidden Work
 
 - provider calls
 - provider purchases
 - paid provider pulls
-- provider admission
-- DataForSEO calls
-- Ahrefs/Semrush work
+- Ahrefs/Semrush spend
+- DataForSEO task execution
+- provider admission execution
+- bulk capture
+- recurring capture
+- customer data handling
 - marketplace scraping
 - browser-extension capture
 - API/MCP exposure
 - dashboard work
-- customer data handling
 - customer-facing reports
 - strategy/recommendation storage
-- recurring capture
-- broad implementation beyond C2
-- accepting hammer pass claims without executable evidence
 
 ### Blockers
 
-- M11 foundation closure must exist. — met (`decisions/2026-07-10-m11-foundation-closure.md`)
-- M12 deliverables must stay bounded to C2.
-- No M12 artifact may introduce provider, customer, dashboard, API/MCP, marketplace, recurring-capture, or strategy/recommendation scope.
+- M12 first-slice closure must exist. — met (`decisions/2026-07-10-m12-first-slice-closure.md`)
+- Provider admission planning must stay document-only until owner explicitly approves a later controlled pull.
+- No M13 artifact may include credentials, executable provider clients, task execution, paid pull instructions, customer data, or recurring capture.
 
-### M12 Progress Log
+### M13 Progress Log
 
-2026-07-10 — M12 activated by `decisions/2026-07-10-m11-foundation-closure.md` after M11 specified and reviewed foundation expectations for C2.
+2026-07-10 — M13 activated by `decisions/2026-07-10-m12-first-slice-closure.md` after M12 closed the bounded local C2 first evidence slice.
 
-### Build Target
+### Provider Candidate
 
-M12 targets only:
+M13 may plan around:
 
 ```text
-C2 Controlled Public Manual Observation Package
+DataForSEO, if admission gates clear it
 ```
 
-### Required Hammer Execution Focus
+This is a planning candidate only, not admission approval or pull authorization.
 
-M12 must build toward executable proof for:
+### Required Admission Planning Focus
 
-- H1 Scope isolation
-- H2 Rights fail-closed
-- H3 Retention enforcement
-- H5 No strategy/recommendation storage
-- H6 Observation envelope validation
-- H9 Freshness / point-in-time claim-use warning
-- H12 Raw archive integrity if raw support is included
-- H15 Evidence ID / citation integrity
-- H18 Hostile weird input
-- H19 Append-only observations
-- H21 Audit-first enforcement
-- H22 Rollback/recovery expectations
+M13 must define:
+
+- provider admission status;
+- allowed endpoint/surface candidate;
+- rights and retention posture;
+- raw payload handling posture;
+- cost ceiling;
+- stop conditions;
+- controlled pull recipe shape;
+- required owner approval point before any paid call.
 
 ### Exit Criteria
 
-M12 may close when:
+M13 may close when:
 
-- the C2 first slice works under local fixture-based hammers;
-- required executable hammer outcomes are recorded;
-- raw support pointer/hash expectations are proven if raw support exists;
-- observations remain separate from interpretation;
-- no forbidden provider/customer/API/dashboard/strategy scope is introduced;
+- provider admission plan exists;
+- controlled pull recipe exists as a proposal only;
+- cost ceiling and stop conditions are explicit;
+- raw payload handling posture is explicit;
+- no provider call, provider purchase, paid pull, customer data, API/MCP, dashboard, recurring-capture, or strategy/recommendation scope is introduced;
 - `ACTIVE_CONTEXT.md` and `NEXT_SESSION_HANDOFF.md` point to the correct next milestone;
 - changes are committed.
 
 ### Next Milestone
 
-M13 - Provider Admission and Controlled Pull Plan
+M14 - Typed Read API / MCP Contract and Prototype
 
 ---
 
 ## Closed Milestones
+
+### M12 - First Evidence Slice Build
+
+Status: closed
+
+Purpose:
+Build the approved first evidence slice.
+
+Completed outputs:
+
+- `src/observatory_c2/__init__.py`
+- `src/observatory_c2/c2.py`
+- `tests/test_c2_first_slice.py`
+- `pyproject.toml`
+- `tests/README.md`
+- `planning-inbox/m12-local-test-evidence-2026-07-10.md`
+- `planning-inbox/m12-first-slice-closure-readiness-review.md`
+- `decisions/2026-07-10-m12-first-slice-closure.md`
+
+Accepted build target:
+
+```text
+C2 — Controlled Public Manual Observation Package
+```
+
+Closure note:
+M12 accepted the bounded local fixture-based C2 first evidence slice and owner-local test evidence for 13 passing unittest tests. H1/H2/H3/H5/H6/H9/H12/H15/H18/H19/H21/H22 are accepted only for the bounded local C2 fixture implementation. M12 did not authorize provider calls, provider admission, paid pulls, API/MCP exposure, dashboard work, customer-data handling, marketplace scraping, recurring capture, report generation, or strategy/recommendation storage. M13 is now active for provider admission and controlled pull planning only.
 
 ### M11 - Implementation Foundation
 
@@ -903,7 +927,7 @@ Next milestone: M12
 
 ### M12 - First Evidence Slice Build
 
-Status: active; full active-milestone details live in the Active Milestone section above
+Status: closed; closure details live in the Closed Milestones section above
 
 Purpose:
 Build the approved first evidence slice.
@@ -949,7 +973,7 @@ Next milestone: M13
 
 ### M13 - Provider Admission and Controlled Pull Plan
 
-Status: planned
+Status: active; full active-milestone details live in the Active Milestone section above
 
 Purpose:
 Admit the first real provider through rights, retention, cost, recipe, and stop-condition gates.

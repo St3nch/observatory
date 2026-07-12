@@ -12,41 +12,42 @@ Last updated: 2026-07-10
 The Observatory is in:
 
 ```text
-first evidence slice build
+provider admission and controlled pull planning
 ```
 
-This is first-slice build only. It is still not provider, API/MCP exposure, dashboard, customer workflow, customer-data, provider-spend, marketplace scraping, recurring capture, or broad implementation authorization.
+This is provider-admission planning only. It is still not provider calls, provider purchases, paid pulls, API/MCP exposure, dashboard, customer workflow, customer-data, marketplace scraping, recurring capture, or broad implementation authorization.
 
 ---
 
 ## Active Milestone
 
 ```text
-M12 - First Evidence Slice Build
+M13 - Provider Admission and Controlled Pull Plan
 ```
 
-M0, M0.1, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, and M11 are complete and committed.
+M0, M0.1, M1, M2, M3, M4, M5, M6, M7, M8, M9, M10, M11, and M12 are complete and committed.
 
 ---
 
 ## Current Task
 
-Execute M12 as bounded first evidence slice build work for the accepted C2 slice only.
+Execute M13 as bounded provider admission and controlled pull planning only.
 
-Current M12 work is allowed to:
+Current M13 work is allowed to:
 
-- create C2-only build artifacts needed for the first evidence slice;
-- create safe non-customer, non-provider, non-marketplace fixtures;
-- implement or define fixture-based validation behavior for C2 only;
-- create executable hammer tests for the accepted C2 hammer set;
-- implement internal evidence identity behavior for C2 only;
-- implement raw support manifest/hash behavior if included;
-- implement minimum audit-event behavior for C2 consequential transitions;
-- run local tests that do not call providers, access customer data, expose API/MCP, or require external services.
+- draft provider admission plan;
+- confirm rights/retention/cost gate requirements from existing research and contracts;
+- define controlled pull recipe;
+- define cost ceiling;
+- define stop conditions;
+- define raw payload handling plan;
+- define no-customer-data posture;
+- define no-recurring-capture posture;
+- define no-dashboard/report/API/MCP exposure posture.
 
-M11 is closed by `decisions/2026-07-10-m11-foundation-closure.md`. The accepted first-slice build target is the Controlled Public Manual Observation Package. M12 now builds and tests that slice only.
+M12 is closed by `decisions/2026-07-10-m12-first-slice-closure.md`. The bounded local C2 first evidence slice is accepted. M13 now plans provider admission and controlled pull gates only.
 
-M12 does not authorize provider purchases, paid pulls, provider admission, provider calls, API/MCP exposure, dashboard work, customer-data handling, marketplace scraping, browser-extension capture, capture runner work, automated recurring capture, broad implementation beyond C2, or strategy/recommendation storage.
+M13 does not authorize provider purchases, paid pulls, provider admission execution, provider calls, API/MCP exposure, dashboard work, customer-data handling, marketplace scraping, browser-extension capture, capture runner work, automated recurring capture, broad implementation, or strategy/recommendation storage.
 
 ---
 
@@ -59,7 +60,7 @@ Do not start:
 - Ahrefs work
 - Semrush work
 - provider purchases
-- provider admission
+- provider admission execution
 - API/MCP exposure
 - dashboard or operator console work
 - customer data handling
@@ -112,15 +113,16 @@ Closed:
 - M9 - First Evidence Slice Definition
 - M10 - Schema Planning Only
 - M11 - Implementation Foundation
+- M12 - First Evidence Slice Build
 
 Active:
 
-- M12 - First Evidence Slice Build
+- M13 - Provider Admission and Controlled Pull Plan
 
-Next after M12:
+Next after M13:
 
 ```text
-M13 - Provider Admission and Controlled Pull Plan
+M14 - Typed Read API / MCP Contract and Prototype
 ```
 
 M2 folder ruling completed:
