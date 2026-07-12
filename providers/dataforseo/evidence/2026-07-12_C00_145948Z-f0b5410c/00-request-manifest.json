@@ -1,0 +1,29 @@
+{
+  "campaign_id": "m13-dataforseo-exploratory-campaign-v0-1",
+  "captured_at": "2026-07-12T14:59:48.879794+00:00",
+  "claim_use_warning": "provider_testimony_only_not_truth",
+  "conservative_request_ceiling_usd": "0.10",
+  "duplicate_prevention_key": "d09e8ce8030c3ae334eb488792ebc9fd529d64652c30c1f01378f183e759d757",
+  "endpoint": "/v3/serp/google/organic/live/advanced",
+  "expected_price_usd": "0.002",
+  "family": "serp_google_organic",
+  "method": "POST",
+  "package_version": "1",
+  "probe_id": "2026-07-12_C00_145948Z-f0b5410c",
+  "provider": "DataForSEO",
+  "raw_retention_class": "capture_and_purge_raw",
+  "recipe_id": "C00",
+  "request": [
+    {
+      "depth": 10,
+      "device": "desktop",
+      "keyword": "observatory test page",
+      "language_code": "en",
+      "location_code": 2840,
+      "os": "windows"
+    }
+  ],
+  "request_sha256": "f0b5410c5cc490b64ec4bb471a92c24647dccf432962fcd952c4070b03b2c4c9",
+  "rights_class": "provider_limited_internal_probe",
+  "stage_id": "S0"
+}

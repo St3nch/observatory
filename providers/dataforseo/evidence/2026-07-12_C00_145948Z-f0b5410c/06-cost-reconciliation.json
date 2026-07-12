@@ -1,0 +1,13 @@
+{
+  "conservative_cost_usd": "0.002",
+  "differences": {
+    "task_level_minus_expected": "0.000",
+    "top_level_minus_expected": "0.000",
+    "usage_sheet_minus_expected": null
+  },
+  "expected_price_usd": "0.002",
+  "provider_task_level_cost_usd": "0.002",
+  "provider_top_level_cost_usd": "0.002",
+  "reconciliation_status": "reconciled",
+  "usage_sheet_cost_usd": null
+}

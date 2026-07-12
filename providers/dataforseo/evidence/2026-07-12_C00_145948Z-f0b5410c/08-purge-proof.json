@@ -1,0 +1,13 @@
+{
+  "path_containment_check_passed": true,
+  "payload_exists_after_purge": false,
+  "pre_purge_bytes": 23287,
+  "pre_purge_sha256": "17d2050963ca374458b7b2b1e8354702c80f362f66ce44fd34e997cb1d59012c",
+  "probe_id": "2026-07-12_C00_145948Z-f0b5410c",
+  "proof_filename": "08-purge-proof.json",
+  "purge_actor": "Chaz Barclay",
+  "purge_reason": "accepted_capture_and_purge_posture",
+  "purged_at": "2026-07-12T15:20:05.489065+00:00",
+  "raw_file_absent_after_purge": true,
+  "raw_filename": "02-raw-response.json"
+}

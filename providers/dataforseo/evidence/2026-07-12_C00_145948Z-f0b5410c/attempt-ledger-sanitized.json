@@ -1,0 +1,29 @@
+{
+  "version": "1",
+  "attempts": [
+    {
+      "probe_id": "2026-07-12_C00_143020Z-f0b5410c",
+      "recipe_id": "C00",
+      "request_sha256": "f0b5410c5cc490b64ec4bb471a92c24647dccf432962fcd952c4070b03b2c4c9",
+      "duplicate_prevention_key": "d09e8ce8030c3ae334eb488792ebc9fd529d64652c30c1f01378f183e759d757",
+      "status": "provider_authentication_error",
+      "http_status": 401,
+      "retry_permitted": false,
+      "outcome_note": "Placeholder test credentials reached the provider and were rejected before a successful C00 response. No successful or billable C00 response was captured."
+    },
+    {
+      "probe_id": "2026-07-12_C00_145948Z-f0b5410c",
+      "recipe_id": "C00",
+      "request_sha256": "f0b5410c5cc490b64ec4bb471a92c24647dccf432962fcd952c4070b03b2c4c9",
+      "duplicate_prevention_key": "d09e8ce8030c3ae334eb488792ebc9fd529d64652c30c1f01378f183e759d757",
+      "status": "reviewed_complete_raw_purged",
+      "http_status": 200,
+      "retry_permitted": false,
+      "provider_cost_usd": "0.002",
+      "raw_state": "purged_with_proof"
+    }
+  ],
+  "credential_values_recorded": false,
+  "owner_confirmation_phrase_recorded": false,
+  "claim_use_warning": "provider_testimony_only_not_truth"
+}
