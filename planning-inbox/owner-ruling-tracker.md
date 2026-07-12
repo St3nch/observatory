@@ -40,7 +40,7 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
-| OR-C1 | Fund/use a DataForSEO account; release the reserved validation budget; approve recipe/endpoint list/ceilings/stop conditions | RG1; DR1; `decisions/2026-07-11-m13-dataforseo-controlled-probe-approval.md`; `decisions/2026-07-12-m13-dataforseo-exploratory-campaign.md` | ruled — owner reports $50 available and accepted the staged campaign budget, initial C00–C07 catalog, ceilings, and review gates; each live request still requires exact preflight and explicit confirmation |
+| OR-C1 | Fund/use a DataForSEO account; release the reserved validation budget; approve recipe/endpoint list/ceilings/stop conditions | RG1; DR1; `decisions/2026-07-11-m13-dataforseo-controlled-probe-approval.md`; `decisions/2026-07-12-m13-dataforseo-exploratory-campaign.md`; `decisions/2026-07-12-m13-closure-and-m14-activation.md` | ruled for the completed C00 request only — the authorized request was consumed and M13 closed; no additional live request is authorized; any future request requires a new decision and the post-M13 provider hardening gates |
 | OR-C2 | Long-term raw payload retention posture per source family (durable vs manifest-only vs capture-and-purge vs no-storage) | RG1 F6; RG11; DR2; `decisions/2026-07-11-m13-dataforseo-controlled-probe-approval.md` | open — first-probe capture-and-purge posture proposed only; no general or durable retention ruling |
 | OR-C3 | Use AI Optimization endpoint families for validation | RG1; RG6 | open |
 | OR-C4 | Raw archive layout: filesystem-first, object-storage-first, or hybrid | RG11; DR13 | open |
@@ -56,10 +56,10 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
-| OR-D1 | Consumer authentication/authorization model | RG12; DR16 | open |
-| OR-D2 | Raw payload pointer exposure outside internal tools | RG3 | open |
-| OR-D3 | Evidence withdrawal/deprecation/supersession behavior finalization | RG3; DR14 | open |
-| OR-D4 | Update-window feeds as a read-tool dependency | RG5 | open |
+| OR-D1 | Consumer authentication/authorization model | RG12; DR16 | open — active M14 proposal required before prototype implementation |
+| OR-D2 | Raw payload pointer exposure outside internal tools | RG3 | open — active M14 proposal required; fail-closed default remains internal-only |
+| OR-D3 | Evidence withdrawal/deprecation/supersession behavior finalization | RG3; DR14 | open — active M14 proposal required before evidence-handle contract acceptance |
+| OR-D4 | Update-window feeds as a read-tool dependency | RG5 | open — active M14 proposal required; missing feed behavior must fail closed |
 
 ## Group E — Needed before M15 SearchClarity proof
 

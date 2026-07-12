@@ -47,38 +47,43 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-1. `m13-paid-evidence-review-package.md` — implemented per-pull evidence package, cost reconciliation, review notes, and campaign index
-2. `m13-authenticated-dashboard-pricing-evidence-2026-07-12.md` — authenticated balance, zero-expense baseline, live/advanced pricing, and account navigation evidence
-3. `m13-dataforseo-first-pull-campaign-plan.md` — accepted staged pull order, $50 budget allocation, and per-pull review method
-3. `m13-serp-usage-sheet-reconciliation-spec.md` — read-only provider usage workbook reconciliation contract
-4. `m13-serp-usage-baseline-2026-07-12.md` — empty workbook baseline hash and zero-row before-image
-5. `m13-campaign-cli-expansion-review.md` — immutable campaign catalog and CLI/test expansion boundary
-6. `m13-funding-and-pre-submit-owner-checklist.md` — owner-controlled credential, account, pricing, and preflight gate
-6. `m13-local-test-evidence-2026-07-12.md` — owner-local proof that 67 tests pass after the evidence-root regression fix
-7. `m13-probe-implementation-candidate-review.md` — accepted fixture-only implementation review and next-gate disposition
-8. `m13-probe-implementation-preparation-review.md` — implementation-preparation disposition and credits timing
-9. `m13-dataforseo-probe-implementation-task-proposal.md` — exact bounded no-network implementation task proposal
-10. `m13-dataforseo-probe-hostile-path-test-plan.md` — forty-two hostile-path cases required before execution readiness
-11. `m13-dataforseo-probe-preflight-record-template.md` — exact paid-request preflight evidence template
-12. `m13-dataforseo-probe-post-pull-and-purge-template.md` — one-request review, field-summary, and raw-purge evidence template
-13. `m13-dataforseo-official-verification-2026-07-11.md` — official endpoint/field/minimum/terms verification
-14. `m13-controlled-probe-approval-readiness-review.md` — M13 owner-ruling and execution-readiness review
-15. `m13-dataforseo-probe-cli-requirements.md` — bounded probe CLI requirements
-16. `m13-dataforseo-probe-plan-review.md` — review of what is ready, unresolved, and required in a later decision
-17. `m13-dataforseo-admission-and-probe-plan.md` — original M13 DataForSEO admission/probe planning draft
-18. `m12-first-slice-closure-readiness-review.md` — M12 closure-readiness review for the bounded C2 first evidence slice
-19. `m12-local-test-evidence-2026-07-10.md` — M12 owner-local unittest execution evidence note
-20. `m11-foundation-readiness-review.md` — M11 closure-readiness review for the implementation foundation spec
-21. `m11-implementation-foundation-spec.md` — M11 implementation-foundation specification for the accepted C2 first slice
-22. `m10-schema-plan-review.md` — M10 review and closure-readiness note for the C2 logical schema plan
-23. `m10-logical-schema-plan-c2.md` — M10 logical schema planning draft for the accepted C2 first slice
-24. `m9-first-slice-definition-proposal.md` — M9 proposed first-slice definition accepted by owner decision
-25. `m9-first-slice-candidate-comparison.md` — M9 first-slice candidate comparison and recommendation
-26. `m8-hammer-planning-review.md` — M8 closure-readiness and M9 entry review
-27. `owner-ruling-tracker.md` — all open owner-ruling candidates, grouped by blocking milestone
-28. `m7-audit-response-2026-07-07.md` — audit-finding routing and status
-29. `observatory-working-notes.md`
-30. `repo-first-research-triage.md`
+1. `post-m13-deep-audit-response-2026-07-12.md` — full finding, hammer, M14 requirement, opportunity, and owner-ruling response ledger
+2. `m14-contract-set-acceptance-readiness-review.md` — owner-ruling proposal for accepting the M7 contract set as v0.1
+3. `m14-hammer-proof-classification-note.md` — proof-class, execution-surface, and proof-strength clarification without reopening milestones
+4. `m14-rg3-rg8-hermes-lineage-disposition.md` — verified research-lineage gap and M14 routing
+5. `m14-local-test-evidence-2026-07-12.md` — owner-local 128-test proof after Batch A corrections
+6. `m13-paid-evidence-review-package.md` — implemented per-pull evidence package, cost reconciliation, review notes, and campaign index
+7. `m13-authenticated-dashboard-pricing-evidence-2026-07-12.md` — authenticated balance, zero-expense baseline, live/advanced pricing, and account navigation evidence
+8. `m13-dataforseo-first-pull-campaign-plan.md` — accepted staged pull order, $50 budget allocation, and per-pull review method
+9. `m13-serp-usage-sheet-reconciliation-spec.md` — read-only provider usage workbook reconciliation contract
+10. `m13-serp-usage-baseline-2026-07-12.md` — empty workbook baseline hash and zero-row before-image
+11. `m13-campaign-cli-expansion-review.md` — immutable campaign catalog and CLI/test expansion boundary
+12. `m13-funding-and-pre-submit-owner-checklist.md` — owner-controlled credential, account, pricing, and preflight gate
+13. `m13-local-test-evidence-2026-07-12.md` — owner-local proof that 67 tests pass after the evidence-root regression fix
+14. `m13-probe-implementation-candidate-review.md` — accepted fixture-only implementation review and next-gate disposition
+15. `m13-probe-implementation-preparation-review.md` — implementation-preparation disposition and credits timing
+16. `m13-dataforseo-probe-implementation-task-proposal.md` — exact bounded no-network implementation task proposal
+17. `m13-dataforseo-probe-hostile-path-test-plan.md` — forty-two hostile-path cases required before execution readiness
+18. `m13-dataforseo-probe-preflight-record-template.md` — exact paid-request preflight evidence template
+19. `m13-dataforseo-probe-post-pull-and-purge-template.md` — one-request review, field-summary, and raw-purge evidence template
+20. `m13-dataforseo-official-verification-2026-07-11.md` — official endpoint/field/minimum/terms verification
+21. `m13-controlled-probe-approval-readiness-review.md` — M13 owner-ruling and execution-readiness review
+22. `m13-dataforseo-probe-cli-requirements.md` — bounded probe CLI requirements
+23. `m13-dataforseo-probe-plan-review.md` — review of what is ready, unresolved, and required in a later decision
+24. `m13-dataforseo-admission-and-probe-plan.md` — original M13 DataForSEO admission/probe planning draft
+25. `m12-first-slice-closure-readiness-review.md` — M12 closure-readiness review for the bounded C2 first evidence slice
+26. `m12-local-test-evidence-2026-07-10.md` — M12 owner-local unittest execution evidence note
+27. `m11-foundation-readiness-review.md` — M11 closure-readiness review for the implementation foundation spec
+28. `m11-implementation-foundation-spec.md` — M11 implementation-foundation specification for the accepted C2 first slice
+29. `m10-schema-plan-review.md` — M10 review and closure-readiness note for the C2 logical schema plan
+30. `m10-logical-schema-plan-c2.md` — M10 logical schema planning draft for the accepted C2 first slice
+31. `m9-first-slice-definition-proposal.md` — M9 proposed first-slice definition accepted by owner decision
+32. `m9-first-slice-candidate-comparison.md` — M9 first-slice candidate comparison and recommendation
+33. `m8-hammer-planning-review.md` — M8 closure-readiness and M9 entry review
+34. `owner-ruling-tracker.md` — all open owner-ruling candidates, grouped by blocking milestone
+35. `m7-audit-response-2026-07-07.md` — audit-finding routing and status
+36. `observatory-working-notes.md`
+37. `repo-first-research-triage.md`
 
 Root authority files take priority over this folder.
 

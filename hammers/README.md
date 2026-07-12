@@ -51,6 +51,8 @@ Folder earned during M8 after M7 closure by `decisions/2026-07-10-m7-closure.md`
 6. Any hammer touching an unresolved owner ruling must fail closed until the ruling is recorded.
 7. Hammers must map to source contracts and later milestone gates.
 8. No hammer document authorizes implementation, provider admission, provider spend, schema design, or customer data handling.
+9. `hammer` is reserved for high-consequence hostile-path proof. Ordinary correctness checks use ordinary labels.
+10. Every future result should state proof class, execution surface, and proof strength; fixture/in-memory passes must not be restated as database, transaction, API/MCP, or production enforcement proof.
 
 ---
 
