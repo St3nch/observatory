@@ -73,6 +73,7 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-12-m17-owned-telemetry-overlay-contract-and-rulings.md` | accepted decision | Accepts the M17 owned telemetry overlay proof contract and rulings | Proof implementation remains separately gated; no real private telemetry, files, persistence, manifests, canonical ingestion, database, reports, or production integration |
 | `2026-07-12-m17-owned-telemetry-overlay-fixture-proof-authorization.md` | accepted decision | Authorizes one exact synthetic fixture-backed M17 overlay proof task | Local, deterministic, in-memory code-path discard proof only; no real private telemetry, files, persistence, database, reports, or production integration |
 | `2026-07-12-m17-closure-and-m18-activation.md` | accepted decision | Closes M17 after bounded overlay discard proof and activates M18 planning | Recurring watch-panel planning only; no scheduler, recurring execution, autonomous spend, provider calls, crawling, database, or production integration |
+| `2026-07-12-m18-watch-panel-policy-and-m19-activation.md` | accepted decision | Accepts the bounded M18 watch-panel policy, rejects recurring execution for v1, closes M18, and activates M19 planning | Hardening/backup/recovery planning only; no scheduler, recurring provider work, live database, deployment, credentials, or production integration |
 
 ---
 

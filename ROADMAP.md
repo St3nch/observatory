@@ -126,8 +126,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M15 | SearchClarity Proof Workflow | complete | Accepted SearchClarity contract plus bounded synthetic fixture/in-memory proof |
 | M16 | Provider Cross-Check Proof | complete | Accepted provider cross-check contract plus bounded synthetic fixture/in-memory proof |
 | M17 | Owned Telemetry Overlay Proof | complete | Accepted overlay contract plus bounded synthetic fixture/in-memory discard proof |
-| M18 | Recurring Watch Panel Planning | active for planning only | Plan recurring capture only after provider/cost/hammers exist |
-| M19 | Hardening, Backup, Recovery, and Operations | planned | Make the system durable and recoverable |
+| M18 | Recurring Watch Panel Planning | complete | Accepted bounded policy; recurring execution rejected for Observatory v1 |
+| M19 | Hardening, Backup, Recovery, and Operations | active for planning only | Make the system durable and recoverable |
 | M20 | Observatory v1 Acceptance | planned | Accept or reject v1 against doctrine, evidence, and hammers |
 
 ---
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M18
+M19
 
 ### Name
 
-Recurring Watch Panel Planning
+Hardening, Backup, Recovery, and Operations
 
 ### Status
 
@@ -148,52 +148,52 @@ active for planning only
 
 ### Purpose
 
-Plan whether recurring capture can be approved or rejected responsibly after provider, cost, rights, recipe, freshness, and hammer gates are examined.
+Make the existing bounded evidence system durable, auditable, recoverable, and operationally understandable without widening into production deployment or unauthorized persistence.
 
-M18 is planning only. It may define watch-panel membership, cadence policy, budget ceilings, duplicate prevention, stop conditions, failure budgets, manual review gates, and stale/coverage warnings. Recurring capture execution is not part of v1 unless the owner explicitly changes the roadmap.
+M19 may plan backup posture, disposable restore proof, audit-log expectations, secret-exposure checks, retention-cleanup proof, operational runbooks, and an operational-risk register.
 
 ### Required Reading
 
 - `ACTIVE_CONTEXT.md`
-- `decisions/2026-07-12-m17-closure-and-m18-activation.md`
-- M13 provider admission and controlled-pull outputs
-- M16 provider cross-check proof outputs
-- `contracts/query-panel.md`
-- `contracts/freshness-staleness-volatility.md`
-- `contracts/provider-testimony.md`
+- `decisions/2026-07-12-m18-watch-panel-policy-and-m19-activation.md`
+- M12 first-slice build and proof outputs
+- M13 raw capture, purge, and hash evidence
+- M18 accepted no-execution watch-panel policy
+- `contracts/raw-archive-provider-drift.md`
 - `contracts/scope-rights-retention.md`
 - `hammers/hammer-matrix-v0-1.md`
+- `planning-inbox/audit-response-2026-07-07.md`
 
 ### Allowed Work
 
-- watch-panel purpose and bounded membership design;
-- cadence policy by volatility, freshness, and claim need;
-- budget ceilings and duplicate-task prevention;
-- stop conditions, failure budgets, and manual review points;
-- stale, incomplete, coverage, and non-synchronous warnings;
-- explicit approval-or-rejection criteria for recurring capture.
+- backup scope, frequency, encryption, and retention planning;
+- disposable restore-proof design;
+- audit-log and operation-evidence expectations;
+- secret-exposure inventory and checks;
+- retention cleanup and purge-proof procedures;
+- operational runbooks and risk documentation;
+- exact bounded task proposals after separate owner gates.
 
 ### Forbidden Work
 
-- scheduler implementation;
-- recurring capture execution;
-- autonomous spend or provider calls;
-- provider credentials;
-- broad crawling or scraping;
+- production deployment;
+- automatic backup jobs or schedulers;
+- live Postgres creation, schema, or migrations;
+- provider execution or recurring capture;
+- credentials or secret transfer;
 - customer data or reports;
-- production API/MCP deployment or production integration;
-- Postgres creation, physical schema, or migrations;
-- strategy/recommendation storage or automatic conclusion promotion.
+- destructive cleanup without exact authorization;
+- production API/MCP or broad operational automation.
 
 ### Blockers
 
-- Provider, cost, rights, recipe, freshness, and hammer gates must be reconciled before recurring-capture approval can be considered.
-- Any execution proposal requires a future explicit roadmap change and separate owner authorization.
+- Backup and restore scope must be reconciled against the actual repository and evidence paths.
+- Raw archive, purge, hash, retention, and secret-handling expectations must fail closed.
+- Any implementation or restore execution requires a separately bounded owner authorization.
 
-### M18 Progress Log
+### M19 Progress Log
 
-2026-07-12 — M18 planning activated by `decisions/2026-07-12-m17-closure-and-m18-activation.md` after bounded M17 overlay discard proof and owner-local confirmation that all 184 tests pass.
-2026-07-12 — Recurring watch-panel reconciliation review, bounded policy, and owner-ruling proposals drafted. Recommendation: accept the planning policy and reject recurring execution for Observatory v1.
+2026-07-12 — M19 planning activated by `decisions/2026-07-12-m18-watch-panel-policy-and-m19-activation.md` after M18 policy acceptance and rejection of recurring execution for Observatory v1.
 
 ---
 
@@ -1131,7 +1131,7 @@ Next milestone: M18
 
 ### M18 - Recurring Watch Panel Planning
 
-Status: active for planning only — activated by `decisions/2026-07-12-m17-closure-and-m18-activation.md`
+Status: complete — policy accepted and recurring execution rejected for v1 by `decisions/2026-07-12-m18-watch-panel-policy-and-m19-activation.md`
 
 Purpose:
 Plan recurring capture only after provider, cost, rights, recipe, and hammer gates exist. M18 is planning only; recurring capture execution is not part of v1 unless the owner explicitly changes the roadmap.
@@ -1172,7 +1172,7 @@ Next milestone: M19
 
 ### M19 - Hardening, Backup, Recovery, and Operations
 
-Status: planned
+Status: active for planning only — activated by `decisions/2026-07-12-m18-watch-panel-policy-and-m19-activation.md`
 
 Purpose:
 Make Observatory durable, auditable, and recoverable.

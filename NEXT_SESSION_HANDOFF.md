@@ -2,14 +2,14 @@
 
 Status: authority
 Authority: fresh-session handoff pointer; `ACTIVE_CONTEXT.md` owns current phase truth
-Purpose: preserve current state after M17 closure and M18 planning activation
+Purpose: preserve current state after M18 closure and M19 planning activation
 Last updated: 2026-07-12
 
 ---
 
 ## Current State
 
-The Observatory is in M18 recurring watch panel planning.
+The Observatory is in M19 hardening, backup, recovery, and operations planning.
 
 Closed milestones:
 
@@ -32,19 +32,20 @@ Closed milestones:
 - M15 - SearchClarity Proof Workflow
 - M16 - Provider Cross-Check Proof
 - M17 - Owned Telemetry Overlay Proof
+- M18 - Recurring Watch Panel Planning
 
 Active milestone:
 
 ```text
-M18 - Recurring Watch Panel Planning
+M19 - Hardening, Backup, Recovery, and Operations
 ```
 
-M17 closed on an accepted owned telemetry overlay contract plus one local synthetic fixture-backed in-memory discard proof. After correcting one false-positive safety test, the owner ran the full suite: 184 tests passed. M18 is active for planning only. No scheduler implementation, recurring capture execution, autonomous spend, provider calls, broad crawling/scraping, credentials, Postgres, schema, migrations, production API/MCP, customer data, reports, strategy, or production integration is authorized.
+M18 closed on an accepted bounded watch-panel policy with recurring capture execution explicitly rejected for Observatory v1. M19 is active for planning only. No scheduler, recurring provider work, live Postgres/schema/migrations, credentials or secret transfer, customer data, reports, destructive cleanup, automatic backup jobs, production API/MCP, deployment, or production integration is authorized.
 
 Current milestone-transition authority:
 
 ```text
-decisions/2026-07-12-m17-closure-and-m18-activation.md
+decisions/2026-07-12-m18-watch-panel-policy-and-m19-activation.md
 ```
 
 ---
@@ -146,23 +147,23 @@ When using `ob-dev`:
 
 ## Immediate Next Steps
 
-Proceed with active M18:
+Proceed with active M19:
 
 ```text
-M18 - Recurring Watch Panel Planning
+M19 - Hardening, Backup, Recovery, and Operations
 ```
 
 Immediate next moves:
 
 ```text
-1. Reconcile M13 provider/cost/rights/recipe evidence with M16 disagreement proof and M8 hammers.
-2. Define bounded watch-panel purpose and membership rules.
-3. Define cadence policy by volatility, freshness, and claim need.
-4. Define budget ceilings, duplicate prevention, stop conditions, and manual review gates.
-5. Produce an explicit approve-or-reject recommendation for recurring capture planning.
+1. Reconcile actual repository/evidence paths with raw archive, hash, retention, and purge expectations.
+2. Define backup scope, encryption, frequency, retention, and excluded sensitive material.
+3. Define a disposable restore-proof procedure and acceptance evidence.
+4. Define audit-log, secret-exposure, retention-cleanup, and operational-risk expectations.
+5. Prepare exact bounded implementation/proof proposals only after separate owner gates.
 ```
 
-Do not implement a scheduler, execute recurring capture, call providers, spend autonomously, add credentials, crawl broadly, create Postgres/schema/migrations, build production API/MCP, handle customer data, generate reports, or store strategy/recommendations.
+Do not deploy, create automatic backup jobs, create live Postgres/schema/migrations, execute providers or recurrence, transfer credentials, handle customer data, perform destructive cleanup, build production API/MCP, or automate operations broadly.
 
 ---
 

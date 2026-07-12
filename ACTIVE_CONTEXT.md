@@ -12,37 +12,38 @@ Last updated: 2026-07-12
 The Observatory is in:
 
 ```text
-M18 recurring watch panel planning
+M19 hardening, backup, recovery, and operations planning
 ```
 
-M17 is closed after acceptance of the owned telemetry overlay contract and rulings, one bounded synthetic fixture-backed implementation, one corrected false-positive safety test, and owner-local proof that all 184 tests pass. M18 is active for planning only: recurring watch-panel design, cadence policy, budget policy, stop conditions, stale/coverage warnings, and responsible approval-or-rejection criteria. No scheduler implementation, recurring capture execution, autonomous spend, provider calls, broad crawling/scraping, credentials, Postgres, schema, migrations, production API/MCP, customer data, reports, strategy, or production integration is authorized.
+M18 is closed after acceptance of a bounded recurring watch-panel policy and an explicit rejection of recurring capture execution for Observatory v1. M19 is active for planning only: backup posture, restore-proof design, audit-log expectations, secret-exposure checks, retention-cleanup proof, operational runbooks, and operational-risk documentation. No scheduler, recurring capture, provider execution, autonomous spend, credentials, Postgres, physical schema, migrations, production API/MCP, customer data, reports, deployment, or production integration is authorized.
 
 ---
 
 ## Active Milestone
 
 ```text
-M18 - Recurring Watch Panel Planning
+M19 - Hardening, Backup, Recovery, and Operations
 ```
 
-M0, M0.1, and M1 through M17 are complete and committed.
+M0, M0.1, and M1 through M18 are complete and committed.
 
 ---
 
 ## Current Task
 
-Begin M18 with repo-first reconciliation of provider admission, cost, rights, recipe, freshness, query-panel, and hammer boundaries before any recurring-capture decision.
+Begin M19 with repo-first reconciliation of the existing evidence slice, raw archive/hash expectations, retention rules, hammer results, M18 no-execution posture, and current operational risks before any hardening implementation.
 
-Current M18 work is allowed to:
+Current M19 work is allowed to:
 
-- define watch-panel purpose and bounded subject membership;
-- define cadence policy by volatility, freshness, and claim need;
-- define budget ceilings, duplicate prevention, and approval gates;
-- define stop conditions, failure budgets, and manual review points;
-- define stale, incomplete, coverage, and non-synchronous warnings;
-- define an explicit approve/reject recommendation for recurring capture planning.
+- define backup scope, frequency, encryption, and retention posture;
+- define a disposable restore-proof procedure;
+- define audit-log and operation-evidence expectations;
+- define secret-exposure inventory and checks;
+- define retention-cleanup and purge-proof procedures;
+- define bounded operational runbooks and risk registers;
+- propose exact implementation or proof tasks only after separate owner gates.
 
-M18 does not authorize scheduler implementation, recurring capture execution, provider calls, autonomous spend, credentials, broad crawling or scraping, customer data, customer reports, Postgres, schema, migrations, production API/MCP deployment, production integrations, strategy storage, recommendation storage, or automatic conclusion promotion.
+M19 does not authorize production deployment, live database creation, Postgres schema or migrations, provider execution, recurring capture, credentials or secret transfer, customer data, report generation, production API/MCP, destructive cleanup, automatic backup jobs, or broad operational automation.
 
 ---
 
@@ -114,12 +115,13 @@ Closed:
 - M15 - SearchClarity Proof Workflow
 - M16 - Provider Cross-Check Proof
 - M17 - Owned Telemetry Overlay Proof
+- M18 - Recurring Watch Panel Planning
 
 Active:
 
-- M18 - Recurring Watch Panel Planning
+- M19 - Hardening, Backup, Recovery, and Operations
 
-Next after M18:
+Next after M19:
 
 ```text
 Follow the accepted roadmap sequence; no later milestone is activated by this context file.

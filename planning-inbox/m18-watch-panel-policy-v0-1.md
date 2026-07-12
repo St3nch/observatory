@@ -1,6 +1,6 @@
 # M18 Watch Panel Policy v0.1
 
-Status: planning proposal
+Status: accepted planning policy by `decisions/2026-07-12-m18-watch-panel-policy-and-m19-activation.md`; recurring execution rejected for Observatory v1
 Milestone: M18
 Date: 2026-07-12
 
