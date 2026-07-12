@@ -15,7 +15,9 @@ from .c2 import (
     ScopeContext,
     ValidationIssue,
     admit_candidate_observation,
+    recovery_snapshot_digest,
     validate_observation_package,
+    validate_recovery_snapshot_digest,
 )
 
 __all__ = [
@@ -28,5 +30,7 @@ __all__ = [
     "ScopeContext",
     "ValidationIssue",
     "admit_candidate_observation",
+    "recovery_snapshot_digest",
     "validate_observation_package",
+    "validate_recovery_snapshot_digest",
 ]

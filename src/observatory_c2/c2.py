@@ -16,10 +16,11 @@ not persist anything.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
 from hashlib import sha256
-from typing import Iterable, Literal, Sequence
+import json
+from typing import Any, Iterable, Literal, Sequence
 from uuid import uuid4
 
 ALLOWED_SCOPE_CLASSES = {"internal_fixture", "owner_controlled_fixture"}
@@ -361,6 +362,44 @@ def supersede_observation(result: AdmissionResult, *, reason: str, now: datetime
         ),
     )
     return superseded, superseded.audit_events[-1]
+
+
+def _json_safe(value: Any) -> Any:
+    """Convert C2 dataclass values to deterministic JSON-safe values."""
+
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, tuple):
+        return [_json_safe(item) for item in value]
+    if isinstance(value, list):
+        return [_json_safe(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in sorted(value.items())}
+    return value
+
+
+def recovery_snapshot_digest(result: AdmissionResult) -> str:
+    """Return a deterministic digest for C2 recovery/rollback integrity checks.
+
+    This is not a backup system. It is a local M12 proof primitive showing that
+    an admitted observation snapshot can be re-read and checked for tampering
+    without database, migration, provider, or operations scope.
+    """
+
+    snapshot = _json_safe(asdict(result))
+    encoded = json.dumps(snapshot, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return sha256(encoded).hexdigest()
+
+
+def validate_recovery_snapshot_digest(result: AdmissionResult, expected_digest: str) -> tuple[ValidationIssue, ...]:
+    """Validate a C2 recovery snapshot digest in fail-closed form."""
+
+    if not expected_digest:
+        return (_issue("missing_recovery_digest", "expected recovery digest is required"),)
+    actual_digest = recovery_snapshot_digest(result)
+    if actual_digest != expected_digest:
+        return (_issue("recovery_digest_mismatch", "C2 recovery snapshot digest mismatch"),)
+    return ()
 
 
 def validate_no_external_markers(paths_or_names: Sequence[str]) -> tuple[ValidationIssue, ...]:

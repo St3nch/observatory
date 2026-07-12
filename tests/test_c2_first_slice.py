@@ -15,7 +15,9 @@ from observatory_c2 import (  # noqa: E402
     RawSupportManifest,
     ScopeContext,
     admit_candidate_observation,
+    recovery_snapshot_digest,
     validate_observation_package,
+    validate_recovery_snapshot_digest,
 )
 from observatory_c2.c2 import (  # noqa: E402
     supersede_observation,
@@ -173,6 +175,25 @@ class C2FirstSliceHammerTests(unittest.TestCase):
         self.assertEqual(result.audit_events[0].entity_type, "observation")
         self.assertEqual(result.audit_events[0].entity_id, result.observation_id)
         self.assertTrue(result.audit_events[0].event_reason)
+
+    def test_h22_recovery_digest_detects_snapshot_tamper(self) -> None:
+        result = admit_candidate_observation(valid_package(), valid_candidate(), now=CAPTURED_AT)
+        digest = recovery_snapshot_digest(result)
+
+        self.assertEqual(validate_recovery_snapshot_digest(result, digest), ())
+
+        tampered_candidate = CandidateObservation(
+            candidate_observation_id=result.candidate.candidate_observation_id,
+            observation_package_id=result.candidate.observation_package_id,
+            candidate_type=result.candidate.candidate_type,
+            observed_text="Fixture page title: tampered text.",
+            candidate_status=result.candidate.candidate_status,
+            validation_errors=result.candidate.validation_errors,
+        )
+        tampered_result = result.__class__(**{**result.__dict__, "candidate": tampered_candidate})
+        issues = validate_recovery_snapshot_digest(tampered_result, digest)
+
+        self.assertIn("recovery_digest_mismatch", {issue.code for issue in issues})
 
 
 if __name__ == "__main__":
