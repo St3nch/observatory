@@ -79,7 +79,28 @@ src/observatory_searchclarity_proof/models.py
 tests/test_typed_read_hostile_paths.py
 ```
 
-## Required owner-local proof
+## Owner-local proof attempts
+
+### Attempt 1 — failed on stale expectation
+
+The owner ran the full suite after commit `e56af0e29fde4bbff43a22073b33549c8ae984dd`.
+
+Result:
+
+```text
+Ran 188 tests in 0.205s
+FAILED (failures=1)
+```
+
+Failure:
+
+```text
+test_typed_read_contract.TypedReadContractTests.test_coverage_is_sorted_and_evidence_only
+```
+
+The stale assertion expected `consumer_promotion_required` to remain false for `coverage_statement`. The v0.1.1 contract now intentionally classifies coverage-bearing output as meaning-bearing, so the implementation's `true` result was correct and the old test expectation was wrong. The test was corrected to require `true`.
+
+### Required rerun
 
 Run from `C:\dev\observatory`:
 

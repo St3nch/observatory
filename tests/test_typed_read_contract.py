@@ -16,7 +16,7 @@ class TypedReadContractTests(unittest.TestCase):
     def test_coverage_is_sorted_and_evidence_only(self) -> None:
         result = coverage_blind_spot_read(caller_class="internal_llm", scope_id=SCOPE_A, claim_intent="coverage_statement")
         self.assertEqual(result["coverage_blind_spots"], sorted(result["coverage_blind_spots"]))
-        self.assertFalse(result["consumer_promotion_required"])
+        self.assertTrue(result["consumer_promotion_required"])
         self.assertEqual(result["evidence_units"], [])
 
 
