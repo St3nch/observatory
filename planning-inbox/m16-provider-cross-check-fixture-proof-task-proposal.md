@@ -1,7 +1,7 @@
 # M16 Provider Cross-Check Fixture-Backed Proof Task Proposal
 
-Status: exact implementation task proposal; not implementation authority
-Authority: none until owner explicitly approves this exact task after contract and ruling gates
+Status: authorized exact implementation task
+Authority: `decisions/2026-07-12-m16-provider-cross-check-fixture-proof-authorization.md`; implementation remains bounded to this exact task
 Milestone: M16 - Provider Cross-Check Proof
 Date: 2026-07-12
 

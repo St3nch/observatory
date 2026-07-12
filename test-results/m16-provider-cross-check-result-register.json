@@ -1,0 +1,30 @@
+{
+  "register_version": "1",
+  "contract_version": "0.1",
+  "status": "not_executed",
+  "entries": [
+    {
+      "result_id": "m16-provider-cross-check-full-suite-owner-local-pending",
+      "commit": "pending-implementation-commit",
+      "proof_class": "mixed_suite",
+      "execution_surface": "synthetic_fixture_in_memory_local",
+      "proof_strength": "not_executed",
+      "test_command": "$env:PYTHONPATH = (Join-Path $PWD \"src\"); python -m unittest discover -s tests",
+      "result": "owner_local_execution_required",
+      "executed_at": null,
+      "evidence_path": "planning-inbox/m16-provider-cross-check-local-test-evidence.md",
+      "limitations": [
+        "synthetic fixture-backed",
+        "in-memory",
+        "no live provider comparison proof",
+        "no provider purchase or credential proof",
+        "no recurring capture proof",
+        "no persistent ledger proof",
+        "no customer-facing report proof",
+        "no database proof",
+        "no production API/MCP proof",
+        "no deployment proof"
+      ]
+    }
+  ]
+}
