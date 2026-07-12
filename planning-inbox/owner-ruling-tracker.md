@@ -40,8 +40,8 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
-| OR-C1 | Fund/use a DataForSEO account; release the reserved validation budget; approve recipe/endpoint list/ceilings/stop conditions | RG1; DR1 | open |
-| OR-C2 | Long-term raw payload retention posture per source family (durable vs manifest-only vs capture-and-purge vs no-storage) | RG1 F6; RG11; DR2 | open |
+| OR-C1 | Fund/use a DataForSEO account; release the reserved validation budget; approve recipe/endpoint list/ceilings/stop conditions | RG1; DR1; `decisions/2026-07-11-m13-dataforseo-controlled-probe-approval.md` | open — concrete decision proposed; pending fresh official verification and explicit owner acceptance |
+| OR-C2 | Long-term raw payload retention posture per source family (durable vs manifest-only vs capture-and-purge vs no-storage) | RG1 F6; RG11; DR2; `decisions/2026-07-11-m13-dataforseo-controlled-probe-approval.md` | open — first-probe capture-and-purge posture proposed only; no general or durable retention ruling |
 | OR-C3 | Use AI Optimization endpoint families for validation | RG1; RG6 | open |
 | OR-C4 | Raw archive layout: filesystem-first, object-storage-first, or hybrid | RG11; DR13 | open |
 | OR-C5 | Etsy: pursue API path and/or express written authorization, or keep all Etsy evidence consumer/report-side | RG7; DR6 | open |

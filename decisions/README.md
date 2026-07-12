@@ -58,6 +58,7 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-10-m10-schema-planning-closure.md` | accepted decision | Records M10 logical schema planning closure and M11 activation | C2 logical responsibility planning accepted; M11 implementation foundation is active |
 | `2026-07-10-m11-foundation-closure.md` | accepted decision | Records M11 implementation foundation closure and M12 activation | C2 foundation expectations accepted; M12 first evidence slice build is active |
 | `2026-07-10-m12-first-slice-closure.md` | accepted decision | Records M12 first evidence slice closure and M13 activation | Bounded local C2 proof accepted; M13 provider admission planning is active |
+| `2026-07-11-m13-dataforseo-controlled-probe-approval.md` | proposed decision | Proposes one tightly bounded DataForSEO SERP payload-inspection probe with exact cost, request, retention, and stop controls | Pending owner ruling; authorizes no credits, CLI, provider call, Postgres, schema, or migrations |
 
 ---
 
