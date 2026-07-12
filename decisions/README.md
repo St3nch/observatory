@@ -65,6 +65,7 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-12-m14-typed-read-contract-acceptance-and-prototype-authorization.md` | accepted decision | Accepts the full M14 typed-read contract and authorizes one exact fixture-backed prototype | Local, in-memory proof only; no network, database, provider, customer, overlay, or report work |
 | `2026-07-12-m14-closure-and-m15-activation.md` | accepted decision | Closes M14 after bounded proof and activates M15 planning | SearchClarity consumer-boundary planning only; no customer records, reports, overlays, production integration, or persistence |
 | `2026-07-12-m15-searchclarity-contract-and-consumer-boundary-rulings.md` | accepted decision | Accepts the M15 SearchClarity proof-workflow contract and consumer-boundary rulings | Proof implementation remains separately gated; no customer data, overlays, report generation, production integration, provider execution, or persistence |
+| `2026-07-12-m15-searchclarity-fixture-proof-authorization.md` | accepted decision | Authorizes one exact synthetic fixture-backed M15 proof task | Local, in-memory proof only; no real customers, reports, overlays, integration, provider execution, or persistence |
 
 ---
 

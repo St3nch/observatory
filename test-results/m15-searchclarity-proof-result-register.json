@@ -1,18 +1,18 @@
 {
   "register_version": "1",
   "contract_version": "0.1",
-  "status": "not_executed",
+  "status": "passed_bounded_synthetic_fixture_suite",
   "entries": [
     {
-      "result_id": "m15-searchclarity-full-suite-owner-local-pending",
+      "result_id": "m15-searchclarity-full-suite-owner-local-20260712",
       "contract_version": "0.1",
-      "commit": "pending-implementation-commit",
+      "commit": "f18ef37d80ac99eaf2a600d0d42ab4dd1010bde8",
       "proof_class": "mixed_suite",
       "execution_surface": "synthetic_fixture_in_memory_local",
-      "proof_strength": "not_executed",
+      "proof_strength": "bounded_enforcement_proof",
       "test_command": "$env:PYTHONPATH = (Join-Path $PWD \"src\"); python -m unittest discover -s tests",
-      "result": "owner_local_execution_required",
-      "executed_at": null,
+      "result": "pass_156_tests",
+      "executed_at": "2026-07-12T19:25:30Z",
       "evidence_path": "planning-inbox/m15-searchclarity-local-test-evidence.md",
       "limitations": [
         "synthetic fixture-backed",
