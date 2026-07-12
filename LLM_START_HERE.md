@@ -110,17 +110,7 @@ Unless the owner explicitly changes project law:
 
 `ACTIVE_CONTEXT.md` is the single authority for the current phase. Do not hard-code a milestone from this file.
 
-For the active M14 planning boundary, do not start:
-
-- production API or MCP implementation/deployment
-- direct SQL or credential access for LLMs or agents
-- Postgres creation, physical schema, or migrations
-- live provider ingestion or any additional paid provider request
-- recurring capture
-- dashboard or operator console work
-- customer-data handling or customer first-party analytics storage
-- customer-facing reports
-- strategy or recommendation storage
+Read the active non-goals and exact permission boundary from `ACTIVE_CONTEXT.md`. Do not restate a milestone or phase-specific forbidden list here. The post-v1 sequence in `POST_V1_DATABASE_ROADMAP.md` is sequencing authority only; each database permission remains separately gated by the active context and an explicit owner decision.
 
 If another root file disagrees with `ACTIVE_CONTEXT.md`, stop and reconcile the authority drift before proceeding.
 

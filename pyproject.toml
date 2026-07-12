@@ -6,7 +6,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [tool.observatory]
-status = "observatory-v1-accepted-bounded-proof-system"
+status = "db1-post-v1-audit-reconciliation-and-roadmap-planning"
 first_slice = "C2 Controlled Public Manual Observation Package"
 probe = "M13 DataForSEO one-shot tooling retained and disarmed"
 campaign = "M13 closed; no additional provider request authorized"

@@ -12,35 +12,38 @@ Last updated: 2026-07-12
 The Observatory is in:
 
 ```text
-Observatory v1 accepted at the bounded proof-system ceiling
+DB-1 post-v1 audit reconciliation and database-phase roadmap planning
 ```
 
-M20 is closed by `decisions/2026-07-12-observatory-v1-acceptance.md`. The accepted v1 is a bounded, local, evidence-only proof system. It is not production-ready or feature-complete. No production deployment, post-v1 implementation, provider expansion, recurring capture, live database work, customer data handling, report generation, production API/MCP, encrypted/off-machine recovery claim, or strategy storage is authorized.
+Observatory v1 remains accepted at the bounded proof-system ceiling by `decisions/2026-07-12-observatory-v1-acceptance.md`. The owner accepted the post-v1 audit as advisory input and activated database-phase planning through `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`. This opens reconciliation, typed-read corrections, hammer/ruling work, and the physical data-contract-freeze plan only. It does not authorize Postgres creation, DDL, migration files or execution, real ingestion, production, customer data, or strategy storage.
 
 ---
 
 ## Active Milestone
 
 ```text
-none
+DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
 ```
 
-M0, M0.1, and M1 through M20 are complete and committed.
+M0, M0.1, and M1 through M20 remain complete and committed. DB-1 is the first post-v1 planning milestone.
 
 ---
 
 ## Current Task
 
-Preserve the accepted-v1 state and its known-limit/deferred-capability register.
+Execute DB-1 from `POST_V1_DATABASE_ROADMAP.md`.
 
 Current work is limited to:
 
-- reading and reviewing accepted v1 evidence;
-- correcting factual documentation defects without widening authority;
-- preserving proof artifacts and accepted limitations;
-- proposing a new roadmap only when the owner explicitly requests one.
+- preserve and index the accepted post-v1 audit;
+- route N-01 through N-14 and the opportunity set completely;
+- correct stale authority pointers and narrow contract truth defects;
+- plan and, under bounded DB-1 authority, implement the accepted typed-read corrections with hostile tests;
+- prepare and resolve OR-B1, OR-B2, OR-C2, and OR-C4;
+- prepare hammer matrix / gate policy v0.2 and per-hammer result-register requirements;
+- fully specify DB-2, the physical data-contract freeze.
 
-No post-v1 milestone, implementation package, production launch, or roadmap expansion is active.
+Postgres creation, DDL, migration files, migration execution, database credentials, real ingestion, provider calls, and production work remain unauthorized.
 
 ---
 
@@ -117,14 +120,16 @@ Closed:
 Active:
 
 ```text
-none
+DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
 ```
 
-Post-v1 state:
+Post-v1 roadmap authority:
 
 ```text
-No post-v1 milestone is active. A new roadmap requires explicit owner approval.
+POST_V1_DATABASE_ROADMAP.md
 ```
+
+No later database milestone is active. DB-2 requires a separate owner decision.
 
 M2 folder ruling completed:
 

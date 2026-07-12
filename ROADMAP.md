@@ -135,12 +135,14 @@ If required reading includes a folder, that folder must have a `README.md` index
 ## Active Milestone
 
 ```text
-none
+DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
 ```
 
-Observatory v1 is accepted and M20 is closed by `decisions/2026-07-12-observatory-v1-acceptance.md`.
+Observatory v1 remains accepted and M20 remains closed by `decisions/2026-07-12-observatory-v1-acceptance.md`.
 
-No post-v1 milestone, production launch, implementation package, or roadmap expansion is active. The accepted known-limit and deferred-capability register remains binding. A new roadmap requires explicit owner approval.
+The owner activated post-v1 reconciliation and database-phase roadmap planning through `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`. The governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`.
+
+No Postgres creation, DDL, migration files or execution, real ingestion, provider calls, production launch, or customer/strategy persistence is authorized.
 
 ---
 

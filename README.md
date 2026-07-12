@@ -6,7 +6,7 @@ It stores observations, not strategy.
 
 The connected LLM interprets at read time; the database does not store strategy, recommendations, or scores-as-truth.
 
-Current phase authority lives in `ACTIVE_CONTEXT.md`. As of 2026-07-12, M13 is closed and M14 typed read API / MCP contract planning is active. No production API/MCP, Postgres, schema, migrations, live provider ingestion, additional paid pulls, customer data, dashboards, reports, or strategy/recommendation storage are authorized.
+Current phase authority lives only in `ACTIVE_CONTEXT.md`. Do not restate a milestone here. The post-v1 database sequence lives in `POST_V1_DATABASE_ROADMAP.md`, but that roadmap does not authorize Postgres, DDL, migrations, ingestion, production, customer data, reports, or strategy/recommendation storage unless the active context and an explicit owner decision open the exact gate.
 
 ## Start here
 
