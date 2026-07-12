@@ -20,10 +20,9 @@ LIVE_RECIPE_ID = "C00"
 EXPECTED_PRICE_USD = Decimal("0.002")
 REQUEST_TIMEOUT_SECONDS = 30
 LIVE_EXECUTION_IMPLEMENTED = True
-LIVE_EXECUTION_AUTHORIZED = True
+# M13 is closed. No live provider request is authorized.
+LIVE_EXECUTION_AUTHORIZED = False
 OWNER_CONFIRMATION_PHRASE = "AUTHORIZE ONE PAID C00 REQUEST"
-REPLACEMENT_CONFIRMATION_PHRASE = "AUTHORIZE ONE REPLACEMENT PAID C00 REQUEST AFTER NON-BILLABLE 401 INCIDENT"
-REPLACEMENT_INCIDENT_PROBE_ID = "2026-07-12_C00_143020Z-f0b5410c"
 ATTEMPT_REGISTRY_PATH = EVIDENCE_ROOT / "attempt-registry.json"
 
 
@@ -62,7 +61,6 @@ def build_live_preflight(
     account_limits_recorded: bool,
     evidence_root_ignored: bool,
     duplicate_exists: bool,
-    replacement_allowed: bool = False,
     owner_confirmation: str | None = None,
 ) -> dict[str, Any]:
     recipe = get_recipe(LIVE_RECIPE_ID)
@@ -77,16 +75,11 @@ def build_live_preflight(
         blockers.append("account_limits_not_recorded")
     if not evidence_root_ignored:
         blockers.append("evidence_root_not_git_ignored")
-    replacement_requested = owner_confirmation == REPLACEMENT_CONFIRMATION_PHRASE
-    if duplicate_exists and not (replacement_requested and replacement_allowed):
+    if duplicate_exists:
         blockers.append("duplicate_request_detected")
-    if replacement_requested and not duplicate_exists:
-        blockers.append("replacement_incident_not_present")
-    if replacement_requested and duplicate_exists and not replacement_allowed:
-        blockers.append("replacement_request_not_authorized_by_incident_state")
     if not credentials_present(env):
         blockers.append("credentials_missing")
-    if owner_confirmation not in {OWNER_CONFIRMATION_PHRASE, REPLACEMENT_CONFIRMATION_PHRASE}:
+    if owner_confirmation != OWNER_CONFIRMATION_PHRASE:
         blockers.append("owner_paid_request_confirmation_missing")
     if not LIVE_EXECUTION_IMPLEMENTED:
         blockers.append("live_execution_not_implemented")
@@ -108,9 +101,6 @@ def build_live_preflight(
         "timeout_seconds": REQUEST_TIMEOUT_SECONDS,
         "credentials_present": credentials_present(env),
         "network_execution_authorized": LIVE_EXECUTION_AUTHORIZED,
-        "replacement_requested": replacement_requested,
-        "replacement_allowed": replacement_allowed,
-        "replacement_incident_probe_id": REPLACEMENT_INCIDENT_PROBE_ID if replacement_requested else None,
         "generated_at": utc_now().isoformat(),
     }
 
@@ -133,38 +123,12 @@ def duplicate_attempt_exists(path: Path = ATTEMPT_REGISTRY_PATH) -> bool:
     return any(isinstance(item, dict) and item.get("duplicate_prevention_key") == key for item in registry["attempts"])
 
 
-def replacement_attempt_allowed(path: Path = ATTEMPT_REGISTRY_PATH) -> bool:
-    key = get_recipe(LIVE_RECIPE_ID).duplicate_key()
-    registry = _load_attempt_registry(path)
-    incident_ok = any(
-        isinstance(item, dict)
-        and item.get("probe_id") == REPLACEMENT_INCIDENT_PROBE_ID
-        and item.get("duplicate_prevention_key") == key
-        and item.get("status") == "provider_authentication_error"
-        and item.get("http_status") == 401
-        and item.get("retry_permitted") is False
-        for item in registry["attempts"]
-    )
-    replacement_already_recorded = any(
-        isinstance(item, dict) and item.get("replacement_for") == REPLACEMENT_INCIDENT_PROBE_ID
-        for item in registry["attempts"]
-    )
-    return incident_ok and not replacement_already_recorded
-
-
-def reserve_attempt(
-    probe_id: str,
-    path: Path = ATTEMPT_REGISTRY_PATH,
-    replacement_for: str | None = None,
-) -> dict[str, Any]:
+def reserve_attempt(probe_id: str, path: Path = ATTEMPT_REGISTRY_PATH) -> dict[str, Any]:
     recipe = get_recipe(LIVE_RECIPE_ID)
     registry = _load_attempt_registry(path)
-    duplicate_recorded = any(
+    if any(
         isinstance(item, dict) and item.get("duplicate_prevention_key") == recipe.duplicate_key()
         for item in registry["attempts"]
-    )
-    if duplicate_recorded and not (
-        replacement_for == REPLACEMENT_INCIDENT_PROBE_ID and replacement_attempt_allowed(path)
     ):
         raise ProbeBlocked("duplicate C00 attempt already recorded")
     record = {
@@ -176,9 +140,6 @@ def reserve_attempt(
         "status": "reserved_before_transport",
         "retry_permitted": False,
     }
-    if replacement_for is not None:
-        record["replacement_for"] = replacement_for
-        record["replacement_authorization"] = REPLACEMENT_CONFIRMATION_PHRASE
     registry["attempts"].append(record)
     write_json(path, registry)
     return record
@@ -228,13 +189,11 @@ def execute_one_c00(
     if captured_at.tzinfo is None:
         raise ProbeBlocked("execution timestamp must be timezone-aware")
     duplicate_exists = duplicate_attempt_exists(registry_path)
-    replacement_allowed = replacement_attempt_allowed(registry_path)
     preflight = build_live_preflight(
         env=env,
         account_limits_recorded=account_limits_recorded,
         evidence_root_ignored=evidence_root_ignored,
         duplicate_exists=duplicate_exists,
-        replacement_allowed=replacement_allowed,
         owner_confirmation=owner_confirmation,
     )
     if preflight["status"] != "ready":
@@ -243,12 +202,7 @@ def execute_one_c00(
     recipe = get_recipe(LIVE_RECIPE_ID)
     suffix = _safe_suffix(captured_at)
     probe_id = f"{captured_at.astimezone(timezone.utc):%Y-%m-%d}_{recipe.recipe_id}_{suffix}"
-    replacement_for = (
-        REPLACEMENT_INCIDENT_PROBE_ID
-        if owner_confirmation == REPLACEMENT_CONFIRMATION_PHRASE
-        else None
-    )
-    reserve_attempt(probe_id, registry_path, replacement_for=replacement_for)
+    reserve_attempt(probe_id, registry_path)
     request = build_http_request(env)
 
     try:

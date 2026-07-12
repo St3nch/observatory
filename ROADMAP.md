@@ -121,8 +121,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M10 | Schema Planning Only | closed | Design schema after contracts and research; no migrations yet |
 | M11 | Implementation Foundation | closed | Create project implementation skeleton only after gates open |
 | M12 | First Evidence Slice Build | closed | Build and test the first observation path |
-| M13 | Provider Admission and Controlled Pull Plan | active | Admit first provider through rights/cost/recipe gates |
-| M14 | Typed Read API / MCP Contract and Prototype | planned | Expose evidence through bounded read tools, not raw SQL |
+| M13 | Provider Admission and Controlled Pull Plan | closed | One controlled DataForSEO probe completed, reviewed, and purged with proof |
+| M14 | Typed Read API / MCP Contract and Prototype | active | Plan evidence access through bounded read tools, not raw SQL |
 | M15 | SearchClarity Proof Workflow | planned | Prove customer-facing evidence support without storing customer records |
 | M16 | Provider Cross-Check Proof | planned | Prove provider disagreement as first-class evidence |
 | M17 | Owned Telemetry Overlay Proof | planned | Prove read-time overlay without storing customer first-party data |
@@ -136,124 +136,62 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M13
+M14
 
 ### Name
 
-Provider Admission and Controlled Pull Plan
+Typed Read API / MCP Contract and Prototype
 
 ### Status
 
-active
+active for planning only
 
 ### Purpose
 
-Plan admission for the first real provider through rights, retention, cost, recipe, and stop-condition gates before any provider call or paid pull.
+Define the typed, scope-safe, evidence-only read boundary that lets connected LLMs inspect Observatory evidence without direct SQL, raw credential access, customer-data leakage, provider-spend side effects, or stored strategy.
 
-M13 consumes `decisions/2026-07-10-m12-first-slice-closure.md` and may draft provider admission and controlled pull planning documents only. M13 does not authorize provider calls, provider purchases, paid pulls, API/MCP exposure, dashboard work, customer-data handling, marketplace scraping, recurring capture, report generation, or strategy/recommendation storage.
+M14 consumes the closed M13 provider evidence and the existing contract/hammer set. It may plan read contracts, authorization proposals, evidence-handle behavior, caveat-preserving context packs, error taxonomies, pagination/ceiling rules, tool guidance, and hostile-path acceptance criteria.
 
 ### Required Reading
 
-- `README.md`
-- `LLM_START_HERE.md`
 - `ACTIVE_CONTEXT.md`
-- `ROADMAP.md`
-- `ROADMAP_RULES.md`
-- `REPO_MAP.md`
-- `00-project-overview.md`
-- `01-harvest-register.md`
-- `02-boundaries.md`
-- `NEXT_SESSION_HANDOFF.md`
+- `decisions/2026-07-12-m13-closure-and-m14-activation.md`
+- `planning-inbox/m13-closure-readiness-review-2026-07-12.md`
+- `planning-inbox/post-m13-deep-audit-response-2026-07-12.md`
+- `audits/observatory-post-m13-deep-audit-2026-07-12.md`
 - `contracts/README.md`
-- all M7 contract drafts in `contracts/`
-- `hammers/README.md`
 - `hammers/hammer-matrix-v0-1.md`
 - `hammers/acceptance-gate-policy-v0-1.md`
-- `research/rg1-dataforseo-rights-retention-cost.md`
-- `research/rg10-capturepackage-v0-1-inputs.md`
-- `research/rg11-raw-archive-provider-drift.md`
-- `decisions/2026-07-10-m12-first-slice-closure.md`
-- `planning-inbox/m12-first-slice-closure-readiness-review.md`
-- `planning-inbox/m12-local-test-evidence-2026-07-10.md`
 
 ### Allowed Work
 
-- draft provider admission plan;
-- confirm rights/retention/cost gate requirements from existing research and contracts;
-- define controlled pull recipe;
-- define cost ceiling;
-- define stop conditions;
-- define raw payload handling plan;
-- define no-customer-data posture;
-- define no-recurring-capture posture;
-- define no-dashboard/report/API/MCP exposure posture.
+- typed read-contract planning;
+- consumer authentication/authorization proposals;
+- scope-safe evidence-handle and status-resolution planning;
+- pagination, ceilings, redaction, freshness, attribution, and disagreement rules;
+- LLM-context assembly and tool-guidance planning;
+- hostile-path and acceptance-test planning;
+- bounded local prototype task proposals after the required gates are satisfied.
 
 ### Forbidden Work
 
-- provider calls
-- provider purchases
-- paid provider pulls
-- Ahrefs/Semrush spend
-- DataForSEO task execution
-- provider admission execution
-- bulk capture
-- recurring capture
-- customer data handling
-- marketplace scraping
-- browser-extension capture
-- API/MCP exposure
-- dashboard work
-- customer-facing reports
-- strategy/recommendation storage
+- production API/MCP deployment;
+- direct SQL or database credentials for LLMs or agents;
+- Postgres creation, physical schema, or migrations;
+- live provider ingestion or any additional paid provider request;
+- customer data or customer first-party analytics storage;
+- recurring capture, dashboards, reports, or strategy/recommendation storage.
 
 ### Blockers
 
-- M12 first-slice closure must exist. — met (`decisions/2026-07-10-m12-first-slice-closure.md`)
-- Provider admission planning must stay document-only until owner explicitly approves a later controlled pull.
-- No M13 artifact may include credentials, executable provider clients, task execution, paid pull instructions, customer data, or recurring capture.
+- Batch A audit corrections must disarm the closed M13 paid path and restore one truthful phase authority.
+- Sanitized M13 evidence and contract-authority questions must be resolved before M14 read-contract acceptance.
+- OR-D1, OR-D2, OR-D3, and related read-boundary rulings must be proposed before prototype implementation.
 
-### M13 Progress Log
+### M14 Progress Log
 
-2026-07-10 — M13 activated by `decisions/2026-07-10-m12-first-slice-closure.md` after M12 closed the bounded local C2 first evidence slice.
-
-### Provider Candidate
-
-M13 may plan around:
-
-```text
-DataForSEO, if admission gates clear it
-```
-
-This is a planning candidate only, not admission approval or pull authorization.
-
-### Required Admission Planning Focus
-
-M13 must define:
-
-- provider admission status;
-- allowed endpoint/surface candidate;
-- rights and retention posture;
-- raw payload handling posture;
-- cost ceiling;
-- stop conditions;
-- controlled pull recipe shape;
-- required owner approval point before any paid call.
-
-### Exit Criteria
-
-M13 may close when:
-
-- provider admission plan exists;
-- controlled pull recipe exists as a proposal only;
-- cost ceiling and stop conditions are explicit;
-- raw payload handling posture is explicit;
-- no provider call, provider purchase, paid pull, customer data, API/MCP, dashboard, recurring-capture, or strategy/recommendation scope is introduced;
-- `ACTIVE_CONTEXT.md` and `NEXT_SESSION_HANDOFF.md` point to the correct next milestone;
-- changes are committed.
-
-### Next Milestone
-
-M14 - Typed Read API / MCP Contract and Prototype
+2026-07-12 — M14 planning activated by `decisions/2026-07-12-m13-closure-and-m14-activation.md`.
+2026-07-12 — Post-M13 deep audit preserved and routed through a full response ledger; Batch A corrections started.
 
 ---
 
@@ -973,7 +911,7 @@ Next milestone: M13
 
 ### M13 - Provider Admission and Controlled Pull Plan
 
-Status: active; full active-milestone details live in the Active Milestone section above
+Status: closed by `decisions/2026-07-12-m13-closure-and-m14-activation.md`
 
 Purpose:
 Admit the first real provider through rights, retention, cost, recipe, and stop-condition gates.
@@ -1021,7 +959,7 @@ Next milestone: M14
 
 ### M14 - Typed Read API / MCP Contract and Prototype
 
-Status: planned
+Status: active for planning only; full active-milestone details live in the Active Milestone section above
 
 Purpose:
 Expose evidence through bounded typed read tools without giving LLMs SQL or credentials.

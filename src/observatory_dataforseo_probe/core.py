@@ -213,8 +213,8 @@ def assert_preflight_ready(preflight: Mapping[str, Any]) -> None:
 
 
 def execute_request(*_: Any, **__: Any) -> None:
-    """Permanent fixture-only guard until a later owner ruling changes source authority."""
-    raise ProbeBlocked("network execution is not implemented or authorized")
+    """Legacy fixture-only entry point; live transport exists elsewhere but is disarmed."""
+    raise ProbeBlocked("legacy fixture entry point cannot execute network requests")
 
 
 def classify_response(payload: Any) -> str:

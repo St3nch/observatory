@@ -6,7 +6,7 @@ It stores observations, not strategy.
 
 The connected LLM interprets at read time; the database does not store strategy, recommendations, or scores-as-truth.
 
-Current status: M7 — Core Contract Planning. M6 research gates are closed; audit and non-schema contract planning are active. Provider pulls, provider purchases, schema, MCP/API, dashboard, capture runner, and customer-data work are not active.
+Current phase authority lives in `ACTIVE_CONTEXT.md`. As of 2026-07-12, M13 is closed and M14 typed read API / MCP contract planning is active. No production API/MCP, Postgres, schema, migrations, live provider ingestion, additional paid pulls, customer data, dashboards, reports, or strategy/recommendation storage are authorized.
 
 ## Start here
 

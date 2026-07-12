@@ -66,10 +66,10 @@ The audit remains advisory. This tracker records routing and review outcomes; ac
 
 | ID | Audit severity | Audit claim | Initial status | Final disposition | Owner / milestone | Resolution evidence |
 |---|---|---|---|---|---|---|
-| F-01 | Critical | Paid execution remains armed; repo-readable phrase and machine-local duplicate state | pending verification | pending | unassigned | pending |
-| F-02 | High | Sanitized M13 evidence is local-only and not durably committed | pending verification | pending | unassigned | pending |
-| F-03 | High | Fixture-only safety claims contradict enabled live path | pending verification | pending | unassigned | pending |
-| F-04 | High | Root authority files disagree on active phase | pending verification | pending | unassigned | pending |
+| F-01 | Critical | Paid execution remains armed; repo-readable phrase and machine-local duplicate state | proven | partially resolved: immediate disarm complete; structural authority-from-data and clone-safe ledger remain Batch B/C work | M14 pre-prototype + future provider work | `LIVE_EXECUTION_AUTHORIZED=False`; tests updated; structural sub-findings retained under F-02/F-05/F-06 and future authority work |
+| F-02 | High | Sanitized M13 evidence is local-only and not durably committed | pending verification | pending | Batch B | pending |
+| F-03 | High | Fixture-only safety claims contradict enabled live path | proven | resolved for current truth: package/config now state live transport exists but is disarmed; longer-term single authority source remains linked to F-01 | Batch A | `src/observatory_dataforseo_probe/__init__.py`, `pyproject.toml`, `live_execution.py` |
+| F-04 | High | Root authority files disagree on active phase | proven | resolved: README and LLM_START_HERE point to ACTIVE_CONTEXT; ROADMAP and handoff now record M14 planning | Batch A | `README.md`, `LLM_START_HERE.md`, `ROADMAP.md`, `NEXT_SESSION_HANDOFF.md` |
 | F-05 | Medium | Post-receipt cost and cumulative budget enforcement not wired | pending verification | pending | unassigned | pending |
 | F-06 | Medium | Attempt-registry lifecycle is not closed in code; no locking | pending verification | pending | unassigned | pending |
 | F-07 | Medium | Authorizing preflight is not preserved in live evidence package | pending verification | pending | unassigned | pending |
@@ -79,7 +79,7 @@ The audit remains advisory. This tracker records routing and review outcomes; ac
 | F-11 | Medium | Fixture hammers risk false confidence beyond their bounded proof scope | pending verification | pending | unassigned | pending |
 | F-12 | Low | Two incompatible field-fingerprint variants can mislead drift review | pending verification | pending | unassigned | pending |
 | F-13 | Low | Test evidence and planning-inbox numbering are stale/inconsistent | pending verification | pending | unassigned | pending |
-| F-14 | Low | Consumed one-time replacement mechanism remains live scaffolding | pending verification | pending | unassigned | pending |
+| F-14 | Low | Consumed one-time replacement mechanism remains live scaffolding | proven | resolved: replacement phrase, incident constant, eligibility function, reservation branch, CLI wiring, and dedicated tests removed; incident evidence remains outside code | Batch A | `src/observatory_dataforseo_probe/live_execution.py`, `src/observatory_dataforseo_probe/cli.py`, `tests/test_dataforseo_live_execution.py` |
 
 ---
 

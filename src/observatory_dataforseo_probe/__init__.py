@@ -1,6 +1,7 @@
-"""Fixture-only M13 DataForSEO probe safety cage.
+"""Closed M13 DataForSEO probe tooling retained for evidence review and tests.
 
-Network execution is intentionally unavailable until a later owner ruling.
+Live provider execution is implemented but disarmed after M13 closure. No new
+provider request is authorized by this package or its committed source.
 """
 
 from .core import (

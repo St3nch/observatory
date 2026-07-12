@@ -106,24 +106,23 @@ Unless the owner explicitly changes project law:
 
 ---
 
-## Current Non-Implementation Rule
+## Current Boundary Rule
 
-The current phase is M7 core contract planning after M6 research closure.
+`ACTIVE_CONTEXT.md` is the single authority for the current phase. Do not hard-code a milestone from this file.
 
-Do not start:
+For the active M14 planning boundary, do not start:
 
-- schema design
-- migrations
-- provider pulls
-- DataForSEO work
-- Ahrefs or Semrush work
-- API implementation
-- MCP implementation
+- production API or MCP implementation/deployment
+- direct SQL or credential access for LLMs or agents
+- Postgres creation, physical schema, or migrations
+- live provider ingestion or any additional paid provider request
+- recurring capture
 - dashboard or operator console work
-- customer-data handling
+- customer-data handling or customer first-party analytics storage
+- customer-facing reports
 - strategy or recommendation storage
 
-If you are about to build instead of preserving the roadmap/navigation system, stop. You are probably trying to summon the goblin jazz.
+If another root file disagrees with `ACTIVE_CONTEXT.md`, stop and reconcile the authority drift before proceeding.
 
 ---
 

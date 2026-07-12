@@ -17,8 +17,8 @@ class LivePreflightTests(unittest.TestCase):
     def env(self):
         return {"DATAFORSEO_LOGIN": "login", "DATAFORSEO_PASSWORD": "password"}
 
-    def test_default_live_authority_is_true_after_owner_authorization(self):
-        self.assertTrue(live.LIVE_EXECUTION_AUTHORIZED)
+    def test_default_live_authority_is_false_after_m13_closure(self):
+        self.assertFalse(live.LIVE_EXECUTION_AUTHORIZED)
 
     def test_preflight_blocks_without_owner_confirmation(self):
         result = live.build_live_preflight(
@@ -61,31 +61,6 @@ class LivePreflightTests(unittest.TestCase):
         self.assertEqual(result["api_request_ceiling"], 1)
         self.assertEqual(result["retry_ceiling"], 0)
 
-    def test_replacement_preflight_is_ready_only_for_preserved_401_incident(self):
-        result = live.build_live_preflight(
-            env=self.env(),
-            account_limits_recorded=True,
-            evidence_root_ignored=True,
-            duplicate_exists=True,
-            replacement_allowed=True,
-            owner_confirmation=live.REPLACEMENT_CONFIRMATION_PHRASE,
-        )
-        self.assertEqual(result["status"], "ready")
-        self.assertTrue(result["replacement_requested"])
-        self.assertTrue(result["replacement_allowed"])
-
-    def test_replacement_phrase_blocks_without_incident_state(self):
-        result = live.build_live_preflight(
-            env=self.env(),
-            account_limits_recorded=True,
-            evidence_root_ignored=True,
-            duplicate_exists=True,
-            replacement_allowed=False,
-            owner_confirmation=live.REPLACEMENT_CONFIRMATION_PHRASE,
-        )
-        self.assertIn("duplicate_request_detected", result["blockers"])
-        self.assertIn("replacement_request_not_authorized_by_incident_state", result["blockers"])
-
 
 class RegistryTests(unittest.TestCase):
     def test_reservation_blocks_duplicate(self):
@@ -104,32 +79,6 @@ class RegistryTests(unittest.TestCase):
             path.write_text("[]", encoding="utf-8")
             with self.assertRaises(core.ProbeBlocked):
                 live.duplicate_attempt_exists(path)
-
-    def test_preserved_401_allows_exactly_one_replacement_reservation(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / "registry.json"
-            recipe = live.get_recipe(live.LIVE_RECIPE_ID)
-            incident = {
-                "version": "1",
-                "attempts": [
-                    {
-                        "probe_id": live.REPLACEMENT_INCIDENT_PROBE_ID,
-                        "recipe_id": live.LIVE_RECIPE_ID,
-                        "request_sha256": recipe.request_sha256(),
-                        "duplicate_prevention_key": recipe.duplicate_key(),
-                        "status": "provider_authentication_error",
-                        "http_status": 401,
-                        "retry_permitted": False,
-                    }
-                ],
-            }
-            path.write_text(json.dumps(incident), encoding="utf-8")
-            with patch.object(core, "EVIDENCE_ROOT", Path(tmp)):
-                self.assertTrue(live.replacement_attempt_allowed(path))
-                live.reserve_attempt("replacement-one", path, replacement_for=live.REPLACEMENT_INCIDENT_PROBE_ID)
-                self.assertFalse(live.replacement_attempt_allowed(path))
-                with self.assertRaises(core.ProbeBlocked):
-                    live.reserve_attempt("replacement-two", path, replacement_for=live.REPLACEMENT_INCIDENT_PROBE_ID)
 
 
 class HttpRequestTests(unittest.TestCase):

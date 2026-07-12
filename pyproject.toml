@@ -6,19 +6,19 @@ requires-python = ">=3.11"
 dependencies = []
 
 [tool.observatory]
-status = "m13-dataforseo-campaign-fixture-only"
+status = "m14-read-contract-planning"
 first_slice = "C2 Controlled Public Manual Observation Package"
-probe = "DataForSEO one-shot fixture-only safety cage"
-campaign = "M13 staged exploratory provider validation"
+probe = "M13 DataForSEO one-shot tooling retained and disarmed"
+campaign = "M13 closed; no additional provider request authorized"
 campaign_budget_usd = 50
-network = "disabled"
-provider_execution = "disabled"
+network_implementation = "present_but_disarmed"
+provider_execution = "disabled_after_m13_closure"
 provider_funding = "owner-reports-available"
-providers = "candidate-catalog-only"
+providers = "dataforseo-c00-narrowly-validated-no-new-execution"
 customer_data = "disabled"
 postgres = "disabled"
 schema_migrations = "disabled"
-api_mcp = "disabled"
+api_mcp = "planning_only"
 dashboard = "disabled"
 strategy_storage = "disabled"
 

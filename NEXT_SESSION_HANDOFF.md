@@ -1,15 +1,15 @@
 # Next Session Handoff - The Observatory
 
 Status: authority
-Authority: fresh-session handoff
-Purpose: preserve current state after M12 closure and M13 activation
-Last updated: 2026-07-10
+Authority: fresh-session handoff pointer; `ACTIVE_CONTEXT.md` owns current phase truth
+Purpose: preserve current state after M13 closure and M14 planning activation
+Last updated: 2026-07-12
 
 ---
 
 ## Current State
 
-The Observatory is in provider admission and controlled pull planning.
+The Observatory is in M14 typed read API / MCP contract planning.
 
 Closed milestones:
 
@@ -27,19 +27,20 @@ Closed milestones:
 - M10 - Schema Planning Only
 - M11 - Implementation Foundation
 - M12 - First Evidence Slice Build
+- M13 - Provider Admission and Controlled Pull Plan
 
 Active milestone:
 
 ```text
-M13 - Provider Admission and Controlled Pull Plan
+M14 - Typed Read API / MCP Contract and Prototype
 ```
 
-M1 created the roadmap, M2 created approved folders/indexes, M3 preserved planning source docs, M4 hardened boundary law, M5 planned research gates, M6 executed all 13 research gates, M7 drafted/indexed all 13 planned non-schema contracts, M8 drafted/indexed the hammer matrix and acceptance-gate policy, M9 accepted C2 as the first evidence slice, M10 accepted logical schema planning for C2, M11 accepted implementation foundation expectations, and M12 accepted the bounded local C2 first evidence slice. The repo is still not ready for provider pulls, provider purchases, API/MCP exposure, dashboard work, capture runners, customer-data work, marketplace scraping, recurring capture, or broad implementation.
+M13 completed one tightly governed DataForSEO C00 pull, reconciled cost at $0.002, reviewed the payload shape, preserved the 401 incident, and purged raw payload evidence with proof. M14 is active for planning only. No production API/MCP, Postgres, schema, migrations, live ingestion, additional paid provider request, customer data, recurring capture, dashboard, report, or strategy/recommendation storage is authorized.
 
-The next milestone after M13 is:
+Current audit-response authority:
 
 ```text
-M14 - Typed Read API / MCP Contract and Prototype
+planning-inbox/post-m13-deep-audit-response-2026-07-12.md
 ```
 
 ---
