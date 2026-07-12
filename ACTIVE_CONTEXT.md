@@ -12,37 +12,37 @@ Last updated: 2026-07-12
 The Observatory is in:
 
 ```text
-M16 provider cross-check proof planning
+M17 owned telemetry overlay proof planning
 ```
 
-M15 is closed after acceptance of the SearchClarity proof-workflow contract, explicit consumer-boundary rulings, one bounded synthetic fixture-backed implementation, and owner-local proof that all 156 tests pass. M16 is active for planning only: provider disagreement representation, comparability and incomparability rules, capture-time-distance warnings, provider attribution, proprietary metric caveats, hostile-path criteria, and an exact bounded fixture-proof proposal. No provider calls, purchases, recurring capture, truth scores, provider winner logic, customer data, reports, overlays, Postgres, schema, migrations, production API/MCP, or production integration is authorized.
+M16 is closed after acceptance of the provider cross-check contract and rulings, one bounded synthetic fixture-backed implementation, and owner-local proof that all 167 tests pass. M17 is active for planning only: ephemeral owned/internal or customer first-party overlay boundaries, alignment with Observatory evidence, no-storage behavior, hostile-path criteria, and an exact bounded synthetic proof proposal. No real private analytics, customer identity, screenshots/files/exports, overlay persistence, canonical ingestion, provider calls, Postgres, schema, migrations, production API/MCP, report generation, or production integration is authorized.
 
 ---
 
 ## Active Milestone
 
 ```text
-M16 - Provider Cross-Check Proof
+M17 - Owned Telemetry Overlay Proof
 ```
 
-M0, M0.1, and M1 through M15 are complete and committed.
+M0, M0.1, and M1 through M16 are complete and committed.
 
 ---
 
 ## Current Task
 
-Begin M16 with repo-first reconciliation of provider-testimony, provider-cross-check, freshness, claim-safety, typed-read, and consumer contracts before any proof implementation.
+Begin M17 with repo-first reconciliation of overlay, scope-rights-retention, claim-safety, typed-read, SearchClarity, and no-persistence boundaries before any proof implementation.
 
-Current M16 work is allowed to:
+Current M17 work is allowed to:
 
-- define provider disagreement and comparability proof requirements;
-- define capture-time-distance, context-alignment, and methodology warnings;
-- define provider-attributed side-by-side evidence output without winners or averages;
-- define proprietary metric labeling and provider-personality/profile notes as caveated testimony metadata;
-- define hostile-path tests for truth-provider claims, winner logic, averaging, composite scores, and disagreement erasure;
-- define one exact bounded fixture-backed proof-task proposal after contract and owner gates.
+- define ephemeral overlay request and discard behavior;
+- define alignment of synthetic owned/internal or customer first-party series against Observatory evidence;
+- define no-storage, no-cache, no-log, and no-evidence-promotion requirements;
+- define output caveats and consumer-promotion boundaries;
+- define hostile-path tests for private-data persistence, identity leakage, file intake, overlay laundering, and scope mixing;
+- define one exact bounded synthetic fixture-backed proof-task proposal after contract and owner gates.
 
-M16 does not authorize new provider calls, DataForSEO requests, Ahrefs or Semrush purchases, provider credentials, recurring cross-provider capture, truth scores, provider winner logic, composite scores, customer data, customer reports, real overlays, Postgres, schema, migrations, production API/MCP deployment, production integrations, strategy storage, recommendation storage, or automatic conclusion promotion.
+M17 does not authorize real customer first-party analytics, owned/private telemetry intake, customer identity, screenshots, CSV/PDF exports, external files, overlay persistence or caching, canonical ingestion, provider calls, recurring capture, customer reports, Postgres, schema, migrations, production API/MCP deployment, production integrations, strategy storage, recommendation storage, or automatic conclusion promotion.
 
 ---
 
@@ -112,12 +112,13 @@ Closed:
 - M13 - Provider Admission and Controlled Pull Plan
 - M14 - Typed Read API / MCP Contract and Prototype
 - M15 - SearchClarity Proof Workflow
+- M16 - Provider Cross-Check Proof
 
 Active:
 
-- M16 - Provider Cross-Check Proof
+- M17 - Owned Telemetry Overlay Proof
 
-Next after M16:
+Next after M17:
 
 ```text
 Follow the accepted roadmap sequence; no later milestone is activated by this context file.

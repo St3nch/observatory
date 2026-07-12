@@ -124,8 +124,8 @@ If required reading includes a folder, that folder must have a `README.md` index
 | M13 | Provider Admission and Controlled Pull Plan | closed | One controlled DataForSEO probe completed, reviewed, and purged with proof |
 | M14 | Typed Read API / MCP Contract and Prototype | complete | Accepted typed-read contract plus bounded fixture/in-memory prototype proof |
 | M15 | SearchClarity Proof Workflow | complete | Accepted SearchClarity contract plus bounded synthetic fixture/in-memory proof |
-| M16 | Provider Cross-Check Proof | active for planning only | Prove provider disagreement as first-class evidence |
-| M17 | Owned Telemetry Overlay Proof | planned | Prove read-time overlay without storing customer first-party data |
+| M16 | Provider Cross-Check Proof | complete | Accepted provider cross-check contract plus bounded synthetic fixture/in-memory proof |
+| M17 | Owned Telemetry Overlay Proof | active for planning only | Prove read-time overlay without storing customer first-party data |
 | M18 | Recurring Watch Panel Planning | planned | Plan recurring capture only after provider/cost/hammers exist |
 | M19 | Hardening, Backup, Recovery, and Operations | planned | Make the system durable and recoverable |
 | M20 | Observatory v1 Acceptance | planned | Accept or reject v1 against doctrine, evidence, and hammers |
@@ -136,11 +136,11 @@ If required reading includes a folder, that folder must have a `README.md` index
 
 ### Milestone ID
 
-M16
+M17
 
 ### Name
 
-Provider Cross-Check Proof
+Owned Telemetry Overlay Proof
 
 ### Status
 
@@ -148,58 +148,52 @@ active for planning only
 
 ### Purpose
 
-Define how provider disagreement can be represented, compared, and read as evidence without making any provider truth, choosing a winner, averaging unlike values, or creating composite scores.
+Define how synthetic owned/internal or customer first-party telemetry may be supplied ephemerally at read time, aligned against Observatory evidence, and discarded without becoming canonical Observatory data.
 
-M16 consumes the accepted provider-testimony and provider-cross-check contracts, freshness and claim-safety rules, M14 typed-read outputs, the closed M15 consumer boundary, and admitted sanitized provider evidence. It may plan comparability rules, capture-time-distance warnings, proprietary metric labels, provider-attributed side-by-side outputs, disagreement read shapes, hostile-path criteria, and one exact bounded fixture-proof proposal.
+M17 consumes the accepted overlay, scope-rights-retention, claim-safety, typed-read, SearchClarity, and no-persistence boundaries. It may plan closed overlay request shapes, synthetic alignment behavior, discard guarantees, no-storage hammers, consumer-promotion rules, and one exact bounded fixture-proof proposal.
 
 ### Required Reading
 
 - `ACTIVE_CONTEXT.md`
-- `decisions/2026-07-12-m15-closure-and-m16-activation.md`
-- `contracts/provider-testimony.md`
-- `contracts/provider-cross-check.md`
-- `contracts/freshness-staleness-volatility.md`
+- `decisions/2026-07-12-m16-closure-and-m17-activation.md`
+- `contracts/overlay.md`
+- `contracts/scope-rights-retention.md`
 - `contracts/claim-safety.md`
 - `contracts/typed-read-api-mcp-v0-1.md`
 - `contracts/searchclarity-proof-workflow-v0-1.md`
-- `planning-inbox/m15-searchclarity-proof-closure-readiness-review.md`
-- `research/rg9-provider-cross-check-disagreement-model.md`
+- `planning-inbox/m16-provider-cross-check-closure-readiness-review.md`
 - `hammers/hammer-matrix-v0-1.md`
 
 ### Allowed Work
 
-- provider disagreement and comparability contract reconciliation;
-- capture-time-distance and context-alignment warning design;
-- provider-attributed side-by-side evidence output planning;
-- proprietary metric labels and methodology caveats;
-- provider personality/profile notes as caveated testimony metadata;
-- disagreement read-shape and consumer-warning planning;
-- hostile-path tests for truth-provider claims, winner logic, averaging, composite scores, and disagreement erasure;
-- exact bounded fixture-proof task proposals after contract and owner gates are satisfied.
+- ephemeral overlay request and discard contract reconciliation;
+- synthetic owned/internal or customer first-party series modeling;
+- alignment against admitted Observatory evidence without promotion into canonical storage;
+- no-storage, no-cache, no-log, and no-evidence-ID behavior;
+- caveat and consumer-promotion requirements;
+- hostile-path tests for private-data persistence, identity leakage, file intake, overlay laundering, and cross-scope mixing;
+- exact bounded synthetic fixture-proof task proposals after contract and owner gates are satisfied.
 
 ### Forbidden Work
 
-- new provider calls or DataForSEO requests;
-- Ahrefs or Semrush purchases, credentials, or execution;
-- recurring cross-provider capture;
-- truth scores, provider winner logic, averaging into truth, or composite scores;
-- customer data, customer reports, or real overlays;
-- production API/MCP deployment or production integrations;
+- real customer first-party analytics or owned/private telemetry intake;
+- customer identity, account records, screenshots, CSV/PDF exports, or external files;
+- overlay persistence, caching, durable logs, evidence promotion, or canonical ingestion;
+- customer report generation or production consumer integration;
+- provider calls or recurring capture;
+- production API/MCP deployment;
 - Postgres creation, physical schema, or migrations;
 - strategy/recommendation storage or automatic conclusion promotion.
 
 ### Blockers
 
-- The accepted provider contracts must be reconciled into an exact M16 proof contract before implementation.
-- Comparability and incomparability behavior must fail closed when method, scope, time, locale, device, metric definition, or source context do not align.
+- The accepted overlay and no-storage boundaries must be reconciled into an exact M17 proof contract before implementation.
+- Synthetic proof inputs must contain no real customer identity, private analytics, files, screenshots, exports, or external references.
 - Any bounded proof task requires a separate exact owner authorization.
-- Any real provider work requires a separate provider-admission and spend decision.
 
-### M16 Progress Log
+### M17 Progress Log
 
-2026-07-12 — M16 planning activated by `decisions/2026-07-12-m15-closure-and-m16-activation.md` after bounded M15 closure proof.
-2026-07-12 — Full provider cross-check proof contract, owner-ruling proposals, hostile-path plan, exact synthetic fixture-proof task proposal, and reconciliation review drafted from accepted repo authority.
-2026-07-12 — M16 provider cross-check proof contract and rulings accepted; exact synthetic proof implementation remains separately gated.
+2026-07-12 — M17 planning activated by `decisions/2026-07-12-m16-closure-and-m17-activation.md` after bounded M16 closure proof.
 
 ---
 
@@ -1053,7 +1047,7 @@ Next milestone: M16
 
 ### M16 - Provider Cross-Check Proof
 
-Status: active for planning only — activated by `decisions/2026-07-12-m15-closure-and-m16-activation.md`
+Status: complete — closed by `decisions/2026-07-12-m16-closure-and-m17-activation.md`
 
 Purpose:
 Prove provider disagreement can be represented and read without making any provider truth.
@@ -1097,7 +1091,7 @@ Next milestone: M17
 
 ### M17 - Owned Telemetry Overlay Proof
 
-Status: planned
+Status: active for planning only — activated by `decisions/2026-07-12-m16-closure-and-m17-activation.md`
 
 Purpose:
 Prove read-time overlay behavior for owned/internal or customer first-party series without contaminating Observatory storage.
