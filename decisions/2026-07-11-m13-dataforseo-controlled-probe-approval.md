@@ -8,6 +8,9 @@ Related files:
 
 - `planning-inbox/m13-dataforseo-admission-and-probe-plan.md`
 - `planning-inbox/m13-dataforseo-probe-plan-review.md`
+- `planning-inbox/m13-dataforseo-probe-cli-requirements.md`
+- `planning-inbox/m13-dataforseo-official-verification-2026-07-11.md`
+- `planning-inbox/m13-controlled-probe-approval-readiness-review.md`
 - `research/rg1-dataforseo-rights-retention-cost.md`
 - `research/rg10-capturepackage-v0-1-inputs.md`
 - `research/rg11-raw-archive-provider-drift.md`
@@ -67,6 +70,33 @@ The M13 probe plan and review concluded that a tiny DataForSEO response-shape pr
 The purpose of the proposed probe is not to collect useful SEO intelligence. It is to inspect one real provider response envelope and payload shape before later persistence or schema decisions.
 
 Provider output remains testimony, not truth. Raw JSON remains probe evidence, not schema approval.
+
+## Official Verification Status — 2026-07-11
+
+Fresh official verification confirmed:
+
+```text
+endpoint exists
+live advanced is a one-request flow with one task per call
+keyword, location_code, language_code, device, os, and depth fields are valid
+location_code 2840 and language_code en remain official examples
+desktop/windows is a valid pairing
+depth 10 is valid and avoids the documented above-10 surcharge risk
+minimum payment remains $50
+identical tasks remain a documented user-side error
+provider-side API task retention remains 365 days
+SERP usage restrictions remain in current Terms
+```
+
+The exact current price for the exact proposed request was not reliably available in retrievable official page text.
+
+Therefore this proposal remains blocked from acceptance for execution until:
+
+```text
+the official pricing calculator or authenticated account interface confirms the exact request cannot exceed $0.10
+```
+
+All unnamed optional fields must be omitted. No optional cost-bearing feature may be enabled. Top-level and task-level response cost fields must both be recorded.
 
 ---
 

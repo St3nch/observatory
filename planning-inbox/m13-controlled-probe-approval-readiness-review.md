@@ -6,6 +6,7 @@ Milestone: M13 — Provider Admission and Controlled Pull Plan
 Date: 2026-07-11
 Reviewed decision proposal: `decisions/2026-07-11-m13-dataforseo-controlled-probe-approval.md`
 Reviewed CLI requirements: `planning-inbox/m13-dataforseo-probe-cli-requirements.md`
+Reviewed official verification: `planning-inbox/m13-dataforseo-official-verification-2026-07-11.md`
 
 ---
 
@@ -82,7 +83,9 @@ The package now contains:
 - explicit hammer expectations;
 - no Postgres, schema, migration, API/MCP, dashboard, customer, recurring, or strategy scope.
 
-The remaining unknowns are intentionally external and time-sensitive. They must be freshly verified before the owner can safely accept the proposal or before funding occurs.
+Fresh official verification on 2026-07-11 confirmed the endpoint, one-live-request shape, proposed request fields, current $50 minimum payment, duplicate-task warning, provider-side 365-day retention statement, and relevant SERP usage restriction.
+
+One material blocker remains: the exact current price for the exact proposed request was not reliably exposed in retrievable official page text. Owner acceptance for execution must remain blocked until the official pricing calculator or authenticated account interface confirms the request cannot exceed the proposed $0.10 ceiling.
 
 ---
 
