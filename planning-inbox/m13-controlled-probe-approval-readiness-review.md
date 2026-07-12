@@ -85,7 +85,7 @@ The package now contains:
 
 Fresh official verification on 2026-07-11 confirmed the endpoint, one-live-request shape, proposed request fields, current $50 minimum payment, duplicate-task warning, provider-side 365-day retention statement, and relevant SERP usage restriction.
 
-One material blocker remains: the exact current price for the exact proposed request was not reliably exposed in retrievable official page text. Owner acceptance for execution must remain blocked until the official pricing calculator or authenticated account interface confirms the request cannot exceed the proposed $0.10 ceiling.
+One material pre-submit blocker remains: the exact current price for the exact proposed request was not reliably exposed in retrievable official page text. Per the owner's 2026-07-12 timing ruling, price confirmation may occur after credits are added, but the official calculator or authenticated account interface must still confirm the request cannot exceed the proposed $0.10 ceiling before submission.
 
 ---
 

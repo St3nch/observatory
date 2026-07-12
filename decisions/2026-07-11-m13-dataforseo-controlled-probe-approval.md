@@ -90,11 +90,13 @@ SERP usage restrictions remain in current Terms
 
 The exact current price for the exact proposed request was not reliably available in retrievable official page text.
 
-Therefore this proposal remains blocked from acceptance for execution until:
+Owner timing ruling recorded 2026-07-12:
 
 ```text
-the official pricing calculator or authenticated account interface confirms the exact request cannot exceed $0.10
+Exact request pricing may be verified after credits are added, using the authenticated account interface or official calculator, but it must be confirmed before the paid request is sent.
 ```
+
+This timing ruling does not itself accept this proposed decision or authorize funding, CLI implementation, credentials, or a provider request.
 
 All unnamed optional fields must be omitted. No optional cost-bearing feature may be enabled. Top-level and task-level response cost fields must both be recorded.
 

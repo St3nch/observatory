@@ -315,11 +315,13 @@ Disposition:
 Exact current request price remains unresolved.
 ```
 
-Required owner-gate behavior:
+Owner timing ruling recorded 2026-07-12:
 
 ```text
-Do not accept the decision for execution until the official pricing calculator or authenticated account interface confirms that the exact proposed request cannot exceed the $0.10 ceiling.
+Exact request pricing may be verified after the owner adds credits, using the authenticated account interface or official calculator, but it must still be confirmed before any paid request is sent.
 ```
+
+This timing ruling does not itself authorize funding, use of existing credits, CLI implementation, credentials, or a provider request.
 
 The verification record must preserve:
 
@@ -416,10 +418,10 @@ That posture remains proposed, not approved.
 
 No endpoint or request-field correction is required based on the current official endpoint documentation.
 
-One acceptance blocker must remain explicit:
+One pre-submit blocker must remain explicit:
 
 ```text
-Exact current price for the exact proposed request must be verified through the official calculator or account interface before owner acceptance for execution.
+Exact current price for the exact proposed request must be verified through the official calculator or authenticated account interface after funding if necessary, but before any request is sent.
 ```
 
 Recommended clarification for later decision acceptance:
@@ -453,10 +455,11 @@ provider-side 365-day retention evidence
 narrow internal-use posture
 ```
 
-### Still unresolved before owner acceptance for execution
+### Still unresolved before funding or execution
 
 ```text
-exact current calculated price for the exact proposed request
+owner acceptance of funding and the narrow probe decision
+exact current calculated price for the exact proposed request before submission
 confirmation that location_code 2840 remains the intended United States context at execution time
 account-level repetitive-task/spend-control configuration
 owner acceptance of the temporary local capture-and-purge posture
