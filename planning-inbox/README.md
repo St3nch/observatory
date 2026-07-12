@@ -47,13 +47,15 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-Active M18 package:
+Active M19 package:
 
-- `m18-recurring-watch-panel-reconciliation-review.md` — repo-first reconciliation of provider, cost, rights, recipe, freshness, panel, and hammer gates
-- `m18-watch-panel-policy-v0-1.md` — bounded membership, cadence, budget, duplicate-prevention, stop-condition, review-gate, and warning policy
-- `m18-owner-ruling-proposals.md` — explicit v1 no-execution recommendation and minimum policy rulings
+- `m19-hardening-reconciliation-review.md` — actual repository/evidence-footprint reconciliation against raw archive, retention, purge, secret, and restore boundaries
+- `m19-backup-restore-policy-v0-1.md` — repository-only manual encrypted-backup, retention-generation, and disposable-restore policy proposal
+- `m19-operations-risk-and-runbook-plan.md` — operational risk register, secret review, raw inventory, purge-proof, backup, restore, and incident-stop runbooks
+- `m19-owner-ruling-proposals.md` — protected-unit, manual-backup, restore-proof, secret-review, cleanup, and bounded-proof proposals
+- `m19-bounded-backup-restore-proof-task-proposal.md` — exact local repository archive/restore proof proposal; not implementation authority
 
-Completed M17, M16, M15, and M14 packages remain available below for lineage and proof context.
+Completed M18, M17, M16, M15, and M14 packages remain available below for lineage and proof context.
 
 Then read:
 
