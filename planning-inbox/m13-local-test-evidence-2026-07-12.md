@@ -37,7 +37,14 @@ Ran 114 tests in 0.110s
 OK
 ```
 
-The latest full run includes the existing C2 first-slice tests, DataForSEO probe hostile paths, campaign catalog tests, and nine evidence-package organization tests.
+Guarded C00 live-execution readiness proof:
+
+```text
+Ran 126 tests in 0.148s
+OK
+```
+
+The latest full run includes the existing C2 first-slice tests, DataForSEO probe hostile paths, campaign catalog tests, evidence-package organization tests, and guarded live-execution tests covering credential handling, duplicate reservation, timeout/no-retry behavior, fixed endpoint construction, authorization gating, and automatic evidence packaging.
 
 ## Observed Fail-Closed Output
 
@@ -109,10 +116,11 @@ raw provider evidence
 
 ```text
 Fixture-only implementation tests: passed locally
-Latest tests run: 114
+Latest tests run: 126
 Failures: 0
 Errors: 0
 Paid-evidence organization tests: passed
+Guarded live-execution tests: passed
 Network execution: still disabled
 Account funding and controls: evidenced separately
 Provider request: still not authorized
