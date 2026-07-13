@@ -135,12 +135,12 @@ If required reading includes a folder, that folder must have a `README.md` index
 ## Active Milestone
 
 ```text
-DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
+DB-2 — Physical Data-Contract Freeze
 ```
 
 Observatory v1 remains accepted and M20 remains closed by `decisions/2026-07-12-observatory-v1-acceptance.md`.
 
-The owner activated post-v1 reconciliation and database-phase roadmap planning through `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`. The governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`.
+DB-1 closed and DB-2 activated through `decisions/2026-07-13-db1-closure-and-db2-activation.md`. The governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`.
 
 No Postgres creation, DDL, migration files or execution, real ingestion, provider calls, production launch, or customer/strategy persistence is authorized.
 

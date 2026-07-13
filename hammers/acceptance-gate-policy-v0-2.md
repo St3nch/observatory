@@ -1,8 +1,8 @@
 # Acceptance Gate Policy v0.2
 
-Status: DB-1 owner-ready policy candidate
-Authority: planning output subordinate to accepted decisions until separately accepted
-Milestone: DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
+Status: accepted
+Authority: database-phase acceptance policy accepted by `decisions/2026-07-13-db1-closure-and-db2-activation.md`
+Milestone: accepted at DB-1 closure; governs DB-2 through DB-10
 Supersedes for post-v1 database planning: `acceptance-gate-policy-v0-1.md`
 
 ## Purpose

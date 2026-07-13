@@ -73,9 +73,9 @@ Folder earned during M8 after M7 closure by `decisions/2026-07-10-m7-closure.md`
 | File | Status | Purpose | Notes |
 |---|---|---|---|
 | `README.md` | index | Explains hammer folder scope, rules, and reading order | Updated for DB-1 policy candidates |
-| `hammer-matrix-v0-2.md` | owner-ready policy candidate | Carries H1-H22 into DB-1 through DB-10 with accepted proof classes and real-substrate gates | Does not claim execution or authorize database work |
-| `acceptance-gate-policy-v0-2.md` | owner-ready policy candidate | Defines database-phase closure gates, required proof classes, blocked outcomes, and authority controls | Incorporates accepted OR-B1 and OR-B2 rulings |
-| `per-hammer-result-register-v0-1.md` | owner-ready contract candidate | Defines immutable per-execution proof metadata and validation rules | Repository proof metadata only; not Observatory evidence |
+| `hammer-matrix-v0-2.md` | accepted policy | Carries H1-H22 into DB-2 through DB-10 with accepted proof classes and real-substrate gates | Accepted by the DB-1 closure decision; does not claim execution |
+| `acceptance-gate-policy-v0-2.md` | accepted policy | Defines database-phase closure gates, required proof classes, blocked outcomes, and authority controls | Accepted by the DB-1 closure decision |
+| `per-hammer-result-register-v0-1.md` | accepted contract | Defines immutable per-execution proof metadata and validation rules | Repository proof metadata only; not Observatory evidence |
 | `hammer-matrix-v0-1.md` | historical draft | First M8 hostile-path hammer matrix and milestone-gate mapping | Preserved as the v0.1 planning baseline |
 | `acceptance-gate-policy-v0-1.md` | historical draft | M8 acceptance levels, milestone defaults, and first-slice filter | Preserved as the v0.1 planning baseline |
 | `../planning-inbox/m8-hammer-planning-review.md` | historical planning review | Reviews M8 readiness and closure posture without claiming hammer execution | Advisory note; not authority |
@@ -115,6 +115,6 @@ If a hammer would require unresolved owner approval, mark it blocked/fail-closed
 ```text
 Last reviewed: 2026-07-13
 Reviewer: ChatGPT / Observatory Steward
-Result: Added DB-1 owner-ready hammer matrix v0.2, acceptance-gate policy v0.2, and per-hammer result-register contract v0.1; preserved v0.1 as historical planning baseline
-Open issues: Owner review/acceptance of the DB-1 policy package; OR-B3 remains governed by the later accepted report-blocking rulings and must not be broadened silently
+Result: Hammer matrix v0.2, acceptance-gate policy v0.2, and per-hammer result-register contract v0.1 accepted at DB-1 closure; v0.1 preserved as historical baseline
+Open issues: No database hammer has executed; DB-2 consumes policy as logical design constraints only
 ```

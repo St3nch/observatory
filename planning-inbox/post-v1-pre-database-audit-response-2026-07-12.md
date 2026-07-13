@@ -1,6 +1,6 @@
 # Post-v1 / Pre-Database Audit Response Tracker
 
-Status: active planning authority for audit routing only; subordinate to accepted decisions and root boundaries
+Status: closed DB-1 audit-routing record; subordinate to accepted decisions and root boundaries
 Date: 2026-07-12
 Audit: `audits/observatory-post-v1-pre-database-deep-audit-2026-07-12.md`
 Acceptance decision: `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`

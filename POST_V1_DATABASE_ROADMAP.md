@@ -26,7 +26,7 @@ No milestone implies the next milestone.
 
 ```text
 Observatory v1: accepted at bounded proof-system ceiling
-Active milestone: DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
+Active milestone: DB-2 — Physical Data-Contract Freeze
 Postgres creation: not authorized
 DDL: not authorized
 Migration execution: not authorized
@@ -38,8 +38,8 @@ Migration execution: not authorized
 
 | ID | Name | Status | Main gate |
 |---|---|---|---|
-| DB-1 | Post-v1 Audit Reconciliation and Ruling Closure | active | Audit findings routed; typed-read/document corrections; OR-B1/B2/C2/C4 ready or ruled |
-| DB-2 | Physical Data-Contract Freeze | planned | One accepted logical contract and forbidden-persistence register |
+| DB-1 | Post-v1 Audit Reconciliation and Ruling Closure | closed | Audit findings routed; corrections and rulings accepted; DB-2 package prepared |
+| DB-2 | Physical Data-Contract Freeze | active | One accepted logical contract and forbidden-persistence register |
 | DB-3 | Postgres Operational Boundary and Physical Schema Specification | planned | Instance/role/credential/backup rulings plus accepted physical specification; no execution |
 | DB-4 | Database Hammer Harness and Migration Specification | planned | Disposable real-Postgres harness can fail; migration/rollback specifications ready |
 | DB-5 | Governed Local Database Bootstrap and Migration Execution | planned | Separate owner execution gate; migration hammers pass |
@@ -51,7 +51,7 @@ Migration execution: not authorized
 
 ---
 
-# Active milestone
+# Closed milestone
 
 ## DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
 
@@ -116,6 +116,8 @@ strategy or recommendation persistence
 DB-2 activation requires a separate owner decision.
 
 ---
+
+# Active milestone
 
 ## DB-2 — Physical Data-Contract Freeze
 

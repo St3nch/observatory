@@ -22,25 +22,25 @@ Observatory v1 remains accepted at the bounded proof-system ceiling by `decision
 ## Active Milestone
 
 ```text
-DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
+DB-2 — Physical Data-Contract Freeze
 ```
 
-M0, M0.1, and M1 through M20 remain complete and committed. DB-1 is the first post-v1 planning milestone.
+M0, M0.1, M1 through M20, and DB-1 are complete and committed. DB-2 is active by `decisions/2026-07-13-db1-closure-and-db2-activation.md`.
 
 ---
 
 ## Current Task
 
-DB-1 deliverables are complete and reconciled. The current task is owner review of:
+Execute DB-2 as logical-contract work only:
 
-- `hammers/hammer-matrix-v0-2.md`;
-- `hammers/acceptance-gate-policy-v0-2.md`;
-- `hammers/per-hammer-result-register-v0-1.md`;
-- `planning-inbox/db2-physical-data-contract-freeze-specification.md`;
-- `planning-inbox/db1-closure-readiness-review.md`;
-- `planning-inbox/db1-closure-and-db2-activation-owner-gate.md`.
+- reconcile the accepted physical data-contract freeze against all accepted contracts and rulings;
+- resolve or explicitly preserve any remaining `unresolved` classifications;
+- verify every durable, append-only, versioned, derived, ephemeral, external, and forbidden concept;
+- verify identity ownership, lifecycle, provenance, scope, rights, retention, write authority, read exposure, and hammer implications;
+- keep the forbidden-persistence register complete;
+- prepare DB-2 closure readiness and the separate DB-3 planning gate.
 
-DB-1 remains active until the owner explicitly closes it. DB-2 remains inactive until the owner separately activates it.
+DB-3 remains inactive until a separate owner decision.
 
 Postgres creation, DDL, migration files, migration execution, database credentials, real ingestion, provider calls, and production work remain unauthorized.
 

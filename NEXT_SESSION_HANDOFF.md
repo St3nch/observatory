@@ -14,16 +14,16 @@ The Observatory is accepted at the bounded v1 proof-system ceiling, and the post
 Closed milestones:
 
 ```text
-M0, M0.1, and M1 through M20
+M0, M0.1, M1 through M20, and DB-1
 ```
 
 Active milestone:
 
 ```text
-DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
+DB-2 — Physical Data-Contract Freeze
 ```
 
-The owner accepted Observatory v1 through `decisions/2026-07-12-observatory-v1-acceptance.md`, accepted the post-v1 audit, activated the database roadmap, and accepted the DB-1 contract corrections plus OR-B1/OR-B2/OR-C2/OR-C4 rulings. The accepted v1 system remains local, evidence-only, bounded, and not production-ready or feature-complete.
+The owner accepted the DB-1 hammer-policy package and DB-2 logical freeze, closed DB-1, and activated DB-2 through `decisions/2026-07-13-db1-closure-and-db2-activation.md`. The accepted v1 system remains local, evidence-only, bounded, and not production-ready or feature-complete.
 
 Current authority:
 
@@ -31,6 +31,7 @@ Current authority:
 decisions/2026-07-12-observatory-v1-acceptance.md
 decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md
 decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md
+decisions/2026-07-13-db1-closure-and-db2-activation.md
 POST_V1_DATABASE_ROADMAP.md
 ```
 
@@ -106,38 +107,34 @@ When using `ob-dev`:
 ## Roadmap State
 
 ```text
-M0, M0.1, and M1 through M20: closed
-DB-1 — Post-v1 Audit Reconciliation and Ruling Closure: active
-DB-2 through DB-10: planned and inactive
+M0, M0.1, M1 through M20, and DB-1: closed
+DB-2 — Physical Data-Contract Freeze: active
+DB-3 through DB-10: planned and inactive
 ```
 
 The governing sequence is `POST_V1_DATABASE_ROADMAP.md`. No database milestone implies the next milestone.
 
-Current DB-1 progress:
+Accepted DB-1 closure state:
 
 - typed-read and SearchClarity v0.1.1 corrections accepted;
-- owner-local 188-test corrective proof accepted only as `owner_local_process_pass`;
+- owner-local 188-test corrective proof remains only `owner_local_process_pass`;
 - OR-B1, OR-B2, OR-C2, and OR-C4 accepted;
-- ob-dev database-control-plane requirements committed and assigned to DB-3/DB-4;
-- hammer matrix v0.2, acceptance-gate policy v0.2, and per-hammer result-register contract v0.1 drafted as owner-ready candidates;
-- DB-2 physical data-contract-freeze specification and readiness review are drafted as owner-ready candidates; DB-2 remains inactive pending a separate owner decision;
-- DB-1 closure-readiness review reconciles every exit criterion and reports `ready_for_owner_decision`;
-- exact owner options are recorded in `planning-inbox/db1-closure-and-db2-activation-owner-gate.md`.
+- hammer matrix v0.2, acceptance-gate policy v0.2, and per-hammer result-register contract v0.1 accepted;
+- DB-2 physical data-contract freeze accepted;
+- DB-1 closed by `decisions/2026-07-13-db1-closure-and-db2-activation.md`.
 
 ---
 
 ## Immediate Next Steps
 
-DB-1 is ready for the owner's decision:
+Execute DB-2 logical-contract work only:
 
-1. accept or revise hammer matrix v0.2;
-2. accept or revise acceptance-gate policy v0.2;
-3. accept or revise per-hammer result-register contract v0.1;
-4. accept or revise the DB-2 physical data-contract freeze;
-5. close DB-1 or return the package for revision;
-6. separately activate DB-2 or leave it inactive.
+1. reconcile the accepted freeze against all accepted contracts and rulings;
+2. resolve or explicitly preserve remaining unresolved classifications;
+3. verify identity, lifecycle, provenance, scope, rights, retention, write authority, read exposure, and hammer mappings;
+4. prepare DB-2 closure readiness and a separate DB-3 planning gate.
 
-Do not treat readiness as closure. Do not activate DB-2 until the owner records the exact decision.
+Do not begin physical schema specification or activate DB-3 without a separate owner decision.
 
 ---
 

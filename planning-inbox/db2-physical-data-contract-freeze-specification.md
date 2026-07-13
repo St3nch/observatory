@@ -1,9 +1,9 @@
 # DB-2 Physical Data-Contract Freeze Specification
 
-Status: owner-ready DB-1 planning candidate; DB-2 is not active
+Status: accepted DB-2 logical data-contract freeze
 Date: 2026-07-13
-Prepared under: DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
-Future milestone: DB-2 — Physical Data-Contract Freeze
+Accepted by: `decisions/2026-07-13-db1-closure-and-db2-activation.md`
+Active milestone: DB-2 — Physical Data-Contract Freeze
 
 ## Purpose
 

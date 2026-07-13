@@ -47,16 +47,16 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-Active DB-1 package:
+Active DB-2 package and closed DB-1 lineage:
 
 - `post-v1-pre-database-audit-response-2026-07-12.md` — complete N-01 through N-14 routing, opportunity parking, correction order, and DB-1 exit criteria
 - `db1-owner-ruling-proposals.md` — accepted OR-B1, OR-B2, OR-C2, and OR-C4 proposal source; durable authority lives in the linked decision
 - `db1-typed-read-correction-proof.md` — typed-read v0.1.1 correction scope, owner-local 188-test proof, and accepted correction status
 - `db1-ob-dev-database-control-plane-requirements.md` — explicit ob-dev PostgreSQL inspection, disposable lifecycle, migration, hammer-profile, and restore-tool requirements mapped to DB-3/DB-4; planning only
-- `db2-physical-data-contract-freeze-specification.md` — owner-ready DB-2 logical freeze candidate prepared under DB-1; classifies durable, derived, ephemeral, external, and forbidden concepts without DDL
-- `db2-physical-data-contract-freeze-readiness-review.md` — coverage and conflict review showing the freeze candidate is ready for owner review but does not activate DB-2
-- `db1-closure-readiness-review.md` — reconciles every DB-1 exit criterion and classifies the package as ready for owner decision without closing the milestone
-- `db1-closure-and-db2-activation-owner-gate.md` — exact owner options to close DB-1, optionally activate DB-2, or return the package for revision
+- `db2-physical-data-contract-freeze-specification.md` — accepted DB-2 logical freeze and active normative input; classifies durable, derived, ephemeral, external, and forbidden concepts without DDL
+- `db2-physical-data-contract-freeze-readiness-review.md` — historical DB-1 readiness review for the now-accepted freeze
+- `db1-closure-readiness-review.md` — historical closure review that reconciled every DB-1 exit criterion
+- `db1-closure-and-db2-activation-owner-gate.md` — consumed owner-gate proposal; durable authority is `decisions/2026-07-13-db1-closure-and-db2-activation.md`
 - root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence and separate permission gates
 
 Completed M20 through M14 packages remain available below for lineage and proof context.
