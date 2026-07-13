@@ -55,6 +55,8 @@ Active DB-1 package:
 - `db1-ob-dev-database-control-plane-requirements.md` — explicit ob-dev PostgreSQL inspection, disposable lifecycle, migration, hammer-profile, and restore-tool requirements mapped to DB-3/DB-4; planning only
 - `db2-physical-data-contract-freeze-specification.md` — owner-ready DB-2 logical freeze candidate prepared under DB-1; classifies durable, derived, ephemeral, external, and forbidden concepts without DDL
 - `db2-physical-data-contract-freeze-readiness-review.md` — coverage and conflict review showing the freeze candidate is ready for owner review but does not activate DB-2
+- `db1-closure-readiness-review.md` — reconciles every DB-1 exit criterion and classifies the package as ready for owner decision without closing the milestone
+- `db1-closure-and-db2-activation-owner-gate.md` — exact owner options to close DB-1, optionally activate DB-2, or return the package for revision
 - root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence and separate permission gates
 
 Completed M20 through M14 packages remain available below for lineage and proof context.

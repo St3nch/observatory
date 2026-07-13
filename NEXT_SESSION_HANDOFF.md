@@ -120,20 +120,24 @@ Current DB-1 progress:
 - OR-B1, OR-B2, OR-C2, and OR-C4 accepted;
 - ob-dev database-control-plane requirements committed and assigned to DB-3/DB-4;
 - hammer matrix v0.2, acceptance-gate policy v0.2, and per-hammer result-register contract v0.1 drafted as owner-ready candidates;
-- DB-2 physical data-contract-freeze specification and readiness review are drafted as owner-ready candidates; DB-2 remains inactive pending a separate owner decision.
+- DB-2 physical data-contract-freeze specification and readiness review are drafted as owner-ready candidates; DB-2 remains inactive pending a separate owner decision;
+- DB-1 closure-readiness review reconciles every exit criterion and reports `ready_for_owner_decision`;
+- exact owner options are recorded in `planning-inbox/db1-closure-and-db2-activation-owner-gate.md`.
 
 ---
 
 ## Immediate Next Steps
 
-Continue DB-1 only:
+DB-1 is ready for the owner's decision:
 
-1. review and accept or revise the DB-1 hammer-policy package;
-2. complete the DB-2 physical data-contract-freeze specification;
-3. reconcile remaining DB-1 trackers and indexes;
-4. prepare one DB-1 closure-readiness review and exact owner gate.
+1. accept or revise hammer matrix v0.2;
+2. accept or revise acceptance-gate policy v0.2;
+3. accept or revise per-hammer result-register contract v0.1;
+4. accept or revise the DB-2 physical data-contract freeze;
+5. close DB-1 or return the package for revision;
+6. separately activate DB-2 or leave it inactive.
 
-Do not activate DB-2 until a separate owner decision is recorded.
+Do not treat readiness as closure. Do not activate DB-2 until the owner records the exact decision.
 
 ---
 

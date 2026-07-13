@@ -101,6 +101,18 @@ DB-1 may close only when:
 - the DB-2 physical data-contract-freeze package is fully specified;
 - no Postgres, DDL, or migration execution has occurred.
 
+## DB-1 closure posture
+
+```text
+status: ready_for_owner_decision
+closure review: planning-inbox/db1-closure-readiness-review.md
+owner gate: planning-inbox/db1-closure-and-db2-activation-owner-gate.md
+DB-1: still active until explicit owner closure
+DB-2: still inactive until separate owner activation
+```
+
+Every DB-1 exit criterion has a committed evidence path. No database, DDL, migration, provider, ingestion, customer, or production action occurred.
+
 ## Non-authorizations
 
 ```text

@@ -3,7 +3,7 @@
 Status: authority
 Authority: current operating context
 Purpose: tell fresh sessions what phase the repo is in and what work is currently allowed
-Last updated: 2026-07-12
+Last updated: 2026-07-13
 
 ---
 
@@ -31,18 +31,16 @@ M0, M0.1, and M1 through M20 remain complete and committed. DB-1 is the first po
 
 ## Current Task
 
-Execute DB-1 from `POST_V1_DATABASE_ROADMAP.md`.
+DB-1 deliverables are complete and reconciled. The current task is owner review of:
 
-Current work is limited to:
+- `hammers/hammer-matrix-v0-2.md`;
+- `hammers/acceptance-gate-policy-v0-2.md`;
+- `hammers/per-hammer-result-register-v0-1.md`;
+- `planning-inbox/db2-physical-data-contract-freeze-specification.md`;
+- `planning-inbox/db1-closure-readiness-review.md`;
+- `planning-inbox/db1-closure-and-db2-activation-owner-gate.md`.
 
-- preserve and index the accepted post-v1 audit;
-- route N-01 through N-14 and the opportunity set completely;
-- correct stale authority pointers and narrow contract truth defects;
-- plan and, under bounded DB-1 authority, implement the accepted typed-read corrections with hostile tests;
-- preserve the accepted OR-B1, OR-B2, OR-C2, and OR-C4 rulings recorded by `decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md`;
-- prepare hammer matrix / gate policy v0.2 and per-hammer result-register requirements under the accepted proof-class and gate mapping;
-- commit the ob-dev database control-plane requirements and bind their implementation/proof to DB-3/DB-4 before governed database creation;
-- fully specify DB-2, the physical data-contract freeze, using the accepted fail-closed retention and hybrid raw-manifest / opaque-pointer boundaries.
+DB-1 remains active until the owner explicitly closes it. DB-2 remains inactive until the owner separately activates it.
 
 Postgres creation, DDL, migration files, migration execution, database credentials, real ingestion, provider calls, and production work remain unauthorized.
 
