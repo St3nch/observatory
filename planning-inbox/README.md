@@ -53,6 +53,8 @@ Active DB-1 package:
 - `db1-owner-ruling-proposals.md` — accepted OR-B1, OR-B2, OR-C2, and OR-C4 proposal source; durable authority lives in the linked decision
 - `db1-typed-read-correction-proof.md` — typed-read v0.1.1 correction scope, owner-local 188-test proof, and accepted correction status
 - `db1-ob-dev-database-control-plane-requirements.md` — explicit ob-dev PostgreSQL inspection, disposable lifecycle, migration, hammer-profile, and restore-tool requirements mapped to DB-3/DB-4; planning only
+- `db2-physical-data-contract-freeze-specification.md` — owner-ready DB-2 logical freeze candidate prepared under DB-1; classifies durable, derived, ephemeral, external, and forbidden concepts without DDL
+- `db2-physical-data-contract-freeze-readiness-review.md` — coverage and conflict review showing the freeze candidate is ready for owner review but does not activate DB-2
 - root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence and separate permission gates
 
 Completed M20 through M14 packages remain available below for lineage and proof context.

@@ -35,7 +35,7 @@ database creation / DDL / migrations: not authorized
 |---|---|---|---|---|
 | N-01 | High | accept_apply_db1 | Correct typed-read ceiling disclosure contract and prototype; add over-ceiling adversarial test; route database silent-partial-view hammer | Blocks DB-backed reads, not physical planning |
 | N-02 | High | accept_apply_db1 | OR-B1 and OR-B2 accepted; hammer matrix/policy v0.2 and per-hammer result-register contract drafted as owner-ready DB-1 candidates | Blocks migration execution and real ingestion until later gates pass |
-| N-03 | High | accept_assign_future_gate | Create one consolidated owner-accepted physical data contract before physical schema specification | DB-2 exit / DB-3 entry |
+| N-03 | High | accept_assign_future_gate | DB-2 physical data-contract freeze specification and readiness review drafted as owner-ready candidates; acceptance still requires a separate owner gate before DB-3 | DB-2 exit / DB-3 entry |
 | N-04 | High | accept_assign_future_gate | Build clone-stable decision-linked provider authority, duplicate, budget, attempt-lifecycle, and idempotency enforcement before real ingestion | Blocks real ingestion |
 | N-05 | Medium | accept_apply_db1 | Remove stale phase restatements from `README.md` and `LLM_START_HERE.md`; use authority pointers only | Documentation truth |
 | N-06 | Medium | accept_apply_db1 | OR-C2 per-family retention and OR-C4 hybrid raw-manifest / opaque-pointer layout accepted | Raw-support planning may proceed; capture remains unauthorized |

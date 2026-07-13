@@ -120,7 +120,7 @@ Current DB-1 progress:
 - OR-B1, OR-B2, OR-C2, and OR-C4 accepted;
 - ob-dev database-control-plane requirements committed and assigned to DB-3/DB-4;
 - hammer matrix v0.2, acceptance-gate policy v0.2, and per-hammer result-register contract v0.1 drafted as owner-ready candidates;
-- DB-2 physical data-contract-freeze package remains to be completed before DB-1 closure review.
+- DB-2 physical data-contract-freeze specification and readiness review are drafted as owner-ready candidates; DB-2 remains inactive pending a separate owner decision.
 
 ---
 
