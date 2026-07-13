@@ -59,9 +59,12 @@ Folder earned during M8 after M7 closure by `decisions/2026-07-10-m7-closure.md`
 ## Reading Order
 
 1. `README.md` — this folder index
-2. `hammer-matrix-v0-1.md` — first M8 hammer matrix draft
-3. `acceptance-gate-policy-v0-1.md` — milestone gate policy and M9 entry filter
-4. `../planning-inbox/m8-hammer-planning-review.md` — advisory M8 review and closure-readiness note
+2. `hammer-matrix-v0-2.md` — current DB-1 database-phase hammer and proof-class mapping candidate
+3. `acceptance-gate-policy-v0-2.md` — current DB-1 database milestone gate-policy candidate
+4. `per-hammer-result-register-v0-1.md` — current DB-1 immutable proof-record contract candidate
+5. `hammer-matrix-v0-1.md` — preserved M8 historical planning baseline
+6. `acceptance-gate-policy-v0-1.md` — preserved M8 historical gate-policy baseline
+7. `../planning-inbox/m8-hammer-planning-review.md` — historical M8 review and closure-readiness note
 
 ---
 
@@ -69,10 +72,13 @@ Folder earned during M8 after M7 closure by `decisions/2026-07-10-m7-closure.md`
 
 | File | Status | Purpose | Notes |
 |---|---|---|---|
-| `README.md` | index | Explains hammer folder scope, rules, and reading order | Created when M8 activated |
-| `hammer-matrix-v0-1.md` | draft | First M8 hostile-path hammer matrix and milestone-gate mapping | Drafted from RG13 and M7 contract set |
-| `acceptance-gate-policy-v0-1.md` | draft | Defines M8 acceptance levels, milestone gate defaults, owner-ruling defaults, and M9 first-slice entry filter | Drafted from hammer matrix, RG13, roadmap, and owner-ruling tracker |
-| `../planning-inbox/m8-hammer-planning-review.md` | planning review | Reviews M8 readiness and closure posture without claiming hammer execution | Advisory note; not authority |
+| `README.md` | index | Explains hammer folder scope, rules, and reading order | Updated for DB-1 policy candidates |
+| `hammer-matrix-v0-2.md` | owner-ready policy candidate | Carries H1-H22 into DB-1 through DB-10 with accepted proof classes and real-substrate gates | Does not claim execution or authorize database work |
+| `acceptance-gate-policy-v0-2.md` | owner-ready policy candidate | Defines database-phase closure gates, required proof classes, blocked outcomes, and authority controls | Incorporates accepted OR-B1 and OR-B2 rulings |
+| `per-hammer-result-register-v0-1.md` | owner-ready contract candidate | Defines immutable per-execution proof metadata and validation rules | Repository proof metadata only; not Observatory evidence |
+| `hammer-matrix-v0-1.md` | historical draft | First M8 hostile-path hammer matrix and milestone-gate mapping | Preserved as the v0.1 planning baseline |
+| `acceptance-gate-policy-v0-1.md` | historical draft | M8 acceptance levels, milestone defaults, and first-slice filter | Preserved as the v0.1 planning baseline |
+| `../planning-inbox/m8-hammer-planning-review.md` | historical planning review | Reviews M8 readiness and closure posture without claiming hammer execution | Advisory note; not authority |
 
 ---
 
@@ -107,8 +113,8 @@ If a hammer would require unresolved owner approval, mark it blocked/fail-closed
 ## Last Review Notes
 
 ```text
-Last reviewed: 2026-07-10
+Last reviewed: 2026-07-13
 Reviewer: ChatGPT / Observatory Steward
-Result: Hammers folder earned, first matrix drafted, and acceptance gate policy added for M8 planning
-Open issues: Review M8 hammer matrix and gate policy; resolve or explicitly defer OR-B1 through OR-B3 before M8 closure
+Result: Added DB-1 owner-ready hammer matrix v0.2, acceptance-gate policy v0.2, and per-hammer result-register contract v0.1; preserved v0.1 as historical planning baseline
+Open issues: Owner review/acceptance of the DB-1 policy package; OR-B3 remains governed by the later accepted report-blocking rulings and must not be broadened silently
 ```

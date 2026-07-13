@@ -32,18 +32,18 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
-| OR-B1 | Hammer acceptance criteria + acceptable mock/stub level for pre-implementation hammers | RG13 | open — draft default recorded in `hammers/acceptance-gate-policy-v0-1.md`; mock/stub planning does not satisfy implementation acceptance unless later ruled |
-| OR-B2 | Which hammers are hard gates for which milestone | RG13 | open — draft milestone mapping recorded in `hammers/hammer-matrix-v0-1.md` and `hammers/acceptance-gate-policy-v0-1.md`; not binding until accepted |
-| OR-B3 | Does any freshness class automatically block customer-facing report use? | RG5 | open — draft fail-closed default recorded in `hammers/acceptance-gate-policy-v0-1.md`; M15 must revisit report-facing use |
+| OR-B1 | Hammer acceptance criteria + acceptable mock/stub level for pre-implementation hammers | RG13; `decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md` | ruled — fixture/mock/stub/in-memory proof may prove bounded contract behavior only; persistence, transaction, role, concurrency, migration, backup, restore, and database-invariant claims require the real authorized PostgreSQL substrate |
+| OR-B2 | Which hammers are hard gates for which milestone | RG13; `decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md` | ruled — accepted database-phase gate mapping; current owner-ready implementation is `hammers/hammer-matrix-v0-2.md` and `hammers/acceptance-gate-policy-v0-2.md` |
+| OR-B3 | Does any freshness class automatically block customer-facing report use? | RG5; `decisions/2026-07-12-m15-searchclarity-contract-and-consumer-boundary-rulings.md` | ruled for M15 scope — accepted blocker and historical-only downgrade set; no broader automatic rule is inferred outside the accepted consumer contract |
 
 ## Group C — Needed before M13 provider/capture admission
 
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
 | OR-C1 | Fund/use a DataForSEO account; release the reserved validation budget; approve recipe/endpoint list/ceilings/stop conditions | RG1; DR1; `decisions/2026-07-11-m13-dataforseo-controlled-probe-approval.md`; `decisions/2026-07-12-m13-dataforseo-exploratory-campaign.md`; `decisions/2026-07-12-m13-closure-and-m14-activation.md` | ruled for the completed C00 request only — the authorized request was consumed and M13 closed; no additional live request is authorized; any future request requires a new decision and the post-M13 provider hardening gates |
-| OR-C2 | Long-term raw payload retention posture per source family (durable vs manifest-only vs capture-and-purge vs no-storage) | RG1 F6; RG11; DR2; `decisions/2026-07-11-m13-dataforseo-controlled-probe-approval.md` | open — first-probe capture-and-purge posture proposed only; no general or durable retention ruling |
+| OR-C2 | Long-term raw payload retention posture per source family (durable vs manifest-only vs capture-and-purge vs no-storage) | RG1 F6; RG11; DR2; `decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md` | ruled — accepted fail-closed per-source-family posture; unknown or missing family ruling becomes `forbidden_no_capture`; ruling does not authorize capture |
 | OR-C3 | Use AI Optimization endpoint families for validation | RG1; RG6 | open |
-| OR-C4 | Raw archive layout: filesystem-first, object-storage-first, or hybrid | RG11; DR13 | open |
+| OR-C4 | Raw archive layout: filesystem-first, object-storage-first, or hybrid | RG11; DR13; `decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md` | ruled — accepted hybrid governed manifest plus internal opaque artifact pointer; raw bytes remain outside ordinary relational evidence tables and no artifact store or capture is authorized |
 | OR-C5 | Etsy: pursue API path and/or express written authorization, or keep all Etsy evidence consumer/report-side | RG7; DR6 | open |
 | OR-C6 | Browser-extension capture instrument: admit per-marketplace, keep deferred, or kill | RG7; DR8; harvest Q2 | open |
 | OR-C7 | Fiverr capture posture after full-terms review | RG7; DR7 | open |

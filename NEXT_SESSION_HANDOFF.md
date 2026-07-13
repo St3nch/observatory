@@ -3,13 +3,13 @@
 Status: authority
 Authority: fresh-session handoff pointer; `ACTIVE_CONTEXT.md` owns current phase truth
 Purpose: preserve the accepted Observatory v1 bounded proof-system state
-Last updated: 2026-07-12
+Last updated: 2026-07-13
 
 ---
 
 ## Current State
 
-The Observatory is accepted at the bounded v1 proof-system ceiling.
+The Observatory is accepted at the bounded v1 proof-system ceiling, and the post-v1 database roadmap is active.
 
 Closed milestones:
 
@@ -20,15 +20,18 @@ M0, M0.1, and M1 through M20
 Active milestone:
 
 ```text
-none
+DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
 ```
 
-The owner accepted Observatory v1 through `decisions/2026-07-12-observatory-v1-acceptance.md`. The accepted system is local, evidence-only, bounded, and not production-ready or feature-complete. The known-limit and deferred-capability register remains binding.
+The owner accepted Observatory v1 through `decisions/2026-07-12-observatory-v1-acceptance.md`, accepted the post-v1 audit, activated the database roadmap, and accepted the DB-1 contract corrections plus OR-B1/OR-B2/OR-C2/OR-C4 rulings. The accepted v1 system remains local, evidence-only, bounded, and not production-ready or feature-complete.
 
-Current acceptance authority:
+Current authority:
 
 ```text
 decisions/2026-07-12-observatory-v1-acceptance.md
+decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md
+decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md
+POST_V1_DATABASE_ROADMAP.md
 ```
 
 ---
@@ -102,52 +105,50 @@ When using `ob-dev`:
 
 ## Roadmap State
 
-`ROADMAP.md` now sequences:
+```text
+M0, M0.1, and M1 through M20: closed
+DB-1 — Post-v1 Audit Reconciliation and Ruling Closure: active
+DB-2 through DB-10: planned and inactive
+```
 
-- M0 / M0.1 closure
-- M1 closed roadmap sequencing
-- M2 closed folder structure and folder README indexes
-- M3 closed knowledge doc preservation
-- M4 closed boundary reconciliation and doctrine hardening
-- M5 closed research gate planning
-- M6 closed research gate execution
-- M7 closed core contract planning
-- M8 closed hammer matrix and acceptance-gate planning
-- M9 closed first evidence slice definition
-- M10 closed schema planning only
-- M11 closed implementation foundation
-- M12 closed first evidence slice build
-- M13 active provider admission and controlled pull planning
-- M14 typed read API / MCP contract and prototype
-- M15 SearchClarity proof workflow
-- M16 Provider Cross-Check proof
-- M17 owned telemetry overlay proof
-- M18 recurring watch panel planning
-- M19 hardening / backup / recovery / operations
-- M20 Observatory v1 acceptance
+The governing sequence is `POST_V1_DATABASE_ROADMAP.md`. No database milestone implies the next milestone.
+
+Current DB-1 progress:
+
+- typed-read and SearchClarity v0.1.1 corrections accepted;
+- owner-local 188-test corrective proof accepted only as `owner_local_process_pass`;
+- OR-B1, OR-B2, OR-C2, and OR-C4 accepted;
+- ob-dev database-control-plane requirements committed and assigned to DB-3/DB-4;
+- hammer matrix v0.2, acceptance-gate policy v0.2, and per-hammer result-register contract v0.1 drafted as owner-ready candidates;
+- DB-2 physical data-contract-freeze package remains to be completed before DB-1 closure review.
 
 ---
 
 ## Immediate Next Steps
 
-There is no active milestone.
+Continue DB-1 only:
 
-Preserve the accepted-v1 state. Do not begin production or post-v1 implementation unless the owner explicitly approves a new roadmap.
+1. review and accept or revise the DB-1 hammer-policy package;
+2. complete the DB-2 physical data-contract-freeze specification;
+3. reconcile remaining DB-1 trackers and indexes;
+4. prepare one DB-1 closure-readiness review and exact owner gate.
 
-Allowed next actions are limited to reviewing accepted evidence, correcting factual documentation defects, preserving proof artifacts, or drafting a new roadmap only when explicitly requested.
+Do not activate DB-2 until a separate owner decision is recorded.
 
 ---
 
 ## Open Questions
 
-Open questions to carry forward:
+Open items must be read from `planning-inbox/owner-ruling-tracker.md`; do not resurrect already ruled items from stale prose.
 
-- OR-A1: persisted Disagreement Ledger vs compute-on-read only.
-- OR-A2: RG6 sentiment/tone provider-attributed-only vs mechanically derived sentiment.
-- OR-A3: `ai_visibility_sample_summary` read-time output only vs storable under materialization test.
-- OR-A4: citation handles global vs artifact-local; report-safe references separate or derived.
-- OR-B1 through OR-B3 remain open with M8 fail-closed defaults.
-- M13 provider admission planning must stay document-only and must not broaden into provider execution, paid pulls, customer data, marketplace scraping, dashboard, API/MCP, recurring capture, or strategy storage implementation.
+Key current posture:
+
+- OR-A1 is ruled compute-on-read only.
+- OR-B1 and OR-B2 are ruled by the DB-1 database-boundary decision.
+- OR-B3 is ruled for the accepted M15 consumer scope.
+- OR-C2 and OR-C4 are ruled for fail-closed source-family retention and hybrid manifest/opaque-pointer layout.
+- OR-A2, OR-A3, and other tracker rows still marked open remain fail-closed.
+- No ruling authorizes capture, PostgreSQL work, production, customer-private storage, or strategy persistence.
 
 ---
 
@@ -155,19 +156,20 @@ Open questions to carry forward:
 
 Do not start:
 
-- provider calls
-- DataForSEO pulls
-- Ahrefs/Semrush work
-- provider admission execution
-- marketplace scraping
-- browser-extension capture
-- API/MCP exposure
+- PostgreSQL database creation
+- role or credential creation
+- physical schema or DDL
+- migration files or migration execution
+- disposable database lifecycle or real-Postgres hammers
+- synthetic or real evidence persistence
+- provider calls or new paid pulls
+- marketplace scraping or browser-extension capture
+- production API/MCP exposure
 - dashboard/operator console work
-- customer data handling
-- customer-facing reports
-- strategy/recommendation storage
+- customer/private data handling
+- customer-facing report work
+- strategy/recommendation/conclusion storage
 - recurring capture
-- broad implementation beyond C2
-- M13 provider admission before M12 proves the first slice
+- DB-2 activation without a separate owner decision
 
 The project now has rails. Stay on them. No schema goblin jazz.
