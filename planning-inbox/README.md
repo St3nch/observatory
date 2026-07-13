@@ -56,7 +56,10 @@ Active DB-2 package and closed DB-1 lineage:
 - `db2-physical-data-contract-freeze-specification.md` — accepted DB-2 logical freeze and active normative input; classifies durable, derived, ephemeral, external, and forbidden concepts without DDL
 - `db2-physical-data-contract-freeze-readiness-review.md` — historical DB-1 readiness review for the now-accepted freeze
 - `db2-freeze-v0-1-1-classification-corrections.md` — owner-ready clarification package enforcing one primary classification per concept without changing scope or persistence authority
-- `db2-closure-readiness-review.md` — active DB-2 closure review and exact DB-3 specification-only owner gate
+- `db2-closure-readiness-review.md` — historical DB-2 closure review and DB-3 specification-only owner gate
+- `db3-postgres-operational-boundary-specification.md` — DB-3 instance, database-class, role, credential, migration, backup, capability, tool-contract, and restart-boundary specification
+- `db3-physical-schema-specification.md` — DB-3 schema-family, identity, relationship, append-only, audit-first, constraint, index, raw-boundary, and read-exposure specification
+- `db3-specification-readiness-review.md` — active DB-3 closure review and exact DB-4 disposable-proof owner gate
 - `db1-closure-readiness-review.md` — historical closure review that reconciled every DB-1 exit criterion
 - `db1-closure-and-db2-activation-owner-gate.md` — consumed owner-gate proposal; durable authority is `decisions/2026-07-13-db1-closure-and-db2-activation.md`
 - root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence and separate permission gates

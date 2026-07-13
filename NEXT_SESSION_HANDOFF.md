@@ -126,15 +126,16 @@ Accepted DB-2 closure state:
 
 ## Immediate Next Steps
 
-Execute DB-3 specification-only work:
+DB-3 is ready for owner decision:
 
-1. specify PostgreSQL instance and database-class boundaries;
-2. specify roles, privileges, credentials, and secret boundaries without creating them;
-3. specify physical schema structures without producing DDL or migration files;
-4. map every mechanism to accepted hammers;
-5. prepare DB-3 closure readiness and a separate DB-4 gate.
+1. review `planning-inbox/db3-postgres-operational-boundary-specification.md`;
+2. review `planning-inbox/db3-physical-schema-specification.md`;
+3. review `planning-inbox/db3-specification-readiness-review.md`;
+4. accept or revise the DB-3 specifications;
+5. close DB-3 or return it for revision;
+6. separately activate DB-4 disposable proof work or leave it inactive.
 
-Do not create databases, roles, credentials, SQL, DDL, migrations, disposable databases, or execute PostgreSQL hammers.
+Do not create the governed database, governed roles or credentials, or execute governed migrations. DB-4 remains separately gated.
 
 ---
 

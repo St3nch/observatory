@@ -31,16 +31,13 @@ M0, M0.1, M1 through M20, DB-1, and DB-2 are complete and committed. DB-3 is act
 
 ## Current Task
 
-Execute DB-3 specification work only:
+DB-3 specifications are complete and ready for owner review:
 
-- specify PostgreSQL instance and database-class boundaries;
-- specify role, privilege, credential, and secret boundaries without creating them;
-- specify naming, identity, lifecycle, index, constraint, append-only, audit-first, and raw-pointer mechanisms;
-- specify backup-before-migration and migration-governance requirements;
-- map every physical mechanism to accepted hammers;
-- prepare DB-3 closure readiness and a separate DB-4 gate.
+- `planning-inbox/db3-postgres-operational-boundary-specification.md`;
+- `planning-inbox/db3-physical-schema-specification.md`;
+- `planning-inbox/db3-specification-readiness-review.md`.
 
-DB-4 remains inactive until a separate owner decision.
+DB-3 remains active until explicit owner closure. DB-4 remains inactive until a separate owner decision.
 
 Postgres creation, DDL, migration files, migration execution, database credentials, real ingestion, provider calls, and production work remain unauthorized.
 
