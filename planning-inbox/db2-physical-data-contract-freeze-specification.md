@@ -1,9 +1,9 @@
 # DB-2 Physical Data-Contract Freeze Specification
 
-Status: accepted DB-2 logical data-contract freeze v0.1.1
+Status: candidate under DB-2 recovery reconciliation; not accepted
 Date: 2026-07-13
-Accepted by: `decisions/2026-07-13-db1-closure-and-db2-activation.md`; classification corrections accepted by `decisions/2026-07-13-db2-closure-and-db3-activation.md`
-Milestone: DB-2 closed; normative input to active DB-3
+History: original freeze accepted for DB-2 work by `decisions/2026-07-13-db1-closure-and-db2-activation.md`; later closure/correction claim suspended by `decisions/2026-07-13-database-phase-recovery-to-db1.md`
+Milestone: DB-2 active for reconciliation; not a normative DB-3 input
 
 ## Purpose
 
@@ -24,14 +24,14 @@ This candidate remains subordinate to:
 5. accepted contracts;
 6. this planning candidate.
 
-If this file conflicts with higher authority, the higher authority wins and the conflict must be corrected before DB-2 activation.
+If this file conflicts with higher authority, the higher authority wins and the conflict must be corrected before DB-2 may close.
 
 ## Non-authorization boundary
 
 This document does not authorize:
 
 ```text
-DB-2 activation
+DB-2 closure without a new owner decision
 PostgreSQL database creation
 role or credential creation
 physical table, column, index, trigger, function, or schema design

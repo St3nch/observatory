@@ -1,13 +1,13 @@
 # DB-3 Physical Schema Specification
 
-Status: DB-3 specification draft; no DDL or execution authority
+Status: untrusted DB-3 candidate suspended pending DB-2 revalidation; no DDL or execution authority
 Date: 2026-07-13
-Milestone: DB-3 — Postgres Operational Boundary and Physical Schema Specification
-Normative input: accepted DB-2 physical data-contract freeze v0.1.1
+Milestone: DB-3 suspended / inactive
+Historical input claim: unreconciled DB-2 freeze; not normative during recovery
 
 ## Purpose
 
-Derive a physical PostgreSQL schema specification from the accepted logical freeze without writing SQL, creating objects, or authorizing migration execution.
+Derive a physical PostgreSQL schema specification from the candidate logical freeze without writing SQL, creating objects, or authorizing migration execution.
 
 This document defines schema families, table responsibilities, key and relationship strategy, append-only and audit-first mechanisms, index/constraint intentions, exposure boundaries, and migration implications.
 

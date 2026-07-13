@@ -9,7 +9,7 @@ Steward: The Observatory Project Steward (LLM-assisted)
 
 ## Purpose
 
-This is the first document any human or LLM should read when working in `C:\dev\observatory`.
+This is the canonical project-identity document. Fresh humans and LLMs reach it through the mandatory root read order in `README.md` and `LLM_START_HERE.md`; it does not override the current-state files that precede it.
 
 It exists to answer:
 

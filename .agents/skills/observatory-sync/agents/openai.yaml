@@ -1,0 +1,7 @@
+interface:
+  display_name: "Observatory Sync"
+  short_description: "Verify Observatory authority before work"
+  default_prompt: "Use $observatory-sync to synchronize with the repository and report the active authority gate before making changes."
+
+policy:
+  allow_implicit_invocation: true

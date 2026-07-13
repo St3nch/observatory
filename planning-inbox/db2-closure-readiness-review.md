@@ -1,8 +1,8 @@
 # DB-2 Closure Readiness Review
 
-Status: active DB-2 planning review; owner-ready assessment
+Status: historical assessment invalidated by the unreconciled canonical freeze; not current closure evidence
 Date: 2026-07-13
-Active milestone: DB-2 — Physical Data-Contract Freeze
+Current milestone: DB-2 — Physical Data-Contract Freeze Reconciliation
 
 ## Review question
 
@@ -11,7 +11,7 @@ Has DB-2 produced one coherent logical data contract, with every concept classif
 ## Result
 
 ```text
-result: ready_for_owner_decision_with_v0_1_1_clarification
+result: invalidated_pending_fresh_reconciliation
 DB-2 closure: not yet authorized
 DB-3 activation: not yet authorized
 PostgreSQL work: not authorized

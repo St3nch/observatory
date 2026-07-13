@@ -1,6 +1,6 @@
 # Decision — DB-2 Closure and DB-3 Activation
 
-Status: accepted
+Status: suspended by `decisions/2026-07-13-database-phase-recovery-to-db1.md`; retained as historical claimed acceptance
 Date: 2026-07-13
 Owner ruling: accepted verbatim in chat
 Related milestone: DB-2 closure; DB-3 activation

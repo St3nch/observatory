@@ -1,9 +1,9 @@
 # Post-v1 Database Roadmap — The Observatory
 
 Status: authority for post-v1 sequencing after owner acceptance
-Authority: `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`
+Authority: original sequence from `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`; current recovery state from `decisions/2026-07-13-database-phase-recovery-to-db1.md`
 Purpose: govern the path from accepted bounded v1 proof system to a real local Postgres-backed evidence system without widening authority accidentally
-Last updated: 2026-07-12
+Last updated: 2026-07-13
 
 ---
 
@@ -26,11 +26,16 @@ No milestone implies the next milestone.
 
 ```text
 Observatory v1: accepted at bounded proof-system ceiling
-Active milestone: DB-4 — Database Hammer Harness and Migration Specification
+Last trusted database milestone: DB-1 — closed
+Active milestone: DB-2 — Physical Data-Contract Freeze Reconciliation
+DB-3 and DB-4 closure/activation claims: suspended
 Postgres creation: not authorized
 DDL: not authorized
-Migration execution: not authorized
+Migration files or execution: not authorized
+Database-control-plane expansion: not authorized
 ```
+
+Recovery authority: `decisions/2026-07-13-database-phase-recovery-to-db1.md`.
 
 ---
 
@@ -39,9 +44,9 @@ Migration execution: not authorized
 | ID | Name | Status | Main gate |
 |---|---|---|---|
 | DB-1 | Post-v1 Audit Reconciliation and Ruling Closure | closed | Audit findings routed; corrections and rulings accepted; DB-2 package prepared |
-| DB-2 | Physical Data-Contract Freeze | closed | Logical contract v0.1.1 accepted with singular primary classifications and forbidden-persistence register |
-| DB-3 | Postgres Operational Boundary and Physical Schema Specification | closed | Operational boundary and physical schema specifications v0.1 accepted |
-| DB-4 | Database Hammer Harness and Migration Specification | active | Disposable real-Postgres harness can fail; migration/rollback specifications ready |
+| DB-2 | Physical Data-Contract Freeze | active recovery | Reconcile the canonical freeze from trusted DB-1 and return it for owner review |
+| DB-3 | Postgres Operational Boundary and Physical Schema Specification | suspended / inactive | Existing specifications are untrusted candidates until DB-2 is revalidated |
+| DB-4 | Database Hammer Harness and Migration Specification | suspended / inactive | No implementation or PostgreSQL authority during recovery |
 | DB-5 | Governed Local Database Bootstrap and Migration Execution | planned | Separate owner execution gate; migration hammers pass |
 | DB-6 | First Persisted Synthetic Evidence Slice | planned | Append-only, audit-first, identity, scope, rights, retention, and concurrency hammers pass |
 | DB-7 | Database-Backed Typed Read Proof | planned | Read-only role and typed-read hammers pass, including honest truncation |
@@ -118,6 +123,8 @@ DB-2 activation requires a separate owner decision.
 ---
 
 # Active milestone
+
+Recovery posture: DB-2 is reopened for reconciliation. Prior DB-2 closure and all later activation claims are suspended. The existing freeze and corrections are candidate inputs, not accepted authority.
 
 ## DB-2 — Physical Data-Contract Freeze
 

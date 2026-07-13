@@ -9,38 +9,61 @@ Last updated: 2026-07-13
 
 ## Current Phase
 
-The Observatory is in:
+The Observatory is in database-phase recovery from the last trusted checkpoint:
 
 ```text
-DB-1 post-v1 audit reconciliation and database-phase roadmap planning
+DB-1 is closed and trusted.
+DB-2 is active for reconciliation and owner review only.
+DB-3 and DB-4 closure/activation claims are suspended.
 ```
 
-Observatory v1 remains accepted at the bounded proof-system ceiling by `decisions/2026-07-12-observatory-v1-acceptance.md`. The owner accepted the post-v1 audit as advisory input and activated database-phase planning through `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`. This opens reconciliation, typed-read corrections, hammer/ruling work, and the physical data-contract-freeze plan only. It does not authorize Postgres creation, DDL, migration files or execution, real ingestion, production, customer data, or strategy storage.
+Recovery authority:
+
+```text
+decisions/2026-07-13-database-phase-recovery-to-db1.md
+```
+
+Observatory v1 remains accepted at the bounded proof-system ceiling by `decisions/2026-07-12-observatory-v1-acceptance.md`.
 
 ---
 
 ## Active Milestone
 
 ```text
-DB-4 — Database Hammer Harness and Migration Specification
+DB-2 — Physical Data-Contract Freeze Reconciliation
 ```
 
-M0, M0.1, M1 through M20, DB-1, DB-2, and DB-3 are complete and committed. DB-4 is active by `decisions/2026-07-13-db3-closure-and-db4-activation.md`.
+This is not ordinary forward milestone execution. The canonical DB-2 freeze must be reconciled and re-reviewed from the trusted DB-1 checkpoint.
+
+No later database milestone is active.
+
+---
+
+## Why Recovery Is Required
+
+The canonical DB-2 freeze claims accepted v0.1.1 status, but its content does not contain all v0.1.1 corrections and still violates its own singular-classification rule.
+
+The later DB-3 readiness review relied on the unsupported claim that the reconciled freeze was complete and conflict-free.
+
+Therefore:
+
+- DB-2 closure is suspended;
+- DB-3 specifications are candidate material only;
+- DB-3 closure and DB-4 activation are suspended;
+- no PostgreSQL or database-control-plane work is authorized.
 
 ---
 
 ## Current Task
 
-Execute DB-4 within the disposable proof boundary:
+Reconcile DB-2 without widening authority:
 
-- implement the coherent ob-dev database-control-plane expansion;
-- create migration and rollback specification files;
-- build and prove the protected disposable PostgreSQL harness;
-- run only allowlisted real-PostgreSQL hammer profiles;
-- record structured per-hammer proof results;
-- prepare DB-4 closure readiness and a separate DB-5 owner gate.
-
-The governed Observatory database, governed roles or credentials, governed migration execution, governed persistence, provider calls, customer data, raw capture, and production remain unauthorized.
+1. compare the canonical freeze with the correction package;
+2. apply only corrections that survive fresh DB-1-grounded review;
+3. verify every concept has exactly one primary classification;
+4. verify identity, provenance, scope, rights, retention, write, read, and hammer implications;
+5. keep forbidden persistence explicit;
+6. prepare a fresh DB-2 readiness review and owner gate.
 
 ---
 
@@ -48,22 +71,30 @@ The governed Observatory database, governed roles or credentials, governed migra
 
 Do not start:
 
-- provider calls or new paid pulls
+- PostgreSQL database creation
+- role or credential creation
+- SQL or DDL
+- migration files or migration execution
+- disposable database lifecycle
+- real-PostgreSQL hammers
+- database-control-plane expansion
+- synthetic or real persistence
+- provider calls or paid pulls
 - recurring capture
 - production API/MCP exposure
 - dashboard or operator console work
-- live Postgres/schema/migrations
-- customer data handling
+- customer or private data handling
+- raw capture
 - customer-facing reports
 - marketplace scraping
 - browser-extension capture
-- strategy or recommendation storage
+- strategy, recommendation, conclusion, or report-state storage
 - cloud backup upload
 - automatic backup jobs
 - destructive cleanup
 - production deployment
 
-No schema goblin jazz. No provider confetti cannon. No dashboard side quest.
+No schema goblin jazz. The paperwork must become true before the database becomes real.
 
 ---
 
@@ -73,7 +104,7 @@ The Observatory stores observations, not conclusions.
 
 The connected LLM interprets at read time.
 
-Accepted conclusions promote out to the owning consumer, such as SearchClarity, Neon Ronin, or Kaizen.
+Accepted conclusions promote out to the owning consumer.
 
 Customer records and customer first-party analytics stay outside Observatory durable storage.
 
@@ -81,58 +112,51 @@ LLMs and agents receive shaped evidence through typed boundaries, not direct SQL
 
 Provider disagreement is first-class evidence. Proprietary provider scores are provider-attributed testimony, not facts about the web.
 
-Hammer tests are a hard gate for implementation.
+Rights and retention fail closed.
 
-Bounded repository recovery is proven. Encrypted/off-machine recovery is not yet proven.
+Hammer tests are a hard gate for implementation, and database hammers require a real authorized substrate.
+
+Killed ancestor concepts remain killed.
 
 ---
 
 ## Current Completion State
 
-Closed:
-
-- M0 - LLM-first repo navigation and roadmap preservation
-- M0.1 - Knowledgebase-to-repo reconciliation and candidate decision pass
-- M1 - Roadmap Content Draft and Milestone Sequencing
-- M2 - Folder Structure and Folder README Indexes
-- M3 - Knowledge Doc Preservation and Planning-Inbox Expansion
-- M4 - Boundary Reconciliation and Doctrine Hardening
-- M5 - Research Gate Plan
-- M6 - Research Gate Execution
-- M7 - Core Contract Planning
-- M8 - Hammer Matrix and Acceptance Gates
-- M9 - First Evidence Slice Definition
-- M10 - Schema Planning Only
-- M11 - Implementation Foundation
-- M12 - First Evidence Slice Build
-- M13 - Provider Admission and Controlled Pull Plan
-- M14 - Typed Read API / MCP Contract and Prototype
-- M15 - SearchClarity Proof Workflow
-- M16 - Provider Cross-Check Proof
-- M17 - Owned Telemetry Overlay Proof
-- M18 - Recurring Watch Panel Planning
-- M19 - Hardening, Backup, Recovery, and Operations
-- M20 - Observatory v1 Acceptance
-
-Active:
+Trusted and closed:
 
 ```text
+M0, M0.1, M1 through M20
 DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
 ```
 
-Post-v1 roadmap authority:
+Active for recovery:
 
 ```text
-POST_V1_DATABASE_ROADMAP.md
+DB-2 — Physical Data-Contract Freeze Reconciliation
 ```
 
-No later database milestone is active. DB-2 requires a separate owner decision.
-
-M2 folder ruling completed:
+Suspended pending revalidation:
 
 ```text
-Created: decisions/, archive/, research/
-Deferred at M2: contracts/ until M7, hammers/ until M8
+DB-2 closure
+DB-3 activation and closure
+DB-4 activation
 ```
 
-Folder state update 2026-07-10: `contracts/` exists and all planned M7 contracts are drafted/indexed. `hammers/` exists and M8 hammer planning outputs are drafted/indexed. `audits/` is governed by owner ruling (`decisions/2026-07-07-audits-folder.md`).
+Planned and inactive:
+
+```text
+DB-3 through DB-10
+```
+
+The governing post-v1 sequence remains `POST_V1_DATABASE_ROADMAP.md`, as corrected by the recovery decision. No milestone implies the next milestone.
+
+---
+
+## Tool Posture
+
+- Use Codex native local tools for ordinary PowerShell, filesystem, Git, tests, and code work.
+- Use `ob-dev-mcp` only within its current bounded file-oriented surface.
+- Do not use old `ob-dev` Git tools.
+- Do not add PostgreSQL tools to `ob-dev-mcp` during DB-2 recovery.
+- Tool availability never creates roadmap authority.

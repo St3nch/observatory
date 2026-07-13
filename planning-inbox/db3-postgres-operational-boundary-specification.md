@@ -1,8 +1,8 @@
 # DB-3 PostgreSQL Operational Boundary Specification
 
-Status: DB-3 specification draft; no execution authority
+Status: untrusted DB-3 candidate suspended pending DB-2 revalidation; no execution authority
 Date: 2026-07-13
-Milestone: DB-3 — Postgres Operational Boundary and Physical Schema Specification
+Milestone: DB-3 suspended / inactive
 Normative inputs:
 
 - `planning-inbox/db2-physical-data-contract-freeze-specification.md`

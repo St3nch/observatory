@@ -3,7 +3,7 @@
 Status: authority
 Authority: roadmap operating document
 Purpose: preserve milestone memory, required reading, gates, and execution sequence from planning through Observatory v1
-Last updated: 2026-07-10
+Last updated: 2026-07-13
 
 ---
 
@@ -135,14 +135,16 @@ If required reading includes a folder, that folder must have a `README.md` index
 ## Active Milestone
 
 ```text
-DB-4 — Database Hammer Harness and Migration Specification
+DB-2 — Physical Data-Contract Freeze Reconciliation
 ```
 
 Observatory v1 remains accepted and M20 remains closed by `decisions/2026-07-12-observatory-v1-acceptance.md`.
 
-DB-3 closed and DB-4 disposable proof work activated through `decisions/2026-07-13-db3-closure-and-db4-activation.md`. The governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`.
+DB-1 is the last trusted completed database milestone. The recovery decision `decisions/2026-07-13-database-phase-recovery-to-db1.md` reopens DB-2 for reconciliation and owner review only.
 
-DB-4 authorizes only protected disposable PostgreSQL proof, migration/rollback specification files, and the coherent ob-dev control-plane implementation. Governed database creation, governed roles or credentials, governed migration execution, governed persistence, real ingestion, provider calls, production launch, and customer/strategy persistence remain unauthorized.
+Claims that DB-2 closed, DB-3 activated or closed, or DB-4 activated are suspended pending revalidation. Their artifacts remain candidate material, not current authority.
+
+DB-2 recovery authorizes logical-contract reconciliation and Codex authority-drift safeguards only. PostgreSQL work, SQL/DDL, migrations, database-control-plane expansion, persistence, provider calls, customer data, and production remain unauthorized. The governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`.
 
 ---
 

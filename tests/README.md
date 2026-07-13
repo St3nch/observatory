@@ -34,12 +34,14 @@ If using a virtual environment later, activate it first and run the same command
 
 ## Current Note
 
-The ChatGPT `ob-dev` connector expects a fixed interpreter at:
+Run tests through Codex's native local terminal. The `ob-dev-mcp` server is not the project test runner, and the old `ob-dev` Git/test tool path is retired from new work.
 
-```text
-C:\dev\observatory\.venv\Scripts\python.exe
+If the repository does not yet have a local virtual environment, use an explicitly selected Python 3.11+ interpreter. Do not claim a test or hammer result from configuration alone.
+
+The authority-sync check is:
+
+```powershell
+python tools/check_authority_sync.py
 ```
 
-At the time this file was added, that interpreter did not exist, so connector-side execution was not available.
-
-Do not mark hammers as passed until tests are actually executed and the result is recorded.
+Do not mark hammers as passed until the correct proof class has actually executed and its result is recorded.

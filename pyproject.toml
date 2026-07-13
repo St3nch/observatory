@@ -6,7 +6,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [tool.observatory]
-status = "db1-post-v1-audit-reconciliation-and-roadmap-planning"
+status = "db2-reconciliation-last-trusted-db1"
 first_slice = "C2 Controlled Public Manual Observation Package"
 probe = "M13 DataForSEO one-shot tooling retained and disarmed"
 campaign = "M13 closed; no additional provider request authorized"
@@ -16,11 +16,13 @@ provider_execution = "disabled_after_m13_closure"
 provider_funding = "owner-reports-available"
 providers = "dataforseo-c00-narrowly-validated-no-new-execution"
 customer_data = "disabled"
-postgres = "disabled"
-schema_migrations = "disabled"
-api_mcp = "planning_only"
+postgres = "disabled-during-db2-recovery"
+schema_migrations = "disabled-during-db2-recovery"
+api_mcp = "bounded-fixture-prototype-only"
 dashboard = "disabled"
 strategy_storage = "disabled"
+later_database_milestones = "db3-db4-suspended-pending-revalidation"
+mcp_control_plane = "ob-dev-mcp-file-surface-only"
 
 [tool.unittest]
 test_command = "python -m unittest discover -s tests"

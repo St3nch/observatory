@@ -1,9 +1,9 @@
 # DB-2 Physical Data-Contract Freeze v0.1.1 Classification Corrections
 
-Status: accepted DB-2 clarification
+Status: candidate correction package under DB-2 recovery review; not accepted
 Date: 2026-07-13
 Canonical freeze: `planning-inbox/db2-physical-data-contract-freeze-specification.md`
-Accepted by: `decisions/2026-07-13-db2-closure-and-db3-activation.md`
+Historical claim: acceptance decision suspended by `decisions/2026-07-13-database-phase-recovery-to-db1.md`
 
 ## Purpose
 

@@ -1,6 +1,6 @@
 # DB-3 Specification Readiness Review
 
-Status: DB-3 planning review; owner-ready candidate assessment
+Status: invalidated historical review; not current closure evidence
 Date: 2026-07-13
 Reviewed documents:
 
@@ -14,9 +14,9 @@ Do the DB-3 specifications satisfy the roadmap requirement to define the Postgre
 ## Result
 
 ```text
-result: ready_for_owner_review
-DB-3: remains active until explicit owner closure
-DB-4: remains inactive
+result: invalidated_by_unreconciled_db2_freeze
+DB-3: suspended / inactive
+DB-4: suspended / inactive
 PostgreSQL execution: unauthorized
 ```
 

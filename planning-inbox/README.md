@@ -47,22 +47,22 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-Active DB-2 package and closed DB-1 lineage:
+Active DB-2 recovery package and trusted DB-1 lineage:
 
 - `post-v1-pre-database-audit-response-2026-07-12.md` — complete N-01 through N-14 routing, opportunity parking, correction order, and DB-1 exit criteria
 - `db1-owner-ruling-proposals.md` — accepted OR-B1, OR-B2, OR-C2, and OR-C4 proposal source; durable authority lives in the linked decision
 - `db1-typed-read-correction-proof.md` — typed-read v0.1.1 correction scope, owner-local 188-test proof, and accepted correction status
-- `db1-ob-dev-database-control-plane-requirements.md` — explicit ob-dev PostgreSQL inspection, disposable lifecycle, migration, hammer-profile, and restore-tool requirements mapped to DB-3/DB-4; planning only
-- `db2-physical-data-contract-freeze-specification.md` — accepted DB-2 logical freeze and active normative input; classifies durable, derived, ephemeral, external, and forbidden concepts without DDL
-- `db2-physical-data-contract-freeze-readiness-review.md` — historical DB-1 readiness review for the now-accepted freeze
-- `db2-freeze-v0-1-1-classification-corrections.md` — owner-ready clarification package enforcing one primary classification per concept without changing scope or persistence authority
-- `db2-closure-readiness-review.md` — historical DB-2 closure review and DB-3 specification-only owner gate
-- `db3-postgres-operational-boundary-specification.md` — DB-3 instance, database-class, role, credential, migration, backup, capability, tool-contract, and restart-boundary specification
-- `db3-physical-schema-specification.md` — DB-3 schema-family, identity, relationship, append-only, audit-first, constraint, index, raw-boundary, and read-exposure specification
-- `db3-specification-readiness-review.md` — active DB-3 closure review and exact DB-4 disposable-proof owner gate
-- `db1-closure-readiness-review.md` — historical closure review that reconciled every DB-1 exit criterion
-- `db1-closure-and-db2-activation-owner-gate.md` — consumed owner-gate proposal; durable authority is `decisions/2026-07-13-db1-closure-and-db2-activation.md`
-- root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence and separate permission gates
+- `db1-ob-dev-database-control-plane-requirements.md` — historical planning input only; it grants no current database or MCP expansion authority
+- `db1-closure-readiness-review.md` — trusted closure review that reconciled every DB-1 exit criterion
+- `db1-closure-and-db2-activation-owner-gate.md` — consumed owner-gate proposal; durable DB-1 closure authority is `decisions/2026-07-13-db1-closure-and-db2-activation.md`
+- `db2-physical-data-contract-freeze-specification.md` — canonical DB-2 candidate under reconciliation; not accepted and not a DB-3 input
+- `db2-physical-data-contract-freeze-readiness-review.md` — historical DB-1 readiness review; does not establish current acceptance
+- `db2-freeze-v0-1-1-classification-corrections.md` — candidate corrections requiring fresh DB-1-grounded review and actual reconciliation
+- `db2-closure-readiness-review.md` — invalidated historical assessment; not closure evidence
+- `db3-postgres-operational-boundary-specification.md` — suspended untrusted candidate; no current DB-3 or execution authority
+- `db3-physical-schema-specification.md` — suspended untrusted candidate; no current DB-3, DDL, or execution authority
+- `db3-specification-readiness-review.md` — invalidated historical assessment; not closure evidence
+- root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence corrected by the recovery decision
 
 Completed M20 through M14 packages remain available below for lineage and proof context.
 
