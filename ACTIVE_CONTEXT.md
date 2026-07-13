@@ -22,24 +22,25 @@ Observatory v1 remains accepted at the bounded proof-system ceiling by `decision
 ## Active Milestone
 
 ```text
-DB-3 — Postgres Operational Boundary and Physical Schema Specification
+DB-4 — Database Hammer Harness and Migration Specification
 ```
 
-M0, M0.1, M1 through M20, DB-1, and DB-2 are complete and committed. DB-3 is active by `decisions/2026-07-13-db2-closure-and-db3-activation.md`.
+M0, M0.1, M1 through M20, DB-1, DB-2, and DB-3 are complete and committed. DB-4 is active by `decisions/2026-07-13-db3-closure-and-db4-activation.md`.
 
 ---
 
 ## Current Task
 
-DB-3 specifications are complete and ready for owner review:
+Execute DB-4 within the disposable proof boundary:
 
-- `planning-inbox/db3-postgres-operational-boundary-specification.md`;
-- `planning-inbox/db3-physical-schema-specification.md`;
-- `planning-inbox/db3-specification-readiness-review.md`.
+- implement the coherent ob-dev database-control-plane expansion;
+- create migration and rollback specification files;
+- build and prove the protected disposable PostgreSQL harness;
+- run only allowlisted real-PostgreSQL hammer profiles;
+- record structured per-hammer proof results;
+- prepare DB-4 closure readiness and a separate DB-5 owner gate.
 
-DB-3 remains active until explicit owner closure. DB-4 remains inactive until a separate owner decision.
-
-Postgres creation, DDL, migration files, migration execution, database credentials, real ingestion, provider calls, and production work remain unauthorized.
+The governed Observatory database, governed roles or credentials, governed migration execution, governed persistence, provider calls, customer data, raw capture, and production remain unauthorized.
 
 ---
 

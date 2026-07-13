@@ -135,14 +135,14 @@ If required reading includes a folder, that folder must have a `README.md` index
 ## Active Milestone
 
 ```text
-DB-3 — Postgres Operational Boundary and Physical Schema Specification
+DB-4 — Database Hammer Harness and Migration Specification
 ```
 
 Observatory v1 remains accepted and M20 remains closed by `decisions/2026-07-12-observatory-v1-acceptance.md`.
 
-DB-2 closed and DB-3 specification-only work activated through `decisions/2026-07-13-db2-closure-and-db3-activation.md`. The governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`.
+DB-3 closed and DB-4 disposable proof work activated through `decisions/2026-07-13-db3-closure-and-db4-activation.md`. The governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`.
 
-No Postgres creation, DDL, migration files or execution, real ingestion, provider calls, production launch, or customer/strategy persistence is authorized.
+DB-4 authorizes only protected disposable PostgreSQL proof, migration/rollback specification files, and the coherent ob-dev control-plane implementation. Governed database creation, governed roles or credentials, governed migration execution, governed persistence, real ingestion, provider calls, production launch, and customer/strategy persistence remain unauthorized.
 
 ---
 

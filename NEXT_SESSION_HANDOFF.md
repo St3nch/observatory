@@ -14,16 +14,16 @@ The Observatory is accepted at the bounded v1 proof-system ceiling, and the post
 Closed milestones:
 
 ```text
-M0, M0.1, M1 through M20, DB-1, and DB-2
+M0, M0.1, M1 through M20, DB-1, DB-2, and DB-3
 ```
 
 Active milestone:
 
 ```text
-DB-3 — Postgres Operational Boundary and Physical Schema Specification
+DB-4 — Database Hammer Harness and Migration Specification
 ```
 
-The owner accepted the DB-2 v0.1.1 classification corrections, closed DB-2, and activated DB-3 specification-only work through `decisions/2026-07-13-db2-closure-and-db3-activation.md`. The accepted v1 system remains local, evidence-only, bounded, and not production-ready or feature-complete.
+The owner accepted both DB-3 specifications, closed DB-3, and activated DB-4 disposable proof work through `decisions/2026-07-13-db3-closure-and-db4-activation.md`. The accepted v1 system remains local, evidence-only, bounded, and not production-ready or feature-complete.
 
 Current authority:
 
@@ -33,6 +33,7 @@ decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md
 decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md
 decisions/2026-07-13-db1-closure-and-db2-activation.md
 decisions/2026-07-13-db2-closure-and-db3-activation.md
+decisions/2026-07-13-db3-closure-and-db4-activation.md
 POST_V1_DATABASE_ROADMAP.md
 ```
 
@@ -108,34 +109,33 @@ When using `ob-dev`:
 ## Roadmap State
 
 ```text
-M0, M0.1, M1 through M20, DB-1, and DB-2: closed
-DB-3 — Postgres Operational Boundary and Physical Schema Specification: active
-DB-4 through DB-10: planned and inactive
+M0, M0.1, M1 through M20, DB-1, DB-2, and DB-3: closed
+DB-4 — Database Hammer Harness and Migration Specification: active
+DB-5 through DB-10: planned and inactive
 ```
 
 The governing sequence is `POST_V1_DATABASE_ROADMAP.md`. No database milestone implies the next milestone.
 
-Accepted DB-2 closure state:
+Accepted DB-3 closure state:
 
-- physical data-contract freeze v0.1.1 classification corrections accepted;
-- singular primary classifications now bind DB-3;
-- DB-2 closed by `decisions/2026-07-13-db2-closure-and-db3-activation.md`;
-- DB-3 activated for specification work only.
+- PostgreSQL operational-boundary specification v0.1 accepted;
+- physical schema specification v0.1 accepted;
+- DB-3 closed by `decisions/2026-07-13-db3-closure-and-db4-activation.md`;
+- DB-4 activated for coherent ob-dev control-plane implementation, migration/rollback specification files, and disposable PostgreSQL proof only.
 
 ---
 
 ## Immediate Next Steps
 
-DB-3 is ready for owner decision:
+Execute DB-4 within the disposable proof boundary:
 
-1. review `planning-inbox/db3-postgres-operational-boundary-specification.md`;
-2. review `planning-inbox/db3-physical-schema-specification.md`;
-3. review `planning-inbox/db3-specification-readiness-review.md`;
-4. accept or revise the DB-3 specifications;
-5. close DB-3 or return it for revision;
-6. separately activate DB-4 disposable proof work or leave it inactive.
+1. implement the coherent ob-dev database-control-plane batch;
+2. create migration and rollback specification files;
+3. prove protected disposable database lifecycle and SHA-bound migration execution;
+4. run allowlisted real-PostgreSQL hammer profiles and record results;
+5. prepare DB-4 closure readiness and a separate DB-5 owner gate.
 
-Do not create the governed database, governed roles or credentials, or execute governed migrations. DB-4 remains separately gated.
+Do not create the governed Observatory database, governed roles or credentials, execute governed migrations, persist governed evidence, call providers, handle customer data, capture raw payloads, or enter production.
 
 ---
 
