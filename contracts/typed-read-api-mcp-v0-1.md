@@ -1,6 +1,6 @@
 # Contract - Typed Read API / MCP v0.1.1
 
-Status: accepted v0.1; DB-1 corrective amendment v0.1.1 pending owner acceptance
+Status: accepted v0.1.1 by `decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md`
 Authority: binding M14 typed-read behavioral contract within its declared scope; does not authorize production API/MCP, persistence, provider execution, customer data, overlays, or reports
 Version: 0.1.1
 Date: 2026-07-12

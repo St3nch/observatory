@@ -34,11 +34,11 @@ database creation / DDL / migrations: not authorized
 | ID | Severity | Disposition | Required action | Gate |
 |---|---|---|---|---|
 | N-01 | High | accept_apply_db1 | Correct typed-read ceiling disclosure contract and prototype; add over-ceiling adversarial test; route database silent-partial-view hammer | Blocks DB-backed reads, not physical planning |
-| N-02 | High | needs_owner_ruling | Rule OR-B1 and OR-B2; accept hammer matrix/policy v0.2; define per-hammer result register | Blocks migration execution and real ingestion |
+| N-02 | High | accept_apply_db1 | OR-B1 and OR-B2 accepted; prepare hammer matrix/policy v0.2 and define per-hammer result register | Blocks migration execution and real ingestion until later gates pass |
 | N-03 | High | accept_assign_future_gate | Create one consolidated owner-accepted physical data contract before physical schema specification | DB-2 exit / DB-3 entry |
 | N-04 | High | accept_assign_future_gate | Build clone-stable decision-linked provider authority, duplicate, budget, attempt-lifecycle, and idempotency enforcement before real ingestion | Blocks real ingestion |
 | N-05 | Medium | accept_apply_db1 | Remove stale phase restatements from `README.md` and `LLM_START_HERE.md`; use authority pointers only | Documentation truth |
-| N-06 | Medium | needs_owner_ruling | Rule OR-C2 retention posture per source family and OR-C4 raw archive layout | Blocks raw-support physical specification |
+| N-06 | Medium | accept_apply_db1 | OR-C2 per-family retention and OR-C4 hybrid raw-manifest / opaque-pointer layout accepted | Raw-support planning may proceed; capture remains unauthorized |
 | N-07 | Medium | accept_assign_future_gate | Require encrypted off-machine database backup and semantic restore proof before real evidence persistence | DB recovery / real ingestion gate |
 | N-08 | Medium | accept_apply_db1 | Implement and test cursor expiration required by typed-read contract | Blocks DB-backed reads |
 | N-09 | Low | accept_apply_db1 | Correct stale Hermes-lineage statement in accepted typed-read contract with version/change-log note | Contract hygiene |
@@ -79,15 +79,15 @@ database creation / DDL / migrations: not authorized
 
 | Finding | Current status | Evidence |
 |---|---|---|
-| N-01 | implemented and owner-local proven; v0.1.1 acceptance pending | over-ceiling hostile test plus 188-test owner-local pass in `db1-typed-read-correction-proof.md` |
+| N-01 | implemented, owner-local proven, and v0.1.1 accepted | over-ceiling hostile test plus 188-test owner-local pass in `db1-typed-read-correction-proof.md` |
 | N-05 | complete | `README.md`, `LLM_START_HERE.md` now use authority pointers only |
-| N-08 | implemented and owner-local proven; v0.1.1 acceptance pending | expiring HMAC cursor plus expired-cursor hostile test |
-| N-09 | complete pending v0.1.1 acceptance | typed-read contract Section 24 and change log corrected |
-| N-11 | implemented and owner-local proven; v0.1.1 acceptance pending | internal lookup helper plus freshness-only grant test |
-| N-13 | implemented and owner-local proven; v0.1.1 acceptance pending | computed promotion requirement plus forcing test |
-| N-14 | complete pending v0.1.1 acceptance | SearchClarity contract records conservative adapter mapping |
+| N-08 | implemented, owner-local proven, and v0.1.1 accepted | expiring HMAC cursor plus expired-cursor hostile test |
+| N-09 | complete and v0.1.1 accepted | typed-read contract Section 24 and change log corrected |
+| N-11 | implemented, owner-local proven, and v0.1.1 accepted | internal lookup helper plus freshness-only grant test |
+| N-13 | implemented, owner-local proven, and v0.1.1 accepted | computed promotion requirement plus forcing test |
+| N-14 | complete and v0.1.1 accepted | SearchClarity contract records conservative adapter mapping |
 
-The bounded correction evidence is recorded in `planning-inbox/db1-typed-read-correction-proof.md`. Owner-local Attempt 2 passed all 188 tests in 0.331 seconds. The implementation findings are proven at the fixture/in-memory process level and now await explicit acceptance of the v0.1.1 contract corrections.
+The bounded correction evidence is recorded in `planning-inbox/db1-typed-read-correction-proof.md`. Owner-local Attempt 2 passed all 188 tests in 0.331 seconds. The implementation findings are proven at the fixture/in-memory process level. The v0.1.1 contract corrections and OR-B1/B2/C2/C4 were accepted by `decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md`; no database or stronger proof authority is inferred.
 
 ## DB-1 exit criteria
 

@@ -1,6 +1,6 @@
 # DB-1 Typed-Read Corrective Proof
 
-Status: owner-local full-suite proof passed; corrective contract acceptance pending
+Status: owner-local full-suite proof passed; v0.1.1 corrective contracts accepted by `decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md`
 Date: 2026-07-12
 Authority: `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`
 Audit source: `audits/observatory-post-v1-pre-database-deep-audit-2026-07-12.md`

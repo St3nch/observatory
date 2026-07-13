@@ -39,9 +39,9 @@ Current work is limited to:
 - route N-01 through N-14 and the opportunity set completely;
 - correct stale authority pointers and narrow contract truth defects;
 - plan and, under bounded DB-1 authority, implement the accepted typed-read corrections with hostile tests;
-- prepare and resolve OR-B1, OR-B2, OR-C2, and OR-C4;
-- prepare hammer matrix / gate policy v0.2 and per-hammer result-register requirements;
-- fully specify DB-2, the physical data-contract freeze.
+- preserve the accepted OR-B1, OR-B2, OR-C2, and OR-C4 rulings recorded by `decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md`;
+- prepare hammer matrix / gate policy v0.2 and per-hammer result-register requirements under the accepted proof-class and gate mapping;
+- fully specify DB-2, the physical data-contract freeze, using the accepted fail-closed retention and hybrid raw-manifest / opaque-pointer boundaries.
 
 Postgres creation, DDL, migration files, migration execution, database credentials, real ingestion, provider calls, and production work remain unauthorized.
 

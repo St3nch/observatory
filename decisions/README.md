@@ -79,6 +79,7 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-12-m19-closure-and-m20-activation.md` | accepted decision | Closes M19 after bounded repository recovery proof and activates M20 acceptance planning | Acceptance review only; encryption/off-machine recovery remains unproven and no production deployment or implementation widening is authorized |
 | `2026-07-12-observatory-v1-acceptance.md` | accepted decision | Accepts Observatory v1 at the bounded proof-system ceiling and closes M20 | Known limits remain binding; no production, post-v1 implementation, provider expansion, recurrence, live database, customer data, reports, or production API/MCP authority |
 | `2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md` | accepted decision | Accepts the post-v1 audit as advisory input, preserves v1 acceptance, and activates DB-1 reconciliation/database-roadmap planning | No Postgres creation, DDL, migration files/execution, real ingestion, provider calls, customer data, or production authority |
+| `2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md` | accepted decision | Accepts typed-read and SearchClarity v0.1.1 corrections plus OR-B1/B2/C2/C4 | Authorizes DB-1 hammer-policy and data-contract planning only; no Postgres, DDL, migrations, persistence, capture, ingestion, or production authority |
 
 ---
 

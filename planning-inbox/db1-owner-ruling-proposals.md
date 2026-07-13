@@ -1,8 +1,10 @@
 # DB-1 Owner-Ruling Proposals
 
-Status: planning proposal; not accepted until owner rules
+Status: accepted ruling source; recorded by `decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md`
 Date: 2026-07-12
 Milestone: DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
+
+The proposal text below was accepted by the owner. The decision file is the durable authority record.
 
 ## OR-B1 — What counts as a hammer pass
 

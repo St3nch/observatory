@@ -1,6 +1,6 @@
 # Contract - SearchClarity Proof Workflow v0.1.1
 
-Status: accepted v0.1; DB-1 corrective amendment v0.1.1 pending owner acceptance
+Status: accepted v0.1.1 by `decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md`
 Authority: binding M15 SearchClarity evidence-support contract within its declared scope; does not authorize proof implementation, customer data, overlays, report generation, production integration, provider execution, or persistence
 Version: 0.1.1
 Date: 2026-07-12
