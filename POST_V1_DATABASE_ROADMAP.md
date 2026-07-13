@@ -79,6 +79,7 @@ Consume the accepted post-v1 audit completely, correct proven v1 truth/code defe
 - OR-B1/B2/C2/C4 proposal and decision work;
 - hammer matrix/policy v0.2 planning;
 - per-hammer result-register contract planning;
+- ob-dev database control-plane requirements planning so DB-3/DB-4 do not depend on improvised MCP edits;
 - DB-2 physical data-contract-freeze specification.
 
 ### Forbidden work
@@ -106,6 +107,7 @@ strategy or recommendation persistence
 - OR-B1/B2/C2/C4 ruled;
 - hammer matrix and acceptance policy v0.2 accepted or owner-ready under an exact decision gate;
 - per-hammer register shape accepted or owner-ready;
+- ob-dev database control-plane requirements committed and mapped to DB-3/DB-4 gates;
 - DB-2 deliverables and non-authorizations fully specified;
 - no database, DDL, or migration execution has occurred.
 
@@ -183,7 +185,8 @@ Specify the local Postgres operational boundary and derive the physical schema o
 - audit-first same-transaction mechanism;
 - identity/index/constraint strategy;
 - raw manifest pointer boundary;
-- no customer/strategy/recommendation schema rule.
+- no customer/strategy/recommendation schema rule;
+- exact ob-dev database control-plane contract, including fixed binaries, credential custody, protected database names, database classes, migration path/SHA rules, capability activation classes, result shapes, and MCP restart/recovery procedure.
 
 ### Allowed
 
@@ -199,7 +202,24 @@ Creating the database, roles, DDL, migration execution, ingestion.
 
 ### Purpose
 
-Build the disposable real-Postgres test harness before authorizing the governed local database and prove that hammers can actually fail.
+Build the disposable real-Postgres test harness before authorizing the governed local database, implement the accepted ob-dev database control-plane expansion, and prove that hammers can actually fail.
+
+The ob-dev expansion should be one coherent, tested capability batch followed by an owner-controlled restart/connector refresh. Tool existence does not authorize governed database mutation; dangerous modes remain capability-gated.
+
+### Minimum control-plane capabilities
+
+- read-only Postgres readiness, identity, settings, database, role, schema, privilege, and migration-history inspection;
+- disposable-database create/reset/drop tools with protected-name and disposable-marker enforcement;
+- exact-path, expected-SHA migration validation, forward execution, and rollback execution;
+- allowlisted migration, role, concurrency, and restore hammer profiles;
+- structured per-hammer proof results with no secret leakage;
+- no generic shell, arbitrary PowerShell/Python, arbitrary SQL, or caller-selected executable paths.
+
+Detailed planning input:
+
+```text
+planning-inbox/db1-ob-dev-database-control-plane-requirements.md
+```
 
 ### Minimum hammer families
 
@@ -214,9 +234,11 @@ Build the disposable real-Postgres test harness before authorizing the governed 
 
 ### Exit
 
+- accepted ob-dev database tools are implemented, owner-restarted/refreshed, and capability-gated;
+- disposable Postgres lifecycle works through ob-dev without exposing generic SQL or execution;
 - disposable Postgres harness exists;
 - per-hammer register exists;
-- candidate migration specifications include rollback pairs;
+- candidate migration specifications include rollback pairs and execute only through exact-path, expected-SHA tools;
 - mandatory hammers can be shown failing against intentionally broken candidates;
 - no governed durable database or real evidence exists.
 

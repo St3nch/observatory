@@ -50,8 +50,9 @@ For current planning context, read:
 Active DB-1 package:
 
 - `post-v1-pre-database-audit-response-2026-07-12.md` — complete N-01 through N-14 routing, opportunity parking, correction order, and DB-1 exit criteria
-- `db1-owner-ruling-proposals.md` — owner-ready OR-B1, OR-B2, OR-C2, and OR-C4 proposals
-- `db1-typed-read-correction-proof.md` — typed-read v0.1.1 correction scope and pending owner-local proof
+- `db1-owner-ruling-proposals.md` — accepted OR-B1, OR-B2, OR-C2, and OR-C4 proposal source; durable authority lives in the linked decision
+- `db1-typed-read-correction-proof.md` — typed-read v0.1.1 correction scope, owner-local 188-test proof, and accepted correction status
+- `db1-ob-dev-database-control-plane-requirements.md` — explicit ob-dev PostgreSQL inspection, disposable lifecycle, migration, hammer-profile, and restore-tool requirements mapped to DB-3/DB-4; planning only
 - root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence and separate permission gates
 
 Completed M20 through M14 packages remain available below for lineage and proof context.
