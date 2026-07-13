@@ -81,6 +81,7 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md` | accepted decision | Accepts the post-v1 audit as advisory input, preserves v1 acceptance, and activates DB-1 reconciliation/database-roadmap planning | No Postgres creation, DDL, migration files/execution, real ingestion, provider calls, customer data, or production authority |
 | `2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md` | accepted decision | Accepts typed-read and SearchClarity v0.1.1 corrections plus OR-B1/B2/C2/C4 | Authorizes DB-1 hammer-policy and data-contract planning only; no Postgres, DDL, migrations, persistence, capture, ingestion, or production authority |
 | `2026-07-13-db1-closure-and-db2-activation.md` | accepted decision | Accepts hammer policy v0.2, result-register v0.1, and the DB-2 logical freeze; closes DB-1 and activates DB-2 | Logical-contract work only; no Postgres, roles, DDL, migrations, real hammers, persistence, ingestion, or DB-3 authority |
+| `2026-07-13-db2-closure-and-db3-activation.md` | accepted decision | Accepts DB-2 v0.1.1 classification corrections, closes DB-2, and activates DB-3 specification-only work | No database creation, roles, credentials, SQL/DDL, migrations, disposable databases, Postgres hammers, persistence, ingestion, raw capture, or production |
 
 ---
 

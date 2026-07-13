@@ -135,12 +135,12 @@ If required reading includes a folder, that folder must have a `README.md` index
 ## Active Milestone
 
 ```text
-DB-2 — Physical Data-Contract Freeze
+DB-3 — Postgres Operational Boundary and Physical Schema Specification
 ```
 
 Observatory v1 remains accepted and M20 remains closed by `decisions/2026-07-12-observatory-v1-acceptance.md`.
 
-DB-1 closed and DB-2 activated through `decisions/2026-07-13-db1-closure-and-db2-activation.md`. The governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`.
+DB-2 closed and DB-3 specification-only work activated through `decisions/2026-07-13-db2-closure-and-db3-activation.md`. The governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`.
 
 No Postgres creation, DDL, migration files or execution, real ingestion, provider calls, production launch, or customer/strategy persistence is authorized.
 

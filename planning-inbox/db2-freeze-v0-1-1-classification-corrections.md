@@ -1,9 +1,9 @@
 # DB-2 Physical Data-Contract Freeze v0.1.1 Classification Corrections
 
-Status: owner-ready DB-2 clarification proposal
+Status: accepted DB-2 clarification
 Date: 2026-07-13
-Current accepted authority: `planning-inbox/db2-physical-data-contract-freeze-specification.md`
-Accepted by: `decisions/2026-07-13-db1-closure-and-db2-activation.md`
+Canonical freeze: `planning-inbox/db2-physical-data-contract-freeze-specification.md`
+Accepted by: `decisions/2026-07-13-db2-closure-and-db3-activation.md`
 
 ## Purpose
 

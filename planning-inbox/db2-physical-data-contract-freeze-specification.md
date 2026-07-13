@@ -1,9 +1,9 @@
 # DB-2 Physical Data-Contract Freeze Specification
 
-Status: accepted DB-2 logical data-contract freeze
+Status: accepted DB-2 logical data-contract freeze v0.1.1
 Date: 2026-07-13
-Accepted by: `decisions/2026-07-13-db1-closure-and-db2-activation.md`
-Active milestone: DB-2 — Physical Data-Contract Freeze
+Accepted by: `decisions/2026-07-13-db1-closure-and-db2-activation.md`; classification corrections accepted by `decisions/2026-07-13-db2-closure-and-db3-activation.md`
+Milestone: DB-2 closed; normative input to active DB-3
 
 ## Purpose
 
@@ -143,7 +143,8 @@ It is not a cross-system foreign key and must not create customer-record ownersh
 ### 3. Source family
 
 ```text
-classification: versioned vocabulary
+classification: versioned
+qualifier: governed vocabulary
 identity owner: Observatory governance
 lifecycle: candidate / admitted / blocked / retired
 required provenance: decision or contract that established posture
@@ -248,7 +249,8 @@ It is never an Observatory evidence identity.
 ### 9. Candidate observation
 
 ```text
-classification: durable but non-evidence, retention-bounded
+classification: durable
+qualifiers: non-evidence; retention_gated
 identity owner: Observatory
 lifecycle: pending / valid / invalid / rejected / admitted / expired
 required provenance: CapturePackage, attempt, parser/manual extraction path, source context
@@ -293,9 +295,10 @@ Evidence identity must survive physical schema evolution.
 ### 12. Internal citation handle
 
 ```text
-classification: durable mapping
+classification: durable
+qualifier: internal mapping
 identity owner: Observatory
-lifecycle: active / deprecated / unresolved
+lifecycle: active / deprecated / blocked
 required provenance: resolves to evidence_id
 read exposure: internal bounded tools only
 hammer implications: H15, H17
@@ -320,7 +323,8 @@ Observatory may resolve an approved reference through typed boundaries but must 
 ### 14. Raw manifest
 
 ```text
-classification: durable or append_only metadata, source-family gated
+classification: append_only
+qualifiers: source_family_gated; rights_gated; retention_gated
 identity owner: Observatory
 lifecycle: prepared / verified / purged / unavailable / blocked / expired
 required provenance: source family, CapturePackage, attempt, media type, bytes, hash, shape/parser context
@@ -351,7 +355,8 @@ purge_status
 ### 15. Opaque artifact pointer
 
 ```text
-classification: durable internal locator
+classification: durable
+qualifier: internal opaque locator
 identity owner: Observatory artifact boundary
 lifecycle: active / missing / purged / invalid
 required provenance: raw manifest and pointer verification
@@ -364,7 +369,8 @@ Raw bytes live outside ordinary relational evidence records when a future source
 ### 16. Raw payload bytes
 
 ```text
-classification: external artifact, source-family gated
+classification: external
+qualifiers: source_family_gated; rights_gated; retention_gated
 identity owner: governed artifact store when later authorized
 lifecycle: retained / purge_due / purged / unavailable
 Observatory relational persistence: forbidden
@@ -376,7 +382,8 @@ Payload bytes must never be embedded as a generic relational evidence column mer
 ### 17. Shape fingerprint
 
 ```text
-classification: append_only metadata
+classification: append_only
+qualifier: shape metadata
 identity owner: Observatory
 lifecycle: observed / recognized / unknown / breaking / retired
 required provenance: source family, endpoint/surface, capture attempt, canonicalization version
@@ -388,7 +395,8 @@ hammer implications: H12, H13, H21, H22
 ### 18. Parser version
 
 ```text
-classification: versioned external implementation reference
+classification: external
+qualifier: versioned implementation reference
 identity owner: Observatory implementation repository
 lifecycle: active / retired / blocked
 required provenance: exact implementation version or commit

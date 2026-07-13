@@ -14,16 +14,16 @@ The Observatory is accepted at the bounded v1 proof-system ceiling, and the post
 Closed milestones:
 
 ```text
-M0, M0.1, M1 through M20, and DB-1
+M0, M0.1, M1 through M20, DB-1, and DB-2
 ```
 
 Active milestone:
 
 ```text
-DB-2 — Physical Data-Contract Freeze
+DB-3 — Postgres Operational Boundary and Physical Schema Specification
 ```
 
-The owner accepted the DB-1 hammer-policy package and DB-2 logical freeze, closed DB-1, and activated DB-2 through `decisions/2026-07-13-db1-closure-and-db2-activation.md`. The accepted v1 system remains local, evidence-only, bounded, and not production-ready or feature-complete.
+The owner accepted the DB-2 v0.1.1 classification corrections, closed DB-2, and activated DB-3 specification-only work through `decisions/2026-07-13-db2-closure-and-db3-activation.md`. The accepted v1 system remains local, evidence-only, bounded, and not production-ready or feature-complete.
 
 Current authority:
 
@@ -32,6 +32,7 @@ decisions/2026-07-12-observatory-v1-acceptance.md
 decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md
 decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md
 decisions/2026-07-13-db1-closure-and-db2-activation.md
+decisions/2026-07-13-db2-closure-and-db3-activation.md
 POST_V1_DATABASE_ROADMAP.md
 ```
 
@@ -107,35 +108,33 @@ When using `ob-dev`:
 ## Roadmap State
 
 ```text
-M0, M0.1, M1 through M20, and DB-1: closed
-DB-2 — Physical Data-Contract Freeze: active
-DB-3 through DB-10: planned and inactive
+M0, M0.1, M1 through M20, DB-1, and DB-2: closed
+DB-3 — Postgres Operational Boundary and Physical Schema Specification: active
+DB-4 through DB-10: planned and inactive
 ```
 
 The governing sequence is `POST_V1_DATABASE_ROADMAP.md`. No database milestone implies the next milestone.
 
-Accepted DB-1 closure state:
+Accepted DB-2 closure state:
 
-- typed-read and SearchClarity v0.1.1 corrections accepted;
-- owner-local 188-test corrective proof remains only `owner_local_process_pass`;
-- OR-B1, OR-B2, OR-C2, and OR-C4 accepted;
-- hammer matrix v0.2, acceptance-gate policy v0.2, and per-hammer result-register contract v0.1 accepted;
-- DB-2 physical data-contract freeze accepted;
-- DB-1 closed by `decisions/2026-07-13-db1-closure-and-db2-activation.md`.
+- physical data-contract freeze v0.1.1 classification corrections accepted;
+- singular primary classifications now bind DB-3;
+- DB-2 closed by `decisions/2026-07-13-db2-closure-and-db3-activation.md`;
+- DB-3 activated for specification work only.
 
 ---
 
 ## Immediate Next Steps
 
-DB-2 is ready for owner decision with one clarification package:
+Execute DB-3 specification-only work:
 
-1. review `planning-inbox/db2-freeze-v0-1-1-classification-corrections.md`;
-2. review `planning-inbox/db2-closure-readiness-review.md`;
-3. accept or revise the v0.1.1 classification clarifications;
-4. close DB-2 or return it for revision;
-5. separately activate DB-3 specification work or leave it inactive.
+1. specify PostgreSQL instance and database-class boundaries;
+2. specify roles, privileges, credentials, and secret boundaries without creating them;
+3. specify physical schema structures without producing DDL or migration files;
+4. map every mechanism to accepted hammers;
+5. prepare DB-3 closure readiness and a separate DB-4 gate.
 
-Do not begin physical schema specification or activate DB-3 without the explicit owner decision.
+Do not create databases, roles, credentials, SQL, DDL, migrations, disposable databases, or execute PostgreSQL hammers.
 
 ---
 

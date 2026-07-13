@@ -26,7 +26,7 @@ No milestone implies the next milestone.
 
 ```text
 Observatory v1: accepted at bounded proof-system ceiling
-Active milestone: DB-2 — Physical Data-Contract Freeze
+Active milestone: DB-3 — Postgres Operational Boundary and Physical Schema Specification
 Postgres creation: not authorized
 DDL: not authorized
 Migration execution: not authorized
@@ -39,8 +39,8 @@ Migration execution: not authorized
 | ID | Name | Status | Main gate |
 |---|---|---|---|
 | DB-1 | Post-v1 Audit Reconciliation and Ruling Closure | closed | Audit findings routed; corrections and rulings accepted; DB-2 package prepared |
-| DB-2 | Physical Data-Contract Freeze | active | One accepted logical contract and forbidden-persistence register |
-| DB-3 | Postgres Operational Boundary and Physical Schema Specification | planned | Instance/role/credential/backup rulings plus accepted physical specification; no execution |
+| DB-2 | Physical Data-Contract Freeze | closed | Logical contract v0.1.1 accepted with singular primary classifications and forbidden-persistence register |
+| DB-3 | Postgres Operational Boundary and Physical Schema Specification | active | Instance/role/credential/backup rulings plus accepted physical specification; no execution |
 | DB-4 | Database Hammer Harness and Migration Specification | planned | Disposable real-Postgres harness can fail; migration/rollback specifications ready |
 | DB-5 | Governed Local Database Bootstrap and Migration Execution | planned | Separate owner execution gate; migration hammers pass |
 | DB-6 | First Persisted Synthetic Evidence Slice | planned | Append-only, audit-first, identity, scope, rights, retention, and concurrency hammers pass |

@@ -22,23 +22,25 @@ Observatory v1 remains accepted at the bounded proof-system ceiling by `decision
 ## Active Milestone
 
 ```text
-DB-2 — Physical Data-Contract Freeze
+DB-3 — Postgres Operational Boundary and Physical Schema Specification
 ```
 
-M0, M0.1, M1 through M20, and DB-1 are complete and committed. DB-2 is active by `decisions/2026-07-13-db1-closure-and-db2-activation.md`.
+M0, M0.1, M1 through M20, DB-1, and DB-2 are complete and committed. DB-3 is active by `decisions/2026-07-13-db2-closure-and-db3-activation.md`.
 
 ---
 
 ## Current Task
 
-DB-2 reconciliation is complete. Current work is owner review of:
+Execute DB-3 specification work only:
 
-- `planning-inbox/db2-freeze-v0-1-1-classification-corrections.md`;
-- `planning-inbox/db2-closure-readiness-review.md`.
+- specify PostgreSQL instance and database-class boundaries;
+- specify role, privilege, credential, and secret boundaries without creating them;
+- specify naming, identity, lifecycle, index, constraint, append-only, audit-first, and raw-pointer mechanisms;
+- specify backup-before-migration and migration-governance requirements;
+- map every physical mechanism to accepted hammers;
+- prepare DB-3 closure readiness and a separate DB-4 gate.
 
-The v0.1.1 proposal clarifies singular primary classifications without changing scope, doctrine, or persistence authority.
-
-DB-2 remains active until explicit owner closure. DB-3 remains inactive until a separate owner decision.
+DB-4 remains inactive until a separate owner decision.
 
 Postgres creation, DDL, migration files, migration execution, database credentials, real ingestion, provider calls, and production work remain unauthorized.
 
