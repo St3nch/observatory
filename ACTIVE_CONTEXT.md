@@ -31,16 +31,14 @@ M0, M0.1, M1 through M20, and DB-1 are complete and committed. DB-2 is active by
 
 ## Current Task
 
-Execute DB-2 as logical-contract work only:
+DB-2 reconciliation is complete. Current work is owner review of:
 
-- reconcile the accepted physical data-contract freeze against all accepted contracts and rulings;
-- resolve or explicitly preserve any remaining `unresolved` classifications;
-- verify every durable, append-only, versioned, derived, ephemeral, external, and forbidden concept;
-- verify identity ownership, lifecycle, provenance, scope, rights, retention, write authority, read exposure, and hammer implications;
-- keep the forbidden-persistence register complete;
-- prepare DB-2 closure readiness and the separate DB-3 planning gate.
+- `planning-inbox/db2-freeze-v0-1-1-classification-corrections.md`;
+- `planning-inbox/db2-closure-readiness-review.md`.
 
-DB-3 remains inactive until a separate owner decision.
+The v0.1.1 proposal clarifies singular primary classifications without changing scope, doctrine, or persistence authority.
+
+DB-2 remains active until explicit owner closure. DB-3 remains inactive until a separate owner decision.
 
 Postgres creation, DDL, migration files, migration execution, database credentials, real ingestion, provider calls, and production work remain unauthorized.
 

@@ -127,14 +127,15 @@ Accepted DB-1 closure state:
 
 ## Immediate Next Steps
 
-Execute DB-2 logical-contract work only:
+DB-2 is ready for owner decision with one clarification package:
 
-1. reconcile the accepted freeze against all accepted contracts and rulings;
-2. resolve or explicitly preserve remaining unresolved classifications;
-3. verify identity, lifecycle, provenance, scope, rights, retention, write authority, read exposure, and hammer mappings;
-4. prepare DB-2 closure readiness and a separate DB-3 planning gate.
+1. review `planning-inbox/db2-freeze-v0-1-1-classification-corrections.md`;
+2. review `planning-inbox/db2-closure-readiness-review.md`;
+3. accept or revise the v0.1.1 classification clarifications;
+4. close DB-2 or return it for revision;
+5. separately activate DB-3 specification work or leave it inactive.
 
-Do not begin physical schema specification or activate DB-3 without a separate owner decision.
+Do not begin physical schema specification or activate DB-3 without the explicit owner decision.
 
 ---
 
