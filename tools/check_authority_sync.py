@@ -58,6 +58,30 @@ EXPECTED_DB3_ARTIFACT_SHA256 = {
         "d13e83b8fd74fd4c427a3ede92c70e24a252458b80c8abc6531cb5bd92ac2dec"
     ),
 }
+AUTHORIZED_DB4_PLANNING_ARTIFACTS = (
+    "planning-inbox/db4-dormant-postgres-gap-and-disposition-matrix.md",
+    "planning-inbox/db4-exact-ob-dev-implementation-package-specification.md",
+    "planning-inbox/db4-migration-harness-and-proof-package-specification.md",
+    "planning-inbox/db4-security-credentials-restart-and-owner-action-runbook.md",
+    "planning-inbox/db4-owner-readiness-review.md",
+)
+EXPECTED_DB4_PLANNING_SHA256 = {
+    "planning-inbox/db4-dormant-postgres-gap-and-disposition-matrix.md": (
+        "a65919ace9da12c16b7dcc3aa7b8262c1150f2acbc2dc521c91ca7c2ee055a2a"
+    ),
+    "planning-inbox/db4-exact-ob-dev-implementation-package-specification.md": (
+        "b44711fe80a1967ddf3d5413ce150fcc5d56ca7f61ddb5d8f42747c63d9ce14a"
+    ),
+    "planning-inbox/db4-migration-harness-and-proof-package-specification.md": (
+        "9aff671e31fe94dabe5acca6a6631b14f8197a7c85ad55115caced354c7dad2e"
+    ),
+    "planning-inbox/db4-security-credentials-restart-and-owner-action-runbook.md": (
+        "8c08648051a2b88c58d5999f861596c79e8a479f68f02e6061586111edb86b7f"
+    ),
+    "planning-inbox/db4-owner-readiness-review.md": (
+        "1a2cfd0ff9f30be9ca793fc386a218deb3710860cd83f36ae294a354fd431c92"
+    ),
+}
 DB2_CANONICAL_CANDIDATE = (
     "planning-inbox/db2-physical-data-contract-freeze-specification.md"
 )
@@ -254,6 +278,7 @@ def _unauthorized_later_artifacts(root: Path) -> tuple[str, ...]:
         DB2_ACCEPTANCE_DB3_PLANNING_DECISION,
         DB3_ACCEPTANCE_DB4_PACKAGE_DECISION,
         *AUTHORIZED_DB3_PLANNING_ARTIFACTS,
+        *AUTHORIZED_DB4_PLANNING_ARTIFACTS,
     }
     return tuple(
         sorted(
@@ -388,6 +413,40 @@ def check_repository(root: Path = ROOT) -> CheckResult:
     db3_decision_filename = Path(DB3_ACCEPTANCE_DB4_PACKAGE_DECISION).name
     if db3_decision_filename not in decision_index:
         errors.append("decisions index lacks the DB-3 closure / DB-4 preparation decision")
+
+    db4_artifact_texts: dict[str, str] = {}
+    executable_sql = re.compile(
+        r"^(CREATE|ALTER|DROP|GRANT|REVOKE|INSERT|UPDATE|DELETE|TRUNCATE)\s+",
+        re.MULTILINE,
+    )
+    for relative_path, expected_sha256 in EXPECTED_DB4_PLANNING_SHA256.items():
+        artifact_path = root / relative_path
+        artifact_text = _read(root, relative_path, errors)
+        db4_artifact_texts[relative_path] = artifact_text
+        if artifact_path.is_file():
+            actual_sha256 = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
+            if actual_sha256 != expected_sha256:
+                errors.append(
+                    "DB-4 planning artifact SHA-256 mismatch: "
+                    f"{relative_path} is {actual_sha256}"
+                )
+        if Path(relative_path).name not in planning_index:
+            errors.append(f"planning index lacks DB-4 artifact: {relative_path}")
+        if executable_sql.search(artifact_text):
+            errors.append(
+                f"DB-4 planning artifact contains executable SQL: {relative_path}"
+            )
+
+    readiness_path = "planning-inbox/db4-owner-readiness-review.md"
+    readiness_text = db4_artifact_texts.get(readiness_path, "")
+    for relative_path, expected_sha256 in EXPECTED_DB4_PLANNING_SHA256.items():
+        if relative_path == readiness_path:
+            continue
+        if relative_path not in readiness_text or expected_sha256 not in readiness_text:
+            errors.append(
+                "DB-4 readiness review is not bound to the exact package artifact: "
+                f"{relative_path}"
+            )
 
     for relative_path in RETIRED_UNTRUSTED_ARTIFACTS:
         if (root / relative_path).exists():

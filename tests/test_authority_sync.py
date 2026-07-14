@@ -7,6 +7,7 @@ from pathlib import Path
 
 from tools.check_authority_sync import (
     AUTHORIZED_DB3_PLANNING_ARTIFACTS,
+    AUTHORIZED_DB4_PLANNING_ARTIFACTS,
     DB2_ACCEPTANCE_DB3_PLANNING_DECISION,
     DB2_CORRECTION_DISPOSITION,
     DB2_CANONICAL_CANDIDATE,
@@ -19,6 +20,7 @@ from tools.check_authority_sync import (
     EXPECTED_DB2_CORRECTION_STATUS,
     EXPECTED_DB2_REVIEW_STATUS,
     EXPECTED_DB3_ARTIFACT_SHA256,
+    EXPECTED_DB4_PLANNING_SHA256,
     EXPECTED_ACTIVE_MILESTONE,
     REJECTED_DB2_READINESS_REVIEW,
     RETIRED_UNTRUSTED_ARTIFACTS,
@@ -259,7 +261,7 @@ class AuthoritySyncTests(unittest.TestCase):
         self.assertIn(DB2_ACCEPTANCE_DB3_PLANNING_DECISION, roadmap)
         self.assertFalse((ROOT / REJECTED_DB2_READINESS_REVIEW).exists())
 
-    def test_db3_planning_artifact_allowlist_is_exact(self) -> None:
+    def test_db3_db4_planning_artifact_allowlist_is_exact(self) -> None:
         self.assertEqual(
             {
                 "planning-inbox/db3-accepted-input-traceability-matrix.md",
@@ -269,11 +271,24 @@ class AuthoritySyncTests(unittest.TestCase):
             },
             set(AUTHORIZED_DB3_PLANNING_ARTIFACTS),
         )
+        self.assertEqual(
+            {
+                "planning-inbox/db4-dormant-postgres-gap-and-disposition-matrix.md",
+                "planning-inbox/db4-exact-ob-dev-implementation-package-specification.md",
+                "planning-inbox/db4-migration-harness-and-proof-package-specification.md",
+                "planning-inbox/db4-security-credentials-restart-and-owner-action-runbook.md",
+                "planning-inbox/db4-owner-readiness-review.md",
+            },
+            set(AUTHORIZED_DB4_PLANNING_ARTIFACTS),
+        )
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             (root / "planning-inbox").mkdir()
             (root / "decisions").mkdir()
-            for relative_path in AUTHORIZED_DB3_PLANNING_ARTIFACTS:
+            for relative_path in (
+                *AUTHORIZED_DB3_PLANNING_ARTIFACTS,
+                *AUTHORIZED_DB4_PLANNING_ARTIFACTS,
+            ):
                 path = root / relative_path
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("allowed\n", encoding="utf-8")
@@ -283,7 +298,7 @@ class AuthoritySyncTests(unittest.TestCase):
             db3_decision.write_text("allowed\n", encoding="utf-8")
 
             unexpected = {
-                "planning-inbox/db3-surprise-specification.md",
+                "planning-inbox/db4-surprise-specification.md",
                 "decisions/2026-07-14-db4-surprise-activation.md",
             }
             for relative_path in unexpected:
@@ -294,6 +309,19 @@ class AuthoritySyncTests(unittest.TestCase):
                 unexpected,
                 set(_unauthorized_later_artifacts(root)),
             )
+
+    def test_db4_planning_artifacts_are_exact_and_bound(self) -> None:
+        readiness_path = "planning-inbox/db4-owner-readiness-review.md"
+        readiness_text = (ROOT / readiness_path).read_text(encoding="utf-8")
+        for relative_path, expected_sha256 in EXPECTED_DB4_PLANNING_SHA256.items():
+            with self.subTest(path=relative_path):
+                self.assertEqual(
+                    expected_sha256,
+                    hashlib.sha256((ROOT / relative_path).read_bytes()).hexdigest(),
+                )
+                if relative_path != readiness_path:
+                    self.assertIn(relative_path, readiness_text)
+                    self.assertIn(expected_sha256, readiness_text)
 
     def test_db4_preparation_gate_and_retired_artifacts_are_exact(self) -> None:
         self.assertEqual(5, len(RETIRED_UNTRUSTED_ARTIFACTS))

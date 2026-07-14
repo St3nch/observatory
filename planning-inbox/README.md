@@ -65,13 +65,18 @@ Accepted database checkpoints and active DB-4 package-preparation lineage:
 - `db3-fresh-postgres-design-specification-v0-1.md` — exact accepted DB-3 operational-boundary and physical-schema specification; descriptive only, with no implementation authority
 - `db3-future-ob-dev-control-plane-contract-v0-1.md` — exact accepted future control-plane contract; DB-4 may prepare a package from it but may not implement it
 - `db3-owner-readiness-review.md` — consumed historical readiness review; acceptance and closure authority lives in the linked decision
+- `db4-dormant-postgres-gap-and-disposition-matrix.md` — planning-only disposition of dormant ob-dev PostgreSQL work against the accepted DB-3 contract
+- `db4-exact-ob-dev-implementation-package-specification.md` — exact future ob-dev implementation manifest and acceptance contract; creates no tooling
+- `db4-migration-harness-and-proof-package-specification.md` — exact future Observatory migration and proof manifest; contains no SQL or migration bytes
+- `db4-security-credentials-restart-and-owner-action-runbook.md` — planning-only owner action, credential, restart, and recovery boundary
+- `db4-owner-readiness-review.md` — binds the exact DB-4 planning package for owner review; not an implementation gate
 
 DB-3 is trusted, accepted, complete, and the last trusted database milestone. DB-4
-is active only for preparation of an exact implementation package. No DB-4 package
-artifact is approved for creation until its exact inventory is owner-approved, and
-no implementation or execution is authorized. The five retired DB-3/DB-4 artifacts
-remain deleted and prohibited from restoration, salvage, reuse, copying, paraphrase,
-or memory-based reconstruction.
+is active only for preparation of an exact implementation package. The exact
+five-artifact DB-4 planning inventory is owner-approved for creation and is now a
+candidate review package. No implementation or execution is authorized. The five
+retired DB-3/DB-4 artifacts remain deleted and prohibited from restoration, salvage,
+reuse, copying, paraphrase, or memory-based reconstruction.
 
 Completed M20 through M14 packages remain available below for lineage and proof context.
 
@@ -165,6 +170,11 @@ Root authority files take priority over this folder.
 | `db3-fresh-postgres-design-specification-v0-1.md` | accepted immutable DB-3 design specification | Specifies the future local PostgreSQL boundary, roles, namespaces, relation responsibilities, constraints, indexes, migration/rollback policy, and hammer mechanisms | Accepted descriptive specification; creates no database object, role, credential, SQL, migration, persistence, or implementation authority |
 | `db3-future-ob-dev-control-plane-contract-v0-1.md` | accepted immutable DB-3 control-plane contract | Specifies the exact future bounded ob-dev PostgreSQL tool registry, schemas, capability classes, results, proof, and restart/recovery procedure | Sole normative control-plane input to DB-4 package preparation; no implementation, registration, restart, or PostgreSQL authority |
 | `db3-owner-readiness-review.md` | consumed historical DB-3 readiness review | Binds the three accepted candidates by exact SHA-256 and records validation evidence and owner choices | Acceptance/closure authority lives in `decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md` |
+| `db4-dormant-postgres-gap-and-disposition-matrix.md` | DB-4 planning specification | Disposes each dormant ob-dev PostgreSQL component and wrapper against the accepted 28-tool contract | Candidate package only; no implementation, registration, restart, or PostgreSQL authority |
+| `db4-exact-ob-dev-implementation-package-specification.md` | DB-4 planning specification | Defines the exact future 17-path ob-dev change manifest, module ownership, tool registry, and proof gates | Candidate package only; no source mutation or tool activation authority |
+| `db4-migration-harness-and-proof-package-specification.md` | DB-4 planning specification | Defines the exact future 46-path Observatory migration, rollback, fixture, profile, and proof manifest | Candidate package only; contains no executable SQL or migration files |
+| `db4-security-credentials-restart-and-owner-action-runbook.md` | DB-4 planning runbook | Defines owner custody, redaction, restart, capability transition, recovery, and stop boundaries | Candidate package only; does not authorize credentials, restart, services, or execution |
+| `db4-owner-readiness-review.md` | DB-4 planning review | Binds the exact five-artifact candidate package by SHA-256 and records readiness and remaining owner gates | Not acceptance, implementation authority, database authority, execution authority, or DB-5 activation |
 | `strategy-layer-dangerous-design.md` | planning artifact | Preserves dangerous Strategy Layer / IMI design candidates for later classification and reconciliation | M3 preservation artifact; authority none; do not activate dangerous ideas |
 | `deep-research-danger-agenda.md` | research agenda | Preserves future deep-research questions and danger-map topics for later research gate planning | M3 preservation artifact; authority none; not research execution approval |
 | `steward-context-dump.md` | advisory context | Preserves steward/context material for future reconciliation without promoting it into doctrine | M3 preservation artifact; authority none; advisory only |
@@ -200,6 +210,6 @@ Do not implement directly from planning-inbox material. That is how the raccoon 
 ```text
 Last reviewed: 2026-07-14
 Reviewer: Observatory project steward
-Result: Reclassified the exact DB-3 artifacts after owner acceptance/closure and indexed DB-4 package-preparation-only posture
-Open issues: exact DB-4 artifact inventory and implementation package await owner approval; all implementation and execution remain unauthorized
+Result: Indexed the exact owner-approved five-artifact DB-4 planning package and preserved its preparation-only posture
+Open issues: the DB-4 package awaits validation and a separate owner implementation gate; all implementation and execution remain unauthorized
 ```
