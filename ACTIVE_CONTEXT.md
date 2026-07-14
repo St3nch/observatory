@@ -163,8 +163,8 @@ implies the next milestone.
 
 ## Tool Posture
 
-- Use Codex native local tools for ordinary PowerShell, filesystem, Git, tests, and code work.
-- Use `ob-dev-mcp` only within its current bounded file-oriented surface.
-- Do not use old `ob-dev` Git tools.
-- Do not implement or activate PostgreSQL tools during DB-3 planning.
+- Use only the custom `ob-dev` MCP for local repository inspection, bounded mutation, Git, and fixed validation profiles.
+- Generic shell, PowerShell, Python, SQL, and arbitrary Git execution remain disabled.
+- `chatgpt_mcp` is a read-only Git reference; local staging and commits are limited to `ob_dev` and `observatory`.
+- Do not implement, register, or activate PostgreSQL tools during DB-3 planning.
 - Tool availability never creates roadmap authority.

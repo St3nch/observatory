@@ -1,4 +1,4 @@
-# Observatory Codex Instructions
+# Observatory Repository Instructions
 
 These instructions apply to the entire repository.
 
@@ -62,11 +62,11 @@ Do not silently promote a draft, planning note, readiness review, or proposed ow
 
 ## Tool discipline
 
-- Use Codex native local PowerShell, filesystem, Git, test, and review capabilities for ordinary development.
-- Use the desktop app's built-in Git review and commit controls.
-- Do not use old `ob-dev` Git tools.
-- Use `ob-dev-mcp` only for its explicitly bounded project tools.
-- Do not duplicate generic shell, Git, or arbitrary execution inside MCP.
+- Use only the custom `ob-dev` MCP for local repository inspection, bounded mutation, Git, and fixed validation profiles.
+- Respect optimistic SHA-256 locks for every existing-file mutation.
+- Stage only an explicit reviewed path list and use the manifest-locked commit tool.
+- Never push; the owner performs all pushes manually.
+- Generic shell, PowerShell, Python, SQL, and arbitrary Git execution remain disabled.
 - Never add or use PostgreSQL, migration, provider-spend, destructive, or production capabilities without a current accepted gate.
 - Do not retry an identical failed mutation repeatedly. Read the resulting state first.
 

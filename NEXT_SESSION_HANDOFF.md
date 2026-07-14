@@ -128,14 +128,13 @@ inactive and implementation remains unauthorized.
 
 ## Tool Discipline
 
-- Codex native local tools own ordinary PowerShell, filesystem, Git, tests, and code work.
-- Use the desktop app's built-in Git review and commit controls.
-- Do not use old `ob-dev` Git tools.
-- `ob-dev-mcp` remains bounded to its current file-oriented surface during DB-3 planning.
+- Use only the custom `ob-dev` MCP for local repository inspection, bounded mutation, Git, and fixed validation profiles.
+- Generic shell, PowerShell, Python, SQL, and arbitrary Git execution remain disabled.
+- `chatgpt_mcp` is a read-only Git reference; local staging and commits are limited to `ob_dev` and `observatory`.
 - Do not implement, register, or activate database tools during DB-3.
 - Tool availability and credentials never create authority.
 - Do not retry the same failing mutation repeatedly.
-- For edits: read, mutate once, inspect diff, run checks, then stage exact files.
+- For edits: read, mutate once with optimistic SHA-256 control, inspect the complete diff, run checks, then stage exact reviewed paths.
 
 ---
 

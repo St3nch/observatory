@@ -110,7 +110,7 @@ Decision records can change project authority only when they explicitly say so a
 
 ```text
 Last reviewed: 2026-07-14
-Reviewer: Codex / Observatory workhorse
+Reviewer: Observatory project steward
 Result: DB-2 freeze acceptance and fresh DB-3 planning-only authorization indexed
 Open issues: none
 ```

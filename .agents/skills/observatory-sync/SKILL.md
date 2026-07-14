@@ -49,7 +49,7 @@ When milestone state legitimately changes, update the current-state documents, m
 
 ## Tool boundary
 
-Use native Codex tools for ordinary PowerShell, filesystem, Git, tests, and review. Do not use old `ob-dev` Git tools. Use `ob-dev-mcp` only for its explicitly bounded surface.
+Use only the custom `ob-dev` MCP for local repository inspection, bounded mutation, Git, and fixed validation profiles. Generic shell, PowerShell, Python, SQL, and arbitrary Git execution remain disabled.
 
 Never infer database, migration, provider-spend, destructive, customer-data, or production authority from tool availability.
 

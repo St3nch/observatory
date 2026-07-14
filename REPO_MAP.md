@@ -20,7 +20,7 @@ Do not create random folders from vibes. That is how repos turn into haunted fil
 
 | File | Purpose | Authority label |
 |---|---|---|
-| `AGENTS.md` | Always-loaded Codex repository discipline and synchronization gate | authority-support instructions |
+| `AGENTS.md` | Repository discipline and synchronization gate | authority-support instructions |
 | `README.md` | Public entrypoint and LLM-first read path pointer | authority |
 | `LLM_START_HERE.md` | Model-neutral first read file for LLMs | authority |
 | `ACTIVE_CONTEXT.md` | Current phase, active milestone, current non-goals | authority |
@@ -48,7 +48,7 @@ Do not create random folders from vibes. That is how repos turn into haunted fil
 | `audits/` | Audit reports preserved as planning input / advisory context, never authority | active; earned by owner ruling 2026-07-07 (`decisions/2026-07-07-audits-folder.md`) |
 | `contracts/` | Non-schema evidence-behavior contracts and contract template | active as of M7; earned per M2 decision's deferred-until-M7 ruling |
 | `hammers/` | Hammer-test matrix and hostile-path acceptance-gate planning | active as of M8; earned per M2 decision's deferred-until-M8 ruling |
-| `.agents/` | Project-local Codex skills; procedural guidance only, never project authority | active developer tooling |
+| `.agents/` | Project-local synchronization skills; procedural guidance only, never project authority | active developer tooling |
 | `tools/` | Deterministic repository-maintenance and authority-sync checks | active developer tooling |
 
 `planning-inbox/` is not authority. It stores useful material before promotion, pruning, or rejection.
@@ -105,7 +105,7 @@ Allowed at root:
 - harvest/boundary authority docs
 - handoff
 - templates used repo-wide
-- Codex repository instructions
+- repository instructions
 
 Not allowed at root without approval:
 

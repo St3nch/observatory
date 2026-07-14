@@ -64,7 +64,7 @@ No deleted artifact may be restored, salvaged, or treated as candidate authority
 - reconcile the DB-2 canonical freeze with its proposed correction package;
 - audit DB-2 concept classifications and boundaries from the trusted DB-1 checkpoint;
 - correct current-state and navigation documents;
-- add Codex project instructions and deterministic authority-drift checks;
+- add repository-local synchronization instructions and deterministic authority-drift checks;
 - prepare a fresh DB-2 owner review package.
 
 ## Non-authorizations
@@ -88,9 +88,9 @@ No strategy, recommendation, conclusion, or report-state persistence.
 
 ## Tool posture
 
-Codex native local tools own ordinary PowerShell, filesystem, Git, and test work.
+Repository work must use the currently approved bounded development-tool surface.
 
-`ob-dev-mcp` remains limited to its current bounded file-oriented surface during recovery. The old `ob-dev` service receives no new project authority.
+Tool availability never creates project authority, and no database capability receives authority during recovery.
 
 ## Next owner gate
 

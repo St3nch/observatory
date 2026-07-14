@@ -152,7 +152,7 @@ concept register. No mutable current-state record is authorized.
 
 ## Validation evidence
 
-Interpreter: `C:\Users\Stench\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe`
+Interpreter: fixed local Python runtime (historical absolute cache path intentionally omitted)
 
 - `...\python.exe tools/check_authority_sync.py --json` - exit 0; passed with no
   errors; DB-1 remains last trusted and DB-2 remains reconciliation-only.

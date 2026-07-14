@@ -34,7 +34,7 @@ If using a virtual environment later, activate it first and run the same command
 
 ## Current Note
 
-Run tests through Codex's native local terminal. The `ob-dev-mcp` server is not the project test runner, and the old `ob-dev` Git/test tool path is retired from new work.
+Run tests through the custom `ob-dev` MCP's fixed validation profiles. Generic execution and caller-supplied test commands remain disabled.
 
 If the repository does not yet have a local virtual environment, use an explicitly selected Python 3.11+ interpreter. Do not claim a test or hammer result from configuration alone.
 
