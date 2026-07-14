@@ -25,3 +25,6 @@ captures/
 raw-captures/
 probe-evidence/
 *.local.json
+
+# DB-4 disposable PostgreSQL working proof
+.database-proof/

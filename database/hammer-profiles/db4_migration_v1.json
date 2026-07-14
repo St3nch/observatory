@@ -1,0 +1,1 @@
+{"profile_id":"db4_migration_v1","database_class":"disposable_postgres","target_prefix":"observatory_test_","max_databases":1,"timeout_profile":"db4_migration","proof_output":"db4/migration.json","hammer_ids":["H22-forward","H22-rollback","H22-failure-recovery"],"migration_root":"database/migrations","rollback_root":"database/rollbacks","fixture_root":"database/hammer-fixtures"}

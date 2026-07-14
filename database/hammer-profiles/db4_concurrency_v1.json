@@ -1,0 +1,1 @@
+{"profile_id":"db4_concurrency_v1","database_class":"disposable_postgres","target_prefix":"observatory_test_","max_databases":1,"max_workers":2,"max_attempts":2,"timeout_profile":"db4_concurrency","proof_output":"db4/concurrency.json","hammer_ids":["H19-append-only","H20-concurrency","H21-audit-first"]}

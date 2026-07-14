@@ -1,0 +1,1 @@
+{"profile_id":"db4_roles_v1","database_class":"disposable_postgres","target_prefix":"observatory_test_","max_databases":1,"timeout_profile":"db4_standard","proof_output":"db4/roles.json","role_profiles":["db4_minimal_migration_roles_v1","db4_scope_isolation_roles_v1","db4_typed_read_roles_v1"],"hammer_ids":["role-read-only","role-scope-isolation","role-no-secret-access"]}
