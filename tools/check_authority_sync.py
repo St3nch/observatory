@@ -38,6 +38,12 @@ RETIRED_UNTRUSTED_ARTIFACTS = (
     "planning-inbox/db3-physical-schema-specification.md",
     "planning-inbox/db3-specification-readiness-review.md",
 )
+AUTHORIZED_DB3_PLANNING_ARTIFACTS = (
+    "planning-inbox/db3-accepted-input-traceability-matrix.md",
+    "planning-inbox/db3-fresh-postgres-design-specification-v0-1.md",
+    "planning-inbox/db3-future-ob-dev-control-plane-contract-v0-1.md",
+    "planning-inbox/db3-owner-readiness-review.md",
+)
 DB2_CANONICAL_CANDIDATE = (
     "planning-inbox/db2-physical-data-contract-freeze-specification.md"
 )
@@ -229,6 +235,25 @@ def _table_compound_classification_rows(text: str) -> tuple[str, ...]:
     return tuple(violations)
 
 
+def _unauthorized_later_artifacts(root: Path) -> tuple[str, ...]:
+    allowed_paths = {
+        DB2_ACCEPTANCE_DB3_PLANNING_DECISION,
+        *AUTHORIZED_DB3_PLANNING_ARTIFACTS,
+    }
+    return tuple(
+        sorted(
+            relative_path
+            for folder in (root / "planning-inbox", root / "decisions")
+            if folder.is_dir()
+            for path in folder.iterdir()
+            if path.is_file()
+            for relative_path in (str(path.relative_to(root)).replace("\\", "/"),)
+            if ("db3" in path.name.lower() or "db4" in path.name.lower())
+            and relative_path not in allowed_paths
+        )
+    )
+
+
 def check_repository(root: Path = ROOT) -> CheckResult:
     root = root.resolve()
     errors: list[str] = []
@@ -312,22 +337,11 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         if (root / relative_path).exists():
             errors.append(f"retired untrusted artifact exists: {relative_path}")
 
-    allowed_db3_named_paths = {DB2_ACCEPTANCE_DB3_PLANNING_DECISION}
-    unauthorized_fresh_artifacts = tuple(
-        sorted(
-            relative_path
-            for folder in (root / "planning-inbox", root / "decisions")
-            for path in folder.iterdir()
-            if path.is_file()
-            for relative_path in (str(path.relative_to(root)).replace("\\", "/"),)
-            if ("db3" in path.name.lower() or "db4" in path.name.lower())
-            and relative_path not in allowed_db3_named_paths
-        )
-    )
-    if unauthorized_fresh_artifacts:
+    unauthorized_later_artifacts = _unauthorized_later_artifacts(root)
+    if unauthorized_later_artifacts:
         errors.append(
-            "unauthorized DB-3/DB-4 artifact exists during closure: "
-            + ", ".join(unauthorized_fresh_artifacts)
+            "unauthorized DB-3/DB-4 artifact exists during active DB-3 planning: "
+            + ", ".join(unauthorized_later_artifacts)
         )
 
     canonical_path = root / DB2_CANONICAL_CANDIDATE

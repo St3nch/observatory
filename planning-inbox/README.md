@@ -61,11 +61,15 @@ Accepted DB-2 checkpoint and fresh DB-3 planning lineage:
 - `db2-closure-readiness-review.md` — invalidated historical assessment; not closure evidence
 - `db2-reconciled-candidate-v0-2-1-readiness-review.md` — historical replacement review that bound the exact artifact accepted by the 2026-07-14 decision; not authority itself
 - root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence with DB-2 complete and DB-3 active for planning only
+- `db3-accepted-input-traceability-matrix.md` — fresh DB-3 mapping from accepted DB-2 concepts and H1-H22 to future physical responsibilities; planning only
+- `db3-fresh-postgres-design-specification-v0-1.md` — combined future operational-boundary and physical-schema candidate; no SQL, migration, database, or implementation authority
+- `db3-future-ob-dev-control-plane-contract-v0-1.md` — exact candidate contract for a future separately authorized DB-4 ob-dev expansion; no current tool or PostgreSQL authority
+- `db3-owner-readiness-review.md` — hash-bound review of the fresh DB-3 candidate package, validation evidence, owner choices, and separate future gates; not acceptance or closure
 
-DB-3 is active for fresh planning and specification only; no fresh DB-3 artifact has
-yet been created. DB-4 is inactive. The five retired DB-3/DB-4 artifacts remain
-deleted and prohibited from restoration, salvage, reuse, copying, paraphrase, or
-memory-based reconstruction.
+DB-3 is active for fresh planning and specification only. The fresh candidates above
+are planning material, not authority or implementation permission. DB-4 is inactive.
+The five retired DB-3/DB-4 artifacts remain deleted and prohibited from restoration,
+salvage, reuse, copying, paraphrase, or memory-based reconstruction.
 
 Completed M20 through M14 packages remain available below for lineage and proof context.
 
@@ -155,6 +159,10 @@ Root authority files take priority over this folder.
 | `db2-freeze-v0-1-1-classification-corrections.md` | historical disposition record | Preserves C-01 through C-12 and independent-review dispositions applied to candidate v0.2.1 | Not a competing freeze or owner gate |
 | `db2-closure-readiness-review.md` | invalidated historical review | Preserves the obsolete assessment for history | Not current closure evidence |
 | `db2-reconciled-candidate-v0-2-1-readiness-review.md` | historical replacement planning review | Records v0.2.0 rejection and binds exact v0.2.1 hash, validation, disposition, and three-part owner gate | The later decision accepted/closed/activated; this review remains non-authority history |
+| `db3-accepted-input-traceability-matrix.md` | DB-3 planning specification | Maps the exact accepted DB-2 freeze, classifications, identities, lifecycles, forbidden persistence, and H1-H22 to future physical responsibilities | Planning only; no SQL, migration, database, DB-4, or implementation authority |
+| `db3-fresh-postgres-design-specification-v0-1.md` | DB-3 planning candidate | Specifies the future local PostgreSQL boundary, roles, namespaces, relation responsibilities, constraints, indexes, migration/rollback policy, and hammer mechanisms | Descriptive only; creates no database object, role, credential, SQL, migration, persistence, or later-milestone authority |
+| `db3-future-ob-dev-control-plane-contract-v0-1.md` | DB-3 planning candidate | Specifies the exact future bounded ob-dev PostgreSQL tool registry, schemas, capability classes, results, proof, and restart/recovery procedure | No ob_dev edit, tool registration, restart, PostgreSQL action, or DB-4 authority |
+| `db3-owner-readiness-review.md` | owner-ready DB-3 planning review | Binds the three fresh candidates by exact SHA-256, records validations and the stale-checker correction, and presents independent owner decisions | Not acceptance, DB-3 closure, DB-4 activation, PostgreSQL, or implementation authority |
 | `strategy-layer-dangerous-design.md` | planning artifact | Preserves dangerous Strategy Layer / IMI design candidates for later classification and reconciliation | M3 preservation artifact; authority none; do not activate dangerous ideas |
 | `deep-research-danger-agenda.md` | research agenda | Preserves future deep-research questions and danger-map topics for later research gate planning | M3 preservation artifact; authority none; not research execution approval |
 | `steward-context-dump.md` | advisory context | Preserves steward/context material for future reconciliation without promoting it into doctrine | M3 preservation artifact; authority none; advisory only |
@@ -177,7 +185,7 @@ Do not treat planning-inbox files as accepted doctrine unless a root authority f
 
 Use this folder to understand context and unresolved ideas.
 
-Go8 refers to the bounded repo/MCP tooling used to inspect and edit the live local repository. It is tool context, not project doctrine.
+The custom `ob-dev` MCP is the current bounded local repository tool surface. Tool availability is context, never project authority.
 
 When citing this folder in a plan, preserve labels like `working note`, `historical`, and `not authority`.
 
@@ -188,8 +196,8 @@ Do not implement directly from planning-inbox material. That is how the raccoon 
 ## Last Review Notes
 
 ```text
-Last reviewed: 2026-07-07
-Reviewer: Claude (Observatory Project Steward role), M7 audit-fix pass
-Result: Added m7-audit-response and owner-ruling-tracker; CLAUDE_START_HERE moved to archive/ (tombstone remains pending manual owner deletion); reading order updated
-Open issues: Owner deletes planning-inbox/CLAUDE_START_HERE.md tombstone manually
+Last reviewed: 2026-07-14
+Reviewer: Observatory project steward
+Result: Indexed the fresh DB-3 traceability, design, future ob-dev contract, and hash-bound owner-readiness review; reconciled current tool context
+Open issues: DB-3 candidate package awaits independent owner decisions; DB-4 and implementation remain unauthorized
 ```

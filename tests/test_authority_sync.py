@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import hashlib
+import tempfile
 import unittest
+from pathlib import Path
 
 from tools.check_authority_sync import (
+    AUTHORIZED_DB3_PLANNING_ARTIFACTS,
     DB2_ACCEPTANCE_DB3_PLANNING_DECISION,
     DB2_CORRECTION_DISPOSITION,
     DB2_CANONICAL_CANDIDATE,
@@ -19,6 +22,7 @@ from tools.check_authority_sync import (
     RETIRED_UNTRUSTED_ARTIFACTS,
     ROOT,
     _status_line,
+    _unauthorized_later_artifacts,
     _table_compound_classification_rows,
     _table_primary_classifications,
     check_repository,
@@ -213,6 +217,40 @@ class AuthoritySyncTests(unittest.TestCase):
         )
         self.assertIn(DB2_ACCEPTANCE_DB3_PLANNING_DECISION, roadmap)
         self.assertFalse((ROOT / REJECTED_DB2_READINESS_REVIEW).exists())
+
+    def test_db3_planning_artifact_allowlist_is_exact(self) -> None:
+        self.assertEqual(
+            {
+                "planning-inbox/db3-accepted-input-traceability-matrix.md",
+                "planning-inbox/db3-fresh-postgres-design-specification-v0-1.md",
+                "planning-inbox/db3-future-ob-dev-control-plane-contract-v0-1.md",
+                "planning-inbox/db3-owner-readiness-review.md",
+            },
+            set(AUTHORIZED_DB3_PLANNING_ARTIFACTS),
+        )
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "planning-inbox").mkdir()
+            (root / "decisions").mkdir()
+            for relative_path in AUTHORIZED_DB3_PLANNING_ARTIFACTS:
+                path = root / relative_path
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text("allowed\n", encoding="utf-8")
+            decision = root / DB2_ACCEPTANCE_DB3_PLANNING_DECISION
+            decision.write_text("allowed\n", encoding="utf-8")
+
+            unexpected = {
+                "planning-inbox/db3-surprise-specification.md",
+                "decisions/2026-07-14-db4-surprise-activation.md",
+            }
+            for relative_path in unexpected:
+                path = root / relative_path
+                path.write_text("unexpected\n", encoding="utf-8")
+
+            self.assertEqual(
+                unexpected,
+                set(_unauthorized_later_artifacts(root)),
+            )
 
     def test_db4_and_retired_artifacts_remain_absent(self) -> None:
         self.assertEqual(5, len(RETIRED_UNTRUSTED_ARTIFACTS))
