@@ -1,9 +1,9 @@
 # Post-v1 Database Roadmap — The Observatory
 
 Status: authority for post-v1 sequencing after owner acceptance
-Authority: original sequence from `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`; current recovery state from `decisions/2026-07-13-database-phase-recovery-to-db1.md`
+Authority: original sequence from `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`; recovery state from `decisions/2026-07-13-database-phase-recovery-to-db1.md`; current DB-3 planning gate from `decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md`
 Purpose: govern the path from accepted bounded v1 proof system to a real local Postgres-backed evidence system without widening authority accidentally
-Last updated: 2026-07-13
+Last updated: 2026-07-14
 
 ---
 
@@ -26,16 +26,17 @@ No milestone implies the next milestone.
 
 ```text
 Observatory v1: accepted at bounded proof-system ceiling
-Last trusted database milestone: DB-1 — closed
-Active milestone: DB-2 — Physical Data-Contract Freeze Reconciliation
-DB-3 and DB-4: inactive; no active or authoritative artifacts
+Last trusted database milestone: DB-2 — trusted, accepted, and complete
+Active milestone: DB-3 — Postgres Operational Boundary and Physical Schema Specification
+DB-3 authority: fresh planning and specification only
+DB-4: inactive; no active or authoritative artifact
 Postgres creation: not authorized
-DDL: not authorized
-Migration files or execution: not authorized
-Database-control-plane expansion: not authorized
+Executable DDL: not authorized
+Executable migration files or execution: not authorized
+Database-control-plane implementation or activation: not authorized
 ```
 
-Recovery authority: `decisions/2026-07-13-database-phase-recovery-to-db1.md`.
+Current authority: `decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md`.
 
 ---
 
@@ -44,8 +45,8 @@ Recovery authority: `decisions/2026-07-13-database-phase-recovery-to-db1.md`.
 | ID | Name | Status | Main gate |
 |---|---|---|---|
 | DB-1 | Post-v1 Audit Reconciliation and Ruling Closure | closed | Audit findings routed; corrections and rulings accepted; DB-2 package prepared |
-| DB-2 | Physical Data-Contract Freeze | active recovery | Reconcile the canonical freeze from trusted DB-1 and return it for owner review |
-| DB-3 | Postgres Operational Boundary and Physical Schema Specification | inactive / future placeholder | Must be created fresh only after an explicit DB-2 owner gate; no present authority |
+| DB-2 | Physical Data-Contract Freeze | closed / accepted | Exact v0.2.1 freeze accepted by path, version, and SHA-256; sole normative input to DB-3 |
+| DB-3 | Postgres Operational Boundary and Physical Schema Specification | active / planning only | Fresh specifications derived solely from accepted DB-1 and exact accepted DB-2 freeze |
 | DB-4 | Database Hammer Harness and Migration Specification | inactive / future placeholder | No artifact or present implementation/PostgreSQL authority |
 | DB-5 | Governed Local Database Bootstrap and Migration Execution | planned | Separate owner execution gate; migration hammers pass |
 | DB-6 | First Persisted Synthetic Evidence Slice | planned | Append-only, audit-first, identity, scope, rights, retention, and concurrency hammers pass |
@@ -118,13 +119,26 @@ strategy or recommendation persistence
 
 ### Next gate
 
-DB-2 activation requires a separate owner decision.
+DB-2 activation was completed by `decisions/2026-07-13-db1-closure-and-db2-activation.md`; the later recovery and reconciliation were completed by the 2026-07-14 DB-2 closure decision.
 
 ---
 
-# Active milestone
+# Closed milestone
 
-Recovery posture: DB-2 is reopened for reconciliation. Prior later-milestone claims and their untrusted artifacts were permanently retired from the active repository. The existing DB-2 freeze and corrections are candidate inputs, not accepted authority.
+DB-2 reconciliation is complete. The prior later-milestone claims and their five
+untrusted artifacts remain permanently retired and deleted from the active repository.
+
+Accepted DB-2 artifact:
+
+```text
+planning-inbox/db2-physical-data-contract-freeze-specification.md
+version 0.2.1
+sha256 7c24d38ea8e7634dea8cf52cd7b85b49eda18b8ecde5a00c74b6303809c17891
+decision: decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md
+```
+
+The exact accepted artifact is immutable and is the sole normative DB-2 input to
+fresh DB-3 planning. Acceptance does not authorize DB-4 or implementation.
 
 ## DB-2 — Physical Data-Contract Freeze
 
@@ -172,13 +186,20 @@ No table DDL, migrations, database creation, or implementation.
 
 ### Exit
 
-Owner accepts the freeze and authorizes DB-3 planning.
+Completed by the exact accepted artifact and decision above.
 
 ---
 
+# Active milestone
+
 ## DB-3 — Postgres Operational Boundary and Physical Schema Specification
 
-Future roadmap placeholder only. No present DB-3 authority or artifact exists. If an explicit DB-2 owner gate later activates DB-3, its work must be created fresh.
+Active for fresh planning and specification only under
+`decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md`.
+No DB-3 artifact existed at activation. Work must start fresh from accepted DB-1
+authority, the exact accepted DB-2 freeze, accepted roadmaps/contracts/decisions,
+and the new owner decision. Retired DB-3/DB-4 material must not be restored,
+salvaged, reused, copied, paraphrased, or reconstructed from memory.
 
 ### Purpose
 
@@ -201,17 +222,25 @@ Specify the local Postgres operational boundary and derive the physical schema o
 
 ### Allowed
 
-Specifications, diagrams, constraint matrices, migration plans, rollback plans.
+Specifications, diagrams, constraint matrices, migration plans, rollback plans,
+operational-boundary decisions, physical-schema specifications derived from the
+accepted DB-2 freeze, and the exact future `ob-dev` database control-plane contract.
 
 ### Forbidden
 
-Creating the database, roles, DDL, migration execution, ingestion.
+Creating or starting PostgreSQL; creating a database or roles; creating or handling
+credentials; executable DDL or executable migrations; SQL or migration execution;
+database-tool implementation, activation, or dormant PostgreSQL MCP registration;
+physical-schema implementation; ingestion; providers; capture; persistence;
+customer/private data; raw storage; recurring work; production; DB-4.
 
 ---
 
 ## DB-4 — Database Hammer Harness and Migration Specification
 
-Future roadmap placeholder only. No present DB-4 authority or artifact exists. DB-4 cannot activate by implication from DB-2 or any future DB-3 work.
+Future roadmap placeholder only. No present DB-4 authority or artifact exists. DB-4
+cannot activate by implication from accepted DB-2 or active DB-3 planning. A separate
+future owner gate remains mandatory.
 
 ### Purpose
 

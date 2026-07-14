@@ -47,7 +47,7 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-Active DB-2 recovery package and trusted DB-1 lineage:
+Accepted DB-2 checkpoint and fresh DB-3 planning lineage:
 
 - `post-v1-pre-database-audit-response-2026-07-12.md` — complete N-01 through N-14 routing, opportunity parking, correction order, and DB-1 exit criteria
 - `db1-owner-ruling-proposals.md` — accepted OR-B1, OR-B2, OR-C2, and OR-C4 proposal source; durable authority lives in the linked decision
@@ -55,13 +55,17 @@ Active DB-2 recovery package and trusted DB-1 lineage:
 - `db1-ob-dev-database-control-plane-requirements.md` — historical planning input only; it grants no current database or MCP expansion authority
 - `db1-closure-readiness-review.md` — trusted closure review that reconciled every DB-1 exit criterion
 - `db1-closure-and-db2-activation-owner-gate.md` — consumed owner-gate proposal; durable DB-1 closure authority is `decisions/2026-07-13-db1-closure-and-db2-activation.md`
-- `db2-physical-data-contract-freeze-specification.md` — canonical DB-2 candidate under reconciliation; not accepted and not a DB-3 input
+- `db2-physical-data-contract-freeze-specification.md` — exact immutable DB-2 freeze v0.2.1 accepted by `decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md`; sole normative DB-2 input to fresh DB-3 planning
 - `db2-physical-data-contract-freeze-readiness-review.md` — historical DB-1 readiness review; does not establish current acceptance
-- `db2-freeze-v0-1-1-classification-corrections.md` — candidate corrections requiring fresh DB-1-grounded review and actual reconciliation
+- `db2-freeze-v0-1-1-classification-corrections.md` — historical twelve-finding correction/disposition record incorporated into candidate v0.2.1; not authority
 - `db2-closure-readiness-review.md` — invalidated historical assessment; not closure evidence
-- root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence corrected by the recovery decision
+- `db2-reconciled-candidate-v0-2-1-readiness-review.md` — historical replacement review that bound the exact artifact accepted by the 2026-07-14 decision; not authority itself
+- root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence with DB-2 complete and DB-3 active for planning only
 
-No DB-3 or DB-4 artifact is active or authoritative. The untrusted artifacts were permanently retired from the active repository; any future DB-3 work must be created fresh after an explicit DB-2 owner gate.
+DB-3 is active for fresh planning and specification only; no fresh DB-3 artifact has
+yet been created. DB-4 is inactive. The five retired DB-3/DB-4 artifacts remain
+deleted and prohibited from restoration, salvage, reuse, copying, paraphrase, or
+memory-based reconstruction.
 
 Completed M20 through M14 packages remain available below for lineage and proof context.
 
@@ -100,7 +104,7 @@ Then read:
 31. `m9-first-slice-definition-proposal.md` — M9 proposed first-slice definition accepted by owner decision
 32. `m9-first-slice-candidate-comparison.md` — M9 first-slice candidate comparison and recommendation
 33. `m8-hammer-planning-review.md` — M8 closure-readiness and M9 entry review
-34. `owner-ruling-tracker.md` — all open owner-ruling candidates, grouped by blocking milestone
+34. `owner-ruling-tracker.md` — owner-ruling candidates and accepted dispositions, grouped by blocking milestone
 35. `m7-audit-response-2026-07-07.md` — audit-finding routing and status
 36. `observatory-working-notes.md`
 37. `repo-first-research-triage.md`
@@ -118,7 +122,7 @@ Root authority files take priority over this folder.
 | `knowledgebase-reconciliation.md` | planning | Reconciles project knowledge docs against the live repo and classifies Claude/GPT candidate ideas into now, next, research, later, defer, forbidden, or killed buckets | M0.1 artifact; not implementation approval |
 | `audit-response-2026-07-07.md` | planning / audit response backlog | Tracks the M1-era Claude repo audit findings, assigns each to a milestone/file, and prevents partial audit cherry-picking | Responds to the M1-era audit only; the 2026-07-07 M7/full-repo audits are tracked in `m7-audit-response-2026-07-07.md` |
 | `m7-audit-response-2026-07-07.md` | planning / audit response backlog | Routes all findings from the two 2026-07-07 audits in `audits/` (ISS-01..22, SEQ-01) | Created in M7 audit-fix pass |
-| `owner-ruling-tracker.md` | planning / ruling tracker | Consolidates every open owner-ruling candidate (groups A–G) with source refs and blocking milestones | Rulings bind only via `decisions/` records |
+| `owner-ruling-tracker.md` | planning / ruling tracker | Consolidates owner-ruling candidates and dispositions with source refs and blocking milestones | Rulings bind only via `decisions/` records |
 | `m8-hammer-planning-review.md` | planning review | Reviews M8 hammer planning readiness and closure posture | Advisory note; not authority |
 | `m9-first-slice-candidate-comparison.md` | planning / candidate comparison | Compares M9 first-slice candidates against M8 gates and recommends the controlled public manual observation package | Advisory note; not authority |
 | `m9-first-slice-definition-proposal.md` | planning / proposed first-slice definition | Defines the recommended controlled public manual observation package slice for owner review and later M10 planning | Advisory proposal; owner accepted C2 in `decisions/2026-07-10-m9-first-slice-closure.md` |
@@ -147,6 +151,10 @@ Root authority files take priority over this folder.
 | `m13-serp-usage-baseline-2026-07-12.md` | provider usage baseline evidence | Records the empty workbook header schema, SHA-256, size, and zero-row baseline | Future uploads are compared to this before-image |
 | `m13-campaign-cli-expansion-review.md` | implementation review | Defines immutable campaign catalog, budget validation, CLI preview commands, and fixture-test expectations | Generic provider framework and unattended execution remain forbidden |
 | `m13-paid-evidence-review-package.md` | implementation review | Defines the durable per-pull package, grouped field inventory, item-type summary, cost reconciliation, review notes, and campaign index | Organization only; no provider execution or cross-project export authority |
+| `db2-physical-data-contract-freeze-specification.md` | accepted immutable DB-2 freeze v0.2.1 | Revised DB-2 logical contract with corrected capture identity, explicit accepted concepts/lifecycles, forbidden/fail-closed registers, and H1-H22 audit | Accepted by exact path/version/SHA in the 2026-07-14 decision; sole normative DB-2 input to DB-3; no implementation authority |
+| `db2-freeze-v0-1-1-classification-corrections.md` | historical disposition record | Preserves C-01 through C-12 and independent-review dispositions applied to candidate v0.2.1 | Not a competing freeze or owner gate |
+| `db2-closure-readiness-review.md` | invalidated historical review | Preserves the obsolete assessment for history | Not current closure evidence |
+| `db2-reconciled-candidate-v0-2-1-readiness-review.md` | historical replacement planning review | Records v0.2.0 rejection and binds exact v0.2.1 hash, validation, disposition, and three-part owner gate | The later decision accepted/closed/activated; this review remains non-authority history |
 | `strategy-layer-dangerous-design.md` | planning artifact | Preserves dangerous Strategy Layer / IMI design candidates for later classification and reconciliation | M3 preservation artifact; authority none; do not activate dangerous ideas |
 | `deep-research-danger-agenda.md` | research agenda | Preserves future deep-research questions and danger-map topics for later research gate planning | M3 preservation artifact; authority none; not research execution approval |
 | `steward-context-dump.md` | advisory context | Preserves steward/context material for future reconciliation without promoting it into doctrine | M3 preservation artifact; authority none; advisory only |

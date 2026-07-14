@@ -1,30 +1,18 @@
-# DB-2 Physical Data-Contract Freeze v0.1.1 Classification Corrections
+# DB-2 Classification-Correction Disposition Record
 
-Status: candidate correction package under DB-2 recovery review; not accepted
+Status: historical correction-disposition record; not authority
 Date: 2026-07-13
-Canonical freeze: `planning-inbox/db2-physical-data-contract-freeze-specification.md`
-Historical claim: acceptance decision suspended by `decisions/2026-07-13-database-phase-recovery-to-db1.md`
+Canonical candidate: `planning-inbox/db2-physical-data-contract-freeze-specification.md`
+Recovery authority: `decisions/2026-07-13-database-phase-recovery-to-db1.md`
 
 ## Purpose
 
-Correct classification-shape inconsistencies discovered during DB-2 reconciliation without changing project scope, admitting new persistence, or beginning physical design.
+Preserve the disposition of the twelve v0.1.1 correction findings without acting as
+a competing freeze, stale acceptance gate, or claim that DB-2 is closed. Candidate
+Candidate v0.2.1 preserves each defensible C-01 through C-12 result while correcting
+the separate conflicts found by independent review of rejected candidate v0.2.0.
 
-The accepted freeze requires every concept to receive exactly one primary classification from:
-
-```text
-durable
-append_only
-versioned
-derived
-ephemeral
-external
-forbidden
-unresolved
-```
-
-Several entries currently combine a primary classification with descriptive qualifiers or combine two separately governed concepts in one line. This proposal normalizes those entries so DB-3 receives an unambiguous logical contract.
-
-## Correction class
+## Edit classification
 
 ```text
 roadmap edit class: clarification
@@ -32,286 +20,51 @@ scope change: no
 doctrine change: no
 new persistence authority: no
 physical design authority: no
+implementation authority: no
 ```
 
-## Proposed corrections
-
-### C-01 Source family
-
-Current:
-
-```text
-classification: versioned vocabulary
-```
-
-Corrected:
-
-```text
-classification: versioned
-qualifier: governed vocabulary
-```
-
-### C-02 Candidate observation
-
-Current:
-
-```text
-classification: durable but non-evidence, retention-bounded
-```
-
-Corrected:
-
-```text
-classification: durable
-qualifiers: non-evidence; retention_gated
-```
-
-This does not require candidate persistence in every implementation. It states only that, when the accepted contract permits candidate records, their canonical logical classification is durable and retention-bounded rather than evidence.
-
-### C-03 Raw manifest
-
-Current:
-
-```text
-classification: durable or append_only metadata, source-family gated
-```
-
-Corrected:
-
-```text
-classification: append_only
-qualifiers: source_family_gated; rights_gated; retention_gated
-```
-
-Raw-support status changes must preserve history rather than silently overwrite the manifest's prior support state.
-
-### C-04 Opaque artifact pointer
-
-Current:
-
-```text
-classification: durable internal locator
-```
-
-Corrected:
-
-```text
-classification: durable
-qualifier: internal opaque locator
-```
-
-### C-05 Raw payload bytes
-
-Current:
-
-```text
-classification: external artifact, source-family gated
-```
-
-Corrected:
-
-```text
-classification: external
-qualifiers: source_family_gated; rights_gated; retention_gated
-```
-
-Raw bytes remain outside ordinary relational evidence records.
-
-### C-06 Shape fingerprint
-
-Current:
-
-```text
-classification: append_only metadata
-```
-
-Corrected:
-
-```text
-classification: append_only
-qualifier: shape metadata
-```
-
-### C-07 Parser version
-
-Current:
-
-```text
-classification: versioned external implementation reference
-```
-
-Corrected:
-
-```text
-classification: external
-qualifier: versioned implementation reference
-```
-
-The implementation repository owns parser source and release identity. Observatory may retain a bounded reference but does not own parser source code as database content.
-
-### C-08 Rights vocabulary and assignment
-
-Current combines two concepts:
-
-```text
-classification: versioned vocabulary plus append_only assignment history
-```
-
-Corrected split:
-
-```text
-rights vocabulary
-classification: versioned
-qualifier: governed vocabulary
-
-rights assignment history
-classification: append_only
-qualifiers: audit_first; source_family_gated
-```
-
-### C-09 Retention vocabulary and assignment
-
-Current combines two concepts:
-
-```text
-classification: versioned vocabulary plus append_only assignment history
-```
-
-Corrected split:
-
-```text
-retention vocabulary
-classification: versioned
-qualifier: governed vocabulary
-
-retention assignment history
-classification: append_only
-qualifiers: audit_first; source_family_gated
-```
-
-### C-10 Audit event
-
-Current:
-
-```text
-classification: append_only, audit_first
-```
-
-Corrected:
-
-```text
-classification: append_only
-qualifier: audit_first
-```
-
-### C-11 Security/access log
-
-Current:
-
-```text
-classification: append_only operational record, separate from evidence corpus
-```
-
-Corrected:
-
-```text
-classification: append_only
-qualifiers: operational record; separate from evidence corpus; retention_gated
-```
-
-### C-12 Internal citation handle lifecycle
-
-Current lifecycle includes `unresolved`, which is a freeze classification rather than a useful handle lifecycle state:
-
-```text
-lifecycle: active / deprecated / unresolved
-```
-
-Corrected:
-
-```text
-lifecycle: active / deprecated / blocked
-```
-
-An unresolved design question fails closed to `blocked`; it does not become a durable lifecycle state.
-
-## Classification register after correction
-
-| Concept | Primary classification |
+## Final dispositions
+
+| ID | Topic | Disposition | Incorporated v0.2.1 rule |
+|---|---|---|---|
+| C-01 | Source family | accept | `versioned`; `governed` is a qualifier |
+| C-02 | Candidate observation | accept with restrictions | `durable`, non-evidence, non-citable, retention-gated; cannot hide raw, strategy, or rejected evidence |
+| C-03 | Raw manifest | revise | Manifest facts are `durable`; support/purge/parser/review changes are separate `append_only` transitions; current state is derived |
+| C-04 | Opaque artifact pointer | accept | `durable`, internal-only opaque token; never an underlying path/key/URI/credential |
+| C-05 | Raw payload bytes | revise | Conditionally governed Observatory artifact content is `durable` but unauthorized; consumer-owned content is `external`; relational raw bytes are `forbidden` |
+| C-06 | Shape fingerprint | revise | Observed fingerprints are `append_only`; recognition/review/break/retire transitions are separate; current recognition is derived |
+| C-07 | Parser version | accept | `external` versioned implementation reference; source/releases do not become evidence data |
+| C-08 | Rights | revise | Versioned vocabulary, durable assignment, append-only assignment history, and derived effective state; targets are not limited to source family |
+| C-09 | Retention | revise | Versioned vocabulary, durable assignment/deadline posture, append-only history, and derived effective state across all applicable targets |
+| C-10 | Audit event | accept | `append_only`; `audit_first` is a qualifier |
+| C-11 | Security/access log | accept with completion | `append_only`, operationally separate, retention-gated, security-only; H3 applies; ordinary evidence reads exclude it |
+| C-12 | Citation-handle lifecycle | accept | `active / deprecated / blocked`; unresolved references fail closed to blocked |
+
+## Superseded proposals
+
+The former v0.1.1 acceptance/DB-2 closure/DB-3 activation phrase is obsolete and
+must not be used. Candidate v0.2.0 and its readiness review failed independent
+steward review and are not current review targets. The only current owner gate is
+the three-decision gate in candidate v0.2.1 and its fresh readiness review.
+Historical DB-2 reviews remain historical.
+
+## Independent-review corrections beyond C-01 through C-12
+
+| Finding | v0.2.1 disposition |
 |---|---|
-| Scope | durable |
-| External consumer reference | external |
-| Source family | versioned |
-| Provider/capture instrument | versioned |
-| Query panel definition | versioned |
-| CapturePackage | append_only |
-| Capture attempt | append_only |
-| Provider job ID | external |
-| Candidate observation | durable |
-| Admitted observation | append_only |
-| Evidence identity | durable |
-| Internal citation handle | durable |
-| Report-safe reference | external |
-| Raw manifest | append_only |
-| Opaque artifact pointer | durable |
-| Raw payload bytes | external |
-| Shape fingerprint | append_only |
-| Parser version | external |
-| Provider drift event | append_only |
-| Rights vocabulary | versioned |
-| Rights assignment history | append_only |
-| Retention vocabulary | versioned |
-| Retention assignment history | append_only |
-| Freshness/volatility current status | derived |
-| Provider disagreement | derived |
-| Claim-use/evidence-pack warnings | derived |
-| Audit event | append_only |
-| Security/access log | append_only |
-| Customer/owned first-party overlay | ephemeral |
-| Strategy/recommendation/conclusion/report state | forbidden |
+| Capture identity conflict | `capture_package_id` remains the package identity; accepted `capture_id` identifies the capture event/attempt; `capture_attempt_id` is an inactive `unresolved` rename/alias proposal that fails closed pending owner ruling |
+| Accepted-concept omissions | Observed artifact, validation/rejection, freshness inputs/results, claim inputs/intents/results/warnings, and consumer-promotion concepts now have explicit dossiers |
+| Lifecycle underspecification | Named append-only transition concepts, identifiers, target relations, event vocabularies, authorities, audit/retention rules, derived states, and hammer mappings are explicit |
+| Roadmap duplication | Duplicate current-review-target block removed; one v0.2.1 block remains |
+| Authority guard weakness | Checker uses exact status classes, exact version/hash, capture-identity assertions, concept assertions, duplicate-block guard, and rejected-review absence guard |
 
-No concept remains primarily `unresolved`. Open capability questions remain fail-closed outside the freeze and require separate decisions.
+## Preserved non-authorizations
 
-## Preserved boundaries
-
-These corrections do not authorize:
-
-```text
-PostgreSQL creation
-roles or credentials
-tables, columns, indexes, constraints, triggers, functions, or SQL
-migration files or execution
-disposable databases or real PostgreSQL hammers
-synthetic or real persistence
-provider calls, paid pulls, or ingestion
-raw capture or artifact-store creation
-customer/private data
-production API/MCP
-strategy, recommendation, conclusion, or report-state persistence
-DB-3 activation
-```
-
-## Exact owner gate candidate
-
-```text
-ACCEPT DB-2 PHYSICAL DATA-CONTRACT FREEZE v0.1.1 CLASSIFICATION CORRECTIONS
-
-CLOSE DB-2 — PHYSICAL DATA-CONTRACT FREEZE
-
-ACTIVATE DB-3 — POSTGRES OPERATIONAL BOUNDARY AND PHYSICAL SCHEMA SPECIFICATION
-
-AUTHORIZE SPECIFICATION WORK ONLY.
-DO NOT AUTHORIZE DATABASE CREATION, ROLES, CREDENTIALS, DDL,
-MIGRATION FILES, MIGRATION EXECUTION, DISPOSABLE DATABASES,
-POSTGRES HAMMERS, SYNTHETIC OR REAL PERSISTENCE, PROVIDER CALLS,
-CUSTOMER DATA, RAW CAPTURE, OR PRODUCTION.
-```
-
-This phrase is a proposal until explicitly accepted by the owner and recorded in `decisions/`.
+No disposition here authorizes PostgreSQL, roles, credentials, physical schema,
+SQL/DDL, migrations, database tools, persistence, artifact storage, providers,
+capture, customer/private data, production, DB-2 closure, or DB-3 activation.
 
 ## Final rule
 
-```text
-One concept, one primary classification.
-Qualifiers may sharpen behavior but must never blur authority.
-```
+One concept, one primary classification. Facts, transitions, and current derived
+state stay separate. A correction record does not accept its target candidate.

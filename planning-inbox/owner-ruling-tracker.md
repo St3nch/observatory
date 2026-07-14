@@ -81,6 +81,19 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 | OR-F2 | Internal first-party telemetry admission + internal-scope handling | RG2; RG12; DR11; `decisions/2026-07-12-m17-owned-telemetry-overlay-contract-and-rulings.md` | ruled for M17 scope — synthetic internal telemetry follows the same no-storage overlay law; real internal telemetry remains separately gated |
 | OR-F3 | Overlay freshness metadata used in customer-facing conclusions | RG5; `decisions/2026-07-12-m17-owned-telemetry-overlay-contract-and-rulings.md` | ruled for M17 scope — freshness supports bounded alignment warnings only; no customer-facing conclusion authorization in M17 |
 
+## Group H - Current DB-2 owner gate
+
+| ID | Ruling needed | Source | Status |
+|---|---|---|---|
+| OR-H1 | Accept or reject the exact DB-2 candidate v0.2.1 identified by path and SHA-256 after another independent steward review | `planning-inbox/db2-reconciled-candidate-v0-2-1-readiness-review.md`; `decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md` | ruled — exact v0.2.1 path/version/SHA accepted; sole normative DB-2 input to DB-3 |
+| OR-H2 | Close or continue DB-2 after deciding OR-H1 | `decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md` | ruled — DB-2 closed successfully; trusted, accepted, and complete |
+| OR-H3 | Authorize or refuse preparation of fresh DB-3 planning | recovery decision; `decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md` | ruled — fresh DB-3 planning/specification authorized; no implementation authority |
+
+None of the OR-H1 through OR-H3 rulings authorizes PostgreSQL, database creation,
+roles, credentials, executable schema/SQL/DDL/migrations, migration execution,
+database-tool implementation or activation, persistence, providers, capture,
+customer data, raw storage, recurring work, DB-4, production, or implementation.
+
 ## Group G — Deferred (do not resolve now)
 
 | ID | Ruling needed | Source | Status |

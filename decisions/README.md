@@ -81,7 +81,8 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md` | accepted decision | Accepts the post-v1 audit as advisory input, preserves v1 acceptance, and activates DB-1 reconciliation/database-roadmap planning | No Postgres creation, DDL, migration files/execution, real ingestion, provider calls, customer data, or production authority |
 | `2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md` | accepted decision | Accepts typed-read and SearchClarity v0.1.1 corrections plus OR-B1/B2/C2/C4 | Authorizes DB-1 hammer-policy and data-contract planning only; no Postgres, DDL, migrations, persistence, capture, ingestion, or production authority |
 | `2026-07-13-db1-closure-and-db2-activation.md` | accepted decision | Accepts hammer policy v0.2, result-register v0.1, closes trusted DB-1, and activates DB-2 logical-contract work | DB-1 closure remains trusted; DB-2 is reopened for reconciliation by the recovery decision |
-| `2026-07-13-database-phase-recovery-to-db1.md` | accepted recovery decision; amended | Establishes DB-1 as the last trusted database milestone, reopens DB-2 reconciliation, and retires untrusted later-milestone artifacts | Future DB-3 work must start fresh after an explicit DB-2 owner gate; no PostgreSQL, migrations, database tools, persistence, provider, customer-data, or production authority |
+| `2026-07-13-database-phase-recovery-to-db1.md` | accepted historical recovery decision; amended | Established DB-1 as the recovery checkpoint, reopened DB-2 reconciliation, and retired untrusted later-milestone artifacts | Recovery gate completed by the 2026-07-14 decision; retired artifacts remain prohibited and non-authorizations remain binding |
+| `2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md` | accepted decision | Accepts the exact immutable DB-2 freeze v0.2.1, closes DB-2, and activates fresh DB-3 planning/specification | DB-2 is the last trusted completed database milestone; DB-4 and all implementation/database authority remain inactive |
 
 ---
 
@@ -108,8 +109,8 @@ Decision records can change project authority only when they explicitly say so a
 ## Last Review Notes
 
 ```text
-Last reviewed: 2026-07-10
-Reviewer: ChatGPT / Observatory Steward
-Result: M12 first-slice closure decision added and indexed; roadmap state moved from M12 to M13
+Last reviewed: 2026-07-14
+Reviewer: Codex / Observatory workhorse
+Result: DB-2 freeze acceptance and fresh DB-3 planning-only authorization indexed
 Open issues: none
 ```

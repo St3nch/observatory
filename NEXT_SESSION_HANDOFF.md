@@ -2,8 +2,8 @@
 
 Status: authority
 Authority: fresh-session handoff pointer; `ACTIVE_CONTEXT.md` owns current phase truth
-Purpose: preserve the trusted DB-1 checkpoint and DB-2 recovery posture
-Last updated: 2026-07-13
+Purpose: preserve the accepted DB-2 checkpoint and fresh DB-3 planning-only posture
+Last updated: 2026-07-14
 
 ---
 
@@ -11,30 +11,34 @@ Last updated: 2026-07-13
 
 The Observatory v1 bounded proof system remains accepted.
 
-Database-phase trust is reset to:
+Database-phase authority is now:
 
 ```text
-DB-1 — closed and trusted
-DB-2 — active for reconciliation and owner review only
-DB-3 — inactive; no active or authoritative artifact
+DB-1 — trusted and complete
+DB-2 — trusted, accepted, and complete
+DB-3 — active for fresh planning and specification only
 DB-4 — inactive; no active or authoritative artifact
 DB-5 through DB-10 — planned / inactive
 ```
 
-Recovery authority:
+Current authority:
 
 ```text
-decisions/2026-07-13-database-phase-recovery-to-db1.md
+decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md
 ```
 
-The canonical DB-2 freeze was declared accepted without actually incorporating all v0.1.1 corrections. The resulting untrusted DB-3 and DB-4 artifacts were permanently retired and deleted from the active repository; Git history is sufficient archival retention.
+The owner accepted the exact DB-2 freeze v0.2.1 at SHA-256
+`7c24d38ea8e7634dea8cf52cd7b85b49eda18b8ecde5a00c74b6303809c17891`,
+closed DB-2 successfully, and authorized fresh DB-3 planning. The five untrusted
+DB-3/DB-4 artifacts remain permanently retired and must not be restored, salvaged,
+reused, copied, paraphrased, or reconstructed from memory.
 
 ---
 
 ## Active Milestone
 
 ```text
-DB-2 — Physical Data-Contract Freeze Reconciliation
+DB-3 — Postgres Operational Boundary and Physical Schema Specification
 ```
 
 ---
@@ -58,9 +62,9 @@ If any required file is missing or disagrees about active authority, stop and re
 
 ---
 
-## DB-2 Recovery Read Path
+## DB-3 Fresh Planning Read Path
 
-Before DB-2 work, also read:
+Before DB-3 planning, also read:
 
 1. `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`
 2. `decisions/2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md`
@@ -73,7 +77,10 @@ Before DB-2 work, also read:
 9. `planning-inbox/db2-physical-data-contract-freeze-specification.md`
 10. `planning-inbox/db2-freeze-v0-1-1-classification-corrections.md`
 11. `planning-inbox/db2-closure-readiness-review.md`
-12. `planning-inbox/owner-ruling-tracker.md`
+12. `planning-inbox/db2-reconciled-candidate-v0-2-1-readiness-review.md`
+13. `planning-inbox/owner-ruling-tracker.md`
+14. `decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md`
+15. `POST_V1_DATABASE_ROADMAP.md`
 
 Read `planning-inbox/README.md` before treating any planning-inbox file as context. Planning material is not authority.
 
@@ -103,16 +110,19 @@ A failing authority check blocks mutation until the conflict is reconciled.
 
 ---
 
-## Current Recovery Task
+## Current Task
 
-1. reconcile the canonical DB-2 freeze with the v0.1.1 correction package;
-2. review each correction from the trusted DB-1 contracts and boundaries;
-3. enforce exactly one primary classification per concept;
-4. preserve all fail-closed and forbidden-persistence rules;
-5. produce a fresh DB-2 readiness review;
-6. request a new explicit owner decision.
+Prepare to begin DB-3 fresh from accepted authority:
 
-No DB-3 or DB-4 artifact is active or authoritative. Any future DB-3 work must be created fresh after an explicit DB-2 owner gate and must not smuggle physical design backward into DB-2.
+1. define the DB-3 planning approach and ordered specification work;
+2. derive only from trusted DB-1 and the exact accepted DB-2 freeze;
+3. preserve identity, lifecycle, provenance, scope, rights, retention, relationships,
+   exposure, fail-closed behavior, forbidden persistence, and H1-H22 implications;
+4. do not create executable DDL, migrations, SQL, database tooling, or any database;
+5. do not restore or reconstruct any retired DB-3/DB-4 artifact.
+
+DB-3 planning authority exists, but no DB-3 artifact has yet been created. DB-4 is
+inactive and implementation remains unauthorized.
 
 ---
 
@@ -121,8 +131,8 @@ No DB-3 or DB-4 artifact is active or authoritative. Any future DB-3 work must b
 - Codex native local tools own ordinary PowerShell, filesystem, Git, tests, and code work.
 - Use the desktop app's built-in Git review and commit controls.
 - Do not use old `ob-dev` Git tools.
-- `ob-dev-mcp` remains bounded to its current file-oriented surface during recovery.
-- Do not add database tools to `ob-dev-mcp` during DB-2.
+- `ob-dev-mcp` remains bounded to its current file-oriented surface during DB-3 planning.
+- Do not implement, register, or activate database tools during DB-3.
 - Tool availability and credentials never create authority.
 - Do not retry the same failing mutation repeatedly.
 - For edits: read, mutate once, inspect diff, run checks, then stage exact files.
@@ -148,12 +158,15 @@ No DB-3 or DB-4 artifact is active or authoritative. Any future DB-3 work must b
 
 ```text
 PostgreSQL creation
+PostgreSQL startup
+database creation
 roles or credentials
 SQL or DDL
 migration files or execution
 disposable database lifecycle
 real PostgreSQL hammers
 database-control-plane expansion
+database-tool implementation or activation
 synthetic or real persistence
 provider calls or paid pulls
 customer or private data

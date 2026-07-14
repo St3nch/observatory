@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -27,6 +28,9 @@ REQUIRED_ROOT_FILES = (
 )
 
 RECOVERY_DECISION = "decisions/2026-07-13-database-phase-recovery-to-db1.md"
+DB2_ACCEPTANCE_DB3_PLANNING_DECISION = (
+    "decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md"
+)
 RETIRED_UNTRUSTED_ARTIFACTS = (
     "decisions/2026-07-13-db2-closure-and-db3-activation.md",
     "decisions/2026-07-13-db3-closure-and-db4-activation.md",
@@ -34,13 +38,76 @@ RETIRED_UNTRUSTED_ARTIFACTS = (
     "planning-inbox/db3-physical-schema-specification.md",
     "planning-inbox/db3-specification-readiness-review.md",
 )
-CANDIDATE_FILES = (
-    "planning-inbox/db2-physical-data-contract-freeze-specification.md",
-    "planning-inbox/db2-freeze-v0-1-1-classification-corrections.md",
+DB2_CANONICAL_CANDIDATE = (
+    "planning-inbox/db2-physical-data-contract-freeze-specification.md"
 )
-EXPECTED_PROJECT_STATUS = "db2-reconciliation-last-trusted-db1"
+DB2_FRESH_READINESS_REVIEW = (
+    "planning-inbox/db2-reconciled-candidate-v0-2-1-readiness-review.md"
+)
+DB2_CORRECTION_DISPOSITION = (
+    "planning-inbox/db2-freeze-v0-1-1-classification-corrections.md"
+)
+REJECTED_DB2_READINESS_REVIEW = (
+    "planning-inbox/db2-reconciled-candidate-v0-2-0-readiness-review.md"
+)
+EXPECTED_DB2_CANDIDATE_STATUS = (
+    "Status: candidate under DB-2 recovery reconciliation; not accepted"
+)
+EXPECTED_DB2_REVIEW_STATUS = (
+    "Status: replacement planning review after independent rejection; "
+    "not acceptance, closure, or DB-3 authority"
+)
+EXPECTED_DB2_CORRECTION_STATUS = (
+    "Status: historical correction-disposition record; not authority"
+)
+EXPECTED_DB2_CANDIDATE_VERSION = "0.2.1"
+EXPECTED_DB2_CANDIDATE_SHA256 = (
+    "7c24d38ea8e7634dea8cf52cd7b85b49eda18b8ecde5a00c74b6303809c17891"
+)
+EXPECTED_ACTIVE_MILESTONE = (
+    "DB-3 — Postgres Operational Boundary and Physical Schema Specification"
+)
+EXPECTED_DB2_CONCEPT_CLASSIFICATIONS = {
+    "Observed artifact reference (`observed_artifact_reference`)": "durable",
+    "Validation-failure vocabulary": "versioned",
+    "Validation result": "append_only",
+    "Validation status (`validation_status`)": "derived",
+    "Rejection reason (`rejection_reason`)": "append_only",
+    "`captured_at`": "append_only",
+    "`provider_reported_time`": "append_only",
+    "Observation age (`observation_age`)": "derived",
+    "Age-band vocabulary": "versioned",
+    "`age_band`": "derived",
+    "`freshness_status`": "derived",
+    "`volatility_class`": "derived",
+    "Update-window input (`update_window`)": "ephemeral",
+    "Historical observation claim (`historical_observation_claim`)": "ephemeral",
+    "Current-state claim (`current_state_claim`)": "ephemeral",
+    "Comparative claim (`comparative_claim`)": "ephemeral",
+    "Absence claim (`absence_claim`)": "ephemeral",
+    "Provider metric claim (`provider_metric_claim`)": "ephemeral",
+    "AI/GEO claim (`ai_geo_claim`)": "ephemeral",
+    "Marketplace claim (`marketplace_claim`)": "ephemeral",
+    "Predictive claim (`predictive_claim`)": "forbidden",
+    "Causal claim (`causal_claim`)": "forbidden",
+    "Recommendation claim (`recommendation_claim`)": "forbidden",
+    "Accepted conclusion (`accepted_conclusion`)": "forbidden",
+    "Claim-intent vocabulary": "versioned",
+    "Claim-intent selection (`claim_intent`)": "ephemeral",
+    "Claim input (`claim`)": "ephemeral",
+    "Claim support result (`claim_support`)": "derived",
+    "Claim-use warning (`claim_use_warning`)": "derived",
+    "Freshness warning (`freshness_warning`)": "derived",
+    "Provider-attribution requirement (`provider_attribution_required`)": "derived",
+    "Sample-bound warning (`sample_bound_warning`)": "derived",
+    "Absence warning (`absence_warning`)": "derived",
+    "Incomparability warning (`incomparability_warning`)": "derived",
+    "Rights/retention warning (`rights_retention_warning`)": "derived",
+    "Consumer-promotion requirement (`consumer_promotion_required`)": "derived",
+}
+EXPECTED_PROJECT_STATUS = "db3-planning-last-trusted-db2"
 EXPECTED_LATER_DATABASE_MILESTONES = (
-    "db3-db4-inactive-no-artifacts-fresh-db3-requires-db2-owner-gate"
+    "db4-inactive-no-artifacts-separate-owner-gate-required"
 )
 
 
@@ -104,6 +171,64 @@ def _post_roadmap_active(text: str) -> str | None:
     return match.group(1).strip() if match else None
 
 
+def _status_line(text: str) -> str | None:
+    match = re.search(r"^Status:.*$", text, re.MULTILINE)
+    return match.group(0).strip() if match else None
+
+
+def _table_primary_classifications(text: str) -> dict[str, str]:
+    classifications: dict[str, str] = {}
+    allowed = {
+        "durable",
+        "append_only",
+        "versioned",
+        "derived",
+        "ephemeral",
+        "external",
+        "forbidden",
+        "unresolved",
+    }
+    for line in text.splitlines():
+        if not line.startswith("| "):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) < 3:
+            continue
+        match = re.match(r"^`([^`]+)`", cells[2])
+        if match and match.group(1) in allowed:
+            classifications[cells[0]] = match.group(1)
+    return classifications
+
+
+def _table_compound_classification_rows(text: str) -> tuple[str, ...]:
+    allowed = (
+        "durable",
+        "append_only",
+        "versioned",
+        "derived",
+        "ephemeral",
+        "external",
+        "forbidden",
+        "unresolved",
+    )
+    violations: list[str] = []
+    for line in text.splitlines():
+        if not line.startswith("| "):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) < 3 or not re.match(r"^`[^`]+`", cells[2]):
+            continue
+        class_tokens = re.findall(r"`([^`]+)`", cells[2])
+        first_token = class_tokens[0]
+        if first_token not in allowed:
+            if any(first_token.startswith(classification) for classification in allowed):
+                violations.append(cells[0])
+            continue
+        if sum(token in allowed for token in class_tokens) != 1:
+            violations.append(cells[0])
+    return tuple(violations)
+
+
 def check_repository(root: Path = ROOT) -> CheckResult:
     root = root.resolve()
     errors: list[str] = []
@@ -116,6 +241,9 @@ def check_repository(root: Path = ROOT) -> CheckResult:
     roadmap = _read(root, "ROADMAP.md", errors)
     post_roadmap = _read(root, "POST_V1_DATABASE_ROADMAP.md", errors)
     handoff = _read(root, "NEXT_SESSION_HANDOFF.md", errors)
+    planning_index = _read(root, "planning-inbox/README.md", errors)
+    owner_tracker = _read(root, "planning-inbox/owner-ruling-tracker.md", errors)
+    decision_index = _read(root, "decisions/README.md", errors)
 
     active_values = {
         "ACTIVE_CONTEXT.md": _fenced_value(active_context, "Active Milestone"),
@@ -136,14 +264,20 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         errors.append(f"active milestone disagreement: {rendered}")
 
     active_milestone = next(iter(present_values), None)
+    if active_milestone != EXPECTED_ACTIVE_MILESTONE:
+        errors.append(
+            "active milestone is not the accepted DB-3 planning gate: "
+            f"{active_milestone!r}"
+        )
 
-    future_placeholder_claims = (
-        "Future roadmap placeholder only. No present DB-3 authority or artifact exists.",
-        "Future roadmap placeholder only. No present DB-4 authority or artifact exists.",
+    db3_active_claim = "Active for fresh planning and specification only under"
+    if db3_active_claim not in post_roadmap:
+        errors.append("post-v1 roadmap lacks the active DB-3 planning-only gate")
+    db4_placeholder_claim = (
+        "Future roadmap placeholder only. No present DB-4 authority or artifact exists."
     )
-    for claim in future_placeholder_claims:
-        if claim not in post_roadmap:
-            errors.append(f"post-v1 roadmap lacks future-only authority guard: {claim}")
+    if db4_placeholder_claim not in post_roadmap:
+        errors.append("post-v1 roadmap lacks the inactive DB-4 authority guard")
 
     recovery_text = _read(root, RECOVERY_DECISION, errors)
     if recovery_text and "ESTABLISH DB-1 AS THE LAST TRUSTED" not in recovery_text:
@@ -151,14 +285,162 @@ def check_repository(root: Path = ROOT) -> CheckResult:
     if recovery_text and "ANY FUTURE DB-3 WORK MUST BE CREATED FRESH" not in recovery_text:
         errors.append("recovery decision lacks the fresh future DB-3 gate")
 
+    decision_text = _read(root, DB2_ACCEPTANCE_DB3_PLANNING_DECISION, errors)
+    required_decision_claims = (
+        "Status: accepted decision",
+        "Date: 2026-07-14",
+        "### OR-H1 — accept the exact DB-2 freeze",
+        f"path: {DB2_CANONICAL_CANDIDATE}",
+        f"version: {EXPECTED_DB2_CANDIDATE_VERSION}",
+        f"sha256: {EXPECTED_DB2_CANDIDATE_SHA256}",
+        "### OR-H2 — close DB-2",
+        "DB-2 is trusted, accepted, complete, and is now the last trusted completed database milestone.",
+        "### OR-H3 — authorize fresh DB-3 planning",
+        EXPECTED_ACTIVE_MILESTONE,
+        "DB-3 authority is planning and specification only.",
+        "DB-4 remains inactive.",
+        "implementation authority: no",
+    )
+    for claim in required_decision_claims:
+        if decision_text and claim not in decision_text:
+            errors.append(f"DB-2 closure decision lacks required claim: {claim!r}")
+    decision_filename = Path(DB2_ACCEPTANCE_DB3_PLANNING_DECISION).name
+    if decision_filename not in decision_index:
+        errors.append("decisions index lacks the DB-2 closure / DB-3 planning decision")
+
     for relative_path in RETIRED_UNTRUSTED_ARTIFACTS:
         if (root / relative_path).exists():
             errors.append(f"retired untrusted artifact exists: {relative_path}")
 
-    for relative_path in CANDIDATE_FILES:
-        text = _read(root, relative_path, errors)
-        if text and "Status:" in text and "candidate" not in text.splitlines()[2].lower():
-            errors.append(f"recovery candidate has an authoritative status: {relative_path}")
+    allowed_db3_named_paths = {DB2_ACCEPTANCE_DB3_PLANNING_DECISION}
+    unauthorized_fresh_artifacts = tuple(
+        sorted(
+            relative_path
+            for folder in (root / "planning-inbox", root / "decisions")
+            for path in folder.iterdir()
+            if path.is_file()
+            for relative_path in (str(path.relative_to(root)).replace("\\", "/"),)
+            if ("db3" in path.name.lower() or "db4" in path.name.lower())
+            and relative_path not in allowed_db3_named_paths
+        )
+    )
+    if unauthorized_fresh_artifacts:
+        errors.append(
+            "unauthorized DB-3/DB-4 artifact exists during closure: "
+            + ", ".join(unauthorized_fresh_artifacts)
+        )
+
+    canonical_path = root / DB2_CANONICAL_CANDIDATE
+    canonical_text = _read(root, DB2_CANONICAL_CANDIDATE, errors)
+    review_text = _read(root, DB2_FRESH_READINESS_REVIEW, errors)
+    correction_text = _read(root, DB2_CORRECTION_DISPOSITION, errors)
+    expected_statuses = (
+        (
+            DB2_CANONICAL_CANDIDATE,
+            canonical_text,
+            EXPECTED_DB2_CANDIDATE_STATUS,
+        ),
+        (DB2_FRESH_READINESS_REVIEW, review_text, EXPECTED_DB2_REVIEW_STATUS),
+        (
+            DB2_CORRECTION_DISPOSITION,
+            correction_text,
+            EXPECTED_DB2_CORRECTION_STATUS,
+        ),
+    )
+    for relative_path, text, expected_status in expected_statuses:
+        if text and _status_line(text) != expected_status:
+            errors.append(
+                f"unexpected exact status for {relative_path}: "
+                f"{_status_line(text)!r}; expected {expected_status!r}"
+            )
+
+    if (root / REJECTED_DB2_READINESS_REVIEW).exists():
+        errors.append(
+            "rejected v0.2.0 readiness review reappeared as a current file: "
+            f"{REJECTED_DB2_READINESS_REVIEW}"
+        )
+
+    if canonical_text:
+        version_line = f"Candidate version: {EXPECTED_DB2_CANDIDATE_VERSION}"
+        if canonical_text.count(version_line) != 1:
+            errors.append(
+                "canonical DB-2 candidate version disagrees with the owner-review gate"
+            )
+        candidate_sha = hashlib.sha256(canonical_path.read_bytes()).hexdigest()
+        if candidate_sha != EXPECTED_DB2_CANDIDATE_SHA256:
+            errors.append(
+                "canonical DB-2 candidate SHA-256 disagrees with the owner-review gate: "
+                f"{candidate_sha}"
+            )
+        capture_package_marker = "Observatory, `capture_package_id` only"
+        capture_id_marker = "Observatory, `capture_id`"
+        unresolved_attempt_marker = "Proposed `capture_attempt_id` rename/alias"
+        for marker in (
+            capture_package_marker,
+            capture_id_marker,
+            unresolved_attempt_marker,
+        ):
+            if marker not in canonical_text:
+                errors.append(f"canonical DB-2 capture identity is incomplete: {marker}")
+        forbidden_capture_aliases = (
+            "capture_id is an alias",
+            "alias to `capture_package_id`",
+            "`capture_attempt_id` | One bounded attempt",
+        )
+        for forbidden_alias in forbidden_capture_aliases:
+            if forbidden_alias in canonical_text:
+                errors.append(
+                    "canonical DB-2 capture identity contradicts accepted contracts: "
+                    f"{forbidden_alias}"
+                )
+        actual_classifications = _table_primary_classifications(canonical_text)
+        compound_rows = _table_compound_classification_rows(canonical_text)
+        if compound_rows:
+            errors.append(
+                "canonical DB-2 dossier has compound primary classifications: "
+                + ", ".join(compound_rows)
+            )
+        for concept, expected_classification in (
+            EXPECTED_DB2_CONCEPT_CLASSIFICATIONS.items()
+        ):
+            actual_classification = actual_classifications.get(concept)
+            if actual_classification != expected_classification:
+                errors.append(
+                    "canonical DB-2 concept classification disagrees with the "
+                    f"reconciled dossier: {concept!r} is {actual_classification!r}; "
+                    f"expected {expected_classification!r}"
+                )
+    if review_text:
+        for expected_value in (
+            DB2_CANONICAL_CANDIDATE,
+            EXPECTED_DB2_CANDIDATE_VERSION,
+            EXPECTED_DB2_CANDIDATE_SHA256,
+        ):
+            if expected_value not in review_text:
+                errors.append(
+                    "fresh DB-2 readiness review is not bound to the exact candidate: "
+                    f"missing {expected_value!r}"
+                )
+
+    accepted_heading = "Accepted DB-2 artifact:"
+    if post_roadmap.count(accepted_heading) != 1:
+        errors.append(
+            "post-v1 roadmap must contain exactly one accepted DB-2 artifact block: "
+            f"found {post_roadmap.count(accepted_heading)}"
+        )
+    if "Current reconciled review target:" in post_roadmap:
+        errors.append("post-v1 roadmap retains the obsolete DB-2 review-target block")
+    for expected_value in (
+        DB2_CANONICAL_CANDIDATE,
+        f"version {EXPECTED_DB2_CANDIDATE_VERSION}",
+        f"sha256 {EXPECTED_DB2_CANDIDATE_SHA256}",
+        f"decision: {DB2_ACCEPTANCE_DB3_PLANNING_DECISION}",
+    ):
+        if expected_value not in post_roadmap:
+            errors.append(
+                "post-v1 roadmap is not bound to the exact accepted DB-2 artifact: "
+                f"missing {expected_value!r}"
+            )
 
     pyproject_text = _read(root, "pyproject.toml", errors)
     if pyproject_text:
@@ -174,38 +456,95 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         else:
             if status != EXPECTED_PROJECT_STATUS:
                 errors.append(
-                    "pyproject project status disagrees with recovery authority: "
+                    "pyproject project status disagrees with DB-3 planning authority: "
                     f"{status!r}"
                 )
             if later_database_milestones != EXPECTED_LATER_DATABASE_MILESTONES:
                 errors.append(
-                    "pyproject later-database posture disagrees with recovery authority: "
+                    "pyproject later-database posture disagrees with DB-3 planning authority: "
                     f"{later_database_milestones!r}"
                 )
 
+    required_current_claims = {
+        "ACTIVE_CONTEXT.md": (
+            "DB-2 is now the last trusted completed database milestone.",
+            "DB-3 is active for fresh planning and specification only.",
+            "DB-4 is inactive",
+        ),
+        "ROADMAP.md": (
+            "DB-2 is now the last trusted completed database milestone",
+            "DB-3 authorizes planning and specification only.",
+            "DB-4 remains inactive.",
+        ),
+        "POST_V1_DATABASE_ROADMAP.md": (
+            "Last trusted database milestone: DB-2 — trusted, accepted, and complete",
+            f"Active milestone: {EXPECTED_ACTIVE_MILESTONE}",
+            "DB-4: inactive; no active or authoritative artifact",
+        ),
+        "NEXT_SESSION_HANDOFF.md": (
+            "DB-2 — trusted, accepted, and complete",
+            "DB-3 — active for fresh planning and specification only",
+            "DB-4 — inactive; no active or authoritative artifact",
+        ),
+    }
+    current_texts = {
+        "ACTIVE_CONTEXT.md": active_context,
+        "ROADMAP.md": roadmap,
+        "POST_V1_DATABASE_ROADMAP.md": post_roadmap,
+        "NEXT_SESSION_HANDOFF.md": handoff,
+    }
+    for source, claims in required_current_claims.items():
+        for claim in claims:
+            if claim not in current_texts[source]:
+                errors.append(f"current authority claim missing from {source}: {claim}")
+
     stale_current_claims = (
-        "DB-4 — Database Hammer Harness and Migration Specification",
-        "No later database milestone is active. DB-2 requires a separate owner decision.",
-        "Their artifacts remain candidate material",
-        "Existing DB-3 documents may be read as untrusted candidates",
+        "DB-1 is the last trusted completed database milestone",
+        "DB-2 is active for reconciliation",
+        "DB-2 closure remains unaccepted",
+        "candidate version 0.2.1 - not accepted",
+        "DB-3 and DB-4 are inactive",
+        "DB-3 — inactive; no active or authoritative artifact",
+        "No present DB-3 authority or artifact exists",
+        "Any future DB-3 work must be created fresh after an explicit DB-2 owner gate",
     )
     for source, text in (
         ("ACTIVE_CONTEXT.md", active_context),
+        ("ROADMAP.md", roadmap),
+        ("POST_V1_DATABASE_ROADMAP.md", post_roadmap),
         ("NEXT_SESSION_HANDOFF.md", handoff),
+        ("planning-inbox/README.md", planning_index),
+        ("planning-inbox/owner-ruling-tracker.md", owner_tracker),
     ):
         for stale in stale_current_claims:
             if stale in text:
                 errors.append(f"stale current-state claim in {source}: {stale}")
 
+    tracker_h = _section(owner_tracker, "Group H - Current DB-2 owner gate")
+    if tracker_h is None:
+        errors.append("owner-ruling tracker lacks Group H")
+    else:
+        for ruling_id in ("OR-H1", "OR-H2", "OR-H3"):
+            matching_rows = [
+                line
+                for line in tracker_h.splitlines()
+                if line.startswith(f"| {ruling_id} |")
+            ]
+            if len(matching_rows) != 1 or "ruled —" not in matching_rows[0]:
+                errors.append(f"{ruling_id} is not exactly ruled in owner tracker")
+            if matching_rows and DB2_ACCEPTANCE_DB3_PLANNING_DECISION not in matching_rows[0]:
+                errors.append(f"{ruling_id} is not bound to the DB-2 closure decision")
+
     for forbidden_path in ("migrations", "sql"):
         if (root / forbidden_path).exists():
             errors.append(
-                f"unauthorized database implementation path exists during recovery: {forbidden_path}"
+                f"unauthorized database implementation path exists during DB-3 planning: {forbidden_path}"
             )
 
-    notes.append("DB-1 is the last trusted completed database milestone.")
-    notes.append("DB-2 is reconciliation-only; implementation remains unauthorized.")
-    notes.append("DB-3 and DB-4 are inactive with no active or authoritative artifacts.")
+    notes.append("DB-1 remains trusted and complete.")
+    notes.append("DB-2 is trusted, accepted, complete, and last trusted.")
+    notes.append("DB-3 is active for fresh planning and specification only.")
+    notes.append("DB-4 and implementation remain unauthorized.")
     notes.append("A passing sync check is not an implementation gate.")
 
     return CheckResult(
