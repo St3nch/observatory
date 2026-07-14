@@ -1,7 +1,7 @@
 # Post-v1 Database Roadmap — The Observatory
 
 Status: authority for post-v1 sequencing after owner acceptance
-Authority: original sequence from `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`; recovery state from `decisions/2026-07-13-database-phase-recovery-to-db1.md`; current DB-4 package-preparation gate from `decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md`
+Authority: original sequence from `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`; recovery state from `decisions/2026-07-13-database-phase-recovery-to-db1.md`; current DB-4 implementation gate from `decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md`
 Purpose: govern the path from accepted bounded v1 proof system to a real local Postgres-backed evidence system without widening authority accidentally
 Last updated: 2026-07-14
 
@@ -28,19 +28,19 @@ No milestone implies the next milestone.
 Observatory v1: accepted at bounded proof-system ceiling
 Last trusted database milestone: DB-3 — trusted, accepted, and complete
 Active milestone: DB-4 — Database Hammer Harness and Migration Specification
-DB-4 authority: exact implementation-package preparation only
+DB-4 authority: exact phased implementation and disposable PostgreSQL proof
 DB-5: inactive
-Postgres startup/control: not authorized
-Database or role creation: not authorized
-Credentials or secrets: not authorized
-Executable SQL/DDL/migrations or execution: not authorized
-Database-control-plane implementation, registration, restart, or activation: not authorized
-Disposable databases and real PostgreSQL hammers: not authorized
-Persistence: not authorized
+Governed database or governed role creation: not authorized
+Package-defined ob_dev implementation and registration: authorized
+Package-defined migration/rollback files and disposable execution: authorized
+Owner-controlled credentials, PostgreSQL service actions, restart, and connector refresh: authorized for the exact package only
+One protected marked observatory_test_ disposable database: authorized
+Package-defined real disposable hammers and backup/restore proof: authorized
+Governed, production, provider, customer/private-data, recurring, and DB-5 work: not authorized
 ```
 
 Current authority:
-`decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md`.
+`decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md`.
 
 ---
 

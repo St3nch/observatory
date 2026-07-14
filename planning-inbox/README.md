@@ -71,12 +71,15 @@ Accepted database checkpoints and active DB-4 package-preparation lineage:
 - `db4-security-credentials-restart-and-owner-action-runbook.md` — planning-only owner action, credential, restart, and recovery boundary
 - `db4-owner-readiness-review.md` — binds the exact DB-4 planning package for owner review; not an implementation gate
 
-DB-3 is trusted, accepted, complete, and the last trusted database milestone. DB-4
-is active only for preparation of an exact implementation package. The exact
-five-artifact DB-4 planning inventory is owner-approved for creation and is now a
-candidate review package. No implementation or execution is authorized. The five
-retired DB-3/DB-4 artifacts remain deleted and prohibited from restoration, salvage,
-reuse, copying, paraphrase, or memory-based reconstruction.
+DB-3 is trusted, accepted, complete, and the last trusted database milestone. The
+exact five-artifact DB-4 planning package committed at
+`90e6cecec19a8ed3e4bd241b37ff575b55a826b1` is accepted by
+`decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md`.
+DB-4 is active for only the exact phased package implementation and disposable
+PostgreSQL proof. Governed/production databases, providers, customer/private data,
+recurring work, and DB-5 remain prohibited. The five retired DB-3/DB-4 artifacts
+remain deleted and prohibited from restoration, salvage, reuse, copying, paraphrase,
+or memory-based reconstruction.
 
 Completed M20 through M14 packages remain available below for lineage and proof context.
 

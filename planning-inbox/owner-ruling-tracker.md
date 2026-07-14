@@ -108,6 +108,19 @@ registration, restart/refresh, disposable databases, hammers, backup/restore,
 persistence, providers, capture, customer/private data, recurring work, production,
 or DB-5.
 
+## Group J — DB-4 package acceptance and phased implementation gate
+
+| ID | Ruling needed | Source | Status |
+|---|---|---|---|
+| OR-J1 | Accept, reject, or revise the exact five-artifact DB-4 planning package committed at `90e6cecec19a8ed3e4bd241b37ff575b55a826b1` | `planning-inbox/db4-owner-readiness-review.md`; `decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md` | ruled — exact five-artifact package accepted by path/version/SHA and commit |
+| OR-J2 | Authorize or refuse the exact phased 17-path `ob_dev` and 46-path Observatory DB-4 implementation plus disposable PostgreSQL proof | `decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md` | ruled — exact phased package implementation and disposable proof authorized with stop-after-failure sequencing |
+| OR-J3 | Preserve or change the governed-database and DB-5 boundary | `decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md` | ruled — DB-4 remains active; governed/production database work and DB-5 remain prohibited |
+
+The Group J rulings authorize only the accepted package-defined implementation,
+owner actions, disposable `observatory_test_` substrate, hammers, rollback,
+backup/restore, cleanup, and proof. They do not authorize governed or production
+databases, providers, capture, customer/private data, recurring work, or DB-5.
+
 ## Group G — Deferred (do not resolve now)
 
 | ID | Ruling needed | Source | Status |

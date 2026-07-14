@@ -6,7 +6,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [tool.observatory]
-status = "db4-package-preparation-last-trusted-db3"
+status = "db4-phased-implementation-last-trusted-db3"
 first_slice = "C2 Controlled Public Manual Observation Package"
 probe = "M13 DataForSEO one-shot tooling retained and disarmed"
 campaign = "M13 closed; no additional provider request authorized"

@@ -34,6 +34,9 @@ DB2_ACCEPTANCE_DB3_PLANNING_DECISION = (
 DB3_ACCEPTANCE_DB4_PACKAGE_DECISION = (
     "decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md"
 )
+DB4_PACKAGE_IMPLEMENTATION_DECISION = (
+    "decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md"
+)
 RETIRED_UNTRUSTED_ARTIFACTS = (
     "decisions/2026-07-13-db2-closure-and-db3-activation.md",
     "decisions/2026-07-13-db3-closure-and-db4-activation.md",
@@ -149,7 +152,7 @@ EXPECTED_DB2_CONCEPT_CLASSIFICATIONS = {
     "Rights/retention warning (`rights_retention_warning`)": "derived",
     "Consumer-promotion requirement (`consumer_promotion_required`)": "derived",
 }
-EXPECTED_PROJECT_STATUS = "db4-package-preparation-last-trusted-db3"
+EXPECTED_PROJECT_STATUS = "db4-phased-implementation-last-trusted-db3"
 EXPECTED_LATER_DATABASE_MILESTONES = (
     "db5-inactive-db4-implementation-separate-owner-gate-required"
 )
@@ -277,6 +280,7 @@ def _unauthorized_later_artifacts(root: Path) -> tuple[str, ...]:
     allowed_paths = {
         DB2_ACCEPTANCE_DB3_PLANNING_DECISION,
         DB3_ACCEPTANCE_DB4_PACKAGE_DECISION,
+        DB4_PACKAGE_IMPLEMENTATION_DECISION,
         *AUTHORIZED_DB3_PLANNING_ARTIFACTS,
         *AUTHORIZED_DB4_PLANNING_ARTIFACTS,
     }
@@ -596,24 +600,24 @@ def check_repository(root: Path = ROOT) -> CheckResult:
 
     required_current_claims = {
         "ACTIVE_CONTEXT.md": (
-            "DB-3 is now the last trusted completed database milestone.",
-            "DB-4 is active for exact implementation-package preparation only.",
+            "DB-4 is active for exact phased implementation and disposable PostgreSQL proof.",
             "DB-5 is inactive.",
+            DB4_PACKAGE_IMPLEMENTATION_DECISION,
         ),
         "ROADMAP.md": (
-            "DB-3 is the last trusted completed database milestone.",
-            "DB-4 is active only for",
-            "DB-4 does not authorize PostgreSQL",
+            "DB-3 is the last trusted completed database milestone",
+            "implementation and disposable PostgreSQL proof.",
+            "DB-5 remain prohibited",
         ),
         "POST_V1_DATABASE_ROADMAP.md": (
             "Last trusted database milestone: DB-3 — trusted, accepted, and complete",
             f"Active milestone: {EXPECTED_ACTIVE_MILESTONE}",
-            "DB-4 authority: exact implementation-package preparation only",
+            "DB-4 authority: exact phased implementation and disposable PostgreSQL proof",
         ),
         "NEXT_SESSION_HANDOFF.md": (
             "DB-3 — trusted, accepted, and complete",
-            "DB-4 — active for exact implementation-package preparation only",
-            "No DB-4 implementation-package artifact has yet been approved for creation.",
+            "DB-4 — active for exact phased implementation and disposable PostgreSQL proof",
+            DB4_PACKAGE_IMPLEMENTATION_DECISION,
         ),
     }
     current_texts = {
@@ -695,9 +699,9 @@ def check_repository(root: Path = ROOT) -> CheckResult:
     notes.append("DB-1 remains trusted and complete.")
     notes.append("DB-2 remains trusted, accepted, and complete.")
     notes.append("DB-3 is trusted, accepted, complete, and last trusted.")
-    notes.append("DB-4 is active for exact implementation-package preparation only.")
-    notes.append("PostgreSQL, tooling implementation, execution, and DB-5 remain unauthorized.")
-    notes.append("A passing sync check is not an implementation gate.")
+    notes.append("DB-4 is active for exact phased implementation and disposable PostgreSQL proof.")
+    notes.append("Governed/production databases, providers, customer/private data, recurring work, and DB-5 remain unauthorized.")
+    notes.append("A passing sync check does not close DB-4 or activate DB-5.")
 
     return CheckResult(
         root=str(root),

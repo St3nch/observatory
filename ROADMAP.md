@@ -147,17 +147,18 @@ the owner accepted the exact DB-3 planning package, accepted the bounded
 authority-checker correction, closed DB-3 successfully, and authorized preparation
 of an exact DB-4 implementation package.
 
-DB-3 is the last trusted completed database milestone. DB-4 is active only for
-package preparation. It may define an exact future implementation manifest,
-control-plane registry, migration/rollback specification inventory, disposable
-harness plan, hammer profiles, proof contracts, credential boundary, validation,
-and owner-controlled restart sequence.
+DB-3 is the last trusted completed database milestone. It remains so. By
+`decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md`,
+the owner accepted the exact DB-4 planning package committed at
+`90e6cecec19a8ed3e4bd241b37ff575b55a826b1` and authorized its exact phased
+implementation and disposable PostgreSQL proof.
 
-DB-4 does not authorize PostgreSQL startup/control, databases, roles, credentials,
-SQL/DDL, executable migration or rollback files, migration execution, `ob_dev`
-implementation or tool registration, restart/connector refresh, disposable
-databases, real PostgreSQL hammers, backup/restore execution, persistence, providers,
-capture, customer/private data, recurring work, production, or DB-5.
+DB-4 implementation is limited to the package-defined 17-path `ob_dev` manifest,
+exact 28-tool expansion to the expected 60-tool registry, exact 46-path Observatory
+migration/harness manifest, owner-controlled credentials/service/restart actions, and
+one protected marked `observatory_test_` disposable proof substrate. The governed
+`observatory` database, production, providers, capture, customer/private data,
+recurring work, and DB-5 remain prohibited.
 
 The governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`. No milestone
 implies the next milestone.
