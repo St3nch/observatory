@@ -135,25 +135,32 @@ If required reading includes a folder, that folder must have a `README.md` index
 ## Active Milestone
 
 ```text
-DB-3 — Postgres Operational Boundary and Physical Schema Specification
+DB-4 — Database Hammer Harness and Migration Specification
 ```
 
-Observatory v1 remains accepted and M20 remains closed by `decisions/2026-07-12-observatory-v1-acceptance.md`.
+Observatory v1 remains accepted and M20 remains closed by
+`decisions/2026-07-12-observatory-v1-acceptance.md`.
 
-DB-1 remains trusted and complete. By
-`decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md`,
-the owner accepted the exact DB-2 freeze v0.2.1, closed DB-2 successfully, and
-authorized fresh DB-3 planning. DB-2 is now the last trusted completed database milestone and its exact accepted freeze is the sole normative input to DB-3.
+DB-1 remains trusted and complete. DB-2 remains trusted, accepted, and complete.
+By `decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md`,
+the owner accepted the exact DB-3 planning package, accepted the bounded
+authority-checker correction, closed DB-3 successfully, and authorized preparation
+of an exact DB-4 implementation package.
 
-DB-3 authorizes planning and specification only. The five retired DB-3/DB-4
-artifacts remain deleted and prohibited from restoration, salvage, reuse, copying,
-paraphrased reconstruction, or memory-based reconstruction. DB-4 remains inactive.
+DB-3 is the last trusted completed database milestone. DB-4 is active only for
+package preparation. It may define an exact future implementation manifest,
+control-plane registry, migration/rollback specification inventory, disposable
+harness plan, hammer profiles, proof contracts, credential boundary, validation,
+and owner-controlled restart sequence.
 
-PostgreSQL creation/startup, databases, roles, credentials, executable SQL/DDL,
-executable migrations, migration execution, database-tool implementation or
-activation, persistence, providers, capture, customer data, raw storage, recurring
-work, production, and physical-schema implementation remain unauthorized. The
-governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`.
+DB-4 does not authorize PostgreSQL startup/control, databases, roles, credentials,
+SQL/DDL, executable migration or rollback files, migration execution, `ob_dev`
+implementation or tool registration, restart/connector refresh, disposable
+databases, real PostgreSQL hammers, backup/restore execution, persistence, providers,
+capture, customer/private data, recurring work, production, or DB-5.
+
+The governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`. No milestone
+implies the next milestone.
 
 ---
 
@@ -448,7 +455,7 @@ Completed outputs:
 - `research/README.md`
 - `REPO_MAP.md` updated to match actual folders
 - `README.md` read-order and sibling-repo note cleaned up
-- `planning-inbox/README.md` updated with audit-response and Go8 note
+- `planning-inbox/README.md` updated with audit-response and tool-context note
 
 Closure note:
 M2 created the owner-approved folder subset: `decisions/`, `archive/`, and `research/`. `contracts/` remains deferred until M7 and `hammers/` remains deferred until M8.

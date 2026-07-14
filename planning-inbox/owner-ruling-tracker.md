@@ -81,7 +81,7 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 | OR-F2 | Internal first-party telemetry admission + internal-scope handling | RG2; RG12; DR11; `decisions/2026-07-12-m17-owned-telemetry-overlay-contract-and-rulings.md` | ruled for M17 scope — synthetic internal telemetry follows the same no-storage overlay law; real internal telemetry remains separately gated |
 | OR-F3 | Overlay freshness metadata used in customer-facing conclusions | RG5; `decisions/2026-07-12-m17-owned-telemetry-overlay-contract-and-rulings.md` | ruled for M17 scope — freshness supports bounded alignment warnings only; no customer-facing conclusion authorization in M17 |
 
-## Group H - Current DB-2 owner gate
+## Group H — Completed DB-2 owner gate
 
 | ID | Ruling needed | Source | Status |
 |---|---|---|---|
@@ -89,10 +89,24 @@ Created: 2026-07-07 (M7 audit-fix pass; consolidates candidates from RG1–RG13,
 | OR-H2 | Close or continue DB-2 after deciding OR-H1 | `decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md` | ruled — DB-2 closed successfully; trusted, accepted, and complete |
 | OR-H3 | Authorize or refuse preparation of fresh DB-3 planning | recovery decision; `decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md` | ruled — fresh DB-3 planning/specification authorized; no implementation authority |
 
-None of the OR-H1 through OR-H3 rulings authorizes PostgreSQL, database creation,
+The OR-H1 through OR-H3 rulings alone authorize no PostgreSQL, database creation,
 roles, credentials, executable schema/SQL/DDL/migrations, migration execution,
 database-tool implementation or activation, persistence, providers, capture,
 customer data, raw storage, recurring work, DB-4, production, or implementation.
+
+## Group I — DB-3 acceptance and DB-4 package-preparation gate
+
+| ID | Ruling needed | Source | Status |
+|---|---|---|---|
+| OR-I1 | Accept, reject, or revise the exact three-artifact DB-3 package and bounded authority-checker correction | `planning-inbox/db3-owner-readiness-review.md`; `decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md` | ruled — exact three-artifact package and bounded checker correction accepted |
+| OR-I2 | Close or continue DB-3 after deciding OR-I1 | `decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md` | ruled — DB-3 closed successfully; trusted, accepted, complete, and last trusted |
+| OR-I3 | Authorize or refuse preparation of an exact DB-4 implementation package | `decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md` | ruled — exact package preparation authorized; implementation and all execution remain unauthorized |
+
+OR-I3 permits preparation only. It does not authorize PostgreSQL control, databases,
+roles, credentials, SQL/DDL, executable migrations, tooling implementation or
+registration, restart/refresh, disposable databases, hammers, backup/restore,
+persistence, providers, capture, customer/private data, recurring work, production,
+or DB-5.
 
 ## Group G — Deferred (do not resolve now)
 

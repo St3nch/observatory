@@ -9,40 +9,60 @@ Last updated: 2026-07-14
 
 ## Current Phase
 
-The Observatory has completed DB-2 reconciliation and entered fresh DB-3 planning:
+The Observatory has accepted and closed DB-3 and entered bounded DB-4 package preparation:
 
 ```text
 DB-1 is trusted and complete.
 DB-2 is trusted, accepted, and complete.
-DB-3 is active for fresh planning and specification only.
-DB-4 is inactive, with no active or authoritative artifact.
+DB-3 is trusted, accepted, and complete.
+DB-4 is active for exact implementation-package preparation only.
+DB-5 is inactive.
 ```
 
 Current transition authority:
 
 ```text
-decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md
+decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md
 ```
 
-Observatory v1 remains accepted at the bounded proof-system ceiling by `decisions/2026-07-12-observatory-v1-acceptance.md`.
+Observatory v1 remains accepted at the bounded proof-system ceiling by
+`decisions/2026-07-12-observatory-v1-acceptance.md`.
 
 ---
 
 ## Active Milestone
 
 ```text
-DB-3 — Postgres Operational Boundary and Physical Schema Specification
+DB-4 — Database Hammer Harness and Migration Specification
 ```
 
-DB-3 is planning and specification only. It derives solely from accepted DB-1
-authority, the exact accepted DB-2 freeze, accepted roadmaps/contracts/decisions,
-and the 2026-07-14 owner decision. It grants no implementation authority.
+DB-4 authority is preparation only. It may produce an exact, reviewable
+implementation-package proposal derived from accepted DB-3. It grants no
+implementation, PostgreSQL, database, migration, tooling, restart, hammer-execution,
+backup, restore, or persistence authority.
 
 ---
 
-## Accepted DB-2 checkpoint
+## Accepted DB-3 checkpoint
 
-The owner accepted the exact immutable DB-2 freeze identified by:
+The owner accepted the exact DB-3 planning package:
+
+```text
+planning-inbox/db3-accepted-input-traceability-matrix.md
+sha256 db2ae41552aa4fc2c88b450f86f8070fb8e3cc023fb93fc7e7a39ab625aadc98
+
+planning-inbox/db3-fresh-postgres-design-specification-v0-1.md
+sha256 9b79f0551fac9bbea11bc6e5afbececf48e216e47f41c3554e5806903f666e5e
+
+planning-inbox/db3-future-ob-dev-control-plane-contract-v0-1.md
+sha256 d13e83b8fd74fd4c427a3ede92c70e24a252458b80c8abc6531cb5bd92ac2dec
+```
+
+DB-3 is now the last trusted completed database milestone. The accepted planning
+artifacts are immutable specifications; they are not executable implementation
+artifacts.
+
+The exact accepted DB-2 freeze remains immutable:
 
 ```text
 path: planning-inbox/db2-physical-data-contract-freeze-specification.md
@@ -50,27 +70,23 @@ version: 0.2.1
 sha256: 7c24d38ea8e7634dea8cf52cd7b85b49eda18b8ecde5a00c74b6303809c17891
 ```
 
-DB-2 is now the last trusted completed database milestone. The candidate file's
-historical self-status remains unchanged because the decision binds its exact bytes.
-
-The untrusted later DB-3 and DB-4 artifacts have been permanently retired and deleted from the active repository. Git history is sufficient archival retention.
-
-The five untrusted later DB-3/DB-4 artifacts remain permanently retired and deleted.
-They must not be restored, salvaged, reused, copied, paraphrased, or reconstructed.
-DB-4 remains inactive. No PostgreSQL or database-control-plane implementation is
-authorized.
+The five retired DB-3/DB-4 artifacts remain permanently absent and prohibited from
+restoration, salvage, reuse, copying, paraphrased reconstruction, or memory-based
+reconstruction.
 
 ---
 
 ## Current Task
 
-Begin DB-3 fresh by preparing its planning approach from accepted authority:
+Prepare one exact DB-4 implementation package for owner review:
 
-1. re-read the DB-3 roadmap gate and exact accepted DB-2 freeze;
-2. define the specification work sequence without creating implementation artifacts;
-3. preserve every accepted identity, lifecycle, rights, retention, exposure,
-   forbidden-persistence, and H1-H22 implication;
-4. do not use or reconstruct any retired DB-3/DB-4 artifact.
+1. derive only from accepted DB-1, DB-2, and DB-3 authority;
+2. propose the exact `ob_dev` source/test edit manifest and 28-tool registry;
+3. propose exact non-executable migration-specification, rollback, disposable-harness,
+   hammer-profile, proof, credential, restart, and validation inventories;
+4. preserve protected database names, capability gates, optimistic SHA controls,
+   redaction, and fail-closed behavior;
+5. stop for a separate owner decision before creating any implementation artifact.
 
 ---
 
@@ -78,30 +94,30 @@ Begin DB-3 fresh by preparing its planning approach from accepted authority:
 
 Do not start:
 
-- PostgreSQL database creation
+- PostgreSQL startup, shutdown, restart, or control
+- database creation, reset, drop, or connection
 - role or credential creation
+- secrets or credential setup
 - SQL or DDL
-- migration files or migration execution
+- executable migration or rollback files
+- migration validation or execution
 - disposable database lifecycle
-- real-PostgreSQL hammers
-- database-control-plane expansion
+- real PostgreSQL hammers
+- database-control-plane source implementation or tool registration
+- `ob_dev` restart or connector refresh
+- backup or restore execution
 - synthetic or real persistence
 - provider calls or paid pulls
 - recurring capture
 - production API/MCP exposure
 - dashboard or operator console work
 - customer or private data handling
-- raw capture
+- raw capture or storage
 - customer-facing reports
-- marketplace scraping
-- browser-extension capture
 - strategy, recommendation, conclusion, or report-state storage
-- cloud backup upload
-- automatic backup jobs
-- destructive cleanup
-- production deployment
+- DB-5 planning or activation
 
-No schema goblin jazz. The paperwork must become true before the database becomes real.
+The package must become exact before implementation can become a question.
 
 ---
 
@@ -113,15 +129,15 @@ The connected LLM interprets at read time.
 
 Accepted conclusions promote out to the owning consumer.
 
-Customer records and customer first-party analytics stay outside Observatory durable storage.
+Customer records and customer first-party analytics stay outside Observatory durable
+storage. LLMs and agents receive shaped evidence through typed boundaries, not direct
+SQL access or database credentials.
 
-LLMs and agents receive shaped evidence through typed boundaries, not direct SQL access or database credentials.
+Provider disagreement is first-class evidence. Proprietary provider scores are
+provider-attributed testimony, not facts about the web.
 
-Provider disagreement is first-class evidence. Proprietary provider scores are provider-attributed testimony, not facts about the web.
-
-Rights and retention fail closed.
-
-Hammer tests are a hard gate for implementation, and database hammers require a real authorized substrate.
+Rights and retention fail closed. Hammer tests are hard gates, and real database
+claims require a separately authorized real substrate.
 
 Killed ancestor concepts remain killed.
 
@@ -135,36 +151,37 @@ Trusted and closed:
 M0, M0.1, M1 through M20
 DB-1 — Post-v1 Audit Reconciliation and Ruling Closure
 DB-2 — Physical Data-Contract Freeze
-```
-
-Active for fresh planning and specification only:
-
-```text
 DB-3 — Postgres Operational Boundary and Physical Schema Specification
 ```
 
-Inactive with no current artifact or authority:
+Active for exact implementation-package preparation only:
 
 ```text
-DB-4
+DB-4 — Database Hammer Harness and Migration Specification
+```
+
+Inactive:
+
+```text
+DB-5
 ```
 
 Planned and inactive:
 
 ```text
-DB-4 through DB-10
+DB-5 through DB-10
 ```
 
-The governing post-v1 sequence remains `POST_V1_DATABASE_ROADMAP.md`, as corrected
-by the recovery decision and the 2026-07-14 DB-2 closure decision. No milestone
-implies the next milestone.
+No milestone implies the next milestone.
 
 ---
 
 ## Tool Posture
 
-- Use only the custom `ob-dev` MCP for local repository inspection, bounded mutation, Git, and fixed validation profiles.
+- Use only the custom `ob-dev` MCP for local repository inspection, bounded mutation,
+  Git, and fixed validation profiles.
 - Generic shell, PowerShell, Python, SQL, and arbitrary Git execution remain disabled.
-- `chatgpt_mcp` is a read-only Git reference; local staging and commits are limited to `ob_dev` and `observatory`.
-- Do not implement, register, or activate PostgreSQL tools during DB-3 planning.
+- `chatgpt_mcp` is a read-only Git reference; local staging and commits are limited to
+  `ob_dev` and `observatory`.
+- Do not implement or register PostgreSQL tools during DB-4 package preparation.
 - Tool availability never creates roadmap authority.

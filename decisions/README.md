@@ -82,7 +82,8 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-12-db1-contract-corrections-and-database-boundary-rulings.md` | accepted decision | Accepts typed-read and SearchClarity v0.1.1 corrections plus OR-B1/B2/C2/C4 | Authorizes DB-1 hammer-policy and data-contract planning only; no Postgres, DDL, migrations, persistence, capture, ingestion, or production authority |
 | `2026-07-13-db1-closure-and-db2-activation.md` | accepted decision | Accepts hammer policy v0.2, result-register v0.1, closes trusted DB-1, and activates DB-2 logical-contract work | DB-1 closure remains trusted; DB-2 is reopened for reconciliation by the recovery decision |
 | `2026-07-13-database-phase-recovery-to-db1.md` | accepted historical recovery decision; amended | Established DB-1 as the recovery checkpoint, reopened DB-2 reconciliation, and retired untrusted later-milestone artifacts | Recovery gate completed by the 2026-07-14 decision; retired artifacts remain prohibited and non-authorizations remain binding |
-| `2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md` | accepted decision | Accepts the exact immutable DB-2 freeze v0.2.1, closes DB-2, and activates fresh DB-3 planning/specification | DB-2 is the last trusted completed database milestone; DB-4 and all implementation/database authority remain inactive |
+| `2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md` | accepted decision | Accepts the exact immutable DB-2 freeze v0.2.1, closes DB-2, and activates fresh DB-3 planning/specification | Superseded only as current-state pointer by the later DB-3 closure decision; DB-2 acceptance remains binding |
+| `2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md` | accepted decision | Accepts the exact DB-3 package and checker correction, closes DB-3, and activates DB-4 package preparation | Preparation only; no PostgreSQL, database, SQL, migrations, tooling implementation/restart, hammers, persistence, providers, production, or DB-5 authority |
 
 ---
 
@@ -111,6 +112,6 @@ Decision records can change project authority only when they explicitly say so a
 ```text
 Last reviewed: 2026-07-14
 Reviewer: Observatory project steward
-Result: DB-2 freeze acceptance and fresh DB-3 planning-only authorization indexed
-Open issues: none
+Result: Exact DB-3 acceptance/closure and DB-4 package-preparation-only decision indexed
+Open issues: DB-4 exact artifact inventory and implementation package remain unapproved; implementation remains unauthorized
 ```

@@ -31,6 +31,9 @@ RECOVERY_DECISION = "decisions/2026-07-13-database-phase-recovery-to-db1.md"
 DB2_ACCEPTANCE_DB3_PLANNING_DECISION = (
     "decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md"
 )
+DB3_ACCEPTANCE_DB4_PACKAGE_DECISION = (
+    "decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md"
+)
 RETIRED_UNTRUSTED_ARTIFACTS = (
     "decisions/2026-07-13-db2-closure-and-db3-activation.md",
     "decisions/2026-07-13-db3-closure-and-db4-activation.md",
@@ -44,6 +47,17 @@ AUTHORIZED_DB3_PLANNING_ARTIFACTS = (
     "planning-inbox/db3-future-ob-dev-control-plane-contract-v0-1.md",
     "planning-inbox/db3-owner-readiness-review.md",
 )
+EXPECTED_DB3_ARTIFACT_SHA256 = {
+    "planning-inbox/db3-accepted-input-traceability-matrix.md": (
+        "db2ae41552aa4fc2c88b450f86f8070fb8e3cc023fb93fc7e7a39ab625aadc98"
+    ),
+    "planning-inbox/db3-fresh-postgres-design-specification-v0-1.md": (
+        "9b79f0551fac9bbea11bc6e5afbececf48e216e47f41c3554e5806903f666e5e"
+    ),
+    "planning-inbox/db3-future-ob-dev-control-plane-contract-v0-1.md": (
+        "d13e83b8fd74fd4c427a3ede92c70e24a252458b80c8abc6531cb5bd92ac2dec"
+    ),
+}
 DB2_CANONICAL_CANDIDATE = (
     "planning-inbox/db2-physical-data-contract-freeze-specification.md"
 )
@@ -71,7 +85,7 @@ EXPECTED_DB2_CANDIDATE_SHA256 = (
     "7c24d38ea8e7634dea8cf52cd7b85b49eda18b8ecde5a00c74b6303809c17891"
 )
 EXPECTED_ACTIVE_MILESTONE = (
-    "DB-3 — Postgres Operational Boundary and Physical Schema Specification"
+    "DB-4 — Database Hammer Harness and Migration Specification"
 )
 EXPECTED_DB2_CONCEPT_CLASSIFICATIONS = {
     "Observed artifact reference (`observed_artifact_reference`)": "durable",
@@ -111,9 +125,9 @@ EXPECTED_DB2_CONCEPT_CLASSIFICATIONS = {
     "Rights/retention warning (`rights_retention_warning`)": "derived",
     "Consumer-promotion requirement (`consumer_promotion_required`)": "derived",
 }
-EXPECTED_PROJECT_STATUS = "db3-planning-last-trusted-db2"
+EXPECTED_PROJECT_STATUS = "db4-package-preparation-last-trusted-db3"
 EXPECTED_LATER_DATABASE_MILESTONES = (
-    "db4-inactive-no-artifacts-separate-owner-gate-required"
+    "db5-inactive-db4-implementation-separate-owner-gate-required"
 )
 
 
@@ -238,6 +252,7 @@ def _table_compound_classification_rows(text: str) -> tuple[str, ...]:
 def _unauthorized_later_artifacts(root: Path) -> tuple[str, ...]:
     allowed_paths = {
         DB2_ACCEPTANCE_DB3_PLANNING_DECISION,
+        DB3_ACCEPTANCE_DB4_PACKAGE_DECISION,
         *AUTHORIZED_DB3_PLANNING_ARTIFACTS,
     }
     return tuple(
@@ -291,18 +306,18 @@ def check_repository(root: Path = ROOT) -> CheckResult:
     active_milestone = next(iter(present_values), None)
     if active_milestone != EXPECTED_ACTIVE_MILESTONE:
         errors.append(
-            "active milestone is not the accepted DB-3 planning gate: "
+            "active milestone is not the accepted DB-4 package-preparation gate: "
             f"{active_milestone!r}"
         )
 
-    db3_active_claim = "Active for fresh planning and specification only under"
-    if db3_active_claim not in post_roadmap:
-        errors.append("post-v1 roadmap lacks the active DB-3 planning-only gate")
-    db4_placeholder_claim = (
-        "Future roadmap placeholder only. No present DB-4 authority or artifact exists."
-    )
-    if db4_placeholder_claim not in post_roadmap:
-        errors.append("post-v1 roadmap lacks the inactive DB-4 authority guard")
+    db3_closed_claim = "DB-3 was accepted and closed by"
+    if db3_closed_claim not in post_roadmap:
+        errors.append("post-v1 roadmap lacks the closed DB-3 gate")
+    db4_active_claim = "Active only for exact implementation-package preparation under"
+    if db4_active_claim not in post_roadmap:
+        errors.append("post-v1 roadmap lacks the active DB-4 preparation-only gate")
+    if "Package preparation is not implementation." not in post_roadmap:
+        errors.append("post-v1 roadmap lacks the DB-4 non-implementation guard")
 
     recovery_text = _read(root, RECOVERY_DECISION, errors)
     if recovery_text and "ESTABLISH DB-1 AS THE LAST TRUSTED" not in recovery_text:
@@ -321,7 +336,7 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         "### OR-H2 — close DB-2",
         "DB-2 is trusted, accepted, complete, and is now the last trusted completed database milestone.",
         "### OR-H3 — authorize fresh DB-3 planning",
-        EXPECTED_ACTIVE_MILESTONE,
+        "DB-3 — Postgres Operational Boundary and Physical Schema Specification",
         "DB-3 authority is planning and specification only.",
         "DB-4 remains inactive.",
         "implementation authority: no",
@@ -333,6 +348,47 @@ def check_repository(root: Path = ROOT) -> CheckResult:
     if decision_filename not in decision_index:
         errors.append("decisions index lacks the DB-2 closure / DB-3 planning decision")
 
+    db3_decision_text = _read(root, DB3_ACCEPTANCE_DB4_PACKAGE_DECISION, errors)
+    required_db3_decision_claims = (
+        "Status: accepted decision",
+        "Date: 2026-07-14",
+        "### OR-I1 — accept the exact DB-3 planning package",
+        "### OR-I2 — close DB-3 successfully",
+        "DB-3 is trusted, accepted, complete, and becomes the last trusted",
+        "### OR-I3 — authorize preparation of an exact DB-4 implementation package",
+        EXPECTED_ACTIVE_MILESTONE,
+        "DB-4 authority is limited to preparing an exact, reviewable implementation package.",
+        "DB-4 implementation authority: no",
+        "database authority: no",
+        "execution authority: no",
+    )
+    for claim in required_db3_decision_claims:
+        if db3_decision_text and claim not in db3_decision_text:
+            errors.append(f"DB-3 closure decision lacks required claim: {claim!r}")
+    for relative_path, expected_sha256 in EXPECTED_DB3_ARTIFACT_SHA256.items():
+        if db3_decision_text:
+            if f"path: {relative_path}" not in db3_decision_text:
+                errors.append(
+                    f"DB-3 closure decision lacks accepted path: {relative_path}"
+                )
+            if f"sha256: {expected_sha256}" not in db3_decision_text:
+                errors.append(
+                    f"DB-3 closure decision lacks accepted SHA-256: {relative_path}"
+                )
+        artifact_path = root / relative_path
+        if not artifact_path.is_file():
+            errors.append(f"missing accepted DB-3 artifact: {relative_path}")
+        else:
+            actual_sha256 = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
+            if actual_sha256 != expected_sha256:
+                errors.append(
+                    "accepted DB-3 artifact SHA-256 mismatch: "
+                    f"{relative_path} is {actual_sha256}"
+                )
+    db3_decision_filename = Path(DB3_ACCEPTANCE_DB4_PACKAGE_DECISION).name
+    if db3_decision_filename not in decision_index:
+        errors.append("decisions index lacks the DB-3 closure / DB-4 preparation decision")
+
     for relative_path in RETIRED_UNTRUSTED_ARTIFACTS:
         if (root / relative_path).exists():
             errors.append(f"retired untrusted artifact exists: {relative_path}")
@@ -340,7 +396,7 @@ def check_repository(root: Path = ROOT) -> CheckResult:
     unauthorized_later_artifacts = _unauthorized_later_artifacts(root)
     if unauthorized_later_artifacts:
         errors.append(
-            "unauthorized DB-3/DB-4 artifact exists during active DB-3 planning: "
+            "unauthorized DB-3/DB-4 artifact exists during DB-4 package preparation: "
             + ", ".join(unauthorized_later_artifacts)
         )
 
@@ -470,35 +526,35 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         else:
             if status != EXPECTED_PROJECT_STATUS:
                 errors.append(
-                    "pyproject project status disagrees with DB-3 planning authority: "
+                    "pyproject project status disagrees with DB-4 package-preparation authority: "
                     f"{status!r}"
                 )
             if later_database_milestones != EXPECTED_LATER_DATABASE_MILESTONES:
                 errors.append(
-                    "pyproject later-database posture disagrees with DB-3 planning authority: "
+                    "pyproject later-database posture disagrees with DB-4 package-preparation authority: "
                     f"{later_database_milestones!r}"
                 )
 
     required_current_claims = {
         "ACTIVE_CONTEXT.md": (
-            "DB-2 is now the last trusted completed database milestone.",
-            "DB-3 is active for fresh planning and specification only.",
-            "DB-4 is inactive",
+            "DB-3 is now the last trusted completed database milestone.",
+            "DB-4 is active for exact implementation-package preparation only.",
+            "DB-5 is inactive.",
         ),
         "ROADMAP.md": (
-            "DB-2 is now the last trusted completed database milestone",
-            "DB-3 authorizes planning and specification only.",
-            "DB-4 remains inactive.",
+            "DB-3 is the last trusted completed database milestone.",
+            "DB-4 is active only for",
+            "DB-4 does not authorize PostgreSQL",
         ),
         "POST_V1_DATABASE_ROADMAP.md": (
-            "Last trusted database milestone: DB-2 — trusted, accepted, and complete",
+            "Last trusted database milestone: DB-3 — trusted, accepted, and complete",
             f"Active milestone: {EXPECTED_ACTIVE_MILESTONE}",
-            "DB-4: inactive; no active or authoritative artifact",
+            "DB-4 authority: exact implementation-package preparation only",
         ),
         "NEXT_SESSION_HANDOFF.md": (
-            "DB-2 — trusted, accepted, and complete",
-            "DB-3 — active for fresh planning and specification only",
-            "DB-4 — inactive; no active or authoritative artifact",
+            "DB-3 — trusted, accepted, and complete",
+            "DB-4 — active for exact implementation-package preparation only",
+            "No DB-4 implementation-package artifact has yet been approved for creation.",
         ),
     }
     current_texts = {
@@ -521,6 +577,10 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         "DB-3 — inactive; no active or authoritative artifact",
         "No present DB-3 authority or artifact exists",
         "Any future DB-3 work must be created fresh after an explicit DB-2 owner gate",
+        "DB-3 is active for fresh planning and specification only.",
+        "DB-4 remains inactive.",
+        "DB-4: inactive; no active or authoritative artifact",
+        "Future roadmap placeholder only. No present DB-4 authority or artifact exists.",
     )
     for source, text in (
         ("ACTIVE_CONTEXT.md", active_context),
@@ -534,9 +594,9 @@ def check_repository(root: Path = ROOT) -> CheckResult:
             if stale in text:
                 errors.append(f"stale current-state claim in {source}: {stale}")
 
-    tracker_h = _section(owner_tracker, "Group H - Current DB-2 owner gate")
+    tracker_h = _section(owner_tracker, "Group H — Completed DB-2 owner gate")
     if tracker_h is None:
-        errors.append("owner-ruling tracker lacks Group H")
+        errors.append("owner-ruling tracker lacks completed Group H")
     else:
         for ruling_id in ("OR-H1", "OR-H2", "OR-H3"):
             matching_rows = [
@@ -549,16 +609,35 @@ def check_repository(root: Path = ROOT) -> CheckResult:
             if matching_rows and DB2_ACCEPTANCE_DB3_PLANNING_DECISION not in matching_rows[0]:
                 errors.append(f"{ruling_id} is not bound to the DB-2 closure decision")
 
+    tracker_i = _section(
+        owner_tracker, "Group I — DB-3 acceptance and DB-4 package-preparation gate"
+    )
+    if tracker_i is None:
+        errors.append("owner-ruling tracker lacks Group I")
+    else:
+        for ruling_id in ("OR-I1", "OR-I2", "OR-I3"):
+            matching_rows = [
+                line
+                for line in tracker_i.splitlines()
+                if line.startswith(f"| {ruling_id} |")
+            ]
+            if len(matching_rows) != 1 or "ruled —" not in matching_rows[0]:
+                errors.append(f"{ruling_id} is not exactly ruled in owner tracker")
+            if matching_rows and DB3_ACCEPTANCE_DB4_PACKAGE_DECISION not in matching_rows[0]:
+                errors.append(f"{ruling_id} is not bound to the DB-3 closure decision")
+
     for forbidden_path in ("migrations", "sql"):
         if (root / forbidden_path).exists():
             errors.append(
-                f"unauthorized database implementation path exists during DB-3 planning: {forbidden_path}"
+                "unauthorized database implementation path exists during "
+                f"DB-4 package preparation: {forbidden_path}"
             )
 
     notes.append("DB-1 remains trusted and complete.")
-    notes.append("DB-2 is trusted, accepted, complete, and last trusted.")
-    notes.append("DB-3 is active for fresh planning and specification only.")
-    notes.append("DB-4 and implementation remain unauthorized.")
+    notes.append("DB-2 remains trusted, accepted, and complete.")
+    notes.append("DB-3 is trusted, accepted, complete, and last trusted.")
+    notes.append("DB-4 is active for exact implementation-package preparation only.")
+    notes.append("PostgreSQL, tooling implementation, execution, and DB-5 remain unauthorized.")
     notes.append("A passing sync check is not an implementation gate.")
 
     return CheckResult(

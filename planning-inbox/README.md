@@ -47,7 +47,7 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-Accepted DB-2 checkpoint and fresh DB-3 planning lineage:
+Accepted database checkpoints and active DB-4 package-preparation lineage:
 
 - `post-v1-pre-database-audit-response-2026-07-12.md` — complete N-01 through N-14 routing, opportunity parking, correction order, and DB-1 exit criteria
 - `db1-owner-ruling-proposals.md` — accepted OR-B1, OR-B2, OR-C2, and OR-C4 proposal source; durable authority lives in the linked decision
@@ -60,16 +60,18 @@ Accepted DB-2 checkpoint and fresh DB-3 planning lineage:
 - `db2-freeze-v0-1-1-classification-corrections.md` — historical twelve-finding correction/disposition record incorporated into candidate v0.2.1; not authority
 - `db2-closure-readiness-review.md` — invalidated historical assessment; not closure evidence
 - `db2-reconciled-candidate-v0-2-1-readiness-review.md` — historical replacement review that bound the exact artifact accepted by the 2026-07-14 decision; not authority itself
-- root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence with DB-2 complete and DB-3 active for planning only
-- `db3-accepted-input-traceability-matrix.md` — fresh DB-3 mapping from accepted DB-2 concepts and H1-H22 to future physical responsibilities; planning only
-- `db3-fresh-postgres-design-specification-v0-1.md` — combined future operational-boundary and physical-schema candidate; no SQL, migration, database, or implementation authority
-- `db3-future-ob-dev-control-plane-contract-v0-1.md` — exact candidate contract for a future separately authorized DB-4 ob-dev expansion; no current tool or PostgreSQL authority
-- `db3-owner-readiness-review.md` — hash-bound review of the fresh DB-3 candidate package, validation evidence, owner choices, and separate future gates; not acceptance or closure
+- root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence with DB-3 accepted/closed and DB-4 active for exact package preparation only
+- `db3-accepted-input-traceability-matrix.md` — exact accepted DB-3 traceability specification; immutable bytes bound by the DB-3 closure decision
+- `db3-fresh-postgres-design-specification-v0-1.md` — exact accepted DB-3 operational-boundary and physical-schema specification; descriptive only, with no implementation authority
+- `db3-future-ob-dev-control-plane-contract-v0-1.md` — exact accepted future control-plane contract; DB-4 may prepare a package from it but may not implement it
+- `db3-owner-readiness-review.md` — consumed historical readiness review; acceptance and closure authority lives in the linked decision
 
-DB-3 is active for fresh planning and specification only. The fresh candidates above
-are planning material, not authority or implementation permission. DB-4 is inactive.
-The five retired DB-3/DB-4 artifacts remain deleted and prohibited from restoration,
-salvage, reuse, copying, paraphrase, or memory-based reconstruction.
+DB-3 is trusted, accepted, complete, and the last trusted database milestone. DB-4
+is active only for preparation of an exact implementation package. No DB-4 package
+artifact is approved for creation until its exact inventory is owner-approved, and
+no implementation or execution is authorized. The five retired DB-3/DB-4 artifacts
+remain deleted and prohibited from restoration, salvage, reuse, copying, paraphrase,
+or memory-based reconstruction.
 
 Completed M20 through M14 packages remain available below for lineage and proof context.
 
@@ -159,10 +161,10 @@ Root authority files take priority over this folder.
 | `db2-freeze-v0-1-1-classification-corrections.md` | historical disposition record | Preserves C-01 through C-12 and independent-review dispositions applied to candidate v0.2.1 | Not a competing freeze or owner gate |
 | `db2-closure-readiness-review.md` | invalidated historical review | Preserves the obsolete assessment for history | Not current closure evidence |
 | `db2-reconciled-candidate-v0-2-1-readiness-review.md` | historical replacement planning review | Records v0.2.0 rejection and binds exact v0.2.1 hash, validation, disposition, and three-part owner gate | The later decision accepted/closed/activated; this review remains non-authority history |
-| `db3-accepted-input-traceability-matrix.md` | DB-3 planning specification | Maps the exact accepted DB-2 freeze, classifications, identities, lifecycles, forbidden persistence, and H1-H22 to future physical responsibilities | Planning only; no SQL, migration, database, DB-4, or implementation authority |
-| `db3-fresh-postgres-design-specification-v0-1.md` | DB-3 planning candidate | Specifies the future local PostgreSQL boundary, roles, namespaces, relation responsibilities, constraints, indexes, migration/rollback policy, and hammer mechanisms | Descriptive only; creates no database object, role, credential, SQL, migration, persistence, or later-milestone authority |
-| `db3-future-ob-dev-control-plane-contract-v0-1.md` | DB-3 planning candidate | Specifies the exact future bounded ob-dev PostgreSQL tool registry, schemas, capability classes, results, proof, and restart/recovery procedure | No ob_dev edit, tool registration, restart, PostgreSQL action, or DB-4 authority |
-| `db3-owner-readiness-review.md` | owner-ready DB-3 planning review | Binds the three fresh candidates by exact SHA-256, records validations and the stale-checker correction, and presents independent owner decisions | Not acceptance, DB-3 closure, DB-4 activation, PostgreSQL, or implementation authority |
+| `db3-accepted-input-traceability-matrix.md` | accepted immutable DB-3 planning specification | Maps the exact accepted DB-2 freeze, classifications, identities, lifecycles, forbidden persistence, and H1-H22 to future physical responsibilities | Accepted by exact path/SHA in the DB-3 closure decision; no implementation authority |
+| `db3-fresh-postgres-design-specification-v0-1.md` | accepted immutable DB-3 design specification | Specifies the future local PostgreSQL boundary, roles, namespaces, relation responsibilities, constraints, indexes, migration/rollback policy, and hammer mechanisms | Accepted descriptive specification; creates no database object, role, credential, SQL, migration, persistence, or implementation authority |
+| `db3-future-ob-dev-control-plane-contract-v0-1.md` | accepted immutable DB-3 control-plane contract | Specifies the exact future bounded ob-dev PostgreSQL tool registry, schemas, capability classes, results, proof, and restart/recovery procedure | Sole normative control-plane input to DB-4 package preparation; no implementation, registration, restart, or PostgreSQL authority |
+| `db3-owner-readiness-review.md` | consumed historical DB-3 readiness review | Binds the three accepted candidates by exact SHA-256 and records validation evidence and owner choices | Acceptance/closure authority lives in `decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md` |
 | `strategy-layer-dangerous-design.md` | planning artifact | Preserves dangerous Strategy Layer / IMI design candidates for later classification and reconciliation | M3 preservation artifact; authority none; do not activate dangerous ideas |
 | `deep-research-danger-agenda.md` | research agenda | Preserves future deep-research questions and danger-map topics for later research gate planning | M3 preservation artifact; authority none; not research execution approval |
 | `steward-context-dump.md` | advisory context | Preserves steward/context material for future reconciliation without promoting it into doctrine | M3 preservation artifact; authority none; advisory only |
@@ -198,6 +200,6 @@ Do not implement directly from planning-inbox material. That is how the raccoon 
 ```text
 Last reviewed: 2026-07-14
 Reviewer: Observatory project steward
-Result: Indexed the fresh DB-3 traceability, design, future ob-dev contract, and hash-bound owner-readiness review; reconciled current tool context
-Open issues: DB-3 candidate package awaits independent owner decisions; DB-4 and implementation remain unauthorized
+Result: Reclassified the exact DB-3 artifacts after owner acceptance/closure and indexed DB-4 package-preparation-only posture
+Open issues: exact DB-4 artifact inventory and implementation package await owner approval; all implementation and execution remain unauthorized
 ```

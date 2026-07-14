@@ -11,12 +11,14 @@ from tools.check_authority_sync import (
     DB2_CORRECTION_DISPOSITION,
     DB2_CANONICAL_CANDIDATE,
     DB2_FRESH_READINESS_REVIEW,
+    DB3_ACCEPTANCE_DB4_PACKAGE_DECISION,
     EXPECTED_DB2_CANDIDATE_STATUS,
     EXPECTED_DB2_CANDIDATE_SHA256,
     EXPECTED_DB2_CANDIDATE_VERSION,
     EXPECTED_DB2_CONCEPT_CLASSIFICATIONS,
     EXPECTED_DB2_CORRECTION_STATUS,
     EXPECTED_DB2_REVIEW_STATUS,
+    EXPECTED_DB3_ARTIFACT_SHA256,
     EXPECTED_ACTIVE_MILESTONE,
     REJECTED_DB2_READINESS_REVIEW,
     RETIRED_UNTRUSTED_ARTIFACTS,
@@ -82,7 +84,7 @@ class AuthoritySyncTests(unittest.TestCase):
             "### OR-H1 — accept the exact DB-2 freeze",
             "### OR-H2 — close DB-2",
             "### OR-H3 — authorize fresh DB-3 planning",
-            EXPECTED_ACTIVE_MILESTONE,
+            "DB-3 — Postgres Operational Boundary and Physical Schema Specification",
             "DB-3 authority is planning and specification only.",
             "DB-4 remains inactive.",
             "implementation authority: no",
@@ -90,15 +92,15 @@ class AuthoritySyncTests(unittest.TestCase):
             with self.subTest(claim=exact_claim):
                 self.assertIn(exact_claim, decision)
 
-    def test_db2_is_last_trusted_completed_database_milestone(self) -> None:
+    def test_db3_is_last_trusted_completed_database_milestone(self) -> None:
         active_context = (ROOT / "ACTIVE_CONTEXT.md").read_text(encoding="utf-8")
         roadmap = (ROOT / "ROADMAP.md").read_text(encoding="utf-8")
         self.assertIn(
-            "DB-2 is now the last trusted completed database milestone.",
+            "DB-3 is now the last trusted completed database milestone.",
             active_context,
         )
         self.assertIn(
-            "DB-2 is now the last trusted completed database milestone",
+            "DB-3 is the last trusted completed database milestone.",
             roadmap,
         )
 
@@ -115,6 +117,45 @@ class AuthoritySyncTests(unittest.TestCase):
             self.assertEqual(1, len(rows), ruling_id)
             self.assertIn("ruled —", rows[0])
             self.assertIn(DB2_ACCEPTANCE_DB3_PLANNING_DECISION, rows[0])
+
+    def test_db3_closure_decision_binds_exact_package_and_db4_gate(self) -> None:
+        decision_path = ROOT / DB3_ACCEPTANCE_DB4_PACKAGE_DECISION
+        self.assertTrue(decision_path.is_file())
+        decision = decision_path.read_text(encoding="utf-8")
+        for exact_claim in (
+            "### OR-I1 — accept the exact DB-3 planning package",
+            "### OR-I2 — close DB-3 successfully",
+            "### OR-I3 — authorize preparation of an exact DB-4 implementation package",
+            EXPECTED_ACTIVE_MILESTONE,
+            "DB-4 authority is limited to preparing an exact, reviewable implementation package.",
+            "DB-4 implementation authority: no",
+            "database authority: no",
+            "execution authority: no",
+        ):
+            with self.subTest(claim=exact_claim):
+                self.assertIn(exact_claim, decision)
+        for relative_path, expected_sha256 in EXPECTED_DB3_ARTIFACT_SHA256.items():
+            with self.subTest(path=relative_path):
+                self.assertIn(f"path: {relative_path}", decision)
+                self.assertIn(f"sha256: {expected_sha256}", decision)
+                self.assertEqual(
+                    expected_sha256,
+                    hashlib.sha256((ROOT / relative_path).read_bytes()).hexdigest(),
+                )
+
+    def test_or_i_owner_gate_is_fully_ruled(self) -> None:
+        tracker = (ROOT / "planning-inbox/owner-ruling-tracker.md").read_text(
+            encoding="utf-8"
+        )
+        for ruling_id in ("OR-I1", "OR-I2", "OR-I3"):
+            rows = [
+                line
+                for line in tracker.splitlines()
+                if line.startswith(f"| {ruling_id} |")
+            ]
+            self.assertEqual(1, len(rows), ruling_id)
+            self.assertIn("ruled —", rows[0])
+            self.assertIn(DB3_ACCEPTANCE_DB4_PACKAGE_DECISION, rows[0])
 
     def test_capture_identity_matches_accepted_contracts(self) -> None:
         text = (ROOT / DB2_CANONICAL_CANDIDATE).read_text(encoding="utf-8")
@@ -238,6 +279,8 @@ class AuthoritySyncTests(unittest.TestCase):
                 path.write_text("allowed\n", encoding="utf-8")
             decision = root / DB2_ACCEPTANCE_DB3_PLANNING_DECISION
             decision.write_text("allowed\n", encoding="utf-8")
+            db3_decision = root / DB3_ACCEPTANCE_DB4_PACKAGE_DECISION
+            db3_decision.write_text("allowed\n", encoding="utf-8")
 
             unexpected = {
                 "planning-inbox/db3-surprise-specification.md",
@@ -252,7 +295,7 @@ class AuthoritySyncTests(unittest.TestCase):
                 set(_unauthorized_later_artifacts(root)),
             )
 
-    def test_db4_and_retired_artifacts_remain_absent(self) -> None:
+    def test_db4_preparation_gate_and_retired_artifacts_are_exact(self) -> None:
         self.assertEqual(5, len(RETIRED_UNTRUSTED_ARTIFACTS))
         for relative_path in RETIRED_UNTRUSTED_ARTIFACTS:
             with self.subTest(path=relative_path):
@@ -261,6 +304,11 @@ class AuthoritySyncTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn(
+            "Active only for exact implementation-package preparation under",
+            post_roadmap,
+        )
+        self.assertIn("Package preparation is not implementation.", post_roadmap)
+        self.assertNotIn(
             "Future roadmap placeholder only. No present DB-4 authority or artifact exists.",
             post_roadmap,
         )

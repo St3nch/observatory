@@ -6,7 +6,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [tool.observatory]
-status = "db3-planning-last-trusted-db2"
+status = "db4-package-preparation-last-trusted-db3"
 first_slice = "C2 Controlled Public Manual Observation Package"
 probe = "M13 DataForSEO one-shot tooling retained and disarmed"
 campaign = "M13 closed; no additional provider request authorized"
@@ -16,13 +16,13 @@ provider_execution = "disabled_after_m13_closure"
 provider_funding = "owner-reports-available"
 providers = "dataforseo-c00-narrowly-validated-no-new-execution"
 customer_data = "disabled"
-postgres = "disabled-during-db3-planning"
-schema_migrations = "planning-only-no-executable-files-or-execution"
+postgres = "disabled-during-db4-package-preparation"
+schema_migrations = "package-specification-only-no-executable-files-or-execution"
 api_mcp = "bounded-fixture-prototype-only"
 dashboard = "disabled"
 strategy_storage = "disabled"
-later_database_milestones = "db4-inactive-no-artifacts-separate-owner-gate-required"
-mcp_control_plane = "ob-dev-mcp-file-surface-only-no-database-tools"
+later_database_milestones = "db5-inactive-db4-implementation-separate-owner-gate-required"
+mcp_control_plane = "ob-dev-current-32-tools-db4-expansion-package-preparation-only"
 
 [tool.unittest]
 test_command = "python -m unittest discover -s tests"

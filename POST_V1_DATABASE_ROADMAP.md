@@ -1,7 +1,7 @@
 # Post-v1 Database Roadmap — The Observatory
 
 Status: authority for post-v1 sequencing after owner acceptance
-Authority: original sequence from `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`; recovery state from `decisions/2026-07-13-database-phase-recovery-to-db1.md`; current DB-3 planning gate from `decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md`
+Authority: original sequence from `decisions/2026-07-12-post-v1-audit-acceptance-and-db-roadmap-activation.md`; recovery state from `decisions/2026-07-13-database-phase-recovery-to-db1.md`; current DB-4 package-preparation gate from `decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md`
 Purpose: govern the path from accepted bounded v1 proof system to a real local Postgres-backed evidence system without widening authority accidentally
 Last updated: 2026-07-14
 
@@ -26,17 +26,21 @@ No milestone implies the next milestone.
 
 ```text
 Observatory v1: accepted at bounded proof-system ceiling
-Last trusted database milestone: DB-2 — trusted, accepted, and complete
-Active milestone: DB-3 — Postgres Operational Boundary and Physical Schema Specification
-DB-3 authority: fresh planning and specification only
-DB-4: inactive; no active or authoritative artifact
-Postgres creation: not authorized
-Executable DDL: not authorized
-Executable migration files or execution: not authorized
-Database-control-plane implementation or activation: not authorized
+Last trusted database milestone: DB-3 — trusted, accepted, and complete
+Active milestone: DB-4 — Database Hammer Harness and Migration Specification
+DB-4 authority: exact implementation-package preparation only
+DB-5: inactive
+Postgres startup/control: not authorized
+Database or role creation: not authorized
+Credentials or secrets: not authorized
+Executable SQL/DDL/migrations or execution: not authorized
+Database-control-plane implementation, registration, restart, or activation: not authorized
+Disposable databases and real PostgreSQL hammers: not authorized
+Persistence: not authorized
 ```
 
-Current authority: `decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md`.
+Current authority:
+`decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md`.
 
 ---
 
@@ -46,8 +50,8 @@ Current authority: `decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-
 |---|---|---|---|
 | DB-1 | Post-v1 Audit Reconciliation and Ruling Closure | closed | Audit findings routed; corrections and rulings accepted; DB-2 package prepared |
 | DB-2 | Physical Data-Contract Freeze | closed / accepted | Exact v0.2.1 freeze accepted by path, version, and SHA-256; sole normative input to DB-3 |
-| DB-3 | Postgres Operational Boundary and Physical Schema Specification | active / planning only | Fresh specifications derived solely from accepted DB-1 and exact accepted DB-2 freeze |
-| DB-4 | Database Hammer Harness and Migration Specification | inactive / future placeholder | No artifact or present implementation/PostgreSQL authority |
+| DB-3 | Postgres Operational Boundary and Physical Schema Specification | closed / accepted | Exact planning package accepted by path/SHA; bounded checker correction accepted; sole normative input to DB-4 preparation |
+| DB-4 | Database Hammer Harness and Migration Specification | active / package preparation only | Exact future implementation package must be prepared and separately approved before any implementation |
 | DB-5 | Governed Local Database Bootstrap and Migration Execution | planned | Separate owner execution gate; migration hammers pass |
 | DB-6 | First Persisted Synthetic Evidence Slice | planned | Append-only, audit-first, identity, scope, rights, retention, and concurrency hammers pass |
 | DB-7 | Database-Backed Typed Read Proof | planned | Read-only role and typed-read hammers pass, including honest truncation |
@@ -190,80 +194,95 @@ Completed by the exact accepted artifact and decision above.
 
 ---
 
-# Active milestone
+# Closed milestone
 
 ## DB-3 — Postgres Operational Boundary and Physical Schema Specification
 
-Active for fresh planning and specification only under
-`decisions/2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md`.
-No DB-3 artifact existed at activation. Work must start fresh from accepted DB-1
-authority, the exact accepted DB-2 freeze, accepted roadmaps/contracts/decisions,
-and the new owner decision. Retired DB-3/DB-4 material must not be restored,
-salvaged, reused, copied, paraphrased, or reconstructed from memory.
+DB-3 was accepted and closed by
+`decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md`.
+
+Accepted DB-3 artifacts:
+
+```text
+planning-inbox/db3-accepted-input-traceability-matrix.md
+version 0.1
+sha256 db2ae41552aa4fc2c88b450f86f8070fb8e3cc023fb93fc7e7a39ab625aadc98
+
+planning-inbox/db3-fresh-postgres-design-specification-v0-1.md
+version 0.1
+sha256 9b79f0551fac9bbea11bc6e5afbececf48e216e47f41c3554e5806903f666e5e
+
+planning-inbox/db3-future-ob-dev-control-plane-contract-v0-1.md
+version 0.1
+sha256 d13e83b8fd74fd4c427a3ede92c70e24a252458b80c8abc6531cb5bd92ac2dec
+```
+
+The bounded authority-checker correction and regression test in commit
+`588fd754d954817f92530c6408a20b312f81af65` were also accepted.
 
 ### Purpose
 
-Specify the local Postgres operational boundary and derive the physical schema only from the accepted DB-2 freeze.
+Specify the local Postgres operational boundary and derive the physical schema only
+from the accepted DB-2 freeze.
 
-### Required decisions
+### Exit
 
-- instance ownership and version posture;
-- database and role model, at minimum migration / ingest / read-only roles;
-- credential custody and secret handling;
-- local/test/disposable database separation;
-- backup-before-migration rule;
-- naming and migration version policy;
-- append-only enforcement mechanism;
-- audit-first same-transaction mechanism;
-- identity/index/constraint strategy;
-- raw manifest pointer boundary;
-- no customer/strategy/recommendation schema rule;
-- exact ob-dev database control-plane contract, including fixed binaries, credential custody, protected database names, database classes, migration path/SHA rules, capability activation classes, result shapes, and MCP restart/recovery procedure.
+Completed. The accepted package defines the future operational boundary, physical
+responsibilities, exact 28-tool control-plane contract, migration/rollback/backup
+policies, hammer mappings, and non-authorizations without creating executable SQL,
+migrations, database objects, tools, or a database.
 
-### Allowed
-
-Specifications, diagrams, constraint matrices, migration plans, rollback plans,
-operational-boundary decisions, physical-schema specifications derived from the
-accepted DB-2 freeze, and the exact future `ob-dev` database control-plane contract.
-
-### Forbidden
-
-Creating or starting PostgreSQL; creating a database or roles; creating or handling
-credentials; executable DDL or executable migrations; SQL or migration execution;
-database-tool implementation, activation, or dormant PostgreSQL MCP registration;
-physical-schema implementation; ingestion; providers; capture; persistence;
-customer/private data; raw storage; recurring work; production; DB-4.
+Acceptance does not authorize implementation. The five retired DB-3/DB-4 artifacts
+remain permanently absent and prohibited from restoration, salvage, reuse, copying,
+paraphrased reconstruction, or memory-based reconstruction.
 
 ---
 
+# Active milestone
+
 ## DB-4 — Database Hammer Harness and Migration Specification
 
-Future roadmap placeholder only. No present DB-4 authority or artifact exists. DB-4
-cannot activate by implication from accepted DB-2 or active DB-3 planning. A separate
-future owner gate remains mandatory.
+Active only for exact implementation-package preparation under
+`decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md`.
+
+No DB-4 package artifact is approved for creation until the owner approves its exact
+artifact inventory. Package preparation is not implementation.
 
 ### Purpose
 
-Build the disposable real-Postgres test harness before authorizing the governed local database, implement the accepted ob-dev database control-plane expansion, and prove that hammers can actually fail.
+Prepare one exact, reviewable package for a future separately authorized DB-4
+implementation. The package must show how the disposable real-Postgres hammer
+harness, accepted `ob-dev` control-plane expansion, and non-executable migration
+specifications would be built and proven without performing any of that work now.
 
-The ob-dev expansion should be one coherent, tested capability batch followed by an owner-controlled restart/connector refresh. Tool existence does not authorize governed database mutation; dangerous modes remain capability-gated.
+### Required package content
 
-### Minimum control-plane capabilities
+- exact `ob_dev` source and test edit manifest;
+- exact 28-tool PostgreSQL registry and expected total tool count;
+- fixed input/result schemas, capability classes, protected names, and redaction;
+- fixed binary, host, port, version-inspection, and credential-custody rules;
+- exact non-executable migration/rollback specification inventory and SHA controls;
+- disposable-name/prefix/marker and protected-database enforcement plan;
+- allowlisted hammer profiles and structured proof-result contracts;
+- backup/restore capability plan with separate activation classes;
+- owner-controlled restart and connector-refresh sequence;
+- validation, staged-manifest, commit, manual-push, and stop-condition sequence;
+- explicit implementation permissions and prohibitions for a later owner gate.
 
-- read-only Postgres readiness, identity, settings, database, role, schema, privilege, and migration-history inspection;
-- disposable-database create/reset/drop tools with protected-name and disposable-marker enforcement;
-- exact-path, expected-SHA migration validation, forward execution, and rollback execution;
-- allowlisted migration, role, concurrency, and restore hammer profiles;
+### Minimum future control-plane capabilities
+
+- read-only PostgreSQL readiness, identity, settings, database, role, schema,
+  privilege, and migration-history inspection;
+- disposable-database create/reset/drop tools with protected-name and
+  disposable-marker enforcement;
+- exact-path, expected-SHA migration validation, forward execution, and rollback
+  execution;
+- allowlisted migration, role, concurrency, restore, and backup profiles;
 - structured per-hammer proof results with no secret leakage;
-- no generic shell, arbitrary PowerShell/Python, arbitrary SQL, or caller-selected executable paths.
+- no generic shell, arbitrary PowerShell/Python, arbitrary SQL, or caller-selected
+  executable paths.
 
-Detailed planning input:
-
-```text
-planning-inbox/db1-ob-dev-database-control-plane-requirements.md
-```
-
-### Minimum hammer families
+### Minimum future hammer families
 
 - scope and contamination;
 - rights and retention;
@@ -274,15 +293,48 @@ planning-inbox/db1-ob-dev-database-control-plane-requirements.md
 - role and privilege boundaries;
 - typed-read pagination/truncation/authorization.
 
+### Allowed now
+
+Specifications, inventories, matrices, package manifests, owner-action sequences,
+validation plans, and review material needed to make a future implementation package
+exact.
+
+### Forbidden now
+
+```text
+PostgreSQL startup, shutdown, restart, or control
+database creation, reset, drop, or connection
+role creation or privilege mutation
+credentials, passwords, secrets, or credential setup
+SQL execution
+executable SQL or DDL
+executable migration or rollback files
+migration validation or execution
+ob_dev source implementation
+PostgreSQL tool registration
+ob_dev restart or connector refresh
+disposable database lifecycle
+real PostgreSQL hammers
+backup or restore execution
+governed database creation
+synthetic or real persistence
+providers, capture, raw storage, or customer/private data
+recurring or production work
+DB-5
+```
+
 ### Exit
 
-- accepted ob-dev database tools are implemented, owner-restarted/refreshed, and capability-gated;
-- disposable Postgres lifecycle works through ob-dev without exposing generic SQL or execution;
-- disposable Postgres harness exists;
-- per-hammer register exists;
-- candidate migration specifications include rollback pairs and execute only through exact-path, expected-SHA tools;
-- mandatory hammers can be shown failing against intentionally broken candidates;
-- no governed durable database or real evidence exists.
+DB-4 package preparation exits only when:
+
+- the exact package artifact inventory is owner-approved;
+- the complete implementation manifest and contracts are written and reviewed;
+- every future permission and prohibition is explicit;
+- validation and owner-controlled restart/recovery steps are exact;
+- the owner separately accepts, rejects, or revises the package and decides whether
+  any implementation may begin.
+
+No exit condition is satisfied by implementation occurring early.
 
 ---
 
