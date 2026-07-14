@@ -37,6 +37,10 @@ DB3_ACCEPTANCE_DB4_PACKAGE_DECISION = (
 DB4_PACKAGE_IMPLEMENTATION_DECISION = (
     "decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md"
 )
+DB4_AUDIT_REMEDIATION_DECISION = (
+    "decisions/2026-07-14-db4-audit-acceptance-and-remediation-activation.md"
+)
+DB4_AUDIT_REMEDIATION_PLAN = "planning-inbox/db4-audit-remediation-program-v0-1.md"
 RETIRED_UNTRUSTED_ARTIFACTS = (
     "decisions/2026-07-13-db2-closure-and-db3-activation.md",
     "decisions/2026-07-13-db3-closure-and-db4-activation.md",
@@ -152,9 +156,9 @@ EXPECTED_DB2_CONCEPT_CLASSIFICATIONS = {
     "Rights/retention warning (`rights_retention_warning`)": "derived",
     "Consumer-promotion requirement (`consumer_promotion_required`)": "derived",
 }
-EXPECTED_PROJECT_STATUS = "db4-phased-implementation-last-trusted-db3"
+EXPECTED_PROJECT_STATUS = "db4-remediation-last-trusted-db3"
 EXPECTED_LATER_DATABASE_MILESTONES = (
-    "db5-inactive-db4-implementation-separate-owner-gate-required"
+    "db5-inactive-db4-remediation-separate-implementation-execution-gate-required"
 )
 
 
@@ -281,6 +285,8 @@ def _unauthorized_later_artifacts(root: Path) -> tuple[str, ...]:
         DB2_ACCEPTANCE_DB3_PLANNING_DECISION,
         DB3_ACCEPTANCE_DB4_PACKAGE_DECISION,
         DB4_PACKAGE_IMPLEMENTATION_DECISION,
+        DB4_AUDIT_REMEDIATION_DECISION,
+        DB4_AUDIT_REMEDIATION_PLAN,
         *AUTHORIZED_DB3_PLANNING_ARTIFACTS,
         *AUTHORIZED_DB4_PLANNING_ARTIFACTS,
     }
@@ -335,18 +341,18 @@ def check_repository(root: Path = ROOT) -> CheckResult:
     active_milestone = next(iter(present_values), None)
     if active_milestone != EXPECTED_ACTIVE_MILESTONE:
         errors.append(
-            "active milestone is not the accepted DB-4 package-preparation gate: "
+            "active milestone is not the accepted DB-4 remediation gate: "
             f"{active_milestone!r}"
         )
 
     db3_closed_claim = "DB-3 was accepted and closed by"
     if db3_closed_claim not in post_roadmap:
         errors.append("post-v1 roadmap lacks the closed DB-3 gate")
-    db4_active_claim = "Active only for exact implementation-package preparation under"
+    db4_active_claim = "Status: active in remediation and exact implementation-package preparation under"
     if db4_active_claim not in post_roadmap:
-        errors.append("post-v1 roadmap lacks the active DB-4 preparation-only gate")
-    if "Package preparation is not implementation." not in post_roadmap:
-        errors.append("post-v1 roadmap lacks the DB-4 non-implementation guard")
+        errors.append("post-v1 roadmap lacks the active DB-4 remediation gate")
+    if "New PostgreSQL execution under the prior campaign: not authorized" not in post_roadmap:
+        errors.append("post-v1 roadmap lacks the DB-4 remediation non-execution guard")
 
     recovery_text = _read(root, RECOVERY_DECISION, errors)
     if recovery_text and "ESTABLISH DB-1 AS THE LAST TRUSTED" not in recovery_text:
@@ -600,24 +606,28 @@ def check_repository(root: Path = ROOT) -> CheckResult:
 
     required_current_claims = {
         "ACTIVE_CONTEXT.md": (
-            "DB-4 is active for exact phased implementation and disposable PostgreSQL proof.",
+            "DB-4 is active in remediation.",
             "DB-5 is inactive.",
-            DB4_PACKAGE_IMPLEMENTATION_DECISION,
+            DB4_AUDIT_REMEDIATION_DECISION,
+            DB4_AUDIT_REMEDIATION_PLAN,
         ),
         "ROADMAP.md": (
-            "DB-3 is the last trusted completed database milestone",
-            "implementation and disposable PostgreSQL proof.",
-            "DB-5 remain prohibited",
+            "DB-3 remains the accepted",
+            "physical-design authority",
+            "diagnostic evidence only",
+            "and DB-5\nremain prohibited.",
         ),
         "POST_V1_DATABASE_ROADMAP.md": (
             "Last trusted database milestone: DB-3 — trusted, accepted, and complete",
             f"Active milestone: {EXPECTED_ACTIVE_MILESTONE}",
-            "DB-4 authority: exact phased implementation and disposable PostgreSQL proof",
+            "DB-4 state: remediation and exact implementation-package preparation",
+            "New PostgreSQL execution under the prior campaign: not authorized",
         ),
         "NEXT_SESSION_HANDOFF.md": (
-            "DB-3 — trusted, accepted, and complete",
-            "DB-4 — active for exact phased implementation and disposable PostgreSQL proof",
-            DB4_PACKAGE_IMPLEMENTATION_DECISION,
+            "DB-3 — trusted, accepted, and complete as physical-design authority",
+            EXPECTED_ACTIVE_MILESTONE,
+            DB4_AUDIT_REMEDIATION_DECISION,
+            DB4_AUDIT_REMEDIATION_PLAN,
         ),
     }
     current_texts = {
@@ -698,8 +708,9 @@ def check_repository(root: Path = ROOT) -> CheckResult:
 
     notes.append("DB-1 remains trusted and complete.")
     notes.append("DB-2 remains trusted, accepted, and complete.")
-    notes.append("DB-3 is trusted, accepted, complete, and last trusted.")
-    notes.append("DB-4 is active for exact phased implementation and disposable PostgreSQL proof.")
+    notes.append("DB-3 is trusted, accepted, complete, and remains the physical-design authority.")
+    notes.append("DB-4 is active in remediation and exact implementation-package preparation.")
+    notes.append("Prior disposable proof is diagnostic only; new PostgreSQL execution requires a separate owner gate.")
     notes.append("Governed/production databases, providers, customer/private data, recurring work, and DB-5 remain unauthorized.")
     notes.append("A passing sync check does not close DB-4 or activate DB-5.")
 

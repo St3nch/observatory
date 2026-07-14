@@ -28,19 +28,17 @@ No milestone implies the next milestone.
 Observatory v1: accepted at bounded proof-system ceiling
 Last trusted database milestone: DB-3 — trusted, accepted, and complete
 Active milestone: DB-4 — Database Hammer Harness and Migration Specification
-DB-4 authority: exact phased implementation and disposable PostgreSQL proof
+DB-4 state: remediation and exact implementation-package preparation
+DB-4 closure status: not ready; prior proof is diagnostic only
 DB-5: inactive
 Governed database or governed role creation: not authorized
-Package-defined ob_dev implementation and registration: authorized
-Package-defined migration/rollback files and disposable execution: authorized
-Owner-controlled credentials, PostgreSQL service actions, restart, and connector refresh: authorized for the exact package only
-One protected marked observatory_test_ disposable database: authorized
-Package-defined real disposable hammers and backup/restore proof: authorized
+New PostgreSQL execution under the prior campaign: not authorized
+Audit reconciliation, traceability, redesign, and exact package preparation: authorized
 Governed, production, provider, customer/private-data, recurring, and DB-5 work: not authorized
 ```
 
 Current authority:
-`decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md`.
+`decisions/2026-07-14-db4-audit-acceptance-and-remediation-activation.md`.
 
 ---
 
@@ -51,7 +49,7 @@ Current authority:
 | DB-1 | Post-v1 Audit Reconciliation and Ruling Closure | closed | Audit findings routed; corrections and rulings accepted; DB-2 package prepared |
 | DB-2 | Physical Data-Contract Freeze | closed / accepted | Exact v0.2.1 freeze accepted by path, version, and SHA-256; sole normative input to DB-3 |
 | DB-3 | Postgres Operational Boundary and Physical Schema Specification | closed / accepted | Exact planning package accepted by path/SHA; bounded checker correction accepted; sole normative input to DB-4 preparation |
-| DB-4 | Database Hammer Harness and Migration Specification | active / package preparation only | Exact future implementation package must be prepared and separately approved before any implementation |
+| DB-4 | Database Hammer Harness and Migration Specification | active / remediation | Audit findings reconciled; DB-3-faithful migration, behavioral hammer, durable proof, security, and restart-reduction package must be prepared and separately approved before re-execution |
 | DB-5 | Governed Local Database Bootstrap and Migration Execution | planned | Separate owner execution gate; migration hammers pass |
 | DB-6 | First Persisted Synthetic Evidence Slice | planned | Append-only, audit-first, identity, scope, rights, retention, and concurrency hammers pass |
 | DB-7 | Database-Backed Typed Read Proof | planned | Read-only role and typed-read hammers pass, including honest truncation |
@@ -242,99 +240,88 @@ paraphrased reconstruction, or memory-based reconstruction.
 
 ## DB-4 — Database Hammer Harness and Migration Specification
 
-Active only for exact implementation-package preparation under
-`decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md`.
+Status: active in remediation and exact implementation-package preparation under
+`decisions/2026-07-14-db4-audit-acceptance-and-remediation-activation.md`.
 
-No DB-4 package artifact is approved for creation until the owner approves its exact
-artifact inventory. Package preparation is not implementation.
+The prior DB-4 implementation and disposable campaign are diagnostic only. They do
+not satisfy closure and may not become the DB-5 bootstrap set.
 
 ### Purpose
 
-Prepare one exact, reviewable package for a future separately authorized DB-4
-implementation. The package must show how the disposable real-Postgres hammer
-harness, accepted `ob-dev` control-plane expansion, and non-executable migration
-specifications would be built and proven without performing any of that work now.
+Produce a DB-3-faithful migration specification and a real disposable PostgreSQL
+hammer system whose behavior, failure evidence, security controls, and result records
+satisfy the accepted DB-1 gate policy.
 
-### Required package content
+### Governing remediation plan
 
-- exact `ob_dev` source and test edit manifest;
-- exact 28-tool PostgreSQL registry and expected total tool count;
-- fixed input/result schemas, capability classes, protected names, and redaction;
-- fixed binary, host, port, version-inspection, and credential-custody rules;
-- exact non-executable migration/rollback specification inventory and SHA controls;
-- disposable-name/prefix/marker and protected-database enforcement plan;
-- allowlisted hammer profiles and structured proof-result contracts;
-- backup/restore capability plan with separate activation classes;
-- owner-controlled restart and connector-refresh sequence;
-- validation, staged-manifest, commit, manual-push, and stop-condition sequence;
-- explicit implementation permissions and prohibitions for a later owner gate.
+```text
+planning-inbox/db4-audit-remediation-program-v0-1.md
+```
 
-### Minimum future control-plane capabilities
+### Required remediation workstreams
 
-- read-only PostgreSQL readiness, identity, settings, database, role, schema,
-  privilege, and migration-history inspection;
-- disposable-database create/reset/drop tools with protected-name and
-  disposable-marker enforcement;
-- exact-path, expected-SHA migration validation, forward execution, and rollback
-  execution;
-- allowlisted migration, role, concurrency, restore, and backup profiles;
-- structured per-hammer proof results with no secret leakage;
-- no generic shell, arbitrary PowerShell/Python, arbitrary SQL, or caller-selected
-  executable paths.
+- R0 authority reconciliation and proof-campaign freeze;
+- R1 exact DB-2/DB-3 responsibility traceability;
+- R2 atomic immutable migration/history redesign;
+- R3 DB-3-faithful physical candidate rebuild;
+- R4 behavioral hammer and hostile-candidate rebuild;
+- R5 durable result-register emission and validation;
+- R6 role/RLS, marker, authority, redaction, and remote-access hardening;
+- R7 data-driven profiles and restart reduction;
+- R8 fresh clean-substrate re-execution after a separate owner gate.
 
-### Minimum future hammer families
+### Required DB-4 exit properties
 
-- scope and contamination;
-- rights and retention;
-- identity and raw integrity;
-- append-only and audit-first;
-- concurrency and idempotency;
-- migration forward/rollback/failure recovery;
-- role and privilege boundaries;
-- typed-read pagination/truncation/authorization.
+- every accepted DB-3 responsibility is implemented or explicitly deferred by owner ruling;
+- migration and history are one-session, one-transaction, append-only, SHA-bound, and serialized;
+- before/after fingerprints detect columns, constraints, indexes, triggers, policies, functions, and relevant ownership state;
+- mandatory hammer IDs map exactly to their accepted hostile claims;
+- structural checks are labeled as preconditions rather than passes;
+- role/RLS behavior is tested under bounded role switching, not superuser-only observation;
+- broken candidates traverse the real migration admission path;
+- concurrency tests exercise project identity/admission behavior with forced overlap;
+- failures and cleanup are fully recorded;
+- immutable reviewable per-hammer result records exist;
+- the disposable database and cluster test roles are cleaned and recorded;
+- no governed database exists.
 
 ### Allowed now
 
-Specifications, inventories, matrices, package manifests, owner-action sequences,
-validation plans, and review material needed to make a future implementation package
-exact.
+- audit reconciliation and finding disposition;
+- traceability matrices and architecture options;
+- migration/history, schema, hammer, proof, security, and restart-reduction design;
+- exact bounded implementation-package preparation;
+- current-state and roadmap corrections;
+- repository validation, exact staging, commits, and manual owner pushes.
 
 ### Forbidden now
 
 ```text
-PostgreSQL startup, shutdown, restart, or control
-database creation, reset, drop, or connection
-role creation or privilege mutation
-credentials, passwords, secrets, or credential setup
-SQL execution
-executable SQL or DDL
-executable migration or rollback files
-migration validation or execution
-ob_dev source implementation
-PostgreSQL tool registration
-ob_dev restart or connector refresh
-disposable database lifecycle
-real PostgreSQL hammers
-backup or restore execution
+new PostgreSQL execution under the prior campaign
 governed database creation
-synthetic or real persistence
-providers, capture, raw storage, or customer/private data
+DB-5 planning, activation, or implementation
+providers, capture, ingestion, paid pulls, or raw provider payloads
+customer/private data
 recurring or production work
-DB-5
+strategy, recommendation, conclusion, score-as-truth, or report persistence
+arbitrary SQL or shell
+weakened fixed-root, authority, credential, or protected-name controls
 ```
 
 ### Exit
 
-DB-4 package preparation exits only when:
+DB-4 remediation planning exits only when:
 
-- the exact package artifact inventory is owner-approved;
-- the complete implementation manifest and contracts are written and reviewed;
-- every future permission and prohibition is explicit;
-- validation and owner-controlled restart/recovery steps are exact;
-- the owner separately accepts, rejects, or revises the package and decides whether
-  any implementation may begin.
+- the R1 traceability matrix is complete and independently reviewed;
+- migration/history architecture is selected and exact;
+- the physical candidate set faithfully maps to DB-3;
+- behavioral hammer and result-record designs are complete;
+- security and restart-reduction designs are complete;
+- exact file/tool/test manifests and stop conditions are owner-ready;
+- the owner separately accepts an implementation/execution package.
 
-No exit condition is satisfied by implementation occurring early.
+DB-4 itself closes only after a later clean disposable campaign produces accepted,
+reviewable `real_postgres_disposable_pass` records for every required family.
 
 ---
 

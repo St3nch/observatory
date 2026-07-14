@@ -9,20 +9,32 @@ Last updated: 2026-07-14
 
 ## Current Phase
 
-The Observatory has accepted the exact DB-4 planning package and entered bounded phased DB-4 implementation:
+The independent DB-1 through DB-4 audit has been accepted as remediation input.
 
 ```text
 DB-1 is trusted and complete.
 DB-2 is trusted, accepted, and complete.
-DB-3 is trusted, accepted, and complete.
-DB-4 is active for exact phased implementation and disposable PostgreSQL proof.
+DB-3 is trusted, accepted, and complete as the physical-design authority.
+DB-4 is active in remediation.
 DB-5 is inactive.
 ```
 
 Current authority:
 
 ```text
-decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md
+decisions/2026-07-14-db4-audit-acceptance-and-remediation-activation.md
+```
+
+Current remediation plan:
+
+```text
+planning-inbox/db4-audit-remediation-program-v0-1.md
+```
+
+Source audit:
+
+```text
+audits/observatory-db1-through-db4-full-independent-audit.md
 ```
 
 Observatory v1 remains accepted at the bounded proof-system ceiling by `decisions/2026-07-12-observatory-v1-acceptance.md`.
@@ -35,64 +47,88 @@ Observatory v1 remains accepted at the bounded proof-system ceiling by `decision
 DB-4 — Database Hammer Harness and Migration Specification
 ```
 
-DB-4 now authorizes only the exact phased implementation bound by the accepted package. It does not authorize governed or production database work.
+State: remediation and exact implementation-package preparation.
+
+DB-4 is not closed. The prior disposable PostgreSQL runs are diagnostic evidence only and may not be promoted into closure evidence.
 
 ---
 
-## Accepted DB-4 checkpoint
+## Audit Ruling
 
-The owner accepted commit `90e6cecec19a8ed3e4bd241b37ff575b55a826b1` and these exact immutable planning artifacts:
+The audit found that the current DB-4 implementation is not closure-grade because:
 
-```text
-planning-inbox/db4-dormant-postgres-gap-and-disposition-matrix.md
-sha256 a65919ace9da12c16b7dcc3aa7b8262c1150f2acbc2dc521c91ca7c2ee055a2a
+- the nine migration candidates do not faithfully implement accepted DB-3 physical responsibilities;
+- migration history is mutable and not atomic with migration execution;
+- mandatory hammer IDs are frequently mapped to structural catalog checks rather than hostile behavior;
+- RLS and role behavior was not proven under bounded non-superuser execution;
+- broken candidates did not traverse the real migration admission path;
+- durable per-hammer result-register records do not exist;
+- cleanup, failure preservation, security, and operational controls require hardening.
 
-planning-inbox/db4-exact-ob-dev-implementation-package-specification.md
-sha256 b44711fe80a1967ddf3d5413ce150fcc5d56ca7f61ddb5d8f42747c63d9ce14a
-
-planning-inbox/db4-migration-harness-and-proof-package-specification.md
-sha256 9aff671e31fe94dabe5acca6a6631b14f8197a7c85ad55115caced354c7dad2e
-
-planning-inbox/db4-security-credentials-restart-and-owner-action-runbook.md
-sha256 8c08648051a2b88c58d5999f861596c79e8a479f68f02e6061586111edb86b7f
-
-planning-inbox/db4-owner-readiness-review.md
-sha256 1a2cfd0ff9f30be9ca793fc386a218deb3710860cd83f36ae294a354fd431c92
-```
-
-DB-3 is now the last trusted completed database milestone. The accepted DB-3 artifacts and DB-2 freeze remain immutable foundations. The five retired DB-3/DB-4 artifacts remain permanently absent and prohibited from restoration or reuse.
+The current migrations, hammers, fixtures, profiles, and prior PostgreSQL output are retained only as diagnostic implementation evidence.
 
 ---
 
 ## Current Task
 
-Execute the accepted DB-4 package in its fixed phases:
+Execute the accepted remediation sequence:
 
-1. implement the exact 17-path `ob_dev` package, version `0.5.0`, and exact 28-tool expansion to the expected 60-tool registry;
-2. validate and commit `ob_dev` independently;
-3. have the owner restart `ob_dev` and refresh the connector;
-4. implement the exact 46-path Observatory migration/harness package;
-5. validate and commit Observatory independently;
-6. have the owner perform required PostgreSQL credential and service actions without exposing secrets;
-7. execute only the exact disposable `observatory_test_` migration, rollback, hammer, backup/restore, and cleanup proof;
-8. stop on any failed phase and preserve exact proof;
-9. prepare a later DB-4 closure proposal only after all accepted proof gates pass.
+1. reconcile authority and freeze the prior proof campaign;
+2. create an exact DB-2/DB-3-to-migration-to-hammer traceability matrix;
+3. redesign migration/history integrity;
+4. rebuild the physical candidate schema from accepted DB-3 truth;
+5. rebuild mandatory hammers as behavioral hostile tests;
+6. implement durable immutable result-register records;
+7. harden roles, RLS, markers, authority binding, redaction, and remote-access posture;
+8. move hammer/profile behavior into exact-path SHA-bound data files to reduce restart churn;
+9. prepare an exact remediation implementation and execution package for separate owner review;
+10. only after a separate owner gate, re-run the full disposable proof from a clean substrate.
+
+Immediate planning outputs:
+
+```text
+planning-inbox/db4-db3-implementation-traceability-matrix.md
+planning-inbox/db4-migration-history-redesign-options.md
+planning-inbox/db4-behavioral-hammer-remapping.md
+planning-inbox/db4-remediation-owner-readiness-review.md
+```
+
+---
+
+## Audit Finding Posture
+
+All audit findings must be considered.
+
+The MCP tool-count mismatch is a secondary governance/documentation reconciliation issue, not the primary technical blocker. The two additional bounded tools may remain if the later exact package accepts them.
+
+The remediation program records six scoped disagreements or refinements:
+
+- tool count is secondary;
+- the thin schema may not simply be relabeled and deferred as the final DB-4 result;
+- atomic migration/history is mandatory, but the exact implementation mechanism remains under design;
+- durable result records are mandatory, but their exact storage/promotion path remains under design;
+- data-driven profiles are prioritized while implementation hot reload is deferred;
+- remote unauthenticated exposure is treated as a serious risk requiring verification and hardening, not as an unverified fact.
 
 ---
 
 ## Authorized Work
 
-Only work explicitly named by the accepted DB-4 package is authorized:
+Authorized now:
 
-- exact package-defined `ob_dev` source and tests;
-- exact 28 PostgreSQL tools and expected 60-tool registry;
-- exact package-defined Observatory migration, rollback, fixture, profile, validator, and test paths;
-- owner-controlled credentials, PostgreSQL service actions, `ob_dev` restart, and connector refresh;
-- one protected, marked disposable PostgreSQL substrate using the `observatory_test_` prefix;
-- exact-path and expected-SHA migration validation and execution;
-- package-defined migration, role, concurrency, hammer, backup, restore, rollback, cleanup, and proof profiles;
-- exact staged manifests and separate commits;
-- manual owner pushes.
+- documentation and authority reconciliation;
+- audit finding disposition and remediation planning;
+- exact traceability design;
+- migration/history architecture design;
+- physical-schema remediation planning;
+- behavioral-hammer mapping and hostile-test design;
+- result-register emission and validation design;
+- security and operational hardening design;
+- data-driven profile and restart-reduction design;
+- exact bounded implementation-package preparation;
+- repository validation, exact staging, commits, and manual owner pushes.
+
+No new PostgreSQL execution is authorized until a separate exact remediation execution package is accepted.
 
 ---
 
@@ -102,19 +138,18 @@ Do not start or create:
 
 - the governed database named `observatory`;
 - governed or production roles, migrations, or persistence;
+- new disposable PostgreSQL execution under the superseded happy-path campaign;
 - production or production-like deployment;
 - real evidence persistence;
-- synthetic persistence outside the exact disposable fixtures;
 - provider integration, provider calls, or paid pulls;
 - ingestion, capture, or raw provider payload storage;
 - customer records, customer first-party analytics, or private data;
 - recurring capture or recurring work;
 - autonomous spend;
-- public API/MCP exposure;
-- dashboard or operator-console work;
+- product API/MCP or dashboard work;
 - strategy, recommendation, conclusion, score-as-truth, or report-state storage;
-- any path, dependency, tool, database, profile, or capability outside the accepted package;
-- DB-5 planning, activation, implementation, or execution.
+- DB-5 planning, activation, implementation, or execution;
+- arbitrary shell, SQL, generic database tools, self-modifying behavior, or weakened fixed-root controls.
 
 ---
 
@@ -122,30 +157,19 @@ Do not start or create:
 
 Stop immediately on any:
 
-- changed path outside the exact manifest;
-- unexpected tool or tool-count mismatch;
-- authority, caller-identity, capability, or confirmation mismatch;
-- protected-name attempt;
-- disposable prefix or marker mismatch;
-- migration path or SHA mismatch;
-- credential or secret exposure;
-- PostgreSQL version, binary, host, or port mismatch;
-- test, Ruff, import, authority-sync, integrity, diff-check, hammer, rollback, restore, or cleanup failure;
-- proof-class inconsistency.
-
-Do not improvise beyond the accepted manifest.
-
----
-
-## Current Boundary Posture
-
-The Observatory stores observations, not conclusions. The connected LLM interprets at read time. Accepted conclusions promote out to the owning consumer.
-
-Customer records and customer first-party analytics stay outside Observatory durable storage. LLMs and agents receive shaped evidence through typed boundaries, not direct SQL access or database credentials.
-
-Provider disagreement is first-class evidence. Proprietary provider scores are provider-attributed testimony, not facts about the web.
-
-Rights and retention fail closed. Hammer tests are hard gates. Fixture proof is not real PostgreSQL proof.
+- deviation from DB-2 or DB-3 without explicit owner ruling;
+- schema responsibility with no traceability row;
+- hammer ID that does not match its accepted hostile claim;
+- structural precheck presented as a behavioral pass;
+- migration and history executed in separate transactions;
+- mutable accepted migration history;
+- superuser-only proof of role or RLS behavior;
+- fixture-name detector presented as semantic rejection;
+- missing or overwritten failed result;
+- secret exposure;
+- unverified disposable marker or database identity;
+- unauthenticated remote mutation surface;
+- governed database, provider, customer/private data, production, recurring work, or DB-5 activity.
 
 ---
 
@@ -163,7 +187,7 @@ DB-3
 Active:
 
 ```text
-DB-4 — exact phased implementation and disposable PostgreSQL proof
+DB-4 — remediation and exact implementation-package preparation
 ```
 
 Inactive:
@@ -180,6 +204,14 @@ No milestone implies the next milestone.
 
 - Use only the custom `ob-dev` MCP for local repository inspection, bounded mutation, Git, and fixed validation profiles.
 - Generic shell, PowerShell, Python, SQL, and arbitrary Git execution remain disabled.
-- `chatgpt_mcp` is a read-only Git reference; local staging and commits are limited to `ob_dev` and `observatory`.
-- The package-defined PostgreSQL tools may be implemented and registered only through the accepted DB-4 phases.
+- Never push; the owner pushes manually.
 - Owner actions remain owner actions. Tool availability never widens authority.
+- Data-driven profiles and batched code changes are the preferred path to reducing restart churn.
+
+---
+
+## Boundary Posture
+
+The Observatory stores observations, not conclusions. The connected LLM interprets at read time. Accepted conclusions promote out to the owning consumer.
+
+Customer records and customer first-party analytics stay outside Observatory durable storage. Provider disagreement remains first-class evidence. Rights and retention fail closed. The database must physically enforce the telescope doctrine.

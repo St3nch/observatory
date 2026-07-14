@@ -6,7 +6,7 @@ requires-python = ">=3.11"
 dependencies = []
 
 [tool.observatory]
-status = "db4-phased-implementation-last-trusted-db3"
+status = "db4-remediation-last-trusted-db3"
 first_slice = "C2 Controlled Public Manual Observation Package"
 probe = "M13 DataForSEO one-shot tooling retained and disarmed"
 campaign = "M13 closed; no additional provider request authorized"
@@ -21,7 +21,7 @@ schema_migrations = "package-specification-only-no-executable-files-or-execution
 api_mcp = "bounded-fixture-prototype-only"
 dashboard = "disabled"
 strategy_storage = "disabled"
-later_database_milestones = "db5-inactive-db4-implementation-separate-owner-gate-required"
+later_database_milestones = "db5-inactive-db4-remediation-separate-implementation-execution-gate-required"
 mcp_control_plane = "ob-dev-current-32-tools-db4-expansion-package-preparation-only"
 
 [tool.unittest]

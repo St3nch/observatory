@@ -2,32 +2,40 @@
 
 Status: authority
 Authority: fresh-session handoff pointer; `ACTIVE_CONTEXT.md` owns current phase truth
-Purpose: preserve the accepted DB-4 package and phased implementation posture
+Purpose: preserve the DB-4 audit-remediation posture
 Last updated: 2026-07-14
 
 ---
 
 ## Current State
 
-The Observatory v1 bounded proof system remains accepted.
-
-Database-phase authority is now:
-
 ```text
 DB-1 — trusted and complete
 DB-2 — trusted, accepted, and complete
-DB-3 — trusted, accepted, and complete
-DB-4 — active for exact phased implementation and disposable PostgreSQL proof
-DB-5 through DB-10 — planned / inactive
+DB-3 — trusted, accepted, and complete as physical-design authority
+DB-4 — active in remediation and exact implementation-package preparation
+DB-5 through DB-10 — inactive
 ```
 
 Current authority:
 
 ```text
-decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md
+decisions/2026-07-14-db4-audit-acceptance-and-remediation-activation.md
 ```
 
-The owner accepted the exact DB-4 planning package committed at `90e6cecec19a8ed3e4bd241b37ff575b55a826b1` and authorized only its exact phased implementation. DB-4 is not closed. DB-5 remains inactive.
+Current plan:
+
+```text
+planning-inbox/db4-audit-remediation-program-v0-1.md
+```
+
+Source audit:
+
+```text
+audits/observatory-db1-through-db4-full-independent-audit.md
+```
+
+The prior DB-4 disposable campaign is diagnostic only. DB-4 is not closed. DB-5 remains inactive.
 
 ---
 
@@ -37,11 +45,11 @@ The owner accepted the exact DB-4 planning package committed at `90e6cecec19a8ed
 DB-4 — Database Hammer Harness and Migration Specification
 ```
 
+State: remediation and exact implementation-package preparation.
+
 ---
 
 ## Mandatory Root Read Path
-
-Fresh sessions must read, in order:
 
 1. `README.md`
 2. `LLM_START_HERE.md`
@@ -54,107 +62,103 @@ Fresh sessions must read, in order:
 9. `02-boundaries.md`
 10. `NEXT_SESSION_HANDOFF.md`
 
-If any required file is missing or disagrees about active authority, stop and report the conflict.
+Then read:
 
----
+1. `audits/observatory-db1-through-db4-full-independent-audit.md`
+2. `decisions/2026-07-14-db4-audit-acceptance-and-remediation-activation.md`
+3. `planning-inbox/db4-audit-remediation-program-v0-1.md`
+4. accepted DB-2 and DB-3 artifacts indexed in `planning-inbox/README.md`
+5. `POST_V1_DATABASE_ROADMAP.md`
 
-## DB-4 Implementation Read Path
-
-Read `planning-inbox/README.md` before any planning-inbox artifact.
-
-Then read the full DB-1 through DB-3 lineage listed there, followed by:
-
-1. `planning-inbox/db4-dormant-postgres-gap-and-disposition-matrix.md`
-2. `planning-inbox/db4-exact-ob-dev-implementation-package-specification.md`
-3. `planning-inbox/db4-migration-harness-and-proof-package-specification.md`
-4. `planning-inbox/db4-security-credentials-restart-and-owner-action-runbook.md`
-5. `planning-inbox/db4-owner-readiness-review.md`
-6. `decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md`
-7. `POST_V1_DATABASE_ROADMAP.md`
-
-The five accepted DB-4 planning artifacts are immutable and bind the exact implementation manifests, phases, controls, and stop conditions.
-
----
-
-## Required Synchronization Proof
-
-Before nontrivial changes, report:
-
-- repository root;
-- branch, HEAD, upstream, and ahead/behind;
-- files read;
-- last trusted completed milestone;
-- active milestone;
-- allowed and forbidden work;
-- missing files and contradictions;
-- implementation authorization;
-- staged, unstaged, and untracked paths.
-
-Run the fixed `authority_sync` profile. A failing check blocks mutation until the conflict is reconciled.
+If authority files disagree, stop and report the conflict.
 
 ---
 
 ## Current Task
 
-Execute the exact accepted DB-4 package in phases:
+Prepare the exact DB-4 remediation package in this order:
 
-1. exact 17-path `ob_dev` implementation;
-2. version `0.5.0`, exact 28-tool expansion, expected 60-tool registry;
-3. complete `ob_dev` validation and separate commit;
-4. owner restart and connector refresh;
-5. exact 46-path Observatory migration/harness implementation;
-6. complete Observatory validation and separate commit;
-7. owner credential and PostgreSQL service actions under the accepted runbook;
-8. exact disposable `observatory_test_` migration, rollback, hammer, backup/restore, cleanup, and proof sequence;
-9. later DB-4 closure review only after every accepted proof gate passes.
+```text
+R0 authority reconciliation
+R1 DB-3 implementation traceability
+R2 migration/history integrity design
+R3 DB-3-faithful physical candidate rebuild plan
+R4 behavioral hammer remapping
+R5 durable proof/result-register design
+R6 security and operational hardening
+R7 data-driven profiles and restart reduction
+separate owner implementation/execution gate
+R8 fresh disposable re-execution
+```
 
-Stop on the first failed phase or manifest mismatch.
+Immediate outputs:
+
+```text
+planning-inbox/db4-db3-implementation-traceability-matrix.md
+planning-inbox/db4-migration-history-redesign-options.md
+planning-inbox/db4-behavioral-hammer-remapping.md
+planning-inbox/db4-remediation-owner-readiness-review.md
+```
+
+No PostgreSQL execution begins under the prior campaign.
+
+---
+
+## Accepted Finding Posture
+
+All Claude audit findings must be considered.
+
+The MCP tool-count issue is secondary. Reconcile it, but do not allow it to distract from:
+
+- schema fidelity;
+- atomic immutable migration history;
+- real role/RLS enforcement;
+- behavioral hammers;
+- real broken-candidate admission tests;
+- durable result records;
+- marker, authority, redaction, and network hardening;
+- restart reduction through data-driven profiles.
+
+Scoped disagreements/refinements are recorded in the remediation plan. Do not silently substitute Claude’s preferred implementation mechanism where the plan leaves an architecture choice open.
 
 ---
 
 ## Authorized Scope
 
-Authorized only as named by the accepted package:
+Authorized now:
 
-- package-defined `ob_dev` source/test changes and tool registration;
-- package-defined Observatory migration, rollback, fixture, profile, validator, and test paths;
-- owner-controlled credentials, PostgreSQL service actions, restart, and connector refresh;
-- one protected and marked disposable PostgreSQL database using the `observatory_test_` prefix;
-- exact-path and expected-SHA migration/rollback execution;
-- package-defined hammer, role, concurrency, backup, restore, cleanup, and proof profiles;
-- separate exact-manifest commits and manual pushes.
+- read-only inspection and audit reconciliation;
+- planning and exact package preparation;
+- current-state and roadmap updates;
+- traceability, migration, hammer, proof, security, and restart-reduction design;
+- bounded repository edits, validation, staging, and commits;
+- manual owner pushes.
 
----
-
-## Continuing Prohibitions
+Not authorized:
 
 ```text
 governed database observatory
-governed or production roles and migrations
-production or production-like deployment
-real evidence persistence
-synthetic persistence outside exact disposable fixtures
-providers, paid pulls, ingestion, capture, or raw provider payloads
-customer records, customer first-party analytics, or private data
-recurring capture or recurring work
-autonomous spend
-public API/MCP exposure
-dashboards
-strategy, recommendation, conclusion, score-as-truth, or report-state persistence
-paths, tools, dependencies, databases, profiles, or capabilities outside the accepted package
-DB-5 planning, activation, implementation, or execution
+new disposable PostgreSQL proof execution
+DB-5 planning or implementation
+providers, ingestion, capture, paid pulls
+customer/private data
+recurring work or autonomous spend
+production or product API/MCP/dashboard work
+strategy/recommendation/conclusion/report persistence
+arbitrary shell or SQL
+weakened fixed-root or authority controls
 ```
 
 ---
 
 ## Tool Discipline
 
-- Use only the custom `ob-dev` MCP for local repository inspection, bounded mutation, Git, and fixed validation profiles.
-- Generic shell, PowerShell, Python, SQL, and arbitrary Git execution remain disabled.
-- `chatgpt_mcp` is a read-only Git reference; local staging and commits are limited to `ob_dev` and `observatory`.
-- Owner actions remain owner actions.
-- Use optimistic SHA control, complete diff review, fixed validation, exact staging, and manifest-locked commits.
-- Never push; provide manual push commands after successful commits.
+- Use only `ob-dev` for local repository work.
+- Never push.
+- Preserve the protected untracked `audits/kaizen_to_slash_goal_prompt.md` file untouched.
+- Use optimistic SHA control, diff review, fixed validation, exact staging, and manifest-locked commits.
+- Batch code changes to reduce restarts.
+- Prefer data-driven profile behavior over Python changes when safe and exact.
 
 ---
 
@@ -162,4 +166,4 @@ DB-5 planning, activation, implementation, or execution
 
 The Observatory stores observations, not conclusions. The connected LLM interprets at read time. Accepted conclusions promote out to the owning consumer.
 
-Passing disposable proof does not create the governed database and does not activate DB-5.
+DB-4 remediation does not create the governed database and does not activate DB-5.

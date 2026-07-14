@@ -84,7 +84,8 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-13-database-phase-recovery-to-db1.md` | accepted historical recovery decision; amended | Established DB-1 as the recovery checkpoint, reopened DB-2 reconciliation, and retired untrusted later-milestone artifacts | Recovery gate completed by the 2026-07-14 decision; retired artifacts remain prohibited and non-authorizations remain binding |
 | `2026-07-14-db2-freeze-acceptance-and-db3-planning-authorization.md` | accepted decision | Accepts the exact immutable DB-2 freeze v0.2.1, closes DB-2, and activates fresh DB-3 planning/specification | Superseded only as current-state pointer by the later DB-3 closure decision; DB-2 acceptance remains binding |
 | `2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md` | accepted decision | Accepts the exact DB-3 package and checker correction, closes DB-3, and activates DB-4 package preparation | Superseded only as current-state pointer by the DB-4 implementation decision; DB-3 acceptance remains binding |
-| `2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md` | accepted decision | Accepts the exact DB-4 planning package and authorizes its exact phased implementation and disposable PostgreSQL proof | Governed/production databases, providers, customer/private data, recurring work, and DB-5 remain prohibited |
+| `2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md` | accepted historical implementation decision | Accepted the first exact DB-4 implementation package and disposable PostgreSQL proof campaign | Superseded as current-state authority by the DB-4 audit-remediation decision; prior proof is diagnostic only |
+| `2026-07-14-db4-audit-acceptance-and-remediation-activation.md` | accepted decision | Accepts the independent DB-1 through DB-4 audit as remediation input, returns DB-4 to remediation, and keeps DB-5 inactive | Authorizes reconciliation and exact remediation-package preparation only; no new PostgreSQL execution or governed database |
 
 ---
 
@@ -113,6 +114,6 @@ Decision records can change project authority only when they explicitly say so a
 ```text
 Last reviewed: 2026-07-14
 Reviewer: Observatory project steward
-Result: Exact DB-3 acceptance/closure and DB-4 package-preparation-only decision indexed
-Open issues: DB-4 exact artifact inventory and implementation package remain unapproved; implementation remains unauthorized
+Result: Independent DB-1 through DB-4 audit accepted as remediation input; DB-4 returned to remediation
+Open issues: R1 traceability, migration/history redesign, DB-3-faithful schema rebuild, behavioral hammers, durable proof, security hardening, and restart reduction remain active; DB-5 inactive
 ```

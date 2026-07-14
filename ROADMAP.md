@@ -138,27 +138,38 @@ If required reading includes a folder, that folder must have a `README.md` index
 DB-4 — Database Hammer Harness and Migration Specification
 ```
 
+State: remediation and exact implementation-package preparation.
+
 Observatory v1 remains accepted and M20 remains closed by
 `decisions/2026-07-12-observatory-v1-acceptance.md`.
 
-DB-1 remains trusted and complete. DB-2 remains trusted, accepted, and complete.
-By `decisions/2026-07-14-db3-acceptance-closure-and-db4-package-preparation.md`,
-the owner accepted the exact DB-3 planning package, accepted the bounded
-authority-checker correction, closed DB-3 successfully, and authorized preparation
-of an exact DB-4 implementation package.
+DB-1, DB-2, and DB-3 remain trusted and complete. DB-3 remains the accepted
+physical-design authority.
 
-DB-3 is the last trusted completed database milestone. It remains so. By
-`decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md`,
-the owner accepted the exact DB-4 planning package committed at
-`90e6cecec19a8ed3e4bd241b37ff575b55a826b1` and authorized its exact phased
-implementation and disposable PostgreSQL proof.
+By `decisions/2026-07-14-db4-audit-acceptance-and-remediation-activation.md`, the
+owner accepted the independent DB-1 through DB-4 audit as remediation input,
+rejected the current DB-4 implementation as closure-grade proof, returned DB-4 to
+remediation, and kept DB-5 inactive.
 
-DB-4 implementation is limited to the package-defined 17-path `ob_dev` manifest,
-exact 28-tool expansion to the expected 60-tool registry, exact 46-path Observatory
-migration/harness manifest, owner-controlled credentials/service/restart actions, and
-one protected marked `observatory_test_` disposable proof substrate. The governed
-`observatory` database, production, providers, capture, customer/private data,
-recurring work, and DB-5 remain prohibited.
+The governing remediation plan is:
+
+```text
+planning-inbox/db4-audit-remediation-program-v0-1.md
+```
+
+The current nine migrations, hammers, fixtures, profiles, and prior disposable
+PostgreSQL output are diagnostic evidence only. They may not be promoted into DB-4
+closure evidence or a DB-5 bootstrap set.
+
+Current work is limited to authority reconciliation, DB-3 implementation
+traceability, migration/history redesign, DB-3-faithful schema planning, behavioral
+hammer remapping, durable proof design, security hardening, data-driven profile
+design, restart reduction, and exact remediation-package preparation.
+
+No new PostgreSQL execution is authorized until a separate exact remediation
+implementation/execution package is accepted. The governed `observatory` database,
+providers, capture, customer/private data, recurring work, production, and DB-5
+remain prohibited.
 
 The governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`. No milestone
 implies the next milestone.

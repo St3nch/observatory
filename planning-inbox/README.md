@@ -47,7 +47,7 @@ Nothing in this folder authorizes implementation, provider spending, schema crea
 
 For current planning context, read:
 
-Accepted database checkpoints and active DB-4 package-preparation lineage:
+Accepted database checkpoints and active DB-4 remediation lineage:
 
 - `post-v1-pre-database-audit-response-2026-07-12.md` — complete N-01 through N-14 routing, opportunity parking, correction order, and DB-1 exit criteria
 - `db1-owner-ruling-proposals.md` — accepted OR-B1, OR-B2, OR-C2, and OR-C4 proposal source; durable authority lives in the linked decision
@@ -69,15 +69,15 @@ Accepted database checkpoints and active DB-4 package-preparation lineage:
 - `db4-exact-ob-dev-implementation-package-specification.md` — exact future ob-dev implementation manifest and acceptance contract; creates no tooling
 - `db4-migration-harness-and-proof-package-specification.md` — exact future Observatory migration and proof manifest; contains no SQL or migration bytes
 - `db4-security-credentials-restart-and-owner-action-runbook.md` — planning-only owner action, credential, restart, and recovery boundary
-- `db4-owner-readiness-review.md` — binds the exact DB-4 planning package for owner review; not an implementation gate
+- `db4-owner-readiness-review.md` — historical readiness review for the first DB-4 package; superseded as current-state guidance by the audit-remediation decision
+- `db4-audit-remediation-program-v0-1.md` — accepted DB-4 remediation sequence, finding dispositions, scoped disagreements, workstreams R0–R8, and stop conditions
 
-DB-3 is trusted, accepted, complete, and the last trusted database milestone. The
-exact five-artifact DB-4 planning package committed at
-`90e6cecec19a8ed3e4bd241b37ff575b55a826b1` is accepted by
-`decisions/2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md`.
-DB-4 is active for only the exact phased package implementation and disposable
-PostgreSQL proof. Governed/production databases, providers, customer/private data,
-recurring work, and DB-5 remain prohibited. The five retired DB-3/DB-4 artifacts
+DB-3 is trusted, accepted, complete, and remains the physical-design authority. The
+first DB-4 implementation and disposable proof campaign are diagnostic only under
+`decisions/2026-07-14-db4-audit-acceptance-and-remediation-activation.md`.
+DB-4 is active for remediation and exact implementation-package preparation. New
+PostgreSQL execution, governed/production databases, providers, customer/private
+data, recurring work, and DB-5 remain prohibited. The five retired DB-3/DB-4 artifacts
 remain deleted and prohibited from restoration, salvage, reuse, copying, paraphrase,
 or memory-based reconstruction.
 

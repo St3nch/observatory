@@ -94,15 +94,15 @@ class AuthoritySyncTests(unittest.TestCase):
             with self.subTest(claim=exact_claim):
                 self.assertIn(exact_claim, decision)
 
-    def test_db3_is_last_trusted_completed_database_milestone(self) -> None:
+    def test_db3_remains_trusted_physical_design_authority(self) -> None:
         active_context = (ROOT / "ACTIVE_CONTEXT.md").read_text(encoding="utf-8")
         roadmap = (ROOT / "ROADMAP.md").read_text(encoding="utf-8")
         self.assertIn(
-            "DB-3 is now the last trusted completed database milestone.",
+            "DB-3 is trusted, accepted, and complete as the physical-design authority.",
             active_context,
         )
         self.assertIn(
-            "DB-3 is the last trusted completed database milestone.",
+            "DB-3 remains the accepted\nphysical-design authority.",
             roadmap,
         )
 
@@ -323,7 +323,7 @@ class AuthoritySyncTests(unittest.TestCase):
                     self.assertIn(relative_path, readiness_text)
                     self.assertIn(expected_sha256, readiness_text)
 
-    def test_db4_preparation_gate_and_retired_artifacts_are_exact(self) -> None:
+    def test_db4_remediation_gate_and_retired_artifacts_are_exact(self) -> None:
         self.assertEqual(5, len(RETIRED_UNTRUSTED_ARTIFACTS))
         for relative_path in RETIRED_UNTRUSTED_ARTIFACTS:
             with self.subTest(path=relative_path):
@@ -332,10 +332,13 @@ class AuthoritySyncTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertIn(
-            "Active only for exact implementation-package preparation under",
+            "Status: active in remediation and exact implementation-package preparation under",
             post_roadmap,
         )
-        self.assertIn("Package preparation is not implementation.", post_roadmap)
+        self.assertIn(
+            "New PostgreSQL execution under the prior campaign: not authorized",
+            post_roadmap,
+        )
         self.assertNotIn(
             "Future roadmap placeholder only. No present DB-4 authority or artifact exists.",
             post_roadmap,
