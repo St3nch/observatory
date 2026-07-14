@@ -14,7 +14,7 @@ The Observatory is in database-phase recovery from the last trusted checkpoint:
 ```text
 DB-1 is closed and trusted.
 DB-2 is active for reconciliation and owner review only.
-DB-3 and DB-4 closure/activation claims are suspended.
+DB-3 and DB-4 are inactive, with no active or authoritative artifacts.
 ```
 
 Recovery authority:
@@ -43,13 +43,13 @@ No later database milestone is active.
 
 The canonical DB-2 freeze claims accepted v0.1.1 status, but its content does not contain all v0.1.1 corrections and still violates its own singular-classification rule.
 
-The later DB-3 readiness review relied on the unsupported claim that the reconciled freeze was complete and conflict-free.
+The untrusted later DB-3 and DB-4 artifacts have been permanently retired and deleted from the active repository. Git history is sufficient archival retention.
 
 Therefore:
 
 - DB-2 closure is suspended;
-- DB-3 specifications are candidate material only;
-- DB-3 closure and DB-4 activation are suspended;
+- no DB-3 or DB-4 artifact is active or authoritative;
+- any future DB-3 work must be created fresh after an explicit DB-2 owner gate;
 - no PostgreSQL or database-control-plane work is authorized.
 
 ---
@@ -135,13 +135,20 @@ Active for recovery:
 DB-2 — Physical Data-Contract Freeze Reconciliation
 ```
 
-Suspended pending revalidation:
+Not accepted:
 
 ```text
 DB-2 closure
-DB-3 activation and closure
-DB-4 activation
 ```
+
+Inactive with no current artifacts or authority:
+
+```text
+DB-3
+DB-4
+```
+
+Any future DB-3 work must be created fresh after an explicit DB-2 owner gate.
 
 Planned and inactive:
 

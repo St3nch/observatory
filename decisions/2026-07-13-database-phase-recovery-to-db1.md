@@ -1,13 +1,10 @@
 # Decision — Database-Phase Recovery to Last Trusted DB-1 Checkpoint
 
-Status: accepted
+Status: accepted; amended by explicit owner ruling 2026-07-13
 Date: 2026-07-13
 Owner ruling: accepted explicitly in project conversation
 Related milestone: DB-1 trusted closure; DB-2 reconciliation
-Supersedes current-state claims from:
-
-- `decisions/2026-07-13-db2-closure-and-db3-activation.md`
-- `decisions/2026-07-13-db3-closure-and-db4-activation.md`
+The untrusted later-milestone artifacts formerly present in the active repository were permanently retired and deleted by explicit owner ruling. Git history is sufficient archival retention.
 
 ---
 
@@ -20,10 +17,12 @@ ESTABLISH DB-1 AS THE LAST TRUSTED COMPLETED DATABASE MILESTONE.
 
 REOPEN DB-2 FOR RECONCILIATION AND OWNER REVIEW ONLY.
 
-SUSPEND DB-2 CLOSURE, DB-3 ACTIVATION/CLOSURE, AND DB-4 ACTIVATION
-PENDING REVALIDATION UNDER CODEX.
+DB-2 REMAINS ACTIVE FOR RECONCILIATION AND OWNER REVIEW ONLY.
 
-PRESERVE LATER ARTIFACTS AS UNTRUSTED CANDIDATES, NOT AUTHORITY.
+DB-3 AND DB-4 ARE INACTIVE. NO DB-3 OR DB-4 ARTIFACT IS
+ACTIVE OR AUTHORITATIVE.
+
+ANY FUTURE DB-3 WORK MUST BE CREATED FRESH AFTER AN EXPLICIT DB-2 OWNER GATE.
 
 DO NOT AUTHORIZE POSTGRESQL WORK, MIGRATIONS, DATABASE TOOLS,
 PERSISTENCE, PROVIDER CALLS, CUSTOMER DATA, OR PRODUCTION.
@@ -35,9 +34,7 @@ The canonical DB-2 freeze claims accepted v0.1.1 status but does not contain all
 
 It still contains compound primary classifications despite its own singular-classification rule. It also describes DB-2 as closed while retaining pre-activation non-authorization language.
 
-The later DB-3 readiness review states that no conflict exists with an accepted reconciled DB-2 v0.1.1 freeze. That claim is not supported by the canonical freeze content.
-
-Therefore DB-2 closure, DB-3 activation/closure, and DB-4 activation cannot be relied upon without fresh reconciliation.
+Later-milestone work relied on the unsupported claim that the canonical freeze was complete and conflict-free. That work is not retained in the active repository and grants no present or future authority.
 
 ## Trusted state
 
@@ -45,8 +42,8 @@ Therefore DB-2 closure, DB-3 activation/closure, and DB-4 activation cannot be r
 Observatory v1: accepted at the bounded proof-system ceiling
 DB-1: closed and trusted
 DB-2: active for reconciliation and owner review only
-DB-3: suspended / inactive
-DB-4: suspended / inactive
+DB-3: inactive; no active or authoritative artifact
+DB-4: inactive; no active or authoritative artifact
 DB-5 through DB-10: planned / inactive
 ```
 
@@ -57,12 +54,10 @@ DB-5 through DB-10: planned / inactive
 | DB-1 decisions and accepted DB-1 outputs | trusted |
 | DB-2 freeze and correction package | candidate under reconciliation |
 | DB-2 closure-readiness review | historical assessment; not closure authority |
-| DB-2 closure / DB-3 activation decision | suspended |
-| DB-3 specifications | untrusted candidates; may be salvaged only after DB-2 revalidation |
-| DB-3 closure / DB-4 activation decision | suspended |
-| DB-4 work authority | none |
+| DB-3 and DB-4 artifacts | permanently retired and deleted from the active repository; Git history only |
+| DB-3 and DB-4 work authority | none |
 
-Suspension preserves history. It does not delete or silently rewrite the later artifacts.
+No deleted artifact may be restored, salvaged, or treated as candidate authority. Future DB-3 work starts fresh only after an explicit DB-2 owner gate.
 
 ## Allowed recovery work
 
@@ -104,7 +99,7 @@ DB-2 may close only after:
 1. the canonical freeze is actually reconciled;
 2. the reconciled text passes a fresh boundary and classification audit;
 3. the owner reviews the exact resulting artifact;
-4. a new explicit decision closes DB-2 and separately decides whether DB-3 activates.
+4. a new explicit decision closes DB-2 and separately decides whether fresh DB-3 work activates.
 
 ## Final rule
 

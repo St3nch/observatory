@@ -16,8 +16,8 @@ Database-phase trust is reset to:
 ```text
 DB-1 — closed and trusted
 DB-2 — active for reconciliation and owner review only
-DB-3 — suspended / inactive
-DB-4 — suspended / inactive
+DB-3 — inactive; no active or authoritative artifact
+DB-4 — inactive; no active or authoritative artifact
 DB-5 through DB-10 — planned / inactive
 ```
 
@@ -27,7 +27,7 @@ Recovery authority:
 decisions/2026-07-13-database-phase-recovery-to-db1.md
 ```
 
-The canonical DB-2 freeze was declared accepted without actually incorporating all v0.1.1 corrections. Later DB-3 and DB-4 claims therefore cannot be trusted until DB-2 is repaired and reviewed again.
+The canonical DB-2 freeze was declared accepted without actually incorporating all v0.1.1 corrections. The resulting untrusted DB-3 and DB-4 artifacts were permanently retired and deleted from the active repository; Git history is sufficient archival retention.
 
 ---
 
@@ -112,7 +112,7 @@ A failing authority check blocks mutation until the conflict is reconciled.
 5. produce a fresh DB-2 readiness review;
 6. request a new explicit owner decision.
 
-Existing DB-3 documents may be read as untrusted candidates only after the DB-2 contract is coherent. They must not be used to smuggle physical design backward into DB-2.
+No DB-3 or DB-4 artifact is active or authoritative. Any future DB-3 work must be created fresh after an explicit DB-2 owner gate and must not smuggle physical design backward into DB-2.
 
 ---
 

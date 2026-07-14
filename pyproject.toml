@@ -21,7 +21,7 @@ schema_migrations = "disabled-during-db2-recovery"
 api_mcp = "bounded-fixture-prototype-only"
 dashboard = "disabled"
 strategy_storage = "disabled"
-later_database_milestones = "db3-db4-suspended-pending-revalidation"
+later_database_milestones = "db3-db4-inactive-no-artifacts-fresh-db3-requires-db2-owner-gate"
 mcp_control_plane = "ob-dev-mcp-file-surface-only"
 
 [tool.unittest]

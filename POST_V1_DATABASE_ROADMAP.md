@@ -28,7 +28,7 @@ No milestone implies the next milestone.
 Observatory v1: accepted at bounded proof-system ceiling
 Last trusted database milestone: DB-1 — closed
 Active milestone: DB-2 — Physical Data-Contract Freeze Reconciliation
-DB-3 and DB-4 closure/activation claims: suspended
+DB-3 and DB-4: inactive; no active or authoritative artifacts
 Postgres creation: not authorized
 DDL: not authorized
 Migration files or execution: not authorized
@@ -45,8 +45,8 @@ Recovery authority: `decisions/2026-07-13-database-phase-recovery-to-db1.md`.
 |---|---|---|---|
 | DB-1 | Post-v1 Audit Reconciliation and Ruling Closure | closed | Audit findings routed; corrections and rulings accepted; DB-2 package prepared |
 | DB-2 | Physical Data-Contract Freeze | active recovery | Reconcile the canonical freeze from trusted DB-1 and return it for owner review |
-| DB-3 | Postgres Operational Boundary and Physical Schema Specification | suspended / inactive | Existing specifications are untrusted candidates until DB-2 is revalidated |
-| DB-4 | Database Hammer Harness and Migration Specification | suspended / inactive | No implementation or PostgreSQL authority during recovery |
+| DB-3 | Postgres Operational Boundary and Physical Schema Specification | inactive / future placeholder | Must be created fresh only after an explicit DB-2 owner gate; no present authority |
+| DB-4 | Database Hammer Harness and Migration Specification | inactive / future placeholder | No artifact or present implementation/PostgreSQL authority |
 | DB-5 | Governed Local Database Bootstrap and Migration Execution | planned | Separate owner execution gate; migration hammers pass |
 | DB-6 | First Persisted Synthetic Evidence Slice | planned | Append-only, audit-first, identity, scope, rights, retention, and concurrency hammers pass |
 | DB-7 | Database-Backed Typed Read Proof | planned | Read-only role and typed-read hammers pass, including honest truncation |
@@ -124,7 +124,7 @@ DB-2 activation requires a separate owner decision.
 
 # Active milestone
 
-Recovery posture: DB-2 is reopened for reconciliation. Prior DB-2 closure and all later activation claims are suspended. The existing freeze and corrections are candidate inputs, not accepted authority.
+Recovery posture: DB-2 is reopened for reconciliation. Prior later-milestone claims and their untrusted artifacts were permanently retired from the active repository. The existing DB-2 freeze and corrections are candidate inputs, not accepted authority.
 
 ## DB-2 — Physical Data-Contract Freeze
 
@@ -178,6 +178,8 @@ Owner accepts the freeze and authorizes DB-3 planning.
 
 ## DB-3 — Postgres Operational Boundary and Physical Schema Specification
 
+Future roadmap placeholder only. No present DB-3 authority or artifact exists. If an explicit DB-2 owner gate later activates DB-3, its work must be created fresh.
+
 ### Purpose
 
 Specify the local Postgres operational boundary and derive the physical schema only from the accepted DB-2 freeze.
@@ -208,6 +210,8 @@ Creating the database, roles, DDL, migration execution, ingestion.
 ---
 
 ## DB-4 — Database Hammer Harness and Migration Specification
+
+Future roadmap placeholder only. No present DB-4 authority or artifact exists. DB-4 cannot activate by implication from DB-2 or any future DB-3 work.
 
 ### Purpose
 

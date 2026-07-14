@@ -142,7 +142,7 @@ Observatory v1 remains accepted and M20 remains closed by `decisions/2026-07-12-
 
 DB-1 is the last trusted completed database milestone. The recovery decision `decisions/2026-07-13-database-phase-recovery-to-db1.md` reopens DB-2 for reconciliation and owner review only.
 
-Claims that DB-2 closed, DB-3 activated or closed, or DB-4 activated are suspended pending revalidation. Their artifacts remain candidate material, not current authority.
+DB-2 closure remains unaccepted. DB-3 and DB-4 are inactive, and no DB-3 or DB-4 artifact is active or authoritative. Any future DB-3 work must be created fresh after an explicit DB-2 owner gate.
 
 DB-2 recovery authorizes logical-contract reconciliation and Codex authority-drift safeguards only. PostgreSQL work, SQL/DDL, migrations, database-control-plane expansion, persistence, provider calls, customer data, and production remain unauthorized. The governing post-v1 sequence is `POST_V1_DATABASE_ROADMAP.md`.
 

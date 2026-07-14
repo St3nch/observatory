@@ -59,10 +59,9 @@ Active DB-2 recovery package and trusted DB-1 lineage:
 - `db2-physical-data-contract-freeze-readiness-review.md` — historical DB-1 readiness review; does not establish current acceptance
 - `db2-freeze-v0-1-1-classification-corrections.md` — candidate corrections requiring fresh DB-1-grounded review and actual reconciliation
 - `db2-closure-readiness-review.md` — invalidated historical assessment; not closure evidence
-- `db3-postgres-operational-boundary-specification.md` — suspended untrusted candidate; no current DB-3 or execution authority
-- `db3-physical-schema-specification.md` — suspended untrusted candidate; no current DB-3, DDL, or execution authority
-- `db3-specification-readiness-review.md` — invalidated historical assessment; not closure evidence
 - root `POST_V1_DATABASE_ROADMAP.md` — DB-1 through DB-10 sequence corrected by the recovery decision
+
+No DB-3 or DB-4 artifact is active or authoritative. The untrusted artifacts were permanently retired from the active repository; any future DB-3 work must be created fresh after an explicit DB-2 owner gate.
 
 Completed M20 through M14 packages remain available below for lineage and proof context.
 

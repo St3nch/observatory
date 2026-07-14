@@ -27,15 +27,21 @@ REQUIRED_ROOT_FILES = (
 )
 
 RECOVERY_DECISION = "decisions/2026-07-13-database-phase-recovery-to-db1.md"
-SUSPENDED_DECISIONS = (
+RETIRED_UNTRUSTED_ARTIFACTS = (
     "decisions/2026-07-13-db2-closure-and-db3-activation.md",
     "decisions/2026-07-13-db3-closure-and-db4-activation.md",
+    "planning-inbox/db3-postgres-operational-boundary-specification.md",
+    "planning-inbox/db3-physical-schema-specification.md",
+    "planning-inbox/db3-specification-readiness-review.md",
 )
 CANDIDATE_FILES = (
     "planning-inbox/db2-physical-data-contract-freeze-specification.md",
     "planning-inbox/db2-freeze-v0-1-1-classification-corrections.md",
 )
 EXPECTED_PROJECT_STATUS = "db2-reconciliation-last-trusted-db1"
+EXPECTED_LATER_DATABASE_MILESTONES = (
+    "db3-db4-inactive-no-artifacts-fresh-db3-requires-db2-owner-gate"
+)
 
 
 @dataclass(frozen=True)
@@ -131,14 +137,23 @@ def check_repository(root: Path = ROOT) -> CheckResult:
 
     active_milestone = next(iter(present_values), None)
 
+    future_placeholder_claims = (
+        "Future roadmap placeholder only. No present DB-3 authority or artifact exists.",
+        "Future roadmap placeholder only. No present DB-4 authority or artifact exists.",
+    )
+    for claim in future_placeholder_claims:
+        if claim not in post_roadmap:
+            errors.append(f"post-v1 roadmap lacks future-only authority guard: {claim}")
+
     recovery_text = _read(root, RECOVERY_DECISION, errors)
     if recovery_text and "ESTABLISH DB-1 AS THE LAST TRUSTED" not in recovery_text:
         errors.append("recovery decision lacks the trusted DB-1 ruling")
+    if recovery_text and "ANY FUTURE DB-3 WORK MUST BE CREATED FRESH" not in recovery_text:
+        errors.append("recovery decision lacks the fresh future DB-3 gate")
 
-    for relative_path in SUSPENDED_DECISIONS:
-        text = _read(root, relative_path, errors)
-        if text and "Status: suspended by" not in text:
-            errors.append(f"later decision is not visibly suspended: {relative_path}")
+    for relative_path in RETIRED_UNTRUSTED_ARTIFACTS:
+        if (root / relative_path).exists():
+            errors.append(f"retired untrusted artifact exists: {relative_path}")
 
     for relative_path in CANDIDATE_FILES:
         text = _read(root, relative_path, errors)
@@ -149,7 +164,11 @@ def check_repository(root: Path = ROOT) -> CheckResult:
     if pyproject_text:
         try:
             data = tomllib.loads(pyproject_text)
-            status = data["tool"]["observatory"]["status"]
+            observatory_status = data["tool"]["observatory"]
+            status = observatory_status["status"]
+            later_database_milestones = observatory_status[
+                "later_database_milestones"
+            ]
         except (tomllib.TOMLDecodeError, KeyError, TypeError) as exc:
             errors.append(f"cannot read tool.observatory.status: {exc}")
         else:
@@ -158,10 +177,17 @@ def check_repository(root: Path = ROOT) -> CheckResult:
                     "pyproject project status disagrees with recovery authority: "
                     f"{status!r}"
                 )
+            if later_database_milestones != EXPECTED_LATER_DATABASE_MILESTONES:
+                errors.append(
+                    "pyproject later-database posture disagrees with recovery authority: "
+                    f"{later_database_milestones!r}"
+                )
 
     stale_current_claims = (
         "DB-4 — Database Hammer Harness and Migration Specification",
         "No later database milestone is active. DB-2 requires a separate owner decision.",
+        "Their artifacts remain candidate material",
+        "Existing DB-3 documents may be read as untrusted candidates",
     )
     for source, text in (
         ("ACTIVE_CONTEXT.md", active_context),
@@ -179,6 +205,7 @@ def check_repository(root: Path = ROOT) -> CheckResult:
 
     notes.append("DB-1 is the last trusted completed database milestone.")
     notes.append("DB-2 is reconciliation-only; implementation remains unauthorized.")
+    notes.append("DB-3 and DB-4 are inactive with no active or authoritative artifacts.")
     notes.append("A passing sync check is not an implementation gate.")
 
     return CheckResult(
