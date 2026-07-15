@@ -1,0 +1,19 @@
+{
+  "schema_version": "1",
+  "profile_id": "db4_cleanup",
+  "required_capability": "migration_spec_proof_only",
+  "database_class": "disposable_postgres",
+  "proof_class": "real_postgres_disposable_pass",
+  "result_schema_version": "1",
+  "checks": [
+    {"check_id":"CLEANUP_SCOPE_PROBE","hammer_ids":["H1"],"operation_class":"cleanup","expected_outcome":"All scope probe rows and temporary objects are removed and absence is verified."},
+    {"check_id":"CLEANUP_ADMISSION_PROBE","hammer_ids":["H2","H3","H4"],"operation_class":"cleanup","expected_outcome":"All candidate, admission, observation, evidence, and citation probe rows are removed and absence is verified."},
+    {"check_id":"CLEANUP_EVIDENCE_PROBE","hammer_ids":["H5"],"operation_class":"cleanup","expected_outcome":"All identity-mint probe rows are removed and absence is verified."},
+    {"check_id":"CLEANUP_RAW_PROBE","hammer_ids":["H6"],"operation_class":"cleanup","expected_outcome":"All raw-support probe rows and temporary objects are removed and absence is verified."},
+    {"check_id":"CLEANUP_APPEND_ONLY_PROBE","hammer_ids":["H19"],"operation_class":"cleanup","expected_outcome":"Append-only probe residue is removed only through the accepted disposable cleanup mechanism and absence is verified."},
+    {"check_id":"CLEANUP_AUDIT_PROBE","hammer_ids":["H21"],"operation_class":"cleanup","expected_outcome":"Audit-pair probe residue is removed and absence is verified."},
+    {"check_id":"CLEANUP_ROLE_RLS_PROBE","hammer_ids":["H12","H15"],"operation_class":"cleanup","expected_outcome":"Role/RLS probe rows are removed, role context is reset, and no unexpected role membership remains."},
+    {"check_id":"CLEANUP_CONCURRENCY_PROBE","hammer_ids":["H20"],"operation_class":"cleanup","expected_outcome":"Concurrency probe rows are removed and worker sessions are closed."},
+    {"check_id":"CLEANUP_MIGRATION_PROBE","hammer_ids":["H22"],"operation_class":"cleanup","expected_outcome":"Migration probe schema residue and temporary history rows are absent after the accepted rollback/reset path."}
+  ]
+}

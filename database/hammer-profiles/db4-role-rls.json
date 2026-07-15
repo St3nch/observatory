@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "profile_id": "db4_role_rls",
+  "required_capability": "migration_spec_proof_only",
+  "database_class": "disposable_postgres",
+  "proof_class": "real_postgres_disposable_pass",
+  "result_schema_version": "1",
+  "checks": [
+    {"check_id":"ROLE_PROFILES_EXACT","hammer_ids":["H12"],"operation_class":"role_rls","expected_outcome":"All six functional test roles are NOLOGIN, non-superuser, non-BYPASSRLS, non-owner roles with no unexpected memberships."},
+    {"check_id":"READER_SAME_SCOPE_ALLOWED","hammer_ids":["H12"],"operation_class":"role_rls","expected_outcome":"The reader role can read an authorized same-scope row through the accepted typed-read surface.","cleanup_check_id":"CLEANUP_ROLE_RLS_PROBE"},
+    {"check_id":"READER_CROSS_SCOPE_DENIED","hammer_ids":["H15"],"operation_class":"role_rls","expected_outcome":"The reader role cannot observe a different-scope row and receives the accepted uniform blocked or empty result.","cleanup_check_id":"CLEANUP_ROLE_RLS_PROBE"},
+    {"check_id":"READER_WRITE_DENIED","hammer_ids":["H15"],"operation_class":"role_rls","expected_outcome":"The reader role cannot INSERT, UPDATE, or DELETE base evidence rows.","expected_sqlstate":"42501","cleanup_check_id":"CLEANUP_ROLE_RLS_PROBE"},
+    {"check_id":"INGEST_WITH_CHECK_ENFORCED","hammer_ids":["H15"],"operation_class":"role_rls","expected_outcome":"The ingest role can perform only the accepted same-scope write and a cross-scope write is rejected by WITH CHECK.","expected_sqlstate":"42501","cleanup_check_id":"CLEANUP_ROLE_RLS_PROBE"},
+    {"check_id":"OWNER_BYPASS_BLOCKED","hammer_ids":["H12"],"operation_class":"role_rls","expected_outcome":"Application roles do not own protected tables and FORCE ROW LEVEL SECURITY remains enabled."}
+  ]
+}

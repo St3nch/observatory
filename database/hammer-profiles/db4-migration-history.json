@@ -1,0 +1,14 @@
+{
+  "schema_version": "1",
+  "profile_id": "db4_migration_history",
+  "required_capability": "migration_spec_proof_only",
+  "database_class": "disposable_postgres",
+  "proof_class": "real_postgres_disposable_pass",
+  "result_schema_version": "1",
+  "checks": [
+    {"check_id":"FORWARD_HISTORY_ATOMIC","hammer_ids":["H22"],"operation_class":"migration_history","expected_outcome":"Successful candidate DDL and exactly one immutable history row commit in the same session and transaction.","cleanup_check_id":"CLEANUP_MIGRATION_PROBE"},
+    {"check_id":"FAILED_CANDIDATE_NO_HISTORY","hammer_ids":["H22"],"operation_class":"migration_history","expected_outcome":"A failing candidate rolls back all schema effects and writes no success history row.","cleanup_check_id":"CLEANUP_MIGRATION_PROBE"},
+    {"check_id":"DUPLICATE_VERSION_CHANGED_SHA_DENIED","hammer_ids":["H22"],"operation_class":"migration_history","expected_outcome":"Reusing an accepted version with different bytes is rejected and cannot rewrite history.","expected_sqlstate":"23505","cleanup_check_id":"CLEANUP_MIGRATION_PROBE"},
+    {"check_id":"ROLLBACK_HISTORY_EXPLICIT","hammer_ids":["H22"],"operation_class":"migration_history","expected_outcome":"Accepted rollback behavior follows the selected history semantics and leaves a deterministic fingerprint and reviewable record.","cleanup_check_id":"CLEANUP_MIGRATION_PROBE"}
+  ]
+}

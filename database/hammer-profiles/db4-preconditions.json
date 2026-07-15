@@ -1,0 +1,16 @@
+{
+  "schema_version": "1",
+  "profile_id": "db4_preconditions",
+  "required_capability": "migration_spec_proof_only",
+  "database_class": "disposable_postgres",
+  "proof_class": "real_postgres_disposable_pass",
+  "result_schema_version": "1",
+  "checks": [
+    {
+      "check_id": "PRECONDITION_PACKAGE_OBJECTS",
+      "hammer_ids": ["H1", "H2", "H3", "H4", "H5", "H6", "H12", "H15", "H19", "H20", "H21", "H22"],
+      "operation_class": "precondition",
+      "expected_outcome": "All schema objects required by the behavioral profiles exist and match the accepted package fingerprint."
+    }
+  ]
+}

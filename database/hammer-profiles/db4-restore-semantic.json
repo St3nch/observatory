@@ -1,0 +1,14 @@
+{
+  "schema_version": "1",
+  "profile_id": "db4_restore_semantic",
+  "required_capability": "restore_proof_authorized",
+  "database_class": "disposable_postgres",
+  "proof_class": "real_postgres_disposable_pass",
+  "result_schema_version": "1",
+  "checks": [
+    {"check_id":"RESTORE_SCHEMA_CONTINUITY","hammer_ids":["H22"],"operation_class":"restore_semantic","expected_outcome":"Restored schema fingerprint matches the accepted source fingerprint."},
+    {"check_id":"RESTORE_HISTORY_CONTINUITY","hammer_ids":["H22"],"operation_class":"restore_semantic","expected_outcome":"Migration history remains complete, ordered, immutable, and SHA-bound after restore."},
+    {"check_id":"RESTORE_EVIDENCE_RESOLUTION","hammer_ids":["H5"],"operation_class":"restore_semantic","expected_outcome":"Accepted evidence identities and citation handles resolve to the same observation facts after restore."},
+    {"check_id":"RESTORE_SCOPE_ISOLATION","hammer_ids":["H12","H15"],"operation_class":"restore_semantic","expected_outcome":"Same-scope reads remain allowed and cross-scope reads remain denied after restore."}
+  ]
+}
