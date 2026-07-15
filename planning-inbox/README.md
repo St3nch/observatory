@@ -71,6 +71,10 @@ Accepted database checkpoints and active DB-4 remediation lineage:
 - `db4-security-credentials-restart-and-owner-action-runbook.md` — planning-only owner action, credential, restart, and recovery boundary
 - `db4-owner-readiness-review.md` — historical readiness review for the first DB-4 package; superseded as current-state guidance by the audit-remediation decision
 - `db4-audit-remediation-program-v0-1.md` — accepted DB-4 remediation sequence, finding dispositions, scoped disagreements, workstreams R0–R8, and stop conditions
+- `db4-db3-implementation-traceability-matrix.md` — R1 mapping from every accepted DB-3 responsibility to migration, physical mechanism, behavioral hammer, sabotage candidate, rollback, and result record
+- `db4-migration-history-redesign-options.md` — R2 architecture comparison and recommended runner-owned single-session atomic migration/history design
+- `db4-behavioral-hammer-remapping.md` — R4 exact behavioral meanings, positive/negative actions, sabotage requirements, and data-driven profile model for mandatory DB-4 hammers
+- `db4-remediation-owner-readiness-review.md` — readiness checkpoint that approves derivation of the next exact planning package while preserving the no-implementation/no-execution gate
 
 DB-3 is trusted, accepted, complete, and remains the physical-design authority. The
 first DB-4 implementation and disposable proof campaign are diagnostic only under

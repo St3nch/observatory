@@ -41,6 +41,12 @@ DB4_AUDIT_REMEDIATION_DECISION = (
     "decisions/2026-07-14-db4-audit-acceptance-and-remediation-activation.md"
 )
 DB4_AUDIT_REMEDIATION_PLAN = "planning-inbox/db4-audit-remediation-program-v0-1.md"
+AUTHORIZED_DB4_REMEDIATION_ARTIFACTS = (
+    "planning-inbox/db4-db3-implementation-traceability-matrix.md",
+    "planning-inbox/db4-migration-history-redesign-options.md",
+    "planning-inbox/db4-behavioral-hammer-remapping.md",
+    "planning-inbox/db4-remediation-owner-readiness-review.md",
+)
 RETIRED_UNTRUSTED_ARTIFACTS = (
     "decisions/2026-07-13-db2-closure-and-db3-activation.md",
     "decisions/2026-07-13-db3-closure-and-db4-activation.md",
@@ -287,6 +293,7 @@ def _unauthorized_later_artifacts(root: Path) -> tuple[str, ...]:
         DB4_PACKAGE_IMPLEMENTATION_DECISION,
         DB4_AUDIT_REMEDIATION_DECISION,
         DB4_AUDIT_REMEDIATION_PLAN,
+        *AUTHORIZED_DB4_REMEDIATION_ARTIFACTS,
         *AUTHORIZED_DB3_PLANNING_ARTIFACTS,
         *AUTHORIZED_DB4_PLANNING_ARTIFACTS,
     }
