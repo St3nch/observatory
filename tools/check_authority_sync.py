@@ -46,6 +46,10 @@ AUTHORIZED_DB4_REMEDIATION_ARTIFACTS = (
     "planning-inbox/db4-migration-history-redesign-options.md",
     "planning-inbox/db4-behavioral-hammer-remapping.md",
     "planning-inbox/db4-remediation-owner-readiness-review.md",
+    "planning-inbox/db4-remediation-exact-implementation-manifest-v0-1.md",
+    "planning-inbox/db4-proof-security-and-operations-package-v0-1.md",
+    "planning-inbox/db4-one-restart-implementation-and-validation-plan-v0-1.md",
+    "planning-inbox/db4-remediation-implementation-package-readiness-review.md",
 )
 RETIRED_UNTRUSTED_ARTIFACTS = (
     "decisions/2026-07-13-db2-closure-and-db3-activation.md",

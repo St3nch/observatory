@@ -75,6 +75,10 @@ Accepted database checkpoints and active DB-4 remediation lineage:
 - `db4-migration-history-redesign-options.md` — R2 architecture comparison and recommended runner-owned single-session atomic migration/history design
 - `db4-behavioral-hammer-remapping.md` — R4 exact behavioral meanings, positive/negative actions, sabotage requirements, and data-driven profile model for mandatory DB-4 hammers
 - `db4-remediation-owner-readiness-review.md` — readiness checkpoint that approves derivation of the next exact planning package while preserving the no-implementation/no-execution gate
+- `db4-remediation-exact-implementation-manifest-v0-1.md` — exact two-repository replacement path package, migration responsibilities, data-driven profiles, proof paths, tests, and implementation order
+- `db4-proof-security-and-operations-package-v0-1.md` — immutable result-register, authority, marker, credential, network, role lifecycle, cleanup, and owner-operation requirements
+- `db4-one-restart-implementation-and-validation-plan-v0-1.md` — stable-tool/data-driven-profile implementation workflow targeting one owner restart and one connector refresh
+- `db4-remediation-implementation-package-readiness-review.md` — owner-ready review recommending bounded implementation authority while preserving a separate PostgreSQL execution gate
 
 DB-3 is trusted, accepted, complete, and remains the physical-design authority. The
 first DB-4 implementation and disposable proof campaign are diagnostic only under
