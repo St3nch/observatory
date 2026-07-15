@@ -22,7 +22,7 @@ DB-5 is inactive.
 Current authority:
 
 ```text
-decisions/2026-07-14-db4-audit-acceptance-and-remediation-activation.md
+decisions/2026-07-14-db4-remediation-implementation-authorization.md
 ```
 
 Current remediation plan:
@@ -47,7 +47,7 @@ Observatory v1 remains accepted at the bounded proof-system ceiling by `decision
 DB-4 — Database Hammer Harness and Migration Specification
 ```
 
-State: remediation and exact implementation-package preparation.
+State: exact bounded remediation implementation; PostgreSQL execution remains separately prohibited.
 
 DB-4 is not closed. The prior disposable PostgreSQL runs are diagnostic evidence only and may not be promoted into closure evidence.
 
@@ -114,8 +114,9 @@ The remediation program records six scoped disagreements or refinements:
 
 ## Authorized Work
 
-Authorized now:
+Authorized now under the exact package committed at `4d37a4f1fec51843a568dab00763f2e05da11ca2`:
 
+- bounded Observatory and ob-dev implementation on the exact accepted paths;
 - documentation and authority reconciliation;
 - audit finding disposition and remediation planning;
 - exact traceability design;

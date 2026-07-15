@@ -40,6 +40,9 @@ DB4_PACKAGE_IMPLEMENTATION_DECISION = (
 DB4_AUDIT_REMEDIATION_DECISION = (
     "decisions/2026-07-14-db4-audit-acceptance-and-remediation-activation.md"
 )
+DB4_REMEDIATION_IMPLEMENTATION_DECISION = (
+    "decisions/2026-07-14-db4-remediation-implementation-authorization.md"
+)
 DB4_AUDIT_REMEDIATION_PLAN = "planning-inbox/db4-audit-remediation-program-v0-1.md"
 AUTHORIZED_DB4_REMEDIATION_ARTIFACTS = (
     "planning-inbox/db4-db3-implementation-traceability-matrix.md",
@@ -296,6 +299,7 @@ def _unauthorized_later_artifacts(root: Path) -> tuple[str, ...]:
         DB3_ACCEPTANCE_DB4_PACKAGE_DECISION,
         DB4_PACKAGE_IMPLEMENTATION_DECISION,
         DB4_AUDIT_REMEDIATION_DECISION,
+        DB4_REMEDIATION_IMPLEMENTATION_DECISION,
         DB4_AUDIT_REMEDIATION_PLAN,
         *AUTHORIZED_DB4_REMEDIATION_ARTIFACTS,
         *AUTHORIZED_DB3_PLANNING_ARTIFACTS,
@@ -619,8 +623,10 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         "ACTIVE_CONTEXT.md": (
             "DB-4 is active in remediation.",
             "DB-5 is inactive.",
-            DB4_AUDIT_REMEDIATION_DECISION,
+            DB4_REMEDIATION_IMPLEMENTATION_DECISION,
             DB4_AUDIT_REMEDIATION_PLAN,
+            "bounded Observatory and ob-dev implementation",
+            "PostgreSQL execution remains separately prohibited",
         ),
         "ROADMAP.md": (
             "DB-3 remains the accepted",
@@ -631,14 +637,16 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         "POST_V1_DATABASE_ROADMAP.md": (
             "Last trusted database milestone: DB-3 — trusted, accepted, and complete",
             f"Active milestone: {EXPECTED_ACTIVE_MILESTONE}",
-            "DB-4 state: remediation and exact implementation-package preparation",
+            "DB-4 state: exact bounded remediation implementation; PostgreSQL execution separately prohibited",
             "New PostgreSQL execution under the prior campaign: not authorized",
+            DB4_REMEDIATION_IMPLEMENTATION_DECISION,
         ),
         "NEXT_SESSION_HANDOFF.md": (
             "DB-3 — trusted, accepted, and complete as physical-design authority",
             EXPECTED_ACTIVE_MILESTONE,
-            DB4_AUDIT_REMEDIATION_DECISION,
+            DB4_REMEDIATION_IMPLEMENTATION_DECISION,
             DB4_AUDIT_REMEDIATION_PLAN,
+            "PostgreSQL execution separately prohibited",
         ),
     }
     current_texts = {

@@ -20,7 +20,7 @@ DB-5 through DB-10 — inactive
 Current authority:
 
 ```text
-decisions/2026-07-14-db4-audit-acceptance-and-remediation-activation.md
+decisions/2026-07-14-db4-remediation-implementation-authorization.md
 ```
 
 Current plan:
@@ -45,7 +45,7 @@ The prior DB-4 disposable campaign is diagnostic only. DB-4 is not closed. DB-5 
 DB-4 — Database Hammer Harness and Migration Specification
 ```
 
-State: remediation and exact implementation-package preparation.
+State: exact bounded remediation implementation; PostgreSQL execution separately prohibited.
 
 ---
 
