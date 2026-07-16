@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:observatory:db4:result-register:v1",
+  "title": "DB-4 Result Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version","execution_id","campaign_id","profile_id","profile_sha256","authority_reference","proof_class","database_class","database_name","database_identity","code_commits","dirty_trees","started_at","finished_at","checks","cleanup","secret_review","reviewer_state"],
+  "properties": {
+    "schema_version": {"const": "1"},
+    "execution_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{7,127}$"},
+    "campaign_id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{7,127}$"},
+    "profile_id": {"type": "string", "minLength": 1},
+    "profile_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "authority_reference": {"type": "string", "pattern": "^decisions/.+\\.md$"},
+    "proof_class": {"enum": ["fixture_contract_pass","real_postgres_disposable_pass","blocked","failed"]},
+    "database_class": {"const": "disposable_postgres"},
+    "database_name": {"type": "string", "pattern": "^observatory_test_[a-z0-9_]+$"},
+    "database_identity": {"type": "object"},
+    "code_commits": {"type": "object", "required": ["ob_dev","observatory"], "additionalProperties": {"type": "string"}},
+    "dirty_trees": {"type": "object", "required": ["ob_dev","observatory"], "additionalProperties": {"type": "boolean"}},
+    "started_at": {"type": "string", "format": "date-time"},
+    "finished_at": {"type": "string", "format": "date-time"},
+    "checks": {"type": "array", "items": {"$ref": "#/$defs/check"}},
+    "cleanup": {"type": "object"},
+    "secret_review": {"enum": ["passed","failed"]},
+    "reviewer_state": {"enum": ["unreviewed","accepted","rejected","superseded"]}
+  },
+  "$defs": {
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check_id","hammer_ids","result","expected","observed","sqlstate"],
+      "properties": {
+        "check_id": {"type": "string"},
+        "hammer_ids": {"type": "array", "items": {"type": "string", "pattern": "^H[0-9]+$"}},
+        "result": {"enum": ["pass","fail","blocked"]},
+        "expected": {"type": "string"},
+        "observed": {"type": "string"},
+        "sqlstate": {"type": ["string","null"], "pattern": "^[0-9A-Z]{5}$"}
+      }
+    }
+  }
+}

@@ -8,9 +8,9 @@
   "checks": [
     {
       "check_id": "PRECONDITION_PACKAGE_OBJECTS",
-      "hammer_ids": ["H1", "H2", "H3", "H4", "H5", "H6", "H12", "H15", "H19", "H20", "H21", "H22"],
+      "hammer_ids": ["H1", "H2", "H3", "H4", "H5", "H6", "H7", "H8", "H9", "H10", "H11", "H12", "H13", "H14", "H15", "H16", "H17", "H18", "H19", "H20", "H21", "H22"],
       "operation_class": "precondition",
-      "expected_outcome": "All schema objects required by the behavioral profiles exist and match the accepted package fingerprint."
+      "expected_outcome": "Every schema object, constraint, trigger, policy, role, typed-read surface, probe helper, and recovery structure required by H1-H22 exists and matches the accepted package fingerprint before behavioral execution begins."
     }
   ]
 }

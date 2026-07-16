@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 MODULE_PATH = Path(__file__).resolve().parents[1] / "tools" / "check_database_package.py"
@@ -10,8 +11,8 @@ module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(module)
 
 
-def test_exact_database_manifest_has_46_paths() -> None:
-    assert len(module.expected_paths()) == 46
+def test_exact_database_manifest_has_54_paths() -> None:
+    assert len(module.expected_paths()) == 54
 
 
 def test_database_package_validator_passes() -> None:
@@ -24,3 +25,32 @@ def test_governed_name_is_not_a_migration_target() -> None:
             text = (module.ROOT / rel).read_text(encoding="utf-8")
             assert "CREATE DATABASE observatory" not in text
             assert "DROP DATABASE observatory" not in text
+
+
+def test_runner_owns_every_transaction_boundary() -> None:
+    for name in (*module.FORWARD, *module.FIXTURES):
+        directory = "migrations" if name in module.FORWARD else "hammer-fixtures"
+        text = (module.ROOT / "database" / directory / name).read_text(encoding="utf-8")
+        assert module._has_embedded_transaction(text) is False
+    for name in module.FORWARD:
+        text = (module.ROOT / "database" / "rollbacks" / name).read_text(encoding="utf-8")
+        assert module._has_embedded_transaction(text) is False
+
+
+def test_broken_candidate_profile_sha_binds_every_fixture() -> None:
+    profile = json.loads(
+        (module.ROOT / "database/hammer-profiles/db4-broken-candidates.json").read_text(encoding="utf-8")
+    )
+    fixture_paths = {check["fixture_path"] for check in profile["checks"]}
+    expected = {f"database/hammer-fixtures/{name}" for name in module.FIXTURES}
+    assert fixture_paths == expected
+
+
+def test_proof_schemas_are_closed_draft_2020_12_objects() -> None:
+    for rel in module.PROOF_PATHS:
+        if not rel.endswith(".schema.json"):
+            continue
+        schema = json.loads((module.ROOT / rel).read_text(encoding="utf-8"))
+        assert schema["$schema"] == "https://json-schema.org/draft/2020-12/schema"
+        assert schema["type"] == "object"
+        assert schema["additionalProperties"] is False
