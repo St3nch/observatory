@@ -20,7 +20,7 @@ DB-5 through DB-10 — inactive
 Current authority:
 
 ```text
-decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md
+decisions/2026-07-16-db4-r1-schema-hole-correction-authorization.md
 ```
 
 Accepted implementation authority remains:
@@ -98,14 +98,12 @@ one disposable campaign
 independent closure audit
 ```
 
-Current batch is R0 only. R0 records the honest baseline and installs the conformance ratchet. It does not change SQL, profiles, fixtures, `ob-dev`, or PostgreSQL state.
+Current batch is R1 only. R1 fixes the documented schema holes: scope-derived child-table RLS, the overbroad DB-4 cleanup escape, and the UUID-versus-constrained-text-key traceability conflict. It does not change migration 010 surrogate probes, profiles, fixtures, `ob-dev`, or PostgreSQL state.
 
-Current R0 outputs:
+Current R1 authority:
 
 ```text
-decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md
-database/db4-remediation-conformance-manifest.json
-audits/observatory-db4-drift-correction-and-completion-plan.md
+decisions/2026-07-16-db4-r1-schema-hole-correction-authorization.md
 ```
 
 No PostgreSQL execution begins without the later separate owner gate.

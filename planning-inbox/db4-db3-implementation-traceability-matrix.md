@@ -34,7 +34,7 @@ multiple migrations, but it may not omit a row or silently weaken the responsibi
 
 All rows inherit these requirements:
 
-- internal UUID primary keys; stable domain identifiers remain distinct;
+- stable domain identities use constrained, non-aliasing text keys where the accepted schema defines them; internal transition, assignment, audit, and history rows may use generated bigint surrogate keys; no identity namespace may be polymorphic or reused across responsibilities;
 - timezone-aware UTC instants;
 - bounded identifier grammar and length;
 - no unvalidated JSON escape hatch;

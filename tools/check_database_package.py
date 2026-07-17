@@ -8,6 +8,17 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFORMANCE_PATH = ROOT / "database/db4-remediation-conformance-manifest.json"
+R1_DECISION_PATH = "decisions/2026-07-16-db4-r1-schema-hole-correction-authorization.md"
+R1_SCOPE_DERIVED_RELATIONS = (
+    "obs_evidence.observed_artifact_reference",
+    "obs_evidence.admission_transition",
+    "obs_evidence.observation_transition",
+    "obs_evidence.evidence_identity",
+    "obs_evidence.citation_handle",
+    "obs_raw.raw_payload_identity",
+    "obs_raw.opaque_artifact_token",
+    "obs_raw.raw_integrity_observation",
+)
 
 FORWARD = (
     "001_identity_namespaces.sql",
@@ -89,6 +100,7 @@ def expected_paths() -> set[str]:
         "database/db4-remediation-conformance-manifest.json",
         "audits/observatory-db4-drift-correction-and-completion-plan.md",
         "decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md",
+        R1_DECISION_PATH,
         *PROOF_PATHS,
     }
     paths |= {f"database/migrations/{name}" for name in FORWARD}
@@ -332,9 +344,82 @@ def _validate_conformance_manifest() -> list[str]:
     return errors
 
 
+def _validate_r1_schema_corrections() -> list[str]:
+    errors: list[str] = []
+    migration_001 = (ROOT / "database/migrations/001_identity_namespaces.sql").read_text(encoding="utf-8")
+    migration_007 = (ROOT / "database/migrations/007_scope_rls_roles.sql").read_text(encoding="utf-8")
+    rollback_007 = (ROOT / "database/rollbacks/007_scope_rls_roles.sql").read_text(encoding="utf-8")
+    traceability = (ROOT / "planning-inbox/db4-db3-implementation-traceability-matrix.md").read_text(encoding="utf-8")
+
+    if "to_jsonb(OLD)::text" in migration_001 or "LIKE '%db4-%'" in migration_001:
+        errors.append("r1-cleanup-whole-row-match")
+    for required in (
+        "cleanup_key_names constant text[]",
+        "row_data ->> key_name",
+        "candidate_key ~ '^db4-[a-z0-9_-]+$'",
+        "candidate_key ~ '^ev_db4_[a-z0-9_-]+$'",
+        "candidate_key ~ '^cit_db4_[A-Za-z0-9_-]+$'",
+    ):
+        if required not in migration_001:
+            errors.append(f"r1-cleanup-guard:{required}")
+
+    for helper_guard in (
+        "CREATE FUNCTION obs_security.scope_matches_lineage(lineage_class text, lineage_key text)",
+        "SECURITY DEFINER",
+        "SET search_path = pg_catalog, obs_capture, obs_evidence, obs_raw",
+        "REVOKE ALL ON FUNCTION obs_security.scope_matches_lineage(text, text) FROM PUBLIC;",
+        "GRANT EXECUTE ON FUNCTION obs_security.scope_matches_lineage(text, text) TO observatory_test_migrator, observatory_test_ingest, observatory_test_backup;",
+    ):
+        if helper_guard not in migration_007:
+            errors.append(f"r1-scope-helper:{helper_guard}")
+    if "DROP FUNCTION IF EXISTS obs_security.scope_matches_lineage(text, text);" not in rollback_007:
+        errors.append("r1-scope-helper-rollback")
+
+    for relation in R1_SCOPE_DERIVED_RELATIONS:
+        if f"ALTER TABLE {relation} ENABLE ROW LEVEL SECURITY;" not in migration_007:
+            errors.append(f"r1-rls-enable:{relation}")
+        if f"ALTER TABLE {relation} FORCE ROW LEVEL SECURITY;" not in migration_007:
+            errors.append(f"r1-rls-force:{relation}")
+        if f"ALTER TABLE {relation} DISABLE ROW LEVEL SECURITY;" not in rollback_007:
+            errors.append(f"r1-rls-rollback:{relation}")
+
+    policy_targets = {
+        "observed_artifact_reference": "capture_package",
+        "admission_transition": "candidate_observation",
+        "observation_transition": "observation",
+        "evidence_identity": "observation",
+        "citation_handle": "evidence_identity",
+        "raw_payload_identity": "raw_manifest",
+        "opaque_artifact_token": "raw_payload_identity",
+        "raw_integrity_observation": "raw_payload_identity",
+    }
+    for relation_name, lineage_marker in policy_targets.items():
+        select_name = f"{relation_name}_select_policy"
+        insert_name = f"{relation_name}_insert_policy"
+        if select_name not in migration_007 or insert_name not in migration_007:
+            errors.append(f"r1-policy-missing:{relation_name}")
+        if lineage_marker not in migration_007:
+            errors.append(f"r1-policy-lineage:{relation_name}")
+    if migration_007.count("WITH CHECK (") < len(R1_SCOPE_DERIVED_RELATIONS):
+        errors.append("r1-policy-with-check-count")
+    if "USING (true)" in migration_007:
+        errors.append("r1-policy-using-true")
+
+    key_ruling = (
+        "stable domain identities use constrained, non-aliasing text keys where the accepted schema defines them; "
+        "internal transition, assignment, audit, and history rows may use generated bigint surrogate keys"
+    )
+    if key_ruling not in traceability:
+        errors.append("r1-key-ruling-missing")
+    if "internal UUID primary keys" in traceability:
+        errors.append("r1-stale-uuid-law")
+    return errors
+
+
 def check() -> list[str]:
     errors: list[str] = []
     errors.extend(_validate_conformance_manifest())
+    errors.extend(_validate_r1_schema_corrections())
     for rel in sorted(expected_paths()):
         if not (ROOT / rel).is_file():
             errors.append(f"missing:{rel}")

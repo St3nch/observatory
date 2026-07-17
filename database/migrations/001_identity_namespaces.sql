@@ -19,18 +19,51 @@ SET search_path = pg_catalog
 AS $$
 DECLARE
     relation_owner name;
-    row_text text;
+    row_data jsonb;
+    candidate_key text;
+    key_name text;
+    cleanup_key_names constant text[] := ARRAY[
+        'probe_key',
+        'scope_key',
+        'target_key',
+        'capture_instrument_key',
+        'query_panel_key',
+        'panel_run_key',
+        'capture_package_key',
+        'capture_event_key',
+        'observed_artifact_key',
+        'candidate_observation_key',
+        'observation_key',
+        'evidence_key',
+        'citation_handle',
+        'raw_manifest_key',
+        'raw_payload_key',
+        'opaque_token_key',
+        'subject_key',
+        'version',
+        'restore_verification_key'
+    ];
 BEGIN
     SELECT pg_get_userbyid(relowner) INTO relation_owner
     FROM pg_class
     WHERE oid = TG_RELID;
 
-    row_text := COALESCE(to_jsonb(OLD)::text, '');
     IF TG_OP = 'DELETE'
        AND current_user = relation_owner
-       AND current_setting('ob.db4_cleanup', true) = 'authorized'
-       AND row_text LIKE '%db4-%' THEN
-        RETURN OLD;
+       AND current_setting('ob.db4_cleanup', true) = 'authorized' THEN
+        row_data := to_jsonb(OLD);
+        FOREACH key_name IN ARRAY cleanup_key_names LOOP
+            candidate_key := row_data ->> key_name;
+            IF candidate_key IS NOT NULL
+               AND (
+                    candidate_key ~ '^db4-[a-z0-9_-]+$'
+                    OR candidate_key ~ '^ev_db4_[a-z0-9_-]+$'
+                    OR candidate_key ~ '^cit_db4_[A-Za-z0-9_-]+$'
+                    OR candidate_key IN ('scope-a', 'scope-b')
+               ) THEN
+                RETURN OLD;
+            END IF;
+        END LOOP;
     END IF;
 
     RAISE EXCEPTION 'append-only relation % does not allow %', TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME, TG_OP

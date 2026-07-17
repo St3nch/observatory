@@ -22,7 +22,7 @@ DB-5 is inactive.
 Current authority:
 
 ```text
-decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md
+decisions/2026-07-16-db4-r1-schema-hole-correction-authorization.md
 ```
 
 Accepted implementation authority remains bounded by:
@@ -96,17 +96,15 @@ independent closure audit
 Current batch:
 
 ```text
-R0 — reconciliation and honest baseline
+R1 — schema-hole correction
 ```
 
-R0 may change governance documents, the machine-readable conformance manifest, the package validator, and its tests only. R0 may not change SQL, profiles, fixtures, PostgreSQL runtime behavior, or `ob-dev`.
+R1 is limited to scope-derived child-table RLS, narrowing the DB-4 cleanup escape, and reconciling constrained text domain keys with generated bigint internal rows. R1 may not change migration 010 surrogate probes, profiles, fixtures, `ob-dev`, or PostgreSQL state.
 
-R0 outputs:
+R1 authority:
 
 ```text
-decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md
-database/db4-remediation-conformance-manifest.json
-audits/observatory-db4-drift-correction-and-completion-plan.md
+decisions/2026-07-16-db4-r1-schema-hole-correction-authorization.md
 ```
 
 ---

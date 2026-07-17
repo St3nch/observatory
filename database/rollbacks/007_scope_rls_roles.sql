@@ -3,6 +3,38 @@
 DROP POLICY IF EXISTS db4_scope_write_probe_ingest_policy ON obs_security.db4_scope_write_probe;
 DROP TABLE IF EXISTS obs_security.db4_scope_write_probe;
 
+DROP POLICY IF EXISTS raw_integrity_observation_insert_policy ON obs_raw.raw_integrity_observation;
+DROP POLICY IF EXISTS raw_integrity_observation_select_policy ON obs_raw.raw_integrity_observation;
+ALTER TABLE obs_raw.raw_integrity_observation DISABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS opaque_artifact_token_insert_policy ON obs_raw.opaque_artifact_token;
+DROP POLICY IF EXISTS opaque_artifact_token_select_policy ON obs_raw.opaque_artifact_token;
+ALTER TABLE obs_raw.opaque_artifact_token DISABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS raw_payload_identity_insert_policy ON obs_raw.raw_payload_identity;
+DROP POLICY IF EXISTS raw_payload_identity_select_policy ON obs_raw.raw_payload_identity;
+ALTER TABLE obs_raw.raw_payload_identity DISABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS citation_handle_insert_policy ON obs_evidence.citation_handle;
+DROP POLICY IF EXISTS citation_handle_select_policy ON obs_evidence.citation_handle;
+ALTER TABLE obs_evidence.citation_handle DISABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS evidence_identity_insert_policy ON obs_evidence.evidence_identity;
+DROP POLICY IF EXISTS evidence_identity_select_policy ON obs_evidence.evidence_identity;
+ALTER TABLE obs_evidence.evidence_identity DISABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS observation_transition_insert_policy ON obs_evidence.observation_transition;
+DROP POLICY IF EXISTS observation_transition_select_policy ON obs_evidence.observation_transition;
+ALTER TABLE obs_evidence.observation_transition DISABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS admission_transition_insert_policy ON obs_evidence.admission_transition;
+DROP POLICY IF EXISTS admission_transition_select_policy ON obs_evidence.admission_transition;
+ALTER TABLE obs_evidence.admission_transition DISABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS observed_artifact_reference_insert_policy ON obs_evidence.observed_artifact_reference;
+DROP POLICY IF EXISTS observed_artifact_reference_select_policy ON obs_evidence.observed_artifact_reference;
+ALTER TABLE obs_evidence.observed_artifact_reference DISABLE ROW LEVEL SECURITY;
+
 DROP POLICY IF EXISTS raw_manifest_ingest_policy ON obs_raw.raw_manifest;
 DROP POLICY IF EXISTS raw_manifest_scope_policy ON obs_raw.raw_manifest;
 ALTER TABLE obs_raw.raw_manifest DISABLE ROW LEVEL SECURITY;
@@ -22,6 +54,8 @@ ALTER TABLE obs_capture.panel_run DISABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS governed_target_reader ON obs_governance.governed_target;
 ALTER TABLE obs_governance.governed_target DISABLE ROW LEVEL SECURITY;
+
+DROP FUNCTION IF EXISTS obs_security.scope_matches_lineage(text, text);
 
 DROP OWNED BY observatory_test_migrator;
 DROP OWNED BY observatory_test_ingest;
