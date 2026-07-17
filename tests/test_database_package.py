@@ -11,12 +11,16 @@ module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(module)
 
 
-def test_exact_database_manifest_has_58_paths() -> None:
-    assert len(module.expected_paths()) == 58
+def test_exact_database_manifest_has_59_paths() -> None:
+    assert len(module.expected_paths()) == 59
 
 
 def test_r1_schema_corrections_are_structurally_present() -> None:
     assert module._validate_r1_schema_corrections() == []
+
+
+def test_r2_behavioral_profiles_target_the_real_spine() -> None:
+    assert module._validate_r2_real_spine() == []
 
 
 def test_reconciliation_manifest_accounts_for_every_future_obligation() -> None:

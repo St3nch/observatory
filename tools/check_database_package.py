@@ -9,6 +9,12 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 CONFORMANCE_PATH = ROOT / "database/db4-remediation-conformance-manifest.json"
 R1_DECISION_PATH = "decisions/2026-07-16-db4-r1-schema-hole-correction-authorization.md"
+R2_DECISION_PATH = "decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md"
+R2_REMOVED_SURROGATES = (
+    "obs_meta.db4_admission_probe",
+    "obs_meta.db4_evidence_probe",
+    "obs_meta.db4_concurrent_identity_probe",
+)
 R1_SCOPE_DERIVED_RELATIONS = (
     "obs_evidence.observed_artifact_reference",
     "obs_evidence.admission_transition",
@@ -101,6 +107,7 @@ def expected_paths() -> set[str]:
         "audits/observatory-db4-drift-correction-and-completion-plan.md",
         "decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md",
         R1_DECISION_PATH,
+        R2_DECISION_PATH,
         *PROOF_PATHS,
     }
     paths |= {f"database/migrations/{name}" for name in FORWARD}
@@ -416,10 +423,83 @@ def _validate_r1_schema_corrections() -> list[str]:
     return errors
 
 
+def _validate_r2_real_spine() -> list[str]:
+    errors: list[str] = []
+    migration_004 = (ROOT / "database/migrations/004_evidence_identity.sql").read_text(encoding="utf-8")
+    migration_010 = (ROOT / "database/migrations/010_recovery_verification.sql").read_text(encoding="utf-8")
+    rollback_010 = (ROOT / "database/rollbacks/010_recovery_verification.sql").read_text(encoding="utf-8")
+    behavioral = json.loads((ROOT / "database/hammer-profiles/db4-behavioral-core.json").read_text(encoding="utf-8"))
+    concurrency = json.loads((ROOT / "database/hammer-profiles/db4-concurrency.json").read_text(encoding="utf-8"))
+
+    for surrogate in R2_REMOVED_SURROGATES:
+        if surrogate in migration_010 or surrogate in rollback_010:
+            errors.append(f"r2-surrogate-present:{surrogate}")
+
+    for required in (
+        "admission.outcome IS DISTINCT FROM 'accepted'",
+        "admission.rights_assignment_id IS DISTINCT FROM NEW.rights_assignment_id",
+        "admission.retention_assignment_id IS DISTINCT FROM NEW.retention_assignment_id",
+    ):
+        if required not in migration_004:
+            errors.append(f"r2-null-safe-admission:{required}")
+
+    real_spine_markers = (
+        "INSERT INTO obs_evidence.observation(",
+        "'db4-observation-rights-missing'",
+        "'db4-observation-retention-missing'",
+        "INSERT INTO obs_evidence.evidence_identity(",
+        "'ev_db4_duplicate_identity_0002'",
+        "UPDATE obs_evidence.observation",
+        "DELETE FROM obs_evidence.observation",
+        "'ev_db4_concurrent_identity_0001'",
+        "'db4-observation-concurrent'",
+        "PERFORM pg_sleep(0.5)",
+    )
+    for marker in real_spine_markers:
+        if marker not in migration_010:
+            errors.append(f"r2-real-spine-marker:{marker}")
+
+    forbidden_surrogate_operations = (
+        "CREATE TEMP TABLE db4_append_only_probe",
+        "DELETE FROM obs_meta.db4_admission_probe",
+        "INSERT INTO obs_meta.db4_evidence_probe",
+        "INSERT INTO obs_meta.db4_concurrent_identity_probe",
+    )
+    for marker in forbidden_surrogate_operations:
+        if marker in migration_010:
+            errors.append(f"r2-surrogate-operation:{marker}")
+
+    expected_states = {
+        "RIGHTS_MISSING_BLOCKS_ADMISSION": "23514",
+        "RETENTION_MISSING_BLOCKS_ADMISSION": "23514",
+        "DUPLICATE_EVIDENCE_MINT_DENIED": "23505",
+        "APPEND_ONLY_UPDATE_DELETE_DENIED": "42501",
+    }
+    checks = {item["check_id"]: item for item in behavioral["checks"]}
+    for check_id, sqlstate in expected_states.items():
+        if checks.get(check_id, {}).get("expected_sqlstate") != sqlstate:
+            errors.append(f"r2-profile-sqlstate:{check_id}")
+    concurrency_checks = {item["check_id"]: item for item in concurrency["checks"]}
+    if concurrency_checks.get("CONCURRENT_IDENTITY_MINT", {}).get("expected_sqlstate") != "23505":
+        errors.append("r2-profile-sqlstate:CONCURRENT_IDENTITY_MINT")
+    for check_id in (
+        "RIGHTS_MISSING_BLOCKS_ADMISSION",
+        "RETENTION_MISSING_BLOCKS_ADMISSION",
+        "DUPLICATE_EVIDENCE_MINT_DENIED",
+        "APPEND_ONLY_UPDATE_DELETE_DENIED",
+    ):
+        if "obs_evidence" not in checks.get(check_id, {}).get("expected_outcome", ""):
+            errors.append(f"r2-profile-real-relation:{check_id}")
+    if "obs_evidence.evidence_identity" not in concurrency_checks.get("CONCURRENT_IDENTITY_MINT", {}).get("expected_outcome", ""):
+        errors.append("r2-profile-real-relation:CONCURRENT_IDENTITY_MINT")
+    return errors
+
+
 def check() -> list[str]:
     errors: list[str] = []
     errors.extend(_validate_conformance_manifest())
     errors.extend(_validate_r1_schema_corrections())
+    errors.extend(_validate_r2_real_spine())
     for rel in sorted(expected_paths()):
         if not (ROOT / rel).is_file():
             errors.append(f"missing:{rel}")

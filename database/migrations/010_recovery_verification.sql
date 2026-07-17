@@ -23,18 +23,6 @@ CREATE TRIGGER restore_verification_append_only
 BEFORE UPDATE OR DELETE ON obs_meta.restore_verification
 FOR EACH ROW EXECUTE FUNCTION obs_meta.reject_mutation();
 
-CREATE TABLE obs_meta.db4_admission_probe (
-    probe_key text PRIMARY KEY CHECK (probe_key LIKE 'db4-%'),
-    rights_present boolean NOT NULL,
-    retention_present boolean NOT NULL,
-    admitted boolean GENERATED ALWAYS AS (rights_present AND retention_present) STORED
-);
-
-CREATE TABLE obs_meta.db4_evidence_probe (
-    evidence_key text PRIMARY KEY CHECK (evidence_key LIKE 'db4-%'),
-    observation_key text NOT NULL UNIQUE CHECK (observation_key LIKE 'db4-%')
-);
-
 CREATE TABLE obs_meta.db4_migration_probe_effect (
     version text PRIMARY KEY CHECK (version LIKE 'db4-%'),
     transaction_id bigint NOT NULL
@@ -43,12 +31,6 @@ CREATE TABLE obs_meta.db4_migration_probe_effect (
 CREATE TABLE obs_meta.db4_migration_probe_history (
     version text PRIMARY KEY CHECK (version LIKE 'db4-%'),
     file_sha256 text NOT NULL CHECK (file_sha256 ~ '^[0-9a-f]{64}$'),
-    transaction_id bigint NOT NULL
-);
-
-CREATE TABLE obs_meta.db4_concurrent_identity_probe (
-    probe_key text PRIMARY KEY CHECK (probe_key LIKE 'db4-%'),
-    worker_id integer NOT NULL CHECK (worker_id IN (1, 2)),
     transaction_id bigint NOT NULL
 );
 
@@ -68,15 +50,53 @@ CREATE FUNCTION obs_governance.db4_probe_admission_without_rights()
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, obs_meta
+SET search_path = pg_catalog, obs_meta, obs_evidence, obs_governance
 AS $$
-DECLARE admitted_value boolean;
+DECLARE
+    admission_id bigint;
+    retention_id bigint;
+    rejected boolean := false;
+    observation_count integer;
+    evidence_count integer;
 BEGIN
-    DELETE FROM obs_meta.db4_admission_probe WHERE probe_key = 'db4-admission-without-rights';
-    INSERT INTO obs_meta.db4_admission_probe(probe_key, rights_present, retention_present)
-    VALUES ('db4-admission-without-rights', false, true)
-    RETURNING admitted INTO admitted_value;
-    RETURN jsonb_build_object('admitted', admitted_value, 'evidence_count', 0);
+    PERFORM obs_meta.db4_seed_role_rls_probe();
+    SELECT admission_transition_id, retention_assignment_id
+    INTO admission_id, retention_id
+    FROM obs_evidence.admission_transition
+    WHERE candidate_observation_key = 'db4-candidate-a';
+
+    BEGIN
+        INSERT INTO obs_evidence.observation(
+            observation_key, scope_key, target_key, capture_package_key,
+            candidate_observation_key, admission_transition_id,
+            rights_assignment_id, retention_assignment_id, observed_value, observed_at
+        ) VALUES (
+            'db4-observation-rights-missing', 'scope-a', 'db4-target-a', 'db4-package-a',
+            'db4-candidate-a', admission_id,
+            NULL, retention_id, jsonb_build_object('probe', 'rights-missing'),
+            '2026-07-15T00:00:05Z'
+        );
+    EXCEPTION WHEN check_violation THEN
+        rejected := true;
+    END;
+
+    SELECT count(*) INTO observation_count
+    FROM obs_evidence.observation
+    WHERE observation_key = 'db4-observation-rights-missing';
+
+    SELECT count(*) INTO evidence_count
+    FROM obs_evidence.evidence_identity evidence
+    JOIN obs_evidence.observation observation
+      ON observation.observation_key = evidence.observation_key
+    WHERE observation.observation_key = 'db4-observation-rights-missing';
+
+    RETURN jsonb_build_object(
+        'admitted', NOT rejected,
+        'sqlstate', CASE WHEN rejected THEN '23514' ELSE NULL END,
+        'observation_count', observation_count,
+        'evidence_count', evidence_count,
+        'real_relation', 'obs_evidence.observation'
+    );
 END;
 $$;
 
@@ -84,15 +104,53 @@ CREATE FUNCTION obs_governance.db4_probe_admission_without_retention()
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, obs_meta
+SET search_path = pg_catalog, obs_meta, obs_evidence, obs_governance
 AS $$
-DECLARE admitted_value boolean;
+DECLARE
+    admission_id bigint;
+    rights_id bigint;
+    rejected boolean := false;
+    observation_count integer;
+    evidence_count integer;
 BEGIN
-    DELETE FROM obs_meta.db4_admission_probe WHERE probe_key = 'db4-admission-without-retention';
-    INSERT INTO obs_meta.db4_admission_probe(probe_key, rights_present, retention_present)
-    VALUES ('db4-admission-without-retention', true, false)
-    RETURNING admitted INTO admitted_value;
-    RETURN jsonb_build_object('admitted', admitted_value, 'evidence_count', 0);
+    PERFORM obs_meta.db4_seed_role_rls_probe();
+    SELECT admission_transition_id, rights_assignment_id
+    INTO admission_id, rights_id
+    FROM obs_evidence.admission_transition
+    WHERE candidate_observation_key = 'db4-candidate-a';
+
+    BEGIN
+        INSERT INTO obs_evidence.observation(
+            observation_key, scope_key, target_key, capture_package_key,
+            candidate_observation_key, admission_transition_id,
+            rights_assignment_id, retention_assignment_id, observed_value, observed_at
+        ) VALUES (
+            'db4-observation-retention-missing', 'scope-a', 'db4-target-a', 'db4-package-a',
+            'db4-candidate-a', admission_id,
+            rights_id, NULL, jsonb_build_object('probe', 'retention-missing'),
+            '2026-07-15T00:00:05Z'
+        );
+    EXCEPTION WHEN check_violation THEN
+        rejected := true;
+    END;
+
+    SELECT count(*) INTO observation_count
+    FROM obs_evidence.observation
+    WHERE observation_key = 'db4-observation-retention-missing';
+
+    SELECT count(*) INTO evidence_count
+    FROM obs_evidence.evidence_identity evidence
+    JOIN obs_evidence.observation observation
+      ON observation.observation_key = evidence.observation_key
+    WHERE observation.observation_key = 'db4-observation-retention-missing';
+
+    RETURN jsonb_build_object(
+        'admitted', NOT rejected,
+        'sqlstate', CASE WHEN rejected THEN '23514' ELSE NULL END,
+        'observation_count', observation_count,
+        'evidence_count', evidence_count,
+        'real_relation', 'obs_evidence.observation'
+    );
 END;
 $$;
 
@@ -100,14 +158,18 @@ CREATE FUNCTION obs_evidence.db4_probe_duplicate_evidence_identity()
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, obs_meta
+SET search_path = pg_catalog, obs_meta, obs_evidence
 AS $$
 BEGIN
-    DELETE FROM obs_meta.db4_evidence_probe WHERE observation_key = 'db4-observation-duplicate';
-    INSERT INTO obs_meta.db4_evidence_probe(evidence_key, observation_key)
-    VALUES ('db4-evidence-one', 'db4-observation-duplicate');
-    INSERT INTO obs_meta.db4_evidence_probe(evidence_key, observation_key)
-    VALUES ('db4-evidence-two', 'db4-observation-duplicate');
+    PERFORM obs_meta.db4_seed_role_rls_probe();
+    INSERT INTO obs_evidence.evidence_identity(
+        evidence_key, observation_key, identity_fingerprint, minted_at
+    ) VALUES (
+        'ev_db4_duplicate_identity_0002',
+        'db4-observation-a',
+        repeat('f', 64),
+        '2026-07-15T00:00:06Z'
+    );
     RETURN jsonb_build_object('unexpected_success', true);
 END;
 $$;
@@ -116,7 +178,7 @@ CREATE FUNCTION obs_evidence.db4_probe_append_only_mutation()
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, obs_meta
+SET search_path = pg_catalog, obs_meta, obs_evidence
 AS $$
 DECLARE
     update_rejected boolean := false;
@@ -124,30 +186,36 @@ DECLARE
     original_value text;
     final_value text;
 BEGIN
-    CREATE TEMP TABLE db4_append_only_probe(probe_key text PRIMARY KEY, value text NOT NULL) ON COMMIT DROP;
-    CREATE TRIGGER db4_append_only_probe_reject
-    BEFORE UPDATE OR DELETE ON db4_append_only_probe
-    FOR EACH ROW EXECUTE FUNCTION obs_meta.reject_mutation();
-    INSERT INTO db4_append_only_probe VALUES ('db4-append-only', 'original');
-    SELECT value INTO original_value FROM db4_append_only_probe WHERE probe_key = 'db4-append-only';
+    PERFORM obs_meta.db4_seed_role_rls_probe();
+    SELECT observed_value::text INTO original_value
+    FROM obs_evidence.observation
+    WHERE observation_key = 'db4-observation-a';
 
     BEGIN
-        UPDATE db4_append_only_probe SET value = 'changed' WHERE probe_key = 'db4-append-only';
+        UPDATE obs_evidence.observation
+        SET observed_value = jsonb_build_object('probe', 'changed')
+        WHERE observation_key = 'db4-observation-a';
     EXCEPTION WHEN insufficient_privilege THEN
         update_rejected := true;
     END;
 
     BEGIN
-        DELETE FROM db4_append_only_probe WHERE probe_key = 'db4-append-only';
+        DELETE FROM obs_evidence.observation
+        WHERE observation_key = 'db4-observation-a';
     EXCEPTION WHEN insufficient_privilege THEN
         delete_rejected := true;
     END;
 
-    SELECT value INTO final_value FROM db4_append_only_probe WHERE probe_key = 'db4-append-only';
+    SELECT observed_value::text INTO final_value
+    FROM obs_evidence.observation
+    WHERE observation_key = 'db4-observation-a';
+
     RETURN jsonb_build_object(
         'update_rejected', update_rejected,
         'delete_rejected', delete_rejected,
-        'row_unchanged', original_value = final_value
+        'row_unchanged', original_value = final_value,
+        'sqlstate', '42501',
+        'real_relation', 'obs_evidence.observation'
     );
 END;
 $$;
@@ -240,13 +308,36 @@ CREATE FUNCTION obs_meta.db4_probe_concurrent_identity_mint(worker_id integer)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = pg_catalog, obs_meta
+SET search_path = pg_catalog, obs_meta, obs_evidence, obs_audit
 AS $$
 BEGIN
-    INSERT INTO obs_meta.db4_concurrent_identity_probe(probe_key, worker_id, transaction_id)
-    VALUES ('db4-concurrent-identity', worker_id, txid_current());
+    PERFORM obs_meta.db4_seed_role_rls_probe();
+
+    INSERT INTO obs_audit.audit_event(
+        audit_event_key, event_type, subject_schema, subject_relation,
+        subject_key, action, authority_reference
+    ) VALUES (
+        'aud_db4_concurrent_identity_worker_' || worker_id,
+        'evidence_insert', 'obs_evidence', 'evidence_identity',
+        'ev_db4_concurrent_identity_0001', 'INSERT',
+        'decisions/2026-07-14-db4-remediation-implementation-authorization.md'
+    );
+
+    INSERT INTO obs_evidence.evidence_identity(
+        evidence_key, observation_key, identity_fingerprint, minted_at
+    ) VALUES (
+        'ev_db4_concurrent_identity_0001',
+        'db4-observation-concurrent',
+        repeat('8', 64),
+        '2026-07-15T00:00:07Z'
+    );
+
     PERFORM pg_sleep(0.5);
-    RETURN jsonb_build_object('worker_id', worker_id, 'committed', true);
+    RETURN jsonb_build_object(
+        'worker_id', worker_id,
+        'committed', true,
+        'real_relation', 'obs_evidence.evidence_identity'
+    );
 END;
 $$;
 
@@ -490,33 +581,79 @@ BEGIN
         ON CONFLICT DO NOTHING;
     END LOOP;
 
-    RETURN jsonb_build_object('seeded', true, 'observations', 2);
+    SELECT rights_assignment_id INTO rights_id
+    FROM obs_governance.rights_assignment
+    WHERE target_key = 'db4-target-a'
+    ORDER BY effective_at DESC, rights_assignment_id DESC
+    LIMIT 1;
+
+    SELECT retention_assignment_id INTO retention_id
+    FROM obs_governance.retention_assignment
+    WHERE target_key = 'db4-target-a'
+    ORDER BY effective_at DESC, retention_assignment_id DESC
+    LIMIT 1;
+
+    INSERT INTO obs_evidence.candidate_observation(
+        candidate_observation_key, scope_key, target_key, capture_package_key,
+        observed_artifact_key, candidate_fingerprint, proposed_value, observed_at
+    ) VALUES (
+        'db4-candidate-concurrent', 'scope-a', 'db4-target-a', 'db4-package-a',
+        'db4-artifact-a', repeat('9', 64), jsonb_build_object('probe', 'concurrent'),
+        '2026-07-15T00:00:01Z'
+    ) ON CONFLICT DO NOTHING;
+
+    INSERT INTO obs_evidence.admission_transition(
+        candidate_observation_key, outcome, rights_assignment_id,
+        retention_assignment_id, authority_reference, effective_at
+    ) VALUES (
+        'db4-candidate-concurrent', 'accepted', rights_id, retention_id,
+        'decisions/2026-07-14-db4-remediation-implementation-authorization.md',
+        '2026-07-15T00:00:02Z'
+    ) ON CONFLICT DO NOTHING;
+
+    SELECT admission_transition_id INTO admission_id
+    FROM obs_evidence.admission_transition
+    WHERE candidate_observation_key = 'db4-candidate-concurrent';
+
+    INSERT INTO obs_audit.audit_event(
+        audit_event_key, event_type, subject_schema, subject_relation,
+        subject_key, action, authority_reference
+    ) VALUES (
+        'aud_db4_observation_concurrent_0001', 'observation_insert',
+        'obs_evidence', 'observation', 'db4-observation-concurrent', 'INSERT',
+        'decisions/2026-07-14-db4-remediation-implementation-authorization.md'
+    ) ON CONFLICT DO NOTHING;
+
+    INSERT INTO obs_evidence.observation(
+        observation_key, scope_key, target_key, capture_package_key,
+        candidate_observation_key, admission_transition_id,
+        rights_assignment_id, retention_assignment_id, observed_value, observed_at
+    ) VALUES (
+        'db4-observation-concurrent', 'scope-a', 'db4-target-a', 'db4-package-a',
+        'db4-candidate-concurrent', admission_id, rights_id, retention_id,
+        jsonb_build_object('probe', 'concurrent'), '2026-07-15T00:00:01Z'
+    ) ON CONFLICT DO NOTHING;
+
+    RETURN jsonb_build_object('seeded', true, 'observations', 3);
 END;
 $$;
 
 CREATE FUNCTION obs_meta.db4_cleanup_scope_probe()
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, obs_meta AS $$
 BEGIN
-    DELETE FROM obs_meta.db4_admission_probe WHERE probe_key LIKE 'db4-%';
-    RETURN jsonb_build_object('clean', true, 'remaining', 0);
+    RETURN obs_meta.db4_cleanup_role_rls_probe();
 END; $$;
 
 CREATE FUNCTION obs_meta.db4_cleanup_admission_probe()
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, obs_meta AS $$
-DECLARE remaining integer;
 BEGIN
-    DELETE FROM obs_meta.db4_admission_probe WHERE probe_key LIKE 'db4-%';
-    SELECT count(*) INTO remaining FROM obs_meta.db4_admission_probe WHERE probe_key LIKE 'db4-%';
-    RETURN jsonb_build_object('clean', remaining = 0, 'remaining', remaining);
+    RETURN obs_meta.db4_cleanup_role_rls_probe();
 END; $$;
 
 CREATE FUNCTION obs_meta.db4_cleanup_evidence_probe()
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, obs_meta AS $$
-DECLARE remaining integer;
 BEGIN
-    DELETE FROM obs_meta.db4_evidence_probe WHERE evidence_key LIKE 'db4-%';
-    SELECT count(*) INTO remaining FROM obs_meta.db4_evidence_probe WHERE evidence_key LIKE 'db4-%';
-    RETURN jsonb_build_object('clean', remaining = 0, 'remaining', remaining);
+    RETURN obs_meta.db4_cleanup_role_rls_probe();
 END; $$;
 
 CREATE FUNCTION obs_meta.db4_cleanup_raw_probe()
@@ -525,9 +662,10 @@ SELECT jsonb_build_object('clean', true, 'remaining', 0);
 $$;
 
 CREATE FUNCTION obs_meta.db4_cleanup_append_only_probe()
-RETURNS jsonb LANGUAGE sql SECURITY DEFINER SET search_path = pg_catalog AS $$
-SELECT jsonb_build_object('clean', true, 'remaining', 0);
-$$;
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, obs_meta AS $$
+BEGIN
+    RETURN obs_meta.db4_cleanup_role_rls_probe();
+END; $$;
 
 CREATE FUNCTION obs_meta.db4_cleanup_audit_probe()
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, obs_audit AS $$
@@ -599,17 +737,8 @@ $$;
 
 CREATE FUNCTION obs_meta.db4_cleanup_concurrency_probe()
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, obs_meta AS $$
-DECLARE remaining integer;
 BEGIN
-    DELETE FROM obs_meta.db4_concurrent_identity_probe WHERE probe_key LIKE 'db4-%';
-    DELETE FROM obs_meta.db4_concurrent_migration_effect WHERE probe_key LIKE 'db4-%';
-    DELETE FROM obs_meta.db4_concurrent_migration_history WHERE probe_key LIKE 'db4-%';
-    SELECT
-        (SELECT count(*) FROM obs_meta.db4_concurrent_identity_probe WHERE probe_key LIKE 'db4-%')
-      + (SELECT count(*) FROM obs_meta.db4_concurrent_migration_effect WHERE probe_key LIKE 'db4-%')
-      + (SELECT count(*) FROM obs_meta.db4_concurrent_migration_history WHERE probe_key LIKE 'db4-%')
-    INTO remaining;
-    RETURN jsonb_build_object('clean', remaining = 0, 'remaining', remaining);
+    RETURN obs_meta.db4_cleanup_role_rls_probe();
 END; $$;
 
 CREATE FUNCTION obs_meta.db4_cleanup_migration_probe()
@@ -625,6 +754,6 @@ BEGIN
     RETURN jsonb_build_object('clean', remaining = 0, 'remaining', remaining);
 END; $$;
 
-REVOKE ALL ON obs_meta.db4_admission_probe, obs_meta.db4_evidence_probe, obs_meta.db4_migration_probe_effect, obs_meta.db4_migration_probe_history, obs_meta.db4_concurrent_identity_probe, obs_meta.db4_concurrent_migration_effect, obs_meta.db4_concurrent_migration_history FROM PUBLIC;
+REVOKE ALL ON obs_meta.db4_migration_probe_effect, obs_meta.db4_migration_probe_history, obs_meta.db4_concurrent_migration_effect, obs_meta.db4_concurrent_migration_history FROM PUBLIC;
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA obs_meta FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION obs_meta.db4_seed_role_rls_probe() TO observatory_test_migrator;

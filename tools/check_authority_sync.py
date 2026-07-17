@@ -49,6 +49,9 @@ DB4_RECONCILIATION_DECISION = (
 DB4_R1_DECISION = (
     "decisions/2026-07-16-db4-r1-schema-hole-correction-authorization.md"
 )
+DB4_R2_DECISION = (
+    "decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md"
+)
 DB4_AUDIT_REMEDIATION_PLAN = "planning-inbox/db4-audit-remediation-program-v0-1.md"
 DB4_COMPLETION_PLAN = "audits/observatory-db4-drift-correction-and-completion-plan.md"
 DB4_CONFORMANCE_MANIFEST = "database/db4-remediation-conformance-manifest.json"
@@ -310,6 +313,7 @@ def _unauthorized_later_artifacts(root: Path) -> tuple[str, ...]:
         DB4_REMEDIATION_IMPLEMENTATION_DECISION,
         DB4_RECONCILIATION_DECISION,
         DB4_R1_DECISION,
+        DB4_R2_DECISION,
         DB4_AUDIT_REMEDIATION_PLAN,
         *AUTHORIZED_DB4_REMEDIATION_ARTIFACTS,
         *AUTHORIZED_DB3_PLANNING_ARTIFACTS,
@@ -633,11 +637,11 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         "ACTIVE_CONTEXT.md": (
             "DB-4 is active in remediation.",
             "DB-5 is inactive.",
-            DB4_R1_DECISION,
+            DB4_R2_DECISION,
             DB4_REMEDIATION_IMPLEMENTATION_DECISION,
             DB4_COMPLETION_PLAN,
             DB4_CONFORMANCE_MANIFEST,
-            "R1 — schema-hole correction",
+            "R2 — real-spine behavioral proof",
             "PostgreSQL execution remains separately prohibited",
         ),
         "ROADMAP.md": (
@@ -649,20 +653,20 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         "POST_V1_DATABASE_ROADMAP.md": (
             "Last trusted database milestone: DB-3 — trusted, accepted, and complete",
             f"Active milestone: {EXPECTED_ACTIVE_MILESTONE}",
-            "DB-4 state: Route C Batch R1 schema-hole correction active; PostgreSQL execution separately prohibited",
+            "DB-4 state: Route C Batch R2 real-spine behavioral proof active; PostgreSQL execution separately prohibited",
             "New PostgreSQL execution under the prior campaign: not authorized",
-            DB4_R1_DECISION,
+            DB4_R2_DECISION,
             DB4_REMEDIATION_IMPLEMENTATION_DECISION,
             DB4_CONFORMANCE_MANIFEST,
         ),
         "NEXT_SESSION_HANDOFF.md": (
             "DB-3 — trusted, accepted, and complete as physical-design authority",
             EXPECTED_ACTIVE_MILESTONE,
-            DB4_R1_DECISION,
+            DB4_R2_DECISION,
             DB4_REMEDIATION_IMPLEMENTATION_DECISION,
             DB4_COMPLETION_PLAN,
             DB4_CONFORMANCE_MANIFEST,
-            "Current batch is R1 only.",
+            "Current batch is R2 only.",
             "PostgreSQL execution separately prohibited",
         ),
     }
@@ -745,7 +749,7 @@ def check_repository(root: Path = ROOT) -> CheckResult:
     notes.append("DB-1 remains trusted and complete.")
     notes.append("DB-2 remains trusted, accepted, and complete.")
     notes.append("DB-3 is trusted, accepted, complete, and remains the physical-design authority.")
-    notes.append("DB-4 is active in remediation and exact implementation-package preparation.")
+    notes.append("DB-4 is active in Route C Batch R2 real-spine behavioral proof.")
     notes.append("Prior disposable proof is diagnostic only; new PostgreSQL execution requires a separate owner gate.")
     notes.append("Governed/production databases, providers, customer/private data, recurring work, and DB-5 remain unauthorized.")
     notes.append("A passing sync check does not close DB-4 or activate DB-5.")

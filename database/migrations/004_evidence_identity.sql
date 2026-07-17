@@ -130,10 +130,10 @@ BEGIN
     FROM obs_evidence.admission_transition
     WHERE admission_transition_id = NEW.admission_transition_id;
 
-    IF admission.outcome <> 'accepted'
-       OR admission.candidate_observation_key <> NEW.candidate_observation_key
-       OR admission.rights_assignment_id <> NEW.rights_assignment_id
-       OR admission.retention_assignment_id <> NEW.retention_assignment_id THEN
+    IF admission.outcome IS DISTINCT FROM 'accepted'
+       OR admission.candidate_observation_key IS DISTINCT FROM NEW.candidate_observation_key
+       OR admission.rights_assignment_id IS DISTINCT FROM NEW.rights_assignment_id
+       OR admission.retention_assignment_id IS DISTINCT FROM NEW.retention_assignment_id THEN
         RAISE EXCEPTION 'observation admission binding is invalid' USING ERRCODE = '23514';
     END IF;
     RETURN NEW;

@@ -6,7 +6,7 @@
   "proof_class": "real_postgres_disposable_pass",
   "result_schema_version": "1",
   "checks": [
-    {"check_id":"CONCURRENT_IDENTITY_MINT","hammer_ids":["H20"],"operation_class":"concurrency","expected_outcome":"Two forced-overlap workers attempt the same accepted identity mint; exactly one commits and the other receives the accepted uniqueness or serialization rejection.","cleanup_check_id":"CLEANUP_CONCURRENCY_PROBE"},
+    {"check_id":"CONCURRENT_IDENTITY_MINT","hammer_ids":["H20"],"operation_class":"concurrency","expected_outcome":"Two forced-overlap workers attempt the same real obs_evidence.evidence_identity mint for one admitted observation; exactly one commits and the other receives the accepted uniqueness rejection.","expected_sqlstate":"23505","cleanup_check_id":"CLEANUP_CONCURRENCY_PROBE"},
     {"check_id":"CONCURRENT_MIGRATION_SERIALIZED","hammer_ids":["H22"],"operation_class":"concurrency","expected_outcome":"Two forced-overlap migration sessions cannot both enter the critical section; the advisory lock serializes execution and history remains singular.","cleanup_check_id":"CLEANUP_MIGRATION_PROBE"}
   ]
 }

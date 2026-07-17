@@ -28,9 +28,6 @@ DROP FUNCTION IF EXISTS obs_governance.db4_probe_admission_without_rights();
 
 DROP TABLE IF EXISTS obs_meta.db4_concurrent_migration_history;
 DROP TABLE IF EXISTS obs_meta.db4_concurrent_migration_effect;
-DROP TABLE IF EXISTS obs_meta.db4_concurrent_identity_probe;
 DROP TABLE IF EXISTS obs_meta.db4_migration_probe_history;
 DROP TABLE IF EXISTS obs_meta.db4_migration_probe_effect;
-DROP TABLE IF EXISTS obs_meta.db4_evidence_probe;
-DROP TABLE IF EXISTS obs_meta.db4_admission_probe;
 DROP TABLE IF EXISTS obs_meta.restore_verification;

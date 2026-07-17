@@ -20,7 +20,7 @@ DB-5 through DB-10 — inactive
 Current authority:
 
 ```text
-decisions/2026-07-16-db4-r1-schema-hole-correction-authorization.md
+decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md
 ```
 
 Accepted implementation authority remains:
@@ -98,12 +98,12 @@ one disposable campaign
 independent closure audit
 ```
 
-Current batch is R1 only. R1 fixes the documented schema holes: scope-derived child-table RLS, the overbroad DB-4 cleanup escape, and the UUID-versus-constrained-text-key traceability conflict. It does not change migration 010 surrogate probes, profiles, fixtures, `ob-dev`, or PostgreSQL state.
+Current batch is R2 only. R2 rewires missing-rights, missing-retention, duplicate evidence, append-only mutation, and concurrent identity mint checks onto real Observatory relations while removing the three project-relation surrogate tables. It does not create R3 fixtures, retire R4 profiles/tests, change `ob-dev`, or execute PostgreSQL.
 
-Current R1 authority:
+Current R2 authority:
 
 ```text
-decisions/2026-07-16-db4-r1-schema-hole-correction-authorization.md
+decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md
 ```
 
 No PostgreSQL execution begins without the later separate owner gate.

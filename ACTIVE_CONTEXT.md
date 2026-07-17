@@ -22,7 +22,7 @@ DB-5 is inactive.
 Current authority:
 
 ```text
-decisions/2026-07-16-db4-r1-schema-hole-correction-authorization.md
+decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md
 ```
 
 Accepted implementation authority remains bounded by:
@@ -96,15 +96,15 @@ independent closure audit
 Current batch:
 
 ```text
-R1 — schema-hole correction
+R2 — real-spine behavioral proof
 ```
 
-R1 is limited to scope-derived child-table RLS, narrowing the DB-4 cleanup escape, and reconciling constrained text domain keys with generated bigint internal rows. R1 may not change migration 010 surrogate probes, profiles, fixtures, `ob-dev`, or PostgreSQL state.
+R2 is limited to null-safe admission binding, real observation/evidence/append-only/concurrency probe paths, removal of the three project-relation surrogate tables, matching active-profile expectations, and static conformance guards. R2 may not create R3 fixtures, retire R4 profiles/tests, change `ob-dev`, or execute PostgreSQL.
 
-R1 authority:
+R2 authority:
 
 ```text
-decisions/2026-07-16-db4-r1-schema-hole-correction-authorization.md
+decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md
 ```
 
 ---
