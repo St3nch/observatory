@@ -98,7 +98,7 @@ one disposable campaign
 independent closure audit
 ```
 
-Current batch is the exact-path G1–G5 compatibility correction. It closes only the five documented `ob-dev` compatibility blockers across the authorized paths. It does not execute PostgreSQL, restart the connector before validation, accept the live-campaign draft, close DB-4, or activate DB-5.
+The exact-path G1–G5 compatibility correction is complete in `ob-dev` commit `879529c27cad666099cf4f697eb7cbb56dec2279`. One connector refresh and a repeat frozen-compatibility review are pending. PostgreSQL execution, acceptance of the live-campaign draft, DB-4 closure, and DB-5 remain prohibited.
 
 Current authority:
 

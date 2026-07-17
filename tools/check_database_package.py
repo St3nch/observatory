@@ -262,6 +262,7 @@ def _validate_conformance_manifest() -> list[str]:
         "schema_version",
         "authority",
         "baseline_commit",
+        "ob_dev_compatibility_commit",
         "completion_route",
         "r5_gate_state",
         "r5_blockers",
@@ -293,6 +294,7 @@ def _validate_conformance_manifest() -> list[str]:
         "schema_version",
         "authority",
         "baseline_commit",
+        "ob_dev_compatibility_commit",
         "completion_route",
         "r5_gate_state",
         "r5_compatibility_review",
@@ -303,9 +305,11 @@ def _validate_conformance_manifest() -> list[str]:
         if not isinstance(data.get(key), list):
             errors.append(f"conformance-list:{key}")
 
-    if data.get("r5_gate_state") != "not_ready":
+    if data.get("r5_gate_state") != "compatibility_corrections_committed_restart_pending":
         errors.append("conformance-r5-gate-state")
-    if data.get("r5_blockers") != ["G1", "G2", "G3", "G4", "G5"]:
+    if data.get("ob_dev_compatibility_commit") != "879529c27cad666099cf4f697eb7cbb56dec2279":
+        errors.append("conformance-ob-dev-compatibility-commit")
+    if data.get("r5_blockers") != []:
         errors.append("conformance-r5-blockers")
     if data.get("r5_compatibility_review") != R5_COMPATIBILITY_PATH:
         errors.append("conformance-r5-compatibility-path")

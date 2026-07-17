@@ -28,7 +28,7 @@ No milestone implies the next milestone.
 Observatory v1: accepted at bounded proof-system ceiling
 Last trusted database milestone: DB-3 — trusted, accepted, and complete
 Active milestone: DB-4 — Database Hammer Harness and Migration Specification
-DB-4 state: exact-path G1–G5 ob-dev compatibility correction active; live gate not ready; PostgreSQL execution separately prohibited
+DB-4 state: G1–G5 compatibility corrections committed at ob-dev `879529c27cad666099cf4f697eb7cbb56dec2279`; connector refresh and repeat review pending; PostgreSQL execution separately prohibited
 DB-4 closure status: not ready; prior proof is diagnostic only
 DB-5: inactive
 Governed database or governed role creation: not authorized

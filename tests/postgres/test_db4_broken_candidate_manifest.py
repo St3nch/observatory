@@ -17,7 +17,7 @@ def test_concrete_fixture_manifest_is_complete(database_root: Path) -> None:
 
 def test_executor_bound_fixtures_are_sha_locked(database_root: Path) -> None:
     profile = json.loads((database_root / "hammer-profiles/db4-broken-candidates.json").read_text(encoding="utf-8"))
-    assert len(profile["checks"]) == 8
+    assert len(profile["checks"]) == 16
     for check in profile["checks"]:
         path = database_root.parent / check["fixture_path"]
         assert hashlib.sha256(path.read_bytes()).hexdigest() == check["fixture_sha256"]

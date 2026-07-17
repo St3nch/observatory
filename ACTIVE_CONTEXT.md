@@ -96,10 +96,10 @@ independent closure audit
 Current batch:
 
 ```text
-G1–G5 — exact-path ob-dev compatibility correction
+G1–G5 compatibility correction complete; connector refresh and repeat review pending
 ```
 
-This batch closes only the five R5 compatibility blockers across the exact authorized Observatory and `ob-dev` paths. It may not execute PostgreSQL, restart the connector before validation, accept the live-campaign draft, close DB-4, or activate DB-5.
+The exact-path correction is implemented in `ob-dev` commit `879529c27cad666099cf4f697eb7cbb56dec2279`. One connector refresh and a repeat frozen-compatibility review remain before the live gate can be reconsidered. PostgreSQL execution, acceptance of the live-campaign draft, DB-4 closure, and DB-5 remain prohibited.
 
 Current authority:
 
@@ -114,7 +114,7 @@ planning-inbox/db4-r5-frozen-ob-dev-compatibility-review.md
 planning-inbox/db4-live-disposable-campaign-owner-decision-draft.md
 ```
 
-Gate state: `not_ready`.
+Gate state: `compatibility_corrections_committed_restart_pending`.
 
 ---
 

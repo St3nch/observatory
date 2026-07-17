@@ -659,7 +659,7 @@ def check_repository(root: Path = ROOT) -> CheckResult:
             DB4_REMEDIATION_IMPLEMENTATION_DECISION,
             DB4_COMPLETION_PLAN,
             DB4_CONFORMANCE_MANIFEST,
-            "G1–G5 — exact-path ob-dev compatibility correction",
+            "G1–G5 compatibility correction complete; connector refresh and repeat review pending",
             "PostgreSQL execution remains separately prohibited",
         ),
         "ROADMAP.md": (
@@ -671,7 +671,7 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         "POST_V1_DATABASE_ROADMAP.md": (
             "Last trusted database milestone: DB-3 — trusted, accepted, and complete",
             f"Active milestone: {EXPECTED_ACTIVE_MILESTONE}",
-            "DB-4 state: exact-path G1–G5 ob-dev compatibility correction active; live gate not ready; PostgreSQL execution separately prohibited",
+            "DB-4 state: G1–G5 compatibility corrections committed at ob-dev `879529c27cad666099cf4f697eb7cbb56dec2279`; connector refresh and repeat review pending; PostgreSQL execution separately prohibited",
             "New PostgreSQL execution under the prior campaign: not authorized",
             DB4_G1_G5_DECISION,
             DB4_REMEDIATION_IMPLEMENTATION_DECISION,
@@ -684,7 +684,7 @@ def check_repository(root: Path = ROOT) -> CheckResult:
             DB4_REMEDIATION_IMPLEMENTATION_DECISION,
             DB4_COMPLETION_PLAN,
             DB4_CONFORMANCE_MANIFEST,
-            "Current batch is the exact-path G1–G5 compatibility correction.",
+            "The exact-path G1–G5 compatibility correction is complete in `ob-dev` commit `879529c27cad666099cf4f697eb7cbb56dec2279`.",
             "PostgreSQL execution separately prohibited",
         ),
     }
@@ -767,7 +767,7 @@ def check_repository(root: Path = ROOT) -> CheckResult:
     notes.append("DB-1 remains trusted and complete.")
     notes.append("DB-2 remains trusted, accepted, and complete.")
     notes.append("DB-3 is trusted, accepted, complete, and remains the physical-design authority.")
-    notes.append("DB-4 is active in the exact-path G1–G5 ob-dev compatibility correction.")
+    notes.append("DB-4 G1–G5 compatibility corrections are committed; connector refresh and repeat review remain pending.")
     notes.append("Prior disposable proof is diagnostic only; new PostgreSQL execution requires a separate owner gate.")
     notes.append("Governed/production databases, providers, customer/private data, recurring work, and DB-5 remain unauthorized.")
     notes.append("A passing sync check does not close DB-4 or activate DB-5.")
