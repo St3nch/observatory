@@ -98,18 +98,19 @@ one disposable campaign
 independent closure audit
 ```
 
-The exact-path G1–G5 compatibility correction is complete in `ob-dev` commit `879529c27cad666099cf4f697eb7cbb56dec2279`. One connector refresh and a repeat frozen-compatibility review are pending. PostgreSQL execution, acceptance of the live-campaign draft, DB-4 closure, and DB-5 remain prohibited.
+The R5 repeat compatibility review is complete against refreshed `ob-dev` commit `879529c27cad666099cf4f697eb7cbb56dec2279`, with G1–G5 closed. The gate is ready only for a separate owner execution decision. PostgreSQL execution, acceptance of the live-campaign draft, DB-4 closure, and DB-5 remain prohibited.
 
 Current authority:
 
 ```text
-decisions/2026-07-17-db4-g1-g5-ob-dev-compatibility-correction-authorization.md
+decisions/2026-07-17-db4-r5-repeat-compatibility-review-authorization.md
 ```
 
 Required R5 evidence:
 
 ```text
 planning-inbox/db4-r5-frozen-ob-dev-compatibility-review.md
+planning-inbox/db4-r5-repeat-ob-dev-compatibility-review.md
 planning-inbox/db4-live-disposable-campaign-owner-decision-draft.md
 ```
 

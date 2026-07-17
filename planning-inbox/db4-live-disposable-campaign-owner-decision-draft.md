@@ -2,10 +2,10 @@
 
 Status: draft — not accepted
 Date drafted: 2026-07-17
-Current authority: `decisions/2026-07-17-db4-r5-live-campaign-gate-preparation-authorization.md`
+Current authority: `decisions/2026-07-17-db4-r5-repeat-compatibility-review-authorization.md`
 Authorized operation classes: none
 
-This draft authorizes nothing. It may be promoted into `decisions/` only after every blocker in `planning-inbox/db4-r5-frozen-ob-dev-compatibility-review.md` is closed and a repeat compatibility review returns ready.
+This draft authorizes nothing. The repeat review at `planning-inbox/db4-r5-repeat-ob-dev-compatibility-review.md` returned ready for owner execution decision, but promotion into `decisions/` still requires a separate explicit owner acceptance.
 
 ## Proposed decision
 
@@ -45,14 +45,14 @@ Stop on any marker or authority mismatch, dirty tree, unknown profile or fixture
 
 Campaign execution does not close DB-4. Independent review and a separate owner DB-4 closure decision remain mandatory. DB-5 stays inactive.
 
-## Current blockers
+## Current compatibility state
 
 ```text
-G1 profile execution lacks marker verification
-G2 accepted authority and operation-class enforcement is unused
-G3 eight R3 fixtures lack executor support
-G4 backup cross-scope behavior lacks direct proof
-G5 campaign-register and clean-tree preconditions are incomplete
+G1 closed
+G2 closed
+G3 closed
+G4 closed
+G5 closed
 ```
 
-The full mandatory acceptance criteria are maintained in `planning-inbox/db4-live-disposable-campaign-acceptance-checklist.md`.
+The repeat compatibility review is ready for owner execution decision. The draft remains unaccepted and authorizes no operations. The full mandatory acceptance criteria are maintained in `planning-inbox/db4-live-disposable-campaign-acceptance-checklist.md`.

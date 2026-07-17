@@ -11,8 +11,8 @@ module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(module)
 
 
-def test_exact_database_manifest_has_73_paths() -> None:
-    assert len(module.expected_paths()) == 73
+def test_exact_database_manifest_has_75_paths() -> None:
+    assert len(module.expected_paths()) == 75
 
 
 def test_r1_schema_corrections_are_structurally_present() -> None:
@@ -54,12 +54,14 @@ def test_r4_retires_stale_profiles_and_installs_current_tests() -> None:
     assert len(manifest["current_postgres_tests"]) == 6
 
 
-def test_g1_g5_corrections_are_complete_but_restart_review_is_pending() -> None:
+def test_repeat_review_is_ready_but_execution_draft_remains_unaccepted() -> None:
     manifest = json.loads(module.CONFORMANCE_PATH.read_text(encoding="utf-8"))
-    assert manifest["r5_gate_state"] == "compatibility_corrections_committed_restart_pending"
+    assert manifest["r5_gate_state"] == "ready_for_owner_execution_decision"
     assert manifest["ob_dev_compatibility_commit"] == "879529c27cad666099cf4f697eb7cbb56dec2279"
     assert manifest["r5_blockers"] == []
+    repeat_review = (module.ROOT / manifest["r5_repeat_compatibility_review"]).read_text(encoding="utf-8")
     draft = (module.ROOT / manifest["r5_owner_decision_draft"]).read_text(encoding="utf-8")
+    assert "READY FOR OWNER EXECUTION DECISION" in repeat_review
     assert "Status: draft — not accepted" in draft
     assert "Authorized operation classes: none" in draft
 

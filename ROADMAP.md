@@ -138,7 +138,7 @@ If required reading includes a folder, that folder must have a `README.md` index
 DB-4 — Database Hammer Harness and Migration Specification
 ```
 
-State: G1–G5 compatibility corrections committed in `ob-dev` at `879529c27cad666099cf4f697eb7cbb56dec2279`; one connector refresh and repeat compatibility review remain pending under `decisions/2026-07-17-db4-g1-g5-ob-dev-compatibility-correction-authorization.md`; the live execution decision remains unaccepted; PostgreSQL execution remains separately prohibited.
+State: R5 repeat compatibility review completed against refreshed `ob-dev` commit `879529c27cad666099cf4f697eb7cbb56dec2279` under `decisions/2026-07-17-db4-r5-repeat-compatibility-review-authorization.md`; G1–G5 are closed and the gate is ready for a separate owner execution decision; PostgreSQL execution remains separately prohibited.
 
 Observatory v1 remains accepted and M20 remains closed by
 `decisions/2026-07-12-observatory-v1-acceptance.md`.

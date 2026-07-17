@@ -22,7 +22,7 @@ DB-5 is inactive.
 Current authority:
 
 ```text
-decisions/2026-07-17-db4-g1-g5-ob-dev-compatibility-correction-authorization.md
+decisions/2026-07-17-db4-r5-repeat-compatibility-review-authorization.md
 ```
 
 Accepted implementation authority remains bounded by:
@@ -96,25 +96,26 @@ independent closure audit
 Current batch:
 
 ```text
-G1–G5 compatibility correction complete; connector refresh and repeat review pending
+R5 repeat compatibility review complete; ready for owner execution decision
 ```
 
-The exact-path correction is implemented in `ob-dev` commit `879529c27cad666099cf4f697eb7cbb56dec2279`. One connector refresh and a repeat frozen-compatibility review remain before the live gate can be reconsidered. PostgreSQL execution, acceptance of the live-campaign draft, DB-4 closure, and DB-5 remain prohibited.
+The refreshed `ob-dev` server at commit `879529c27cad666099cf4f697eb7cbb56dec2279` passed the repeat compatibility review with G1–G5 closed. The gate is ready only for a separate owner execution decision. PostgreSQL execution, acceptance of the existing live-campaign draft, DB-4 closure, and DB-5 remain prohibited.
 
 Current authority:
 
 ```text
-decisions/2026-07-17-db4-g1-g5-ob-dev-compatibility-correction-authorization.md
+decisions/2026-07-17-db4-r5-repeat-compatibility-review-authorization.md
 ```
 
 R5 gate evidence:
 
 ```text
 planning-inbox/db4-r5-frozen-ob-dev-compatibility-review.md
+planning-inbox/db4-r5-repeat-ob-dev-compatibility-review.md
 planning-inbox/db4-live-disposable-campaign-owner-decision-draft.md
 ```
 
-Gate state: `compatibility_corrections_committed_restart_pending`.
+Gate state: `ready_for_owner_execution_decision`.
 
 ---
 
