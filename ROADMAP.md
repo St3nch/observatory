@@ -138,7 +138,7 @@ If required reading includes a folder, that folder must have a `README.md` index
 DB-4 — Database Hammer Harness and Migration Specification
 ```
 
-State: Route C Batch R5 live-campaign gate preparation under `decisions/2026-07-17-db4-r5-live-campaign-gate-preparation-authorization.md`; the live gate is `not_ready` on blockers G1–G5; accepted implementation authority remains bounded by `decisions/2026-07-14-db4-remediation-implementation-authorization.md`; PostgreSQL execution remains separately prohibited.
+State: exact-path G1–G5 `ob-dev` compatibility correction under `decisions/2026-07-17-db4-g1-g5-ob-dev-compatibility-correction-authorization.md`; the live gate remains `not_ready`; accepted implementation authority remains bounded by `decisions/2026-07-14-db4-remediation-implementation-authorization.md`; PostgreSQL execution remains separately prohibited.
 
 Observatory v1 remains accepted and M20 remains closed by
 `decisions/2026-07-12-observatory-v1-acceptance.md`.

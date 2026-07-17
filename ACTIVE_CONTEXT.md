@@ -22,7 +22,7 @@ DB-5 is inactive.
 Current authority:
 
 ```text
-decisions/2026-07-17-db4-r5-live-campaign-gate-preparation-authorization.md
+decisions/2026-07-17-db4-g1-g5-ob-dev-compatibility-correction-authorization.md
 ```
 
 Accepted implementation authority remains bounded by:
@@ -96,15 +96,15 @@ independent closure audit
 Current batch:
 
 ```text
-R5 — live-campaign gate preparation
+G1–G5 — exact-path ob-dev compatibility correction
 ```
 
-R5 audits frozen `ob-dev` compatibility and drafts the later owner execution gate. The live gate is not ready: blockers G1–G5 remain active. R5 may not change `ob-dev`, accept the execution draft, execute PostgreSQL, close DB-4, or activate DB-5.
+This batch closes only the five R5 compatibility blockers across the exact authorized Observatory and `ob-dev` paths. It may not execute PostgreSQL, restart the connector before validation, accept the live-campaign draft, close DB-4, or activate DB-5.
 
-R5 authority:
+Current authority:
 
 ```text
-decisions/2026-07-17-db4-r5-live-campaign-gate-preparation-authorization.md
+decisions/2026-07-17-db4-g1-g5-ob-dev-compatibility-correction-authorization.md
 ```
 
 R5 gate evidence:
