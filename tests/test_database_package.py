@@ -11,8 +11,25 @@ module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(module)
 
 
-def test_exact_database_manifest_has_54_paths() -> None:
-    assert len(module.expected_paths()) == 54
+def test_exact_database_manifest_has_57_paths() -> None:
+    assert len(module.expected_paths()) == 57
+
+
+def test_reconciliation_manifest_accounts_for_every_future_obligation() -> None:
+    manifest = json.loads(module.CONFORMANCE_PATH.read_text(encoding="utf-8"))
+    assert manifest["counts"] == {
+        "hostile_candidate_obligations": 23,
+        "present_diagnostic_fixtures": 8,
+        "required_absent_fixtures": 8,
+        "folded_behavioral_obligations": 7,
+        "postgres_test_obligations": 11,
+        "current_stale_postgres_tests": 5,
+        "required_absent_postgres_tests": 6,
+        "active_profiles": 8,
+        "stale_profiles": 5,
+    }
+    assert manifest["explicit_deferrals"] == []
+    assert module._validate_conformance_manifest() == []
 
 
 def test_database_package_validator_passes() -> None:

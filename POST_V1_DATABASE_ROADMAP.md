@@ -28,7 +28,7 @@ No milestone implies the next milestone.
 Observatory v1: accepted at bounded proof-system ceiling
 Last trusted database milestone: DB-3 — trusted, accepted, and complete
 Active milestone: DB-4 — Database Hammer Harness and Migration Specification
-DB-4 state: exact bounded remediation implementation; PostgreSQL execution separately prohibited
+DB-4 state: Route C drift correction and completion; R0 reconciliation active; PostgreSQL execution separately prohibited
 DB-4 closure status: not ready; prior proof is diagnostic only
 DB-5: inactive
 Governed database or governed role creation: not authorized
@@ -38,7 +38,13 @@ Governed, production, provider, customer/private-data, recurring, and DB-5 work:
 ```
 
 Current authority:
+`decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md`.
+
+Accepted implementation authority remains bounded by:
 `decisions/2026-07-14-db4-remediation-implementation-authorization.md`.
+
+Current conformance baseline:
+`database/db4-remediation-conformance-manifest.json`.
 
 ---
 

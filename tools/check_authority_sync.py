@@ -43,7 +43,12 @@ DB4_AUDIT_REMEDIATION_DECISION = (
 DB4_REMEDIATION_IMPLEMENTATION_DECISION = (
     "decisions/2026-07-14-db4-remediation-implementation-authorization.md"
 )
+DB4_RECONCILIATION_DECISION = (
+    "decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md"
+)
 DB4_AUDIT_REMEDIATION_PLAN = "planning-inbox/db4-audit-remediation-program-v0-1.md"
+DB4_COMPLETION_PLAN = "audits/observatory-db4-drift-correction-and-completion-plan.md"
+DB4_CONFORMANCE_MANIFEST = "database/db4-remediation-conformance-manifest.json"
 AUTHORIZED_DB4_REMEDIATION_ARTIFACTS = (
     "planning-inbox/db4-db3-implementation-traceability-matrix.md",
     "planning-inbox/db4-migration-history-redesign-options.md",
@@ -300,6 +305,7 @@ def _unauthorized_later_artifacts(root: Path) -> tuple[str, ...]:
         DB4_PACKAGE_IMPLEMENTATION_DECISION,
         DB4_AUDIT_REMEDIATION_DECISION,
         DB4_REMEDIATION_IMPLEMENTATION_DECISION,
+        DB4_RECONCILIATION_DECISION,
         DB4_AUDIT_REMEDIATION_PLAN,
         *AUTHORIZED_DB4_REMEDIATION_ARTIFACTS,
         *AUTHORIZED_DB3_PLANNING_ARTIFACTS,
@@ -623,9 +629,11 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         "ACTIVE_CONTEXT.md": (
             "DB-4 is active in remediation.",
             "DB-5 is inactive.",
+            DB4_RECONCILIATION_DECISION,
             DB4_REMEDIATION_IMPLEMENTATION_DECISION,
-            DB4_AUDIT_REMEDIATION_PLAN,
-            "bounded Observatory and ob-dev implementation",
+            DB4_COMPLETION_PLAN,
+            DB4_CONFORMANCE_MANIFEST,
+            "R0 — reconciliation and honest baseline",
             "PostgreSQL execution remains separately prohibited",
         ),
         "ROADMAP.md": (
@@ -637,15 +645,20 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         "POST_V1_DATABASE_ROADMAP.md": (
             "Last trusted database milestone: DB-3 — trusted, accepted, and complete",
             f"Active milestone: {EXPECTED_ACTIVE_MILESTONE}",
-            "DB-4 state: exact bounded remediation implementation; PostgreSQL execution separately prohibited",
+            "DB-4 state: Route C drift correction and completion; R0 reconciliation active; PostgreSQL execution separately prohibited",
             "New PostgreSQL execution under the prior campaign: not authorized",
+            DB4_RECONCILIATION_DECISION,
             DB4_REMEDIATION_IMPLEMENTATION_DECISION,
+            DB4_CONFORMANCE_MANIFEST,
         ),
         "NEXT_SESSION_HANDOFF.md": (
             "DB-3 — trusted, accepted, and complete as physical-design authority",
             EXPECTED_ACTIVE_MILESTONE,
+            DB4_RECONCILIATION_DECISION,
             DB4_REMEDIATION_IMPLEMENTATION_DECISION,
-            DB4_AUDIT_REMEDIATION_PLAN,
+            DB4_COMPLETION_PLAN,
+            DB4_CONFORMANCE_MANIFEST,
+            "R0 reconciliation and honest baseline",
             "PostgreSQL execution separately prohibited",
         ),
     }

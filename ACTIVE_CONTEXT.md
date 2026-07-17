@@ -22,19 +22,27 @@ DB-5 is inactive.
 Current authority:
 
 ```text
+decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md
+```
+
+Accepted implementation authority remains bounded by:
+
+```text
 decisions/2026-07-14-db4-remediation-implementation-authorization.md
 ```
 
-Current remediation plan:
+Current completion strategy and machine-readable baseline:
 
 ```text
-planning-inbox/db4-audit-remediation-program-v0-1.md
+audits/observatory-db4-drift-correction-and-completion-plan.md
+database/db4-remediation-conformance-manifest.json
 ```
 
-Source audit:
+Source audits:
 
 ```text
 audits/observatory-db1-through-db4-full-independent-audit.md
+external post-remediation independent audit reviewed on 2026-07-15
 ```
 
 Observatory v1 remains accepted at the bounded proof-system ceiling by `decisions/2026-07-12-observatory-v1-acceptance.md`.
@@ -71,26 +79,34 @@ The current migrations, hammers, fixtures, profiles, and prior PostgreSQL output
 
 ## Current Task
 
-Execute the accepted remediation sequence:
-
-1. reconcile authority and freeze the prior proof campaign;
-2. create an exact DB-2/DB-3-to-migration-to-hammer traceability matrix;
-3. redesign migration/history integrity;
-4. rebuild the physical candidate schema from accepted DB-3 truth;
-5. rebuild mandatory hammers as behavioral hostile tests;
-6. implement durable immutable result-register records;
-7. harden roles, RLS, markers, authority binding, redaction, and remote-access posture;
-8. move hammer/profile behavior into exact-path SHA-bound data files to reduce restart churn;
-9. prepare an exact remediation implementation and execution package for separate owner review;
-10. only after a separate owner gate, re-run the full disposable proof from a clean substrate.
-
-Immediate planning outputs:
+Execute the accepted Route C completion sequence without skipping batches:
 
 ```text
-planning-inbox/db4-db3-implementation-traceability-matrix.md
-planning-inbox/db4-migration-history-redesign-options.md
-planning-inbox/db4-behavioral-hammer-remapping.md
-planning-inbox/db4-remediation-owner-readiness-review.md
+R0 reconciliation and honest baseline
+R1 schema-hole correction
+R2 real-spine behavioral proof
+R3 hostile-candidate completion and redesign
+R4 test/profile completion and retirement
+R5 live-campaign gate preparation
+separate owner execution decision
+one disposable campaign
+independent closure audit
+```
+
+Current batch:
+
+```text
+R0 — reconciliation and honest baseline
+```
+
+R0 may change governance documents, the machine-readable conformance manifest, the package validator, and its tests only. R0 may not change SQL, profiles, fixtures, PostgreSQL runtime behavior, or `ob-dev`.
+
+R0 outputs:
+
+```text
+decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md
+database/db4-remediation-conformance-manifest.json
+audits/observatory-db4-drift-correction-and-completion-plan.md
 ```
 
 ---

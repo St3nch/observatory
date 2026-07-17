@@ -20,19 +20,27 @@ DB-5 through DB-10 — inactive
 Current authority:
 
 ```text
+decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md
+```
+
+Accepted implementation authority remains:
+
+```text
 decisions/2026-07-14-db4-remediation-implementation-authorization.md
 ```
 
-Current plan:
+Current completion strategy and conformance baseline:
 
 ```text
-planning-inbox/db4-audit-remediation-program-v0-1.md
+audits/observatory-db4-drift-correction-and-completion-plan.md
+database/db4-remediation-conformance-manifest.json
 ```
 
-Source audit:
+Source audits:
 
 ```text
 audits/observatory-db1-through-db4-full-independent-audit.md
+external post-remediation independent audit reviewed on 2026-07-15
 ```
 
 The prior DB-4 disposable campaign is diagnostic only. DB-4 is not closed. DB-5 remains inactive.
@@ -76,31 +84,31 @@ If authority files disagree, stop and report the conflict.
 
 ## Current Task
 
-Prepare the exact DB-4 remediation package in this order:
+Follow the accepted Route C sequence exactly:
 
 ```text
-R0 authority reconciliation
-R1 DB-3 implementation traceability
-R2 migration/history integrity design
-R3 DB-3-faithful physical candidate rebuild plan
-R4 behavioral hammer remapping
-R5 durable proof/result-register design
-R6 security and operational hardening
-R7 data-driven profiles and restart reduction
-separate owner implementation/execution gate
-R8 fresh disposable re-execution
+R0 reconciliation and honest baseline
+R1 schema-hole correction
+R2 real-spine behavioral proof
+R3 hostile-candidate completion and redesign
+R4 test/profile completion and retirement
+R5 live-campaign gate preparation
+separate owner execution decision
+one disposable campaign
+independent closure audit
 ```
 
-Immediate outputs:
+Current batch is R0 only. R0 records the honest baseline and installs the conformance ratchet. It does not change SQL, profiles, fixtures, `ob-dev`, or PostgreSQL state.
+
+Current R0 outputs:
 
 ```text
-planning-inbox/db4-db3-implementation-traceability-matrix.md
-planning-inbox/db4-migration-history-redesign-options.md
-planning-inbox/db4-behavioral-hammer-remapping.md
-planning-inbox/db4-remediation-owner-readiness-review.md
+decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md
+database/db4-remediation-conformance-manifest.json
+audits/observatory-db4-drift-correction-and-completion-plan.md
 ```
 
-No PostgreSQL execution begins under the prior campaign.
+No PostgreSQL execution begins without the later separate owner gate.
 
 ---
 

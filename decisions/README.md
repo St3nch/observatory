@@ -87,6 +87,7 @@ This folder is for explicit decisions, not casual suggestions.
 | `2026-07-14-db4-package-acceptance-and-phased-implementation-authorization.md` | accepted historical implementation decision | Accepted the first exact DB-4 implementation package and disposable PostgreSQL proof campaign | Superseded as current-state authority by the DB-4 audit-remediation decision; prior proof is diagnostic only |
 | `2026-07-14-db4-audit-acceptance-and-remediation-activation.md` | accepted historical remediation decision | Accepted the independent DB-1 through DB-4 audit as remediation input, returned DB-4 to remediation, and kept DB-5 inactive | Superseded as current-state authority by the DB-4 remediation implementation decision; audit findings remain binding input |
 | `2026-07-14-db4-remediation-implementation-authorization.md` | accepted decision | Approves the exact remediation package at commit `4d37a4f1fec51843a568dab00763f2e05da11ca2` and authorizes bounded Observatory/ob-dev implementation | PostgreSQL execution, governed database creation, DB-5, providers, customer/private data, recurring work, and production remain prohibited |
+| `2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md` | accepted decision | Accepts Route C, records the honest 8/23 fixture and 5/11 test baseline, dispositions every missing obligation, and authorizes Batch R0 conformance enforcement | R0 changes governance/manifest/validator/tests only; SQL, profiles, fixtures, ob-dev, PostgreSQL execution, and later batches remain unauthorized |
 
 ---
 

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+CONFORMANCE_PATH = ROOT / "database/db4-remediation-conformance-manifest.json"
 
 FORWARD = (
     "001_identity_namespaces.sql",
@@ -85,6 +86,9 @@ def expected_paths() -> set[str]:
         "tests/postgres/test_db4_roles.py",
         "tests/postgres/test_db4_concurrency.py",
         "tests/postgres/test_db4_restore.py",
+        "database/db4-remediation-conformance-manifest.json",
+        "audits/observatory-db4-drift-correction-and-completion-plan.md",
+        "decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md",
         *PROOF_PATHS,
     }
     paths |= {f"database/migrations/{name}" for name in FORWARD}
@@ -206,8 +210,131 @@ def _validate_json_schema_file(path: Path) -> list[str]:
     return errors
 
 
+def _names(path: Path, suffix: str) -> set[str]:
+    return {item.name for item in path.iterdir() if item.is_file() and item.name.endswith(suffix)}
+
+
+def _validate_conformance_manifest() -> list[str]:
+    errors: list[str] = []
+    try:
+        data = json.loads(CONFORMANCE_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"conformance-manifest:{exc}"]
+    required_keys = {
+        "schema_version",
+        "authority",
+        "baseline_commit",
+        "completion_route",
+        "forward_migrations",
+        "rollbacks",
+        "active_profiles",
+        "stale_profiles_pending_r4_retirement",
+        "present_diagnostic_fixtures_pending_r3_redesign",
+        "required_absent_fixtures_for_r3",
+        "folded_behavioral_obligations",
+        "current_stale_postgres_tests_pending_r4_rewrite",
+        "required_absent_postgres_tests_for_r4",
+        "proof_paths",
+        "explicit_deferrals",
+        "counts",
+    }
+    if not isinstance(data, dict) or set(data) != required_keys:
+        return ["conformance-keys"]
+    if data["schema_version"] != "1" or data["completion_route"] != "route_c_reconcile_then_complete":
+        errors.append("conformance-version-or-route")
+    authority = data.get("authority")
+    if not isinstance(authority, str) or not (ROOT / authority).is_file():
+        errors.append("conformance-authority")
+
+    list_keys = required_keys - {"schema_version", "authority", "baseline_commit", "completion_route", "counts"}
+    for key in list_keys:
+        if not isinstance(data.get(key), list):
+            errors.append(f"conformance-list:{key}")
+
+    expected_forward = set(data.get("forward_migrations", []))
+    expected_rollbacks = set(data.get("rollbacks", []))
+    expected_profiles = set(data.get("active_profiles", [])) | set(data.get("stale_profiles_pending_r4_retirement", []))
+    present_fixtures = set(data.get("present_diagnostic_fixtures_pending_r3_redesign", []))
+    absent_fixtures = set(data.get("required_absent_fixtures_for_r3", []))
+    current_tests = set(data.get("current_stale_postgres_tests_pending_r4_rewrite", []))
+    absent_tests = set(data.get("required_absent_postgres_tests_for_r4", []))
+
+    actual_forward = _names(ROOT / "database/migrations", ".sql")
+    actual_rollbacks = _names(ROOT / "database/rollbacks", ".sql")
+    actual_profiles = _names(ROOT / "database/hammer-profiles", ".json")
+    actual_fixtures = _names(ROOT / "database/hammer-fixtures", ".sql")
+    actual_tests = {name for name in _names(ROOT / "tests/postgres", ".py") if name.startswith("test_db4_")}
+
+    for label, actual, expected in (
+        ("forward", actual_forward, expected_forward),
+        ("rollback", actual_rollbacks, expected_rollbacks),
+        ("profile", actual_profiles, expected_profiles),
+        ("fixture", actual_fixtures, present_fixtures),
+        ("postgres-test", actual_tests, current_tests),
+    ):
+        if actual != expected:
+            missing = sorted(expected - actual)
+            extra = sorted(actual - expected)
+            if missing:
+                errors.append(f"conformance-{label}-missing:" + ",".join(missing))
+            if extra:
+                errors.append(f"conformance-{label}-unnamed:" + ",".join(extra))
+
+    unexpected_future_fixtures = actual_fixtures & absent_fixtures
+    if unexpected_future_fixtures:
+        errors.append("conformance-fixture-status-stale:" + ",".join(sorted(unexpected_future_fixtures)))
+    unexpected_future_tests = actual_tests & absent_tests
+    if unexpected_future_tests:
+        errors.append("conformance-test-status-stale:" + ",".join(sorted(unexpected_future_tests)))
+
+    folded = data.get("folded_behavioral_obligations", [])
+    former_fixtures: set[str] = set()
+    for item in folded if isinstance(folded, list) else []:
+        if not isinstance(item, dict) or set(item) != {"former_fixture", "batch", "profile", "check_id"}:
+            errors.append("conformance-folded-shape")
+            continue
+        former = item.get("former_fixture")
+        profile = item.get("profile")
+        if not isinstance(former, str) or former in former_fixtures:
+            errors.append(f"conformance-folded-duplicate:{former}")
+        else:
+            former_fixtures.add(former)
+        if profile not in set(data.get("active_profiles", [])):
+            errors.append(f"conformance-folded-profile:{profile}")
+
+    counts = data.get("counts")
+    if not isinstance(counts, dict):
+        errors.append("conformance-counts")
+    else:
+        computed = {
+            "hostile_candidate_obligations": len(present_fixtures | absent_fixtures | former_fixtures),
+            "present_diagnostic_fixtures": len(present_fixtures),
+            "required_absent_fixtures": len(absent_fixtures),
+            "folded_behavioral_obligations": len(former_fixtures),
+            "postgres_test_obligations": len(current_tests | absent_tests),
+            "current_stale_postgres_tests": len(current_tests),
+            "required_absent_postgres_tests": len(absent_tests),
+            "active_profiles": len(set(data.get("active_profiles", []))),
+            "stale_profiles": len(set(data.get("stale_profiles_pending_r4_retirement", []))),
+        }
+        if counts != computed:
+            errors.append("conformance-count-mismatch")
+    if data.get("explicit_deferrals") != []:
+        errors.append("conformance-unreviewed-deferral")
+    if set(data.get("proof_paths", [])) != set(PROOF_PATHS):
+        errors.append("conformance-proof-paths")
+    if expected_forward != set(FORWARD) or expected_rollbacks != set(FORWARD):
+        errors.append("conformance-migration-constants")
+    if set(data.get("active_profiles", [])) != set(PROFILES):
+        errors.append("conformance-profile-constants")
+    if present_fixtures != set(FIXTURES):
+        errors.append("conformance-fixture-constants")
+    return errors
+
+
 def check() -> list[str]:
     errors: list[str] = []
+    errors.extend(_validate_conformance_manifest())
     for rel in sorted(expected_paths()):
         if not (ROOT / rel).is_file():
             errors.append(f"missing:{rel}")
