@@ -11,8 +11,8 @@ module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(module)
 
 
-def test_exact_database_manifest_has_70_paths() -> None:
-    assert len(module.expected_paths()) == 70
+def test_exact_database_manifest_has_73_paths() -> None:
+    assert len(module.expected_paths()) == 73
 
 
 def test_r1_schema_corrections_are_structurally_present() -> None:
@@ -52,6 +52,17 @@ def test_r4_retires_stale_profiles_and_installs_current_tests() -> None:
     assert manifest["stale_profiles_pending_r4_retirement"] == []
     assert manifest["required_absent_postgres_tests_for_r4"] == []
     assert len(manifest["current_postgres_tests"]) == 6
+
+
+def test_r5_gate_remains_closed_on_named_compatibility_blockers() -> None:
+    manifest = json.loads(module.CONFORMANCE_PATH.read_text(encoding="utf-8"))
+    assert manifest["r5_gate_state"] == "not_ready"
+    assert manifest["r5_blockers"] == ["G1", "G2", "G3", "G4", "G5"]
+    compatibility = (module.ROOT / manifest["r5_compatibility_review"]).read_text(encoding="utf-8")
+    draft = (module.ROOT / manifest["r5_owner_decision_draft"]).read_text(encoding="utf-8")
+    assert "NOT READY FOR OWNER EXECUTION GATE" in compatibility
+    assert "Status: draft — not accepted" in draft
+    assert "Authorized operation classes: none" in draft
 
 
 def test_database_package_validator_passes() -> None:

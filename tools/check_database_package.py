@@ -12,6 +12,9 @@ R1_DECISION_PATH = "decisions/2026-07-16-db4-r1-schema-hole-correction-authoriza
 R2_DECISION_PATH = "decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md"
 R3_DECISION_PATH = "decisions/2026-07-17-db4-r3-hostile-candidate-completion-authorization.md"
 R4_DECISION_PATH = "decisions/2026-07-17-db4-r4-test-profile-completion-authorization.md"
+R5_DECISION_PATH = "decisions/2026-07-17-db4-r5-live-campaign-gate-preparation-authorization.md"
+R5_COMPATIBILITY_PATH = "planning-inbox/db4-r5-frozen-ob-dev-compatibility-review.md"
+R5_OWNER_DRAFT_PATH = "planning-inbox/db4-live-disposable-campaign-owner-decision-draft.md"
 R2_REMOVED_SURROGATES = (
     "obs_meta.db4_admission_probe",
     "obs_meta.db4_evidence_probe",
@@ -121,6 +124,9 @@ def expected_paths() -> set[str]:
         R2_DECISION_PATH,
         R3_DECISION_PATH,
         R4_DECISION_PATH,
+        R5_DECISION_PATH,
+        R5_COMPATIBILITY_PATH,
+        R5_OWNER_DRAFT_PATH,
         *PROOF_PATHS,
     }
     paths |= {f"database/migrations/{name}" for name in FORWARD}
@@ -257,6 +263,10 @@ def _validate_conformance_manifest() -> list[str]:
         "authority",
         "baseline_commit",
         "completion_route",
+        "r5_gate_state",
+        "r5_blockers",
+        "r5_compatibility_review",
+        "r5_owner_decision_draft",
         "forward_migrations",
         "rollbacks",
         "active_profiles",
@@ -279,10 +289,40 @@ def _validate_conformance_manifest() -> list[str]:
     if not isinstance(authority, str) or not (ROOT / authority).is_file():
         errors.append("conformance-authority")
 
-    list_keys = required_keys - {"schema_version", "authority", "baseline_commit", "completion_route", "counts"}
+    list_keys = required_keys - {
+        "schema_version",
+        "authority",
+        "baseline_commit",
+        "completion_route",
+        "r5_gate_state",
+        "r5_compatibility_review",
+        "r5_owner_decision_draft",
+        "counts",
+    }
     for key in list_keys:
         if not isinstance(data.get(key), list):
             errors.append(f"conformance-list:{key}")
+
+    if data.get("r5_gate_state") != "not_ready":
+        errors.append("conformance-r5-gate-state")
+    if data.get("r5_blockers") != ["G1", "G2", "G3", "G4", "G5"]:
+        errors.append("conformance-r5-blockers")
+    if data.get("r5_compatibility_review") != R5_COMPATIBILITY_PATH:
+        errors.append("conformance-r5-compatibility-path")
+    if data.get("r5_owner_decision_draft") != R5_OWNER_DRAFT_PATH:
+        errors.append("conformance-r5-owner-draft-path")
+    for path_value in (R5_COMPATIBILITY_PATH, R5_OWNER_DRAFT_PATH):
+        if not (ROOT / path_value).is_file():
+            errors.append(f"conformance-r5-artifact-missing:{path_value}")
+    compatibility_text = (ROOT / R5_COMPATIBILITY_PATH).read_text(encoding="utf-8")
+    draft_text = (ROOT / R5_OWNER_DRAFT_PATH).read_text(encoding="utf-8")
+    if "NOT READY FOR OWNER EXECUTION GATE" not in compatibility_text:
+        errors.append("conformance-r5-review-overclaims-readiness")
+    for blocker in ("G1", "G2", "G3", "G4", "G5"):
+        if blocker not in compatibility_text or blocker not in draft_text:
+            errors.append(f"conformance-r5-blocker-missing:{blocker}")
+    if "Status: draft — not accepted" not in draft_text or "Authorized operation classes: none" not in draft_text:
+        errors.append("conformance-r5-draft-authority-boundary")
 
     expected_forward = set(data.get("forward_migrations", []))
     expected_rollbacks = set(data.get("rollbacks", []))

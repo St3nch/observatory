@@ -22,7 +22,7 @@ DB-5 is inactive.
 Current authority:
 
 ```text
-decisions/2026-07-17-db4-r4-test-profile-completion-authorization.md
+decisions/2026-07-17-db4-r5-live-campaign-gate-preparation-authorization.md
 ```
 
 Accepted implementation authority remains bounded by:
@@ -96,16 +96,25 @@ independent closure audit
 Current batch:
 
 ```text
-R4 — test/profile completion and retirement
+R5 — live-campaign gate preparation
 ```
 
-R4 is limited to retiring the five stale `_v1` profiles and five stale tests, installing the six current static/contract PostgreSQL tests, and enforcing exact test/profile conformance. R4 may not prepare the R5 live campaign, change `ob-dev`, wire unsupported executor IDs, or execute PostgreSQL.
+R5 audits frozen `ob-dev` compatibility and drafts the later owner execution gate. The live gate is not ready: blockers G1–G5 remain active. R5 may not change `ob-dev`, accept the execution draft, execute PostgreSQL, close DB-4, or activate DB-5.
 
-R4 authority:
+R5 authority:
 
 ```text
-decisions/2026-07-17-db4-r4-test-profile-completion-authorization.md
+decisions/2026-07-17-db4-r5-live-campaign-gate-preparation-authorization.md
 ```
+
+R5 gate evidence:
+
+```text
+planning-inbox/db4-r5-frozen-ob-dev-compatibility-review.md
+planning-inbox/db4-live-disposable-campaign-owner-decision-draft.md
+```
+
+Gate state: `not_ready`.
 
 ---
 
