@@ -1,1 +1,0 @@
-{"profile_id":"db4_restore_verification_v1","database_class":"disposable_postgres","target_prefix":"observatory_test_","max_databases":1,"timeout_profile":"db4_restore","proof_output":"db4/restore.json","hammer_ids":["restore-schema","restore-history","restore-semantic"]}

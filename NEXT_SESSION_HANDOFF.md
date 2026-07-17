@@ -20,7 +20,7 @@ DB-5 through DB-10 — inactive
 Current authority:
 
 ```text
-decisions/2026-07-17-db4-r3-hostile-candidate-completion-authorization.md
+decisions/2026-07-17-db4-r4-test-profile-completion-authorization.md
 ```
 
 Accepted implementation authority remains:
@@ -98,12 +98,12 @@ one disposable campaign
 independent closure audit
 ```
 
-Current batch is R3 only. R3 completes and redesigns the sixteen concrete hostile fixtures, classifies PostgreSQL-native versus runner-detected rejection, updates the existing eight SHA-bound profile rows, and enforces exact fixture-manifest conformance. It does not retire R4 profiles/tests, change `ob-dev`, wire unsupported executor IDs, or execute PostgreSQL.
+Current batch is R4 only. R4 retires the five stale `_v1` profiles and five stale tests, installs the six current static/contract PostgreSQL tests, and enforces exact test/profile conformance. It does not prepare R5, change `ob-dev`, wire unsupported executor IDs, or execute PostgreSQL.
 
-Current R3 authority:
+Current R4 authority:
 
 ```text
-decisions/2026-07-17-db4-r3-hostile-candidate-completion-authorization.md
+decisions/2026-07-17-db4-r4-test-profile-completion-authorization.md
 ```
 
 No PostgreSQL execution begins without the later separate owner gate.

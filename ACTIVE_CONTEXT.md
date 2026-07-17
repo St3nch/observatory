@@ -22,7 +22,7 @@ DB-5 is inactive.
 Current authority:
 
 ```text
-decisions/2026-07-17-db4-r3-hostile-candidate-completion-authorization.md
+decisions/2026-07-17-db4-r4-test-profile-completion-authorization.md
 ```
 
 Accepted implementation authority remains bounded by:
@@ -96,15 +96,15 @@ independent closure audit
 Current batch:
 
 ```text
-R3 — hostile-candidate completion and redesign
+R4 — test/profile completion and retirement
 ```
 
-R3 is limited to completing and redesigning the sixteen concrete hostile fixtures, classifying native versus runner-detected rejection, updating SHA-bound existing profile rows, and enforcing fixture-manifest conformance. R3 may not retire R4 profiles/tests, change `ob-dev`, wire unsupported executor IDs, or execute PostgreSQL.
+R4 is limited to retiring the five stale `_v1` profiles and five stale tests, installing the six current static/contract PostgreSQL tests, and enforcing exact test/profile conformance. R4 may not prepare the R5 live campaign, change `ob-dev`, wire unsupported executor IDs, or execute PostgreSQL.
 
-R3 authority:
+R4 authority:
 
 ```text
-decisions/2026-07-17-db4-r3-hostile-candidate-completion-authorization.md
+decisions/2026-07-17-db4-r4-test-profile-completion-authorization.md
 ```
 
 ---

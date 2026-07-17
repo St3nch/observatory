@@ -11,6 +11,7 @@ CONFORMANCE_PATH = ROOT / "database/db4-remediation-conformance-manifest.json"
 R1_DECISION_PATH = "decisions/2026-07-16-db4-r1-schema-hole-correction-authorization.md"
 R2_DECISION_PATH = "decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md"
 R3_DECISION_PATH = "decisions/2026-07-17-db4-r3-hostile-candidate-completion-authorization.md"
+R4_DECISION_PATH = "decisions/2026-07-17-db4-r4-test-profile-completion-authorization.md"
 R2_REMOVED_SURROGATES = (
     "obs_meta.db4_admission_probe",
     "obs_meta.db4_evidence_probe",
@@ -107,17 +108,19 @@ def expected_paths() -> set[str]:
         "tools/check_database_package.py",
         "tests/test_database_package.py",
         "tests/postgres/conftest.py",
-        "tests/postgres/test_db4_invariants.py",
-        "tests/postgres/test_db4_migrations.py",
-        "tests/postgres/test_db4_roles.py",
-        "tests/postgres/test_db4_concurrency.py",
-        "tests/postgres/test_db4_restore.py",
+        "tests/postgres/test_db4_history_atomicity.py",
+        "tests/postgres/test_db4_profile_manifest.py",
+        "tests/postgres/test_db4_broken_candidate_manifest.py",
+        "tests/postgres/test_db4_result_register.py",
+        "tests/postgres/test_db4_cleanup.py",
+        "tests/postgres/test_db4_security_posture.py",
         "database/db4-remediation-conformance-manifest.json",
         "audits/observatory-db4-drift-correction-and-completion-plan.md",
         "decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md",
         R1_DECISION_PATH,
         R2_DECISION_PATH,
         R3_DECISION_PATH,
+        R4_DECISION_PATH,
         *PROOF_PATHS,
     }
     paths |= {f"database/migrations/{name}" for name in FORWARD}
@@ -262,7 +265,7 @@ def _validate_conformance_manifest() -> list[str]:
         "required_absent_fixtures_for_r3",
         "concrete_fixture_manifest",
         "folded_behavioral_obligations",
-        "current_stale_postgres_tests_pending_r4_rewrite",
+        "current_postgres_tests",
         "required_absent_postgres_tests_for_r4",
         "proof_paths",
         "explicit_deferrals",
@@ -286,7 +289,7 @@ def _validate_conformance_manifest() -> list[str]:
     expected_profiles = set(data.get("active_profiles", [])) | set(data.get("stale_profiles_pending_r4_retirement", []))
     present_fixtures = set(data.get("present_concrete_fixtures", []))
     absent_fixtures = set(data.get("required_absent_fixtures_for_r3", []))
-    current_tests = set(data.get("current_stale_postgres_tests_pending_r4_rewrite", []))
+    current_tests = set(data.get("current_postgres_tests", []))
     absent_tests = set(data.get("required_absent_postgres_tests_for_r4", []))
 
     actual_forward = _names(ROOT / "database/migrations", ".sql")
@@ -385,7 +388,7 @@ def _validate_conformance_manifest() -> list[str]:
             "required_absent_fixtures": len(absent_fixtures),
             "folded_behavioral_obligations": len(former_fixtures),
             "postgres_test_obligations": len(current_tests | absent_tests),
-            "current_stale_postgres_tests": len(current_tests),
+            "current_postgres_tests": len(current_tests),
             "required_absent_postgres_tests": len(absent_tests),
             "active_profiles": len(set(data.get("active_profiles", []))),
             "stale_profiles": len(set(data.get("stale_profiles_pending_r4_retirement", []))),
