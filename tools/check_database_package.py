@@ -14,6 +14,8 @@ R3_DECISION_PATH = "decisions/2026-07-17-db4-r3-hostile-candidate-completion-aut
 R4_DECISION_PATH = "decisions/2026-07-17-db4-r4-test-profile-completion-authorization.md"
 R5_DECISION_PATH = "decisions/2026-07-17-db4-r5-live-campaign-gate-preparation-authorization.md"
 R5_REPEAT_DECISION_PATH = "decisions/2026-07-17-db4-r5-repeat-compatibility-review-authorization.md"
+POST_AUDIT_DECISION_PATH = "decisions/2026-07-17-db4-post-audit-evidence-integrity-correction-authorization.md"
+SQLSTATE_AMENDMENT_PATH = "decisions/2026-07-17-db4-post-audit-sqlstate-path-amendment.md"
 R5_COMPATIBILITY_PATH = "planning-inbox/db4-r5-frozen-ob-dev-compatibility-review.md"
 R5_REPEAT_COMPATIBILITY_PATH = "planning-inbox/db4-r5-repeat-ob-dev-compatibility-review.md"
 R5_OWNER_DRAFT_PATH = "planning-inbox/db4-live-disposable-campaign-owner-decision-draft.md"
@@ -128,6 +130,8 @@ def expected_paths() -> set[str]:
         R4_DECISION_PATH,
         R5_DECISION_PATH,
         R5_REPEAT_DECISION_PATH,
+        POST_AUDIT_DECISION_PATH,
+        SQLSTATE_AMENDMENT_PATH,
         R5_COMPATIBILITY_PATH,
         R5_REPEAT_COMPATIBILITY_PATH,
         R5_OWNER_DRAFT_PATH,
@@ -311,9 +315,9 @@ def _validate_conformance_manifest() -> list[str]:
         if not isinstance(data.get(key), list):
             errors.append(f"conformance-list:{key}")
 
-    if data.get("r5_gate_state") != "ready_for_owner_execution_decision":
+    if data.get("r5_gate_state") != "post_audit_corrections_committed_restart_pending":
         errors.append("conformance-r5-gate-state")
-    if data.get("ob_dev_compatibility_commit") != "879529c27cad666099cf4f697eb7cbb56dec2279":
+    if data.get("ob_dev_compatibility_commit") != "e6ba04da17bd5b27f0c3eaf9c3f71bc228bfc86b":
         errors.append("conformance-ob-dev-compatibility-commit")
     if data.get("r5_blockers") != []:
         errors.append("conformance-r5-blockers")
@@ -332,10 +336,12 @@ def _validate_conformance_manifest() -> list[str]:
     if "NOT READY FOR OWNER EXECUTION GATE" not in compatibility_text:
         errors.append("conformance-r5-original-review-boundary")
     if "READY FOR OWNER EXECUTION DECISION" not in repeat_text:
-        errors.append("conformance-r5-repeat-review-readiness")
+        errors.append("conformance-r5-repeat-review-historical-verdict")
     for blocker in ("G1", "G2", "G3", "G4", "G5"):
-        if blocker not in repeat_text or f"{blocker} closed" not in draft_text:
-            errors.append(f"conformance-r5-blocker-closure-missing:{blocker}")
+        if blocker not in repeat_text:
+            errors.append(f"conformance-r5-repeat-review-blocker-missing:{blocker}")
+    if "The gate is not ready for owner execution consideration" not in draft_text:
+        errors.append("conformance-r5-post-audit-gate-boundary")
     if "Status: draft — not accepted" not in draft_text or "Authorized operation classes: none" not in draft_text:
         errors.append("conformance-r5-draft-authority-boundary")
 

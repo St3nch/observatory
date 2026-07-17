@@ -28,7 +28,7 @@ No milestone implies the next milestone.
 Observatory v1: accepted at bounded proof-system ceiling
 Last trusted database milestone: DB-3 — trusted, accepted, and complete
 Active milestone: DB-4 — Database Hammer Harness and Migration Specification
-DB-4 state: R5 repeat compatibility review complete against refreshed ob-dev `879529c27cad666099cf4f697eb7cbb56dec2279`; ready for separate owner execution decision; PostgreSQL execution separately prohibited
+DB-4 state: post-audit evidence-integrity corrections committed in ob-dev at `e6ba04da17bd5b27f0c3eaf9c3f71bc228bfc86b`; restart, tool refresh, and repeat independent review pending; PostgreSQL execution separately prohibited
 DB-4 closure status: not ready; prior proof is diagnostic only
 DB-5: inactive
 Governed database or governed role creation: not authorized
@@ -38,7 +38,7 @@ Governed, production, provider, customer/private-data, recurring, and DB-5 work:
 ```
 
 Current authority:
-`decisions/2026-07-17-db4-r5-repeat-compatibility-review-authorization.md`.
+`decisions/2026-07-17-db4-post-audit-evidence-integrity-correction-authorization.md`.
 
 Accepted implementation authority remains bounded by:
 `decisions/2026-07-14-db4-remediation-implementation-authorization.md`.

@@ -98,12 +98,12 @@ one disposable campaign
 independent closure audit
 ```
 
-The R5 repeat compatibility review is complete against refreshed `ob-dev` commit `879529c27cad666099cf4f697eb7cbb56dec2279`, with G1–G5 closed. The gate is ready only for a separate owner execution decision. PostgreSQL execution, acceptance of the live-campaign draft, DB-4 closure, and DB-5 remain prohibited.
+The independent audit found blocking evidence-integrity defects after the first repeat review. The bounded corrections are committed in `ob-dev` at `e6ba04da17bd5b27f0c3eaf9c3f71bc228bfc86b`. One normal MCP restart, tool refresh, and repeat independent review remain mandatory. PostgreSQL execution, acceptance of the live-campaign draft, DB-4 closure, and DB-5 remain prohibited.
 
 Current authority:
 
 ```text
-decisions/2026-07-17-db4-r5-repeat-compatibility-review-authorization.md
+decisions/2026-07-17-db4-post-audit-evidence-integrity-correction-authorization.md
 ```
 
 Required R5 evidence:

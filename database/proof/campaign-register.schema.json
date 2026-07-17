@@ -11,7 +11,7 @@
     "authority_reference": {"type": "string", "pattern": "^decisions/.+\\.md$"},
     "database_class": {"const": "disposable_postgres"},
     "profile_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string"}},
-    "execution_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{7,127}$"}},
+    "execution_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z0-9][a-z0-9_-]{7,127}$"}},
     "started_at": {"type": "string", "format": "date-time"},
     "finished_at": {"type": ["string","null"], "format": "date-time"},
     "status": {"enum": ["planned","running","passed","failed","blocked","aborted"]},

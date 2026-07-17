@@ -67,6 +67,12 @@ DB4_G1_G5_DECISION = (
 DB4_R5_REPEAT_DECISION = (
     "decisions/2026-07-17-db4-r5-repeat-compatibility-review-authorization.md"
 )
+DB4_POST_AUDIT_DECISION = (
+    "decisions/2026-07-17-db4-post-audit-evidence-integrity-correction-authorization.md"
+)
+DB4_SQLSTATE_AMENDMENT = (
+    "decisions/2026-07-17-db4-post-audit-sqlstate-path-amendment.md"
+)
 DB4_AUDIT_REMEDIATION_PLAN = "planning-inbox/db4-audit-remediation-program-v0-1.md"
 DB4_COMPLETION_PLAN = "audits/observatory-db4-drift-correction-and-completion-plan.md"
 DB4_CONFORMANCE_MANIFEST = "database/db4-remediation-conformance-manifest.json"
@@ -337,6 +343,8 @@ def _unauthorized_later_artifacts(root: Path) -> tuple[str, ...]:
         DB4_R5_DECISION,
         DB4_G1_G5_DECISION,
         DB4_R5_REPEAT_DECISION,
+        DB4_POST_AUDIT_DECISION,
+        DB4_SQLSTATE_AMENDMENT,
         DB4_AUDIT_REMEDIATION_PLAN,
         *AUTHORIZED_DB4_REMEDIATION_ARTIFACTS,
         *AUTHORIZED_DB3_PLANNING_ARTIFACTS,
@@ -660,11 +668,11 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         "ACTIVE_CONTEXT.md": (
             "DB-4 is active in remediation.",
             "DB-5 is inactive.",
-            DB4_R5_REPEAT_DECISION,
+            DB4_POST_AUDIT_DECISION,
             DB4_REMEDIATION_IMPLEMENTATION_DECISION,
             DB4_COMPLETION_PLAN,
             DB4_CONFORMANCE_MANIFEST,
-            "R5 repeat compatibility review complete; ready for owner execution decision",
+            "Post-audit evidence-integrity corrections committed; restart and repeat independent review pending",
             "PostgreSQL execution remains separately prohibited",
         ),
         "ROADMAP.md": (
@@ -676,20 +684,20 @@ def check_repository(root: Path = ROOT) -> CheckResult:
         "POST_V1_DATABASE_ROADMAP.md": (
             "Last trusted database milestone: DB-3 — trusted, accepted, and complete",
             f"Active milestone: {EXPECTED_ACTIVE_MILESTONE}",
-            "DB-4 state: R5 repeat compatibility review complete against refreshed ob-dev `879529c27cad666099cf4f697eb7cbb56dec2279`; ready for separate owner execution decision; PostgreSQL execution separately prohibited",
+            "DB-4 state: post-audit evidence-integrity corrections committed in ob-dev at `e6ba04da17bd5b27f0c3eaf9c3f71bc228bfc86b`; restart, tool refresh, and repeat independent review pending; PostgreSQL execution separately prohibited",
             "New PostgreSQL execution under the prior campaign: not authorized",
-            DB4_R5_REPEAT_DECISION,
+            DB4_POST_AUDIT_DECISION,
             DB4_REMEDIATION_IMPLEMENTATION_DECISION,
             DB4_CONFORMANCE_MANIFEST,
         ),
         "NEXT_SESSION_HANDOFF.md": (
             "DB-3 — trusted, accepted, and complete as physical-design authority",
             EXPECTED_ACTIVE_MILESTONE,
-            DB4_R5_REPEAT_DECISION,
+            DB4_POST_AUDIT_DECISION,
             DB4_REMEDIATION_IMPLEMENTATION_DECISION,
             DB4_COMPLETION_PLAN,
             DB4_CONFORMANCE_MANIFEST,
-            "The R5 repeat compatibility review is complete against refreshed `ob-dev` commit `879529c27cad666099cf4f697eb7cbb56dec2279`, with G1–G5 closed.",
+            "The independent audit found blocking evidence-integrity defects after the first repeat review.",
             "PostgreSQL execution separately prohibited",
         ),
     }
@@ -772,7 +780,7 @@ def check_repository(root: Path = ROOT) -> CheckResult:
     notes.append("DB-1 remains trusted and complete.")
     notes.append("DB-2 remains trusted, accepted, and complete.")
     notes.append("DB-3 is trusted, accepted, complete, and remains the physical-design authority.")
-    notes.append("DB-4 repeat compatibility review is complete; the gate is ready for a separate owner execution decision.")
+    notes.append("DB-4 post-audit evidence-integrity corrections are committed; restart and repeat independent review remain pending.")
     notes.append("Prior disposable proof is diagnostic only; new PostgreSQL execution requires a separate owner gate.")
     notes.append("Governed/production databases, providers, customer/private data, recurring work, and DB-5 remain unauthorized.")
     notes.append("A passing sync check does not close DB-4 or activate DB-5.")

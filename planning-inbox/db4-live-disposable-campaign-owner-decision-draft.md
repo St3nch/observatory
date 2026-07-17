@@ -2,10 +2,10 @@
 
 Status: draft — not accepted
 Date drafted: 2026-07-17
-Current authority: `decisions/2026-07-17-db4-r5-repeat-compatibility-review-authorization.md`
+Current authority: `decisions/2026-07-17-db4-post-audit-evidence-integrity-correction-authorization.md`
 Authorized operation classes: none
 
-This draft authorizes nothing. The repeat review at `planning-inbox/db4-r5-repeat-ob-dev-compatibility-review.md` returned ready for owner execution decision, but promotion into `decisions/` still requires a separate explicit owner acceptance.
+This draft authorizes nothing. The first repeat review’s readiness claim was invalidated by the later independent audit. The bounded corrections are committed, but one MCP restart, tool refresh, and repeat independent review remain mandatory before this draft may be reconsidered.
 
 ## Proposed decision
 
@@ -48,11 +48,10 @@ Campaign execution does not close DB-4. Independent review and a separate owner 
 ## Current compatibility state
 
 ```text
-G1 closed
-G2 closed
-G3 closed
-G4 closed
-G5 closed
+Independent audit blockers corrected in ob-dev commit e6ba04da17bd5b27f0c3eaf9c3f71bc228bfc86b
+MCP restart pending
+Tool refresh pending
+Repeat independent review pending
 ```
 
-The repeat compatibility review is ready for owner execution decision. The draft remains unaccepted and authorizes no operations. The full mandatory acceptance criteria are maintained in `planning-inbox/db4-live-disposable-campaign-acceptance-checklist.md`.
+The gate is not ready for owner execution consideration until the restarted implementation passes repeat independent review. The draft remains unaccepted and authorizes no operations. The full mandatory acceptance criteria are maintained in `planning-inbox/db4-live-disposable-campaign-acceptance-checklist.md`.

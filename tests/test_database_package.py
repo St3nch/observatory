@@ -11,8 +11,8 @@ module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(module)
 
 
-def test_exact_database_manifest_has_75_paths() -> None:
-    assert len(module.expected_paths()) == 75
+def test_exact_database_manifest_has_77_paths() -> None:
+    assert len(module.expected_paths()) == 77
 
 
 def test_r1_schema_corrections_are_structurally_present() -> None:
@@ -54,14 +54,15 @@ def test_r4_retires_stale_profiles_and_installs_current_tests() -> None:
     assert len(manifest["current_postgres_tests"]) == 6
 
 
-def test_repeat_review_is_ready_but_execution_draft_remains_unaccepted() -> None:
+def test_post_audit_corrections_are_committed_but_restart_review_is_pending() -> None:
     manifest = json.loads(module.CONFORMANCE_PATH.read_text(encoding="utf-8"))
-    assert manifest["r5_gate_state"] == "ready_for_owner_execution_decision"
-    assert manifest["ob_dev_compatibility_commit"] == "879529c27cad666099cf4f697eb7cbb56dec2279"
+    assert manifest["r5_gate_state"] == "post_audit_corrections_committed_restart_pending"
+    assert manifest["ob_dev_compatibility_commit"] == "e6ba04da17bd5b27f0c3eaf9c3f71bc228bfc86b"
     assert manifest["r5_blockers"] == []
     repeat_review = (module.ROOT / manifest["r5_repeat_compatibility_review"]).read_text(encoding="utf-8")
     draft = (module.ROOT / manifest["r5_owner_decision_draft"]).read_text(encoding="utf-8")
     assert "READY FOR OWNER EXECUTION DECISION" in repeat_review
+    assert "The gate is not ready for owner execution consideration" in draft
     assert "Status: draft — not accepted" in draft
     assert "Authorized operation classes: none" in draft
 
@@ -102,7 +103,14 @@ def test_role_profile_directly_exercises_backup_scope_behavior() -> None:
         (module.ROOT / "database/hammer-profiles/db4-role-rls.json").read_text(encoding="utf-8")
     )
     check_ids = {check["check_id"] for check in profile["checks"]}
-    assert {"BACKUP_SAME_SCOPE_ALLOWED", "BACKUP_CROSS_SCOPE_DENIED"} <= check_ids
+    assert {
+        "BACKUP_SAME_SCOPE_ALLOWED",
+        "BACKUP_CROSS_SCOPE_DENIED",
+        "BACKUP_EVIDENCE_SAME_SCOPE_ALLOWED",
+        "BACKUP_EVIDENCE_CROSS_SCOPE_DENIED",
+        "BACKUP_RAW_TOKEN_SAME_SCOPE_ALLOWED",
+        "BACKUP_RAW_TOKEN_CROSS_SCOPE_DENIED",
+    } <= check_ids
 
 
 def test_proof_schemas_are_closed_draft_2020_12_objects() -> None:
