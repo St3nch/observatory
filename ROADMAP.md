@@ -138,7 +138,7 @@ If required reading includes a folder, that folder must have a `README.md` index
 DB-4 — Database Hammer Harness and Migration Specification
 ```
 
-State: Route C Batch R2 real-spine behavioral proof under `decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md`; accepted implementation authority remains bounded by `decisions/2026-07-14-db4-remediation-implementation-authorization.md`; PostgreSQL execution remains separately prohibited.
+State: Route C Batch R3 hostile-candidate completion and redesign under `decisions/2026-07-17-db4-r3-hostile-candidate-completion-authorization.md`; accepted implementation authority remains bounded by `decisions/2026-07-14-db4-remediation-implementation-authorization.md`; PostgreSQL execution remains separately prohibited.
 
 Observatory v1 remains accepted and M20 remains closed by
 `decisions/2026-07-12-observatory-v1-acceptance.md`.

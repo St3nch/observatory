@@ -11,8 +11,8 @@ module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(module)
 
 
-def test_exact_database_manifest_has_59_paths() -> None:
-    assert len(module.expected_paths()) == 59
+def test_exact_database_manifest_has_68_paths() -> None:
+    assert len(module.expected_paths()) == 68
 
 
 def test_r1_schema_corrections_are_structurally_present() -> None:
@@ -27,8 +27,8 @@ def test_reconciliation_manifest_accounts_for_every_future_obligation() -> None:
     manifest = json.loads(module.CONFORMANCE_PATH.read_text(encoding="utf-8"))
     assert manifest["counts"] == {
         "hostile_candidate_obligations": 23,
-        "present_diagnostic_fixtures": 8,
-        "required_absent_fixtures": 8,
+        "present_concrete_fixtures": 16,
+        "required_absent_fixtures": 0,
         "folded_behavioral_obligations": 7,
         "postgres_test_obligations": 11,
         "current_stale_postgres_tests": 5,
@@ -38,6 +38,13 @@ def test_reconciliation_manifest_accounts_for_every_future_obligation() -> None:
     }
     assert manifest["explicit_deferrals"] == []
     assert module._validate_conformance_manifest() == []
+
+
+def test_r3_fixture_manifest_classifies_every_concrete_fixture() -> None:
+    manifest = json.loads(module.CONFORMANCE_PATH.read_text(encoding="utf-8"))
+    rows = manifest["concrete_fixture_manifest"]
+    assert {row["fixture"] for row in rows} == set(module.FIXTURES)
+    assert {row["rejection_class"] for row in rows} == {"postgresql_native", "runner_detected"}
 
 
 def test_database_package_validator_passes() -> None:
@@ -62,13 +69,13 @@ def test_runner_owns_every_transaction_boundary() -> None:
         assert module._has_embedded_transaction(text) is False
 
 
-def test_broken_candidate_profile_sha_binds_every_fixture() -> None:
+def test_broken_candidate_profile_sha_binds_current_executor_set() -> None:
     profile = json.loads(
         (module.ROOT / "database/hammer-profiles/db4-broken-candidates.json").read_text(encoding="utf-8")
     )
     fixture_paths = {check["fixture_path"] for check in profile["checks"]}
-    expected = {f"database/hammer-fixtures/{name}" for name in module.FIXTURES}
-    assert fixture_paths == expected
+    assert len(fixture_paths) == 8
+    assert fixture_paths <= {f"database/hammer-fixtures/{name}" for name in module.FIXTURES}
 
 
 def test_proof_schemas_are_closed_draft_2020_12_objects() -> None:

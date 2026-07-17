@@ -22,7 +22,7 @@ DB-5 is inactive.
 Current authority:
 
 ```text
-decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md
+decisions/2026-07-17-db4-r3-hostile-candidate-completion-authorization.md
 ```
 
 Accepted implementation authority remains bounded by:
@@ -96,15 +96,15 @@ independent closure audit
 Current batch:
 
 ```text
-R2 — real-spine behavioral proof
+R3 — hostile-candidate completion and redesign
 ```
 
-R2 is limited to null-safe admission binding, real observation/evidence/append-only/concurrency probe paths, removal of the three project-relation surrogate tables, matching active-profile expectations, and static conformance guards. R2 may not create R3 fixtures, retire R4 profiles/tests, change `ob-dev`, or execute PostgreSQL.
+R3 is limited to completing and redesigning the sixteen concrete hostile fixtures, classifying native versus runner-detected rejection, updating SHA-bound existing profile rows, and enforcing fixture-manifest conformance. R3 may not retire R4 profiles/tests, change `ob-dev`, wire unsupported executor IDs, or execute PostgreSQL.
 
-R2 authority:
+R3 authority:
 
 ```text
-decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md
+decisions/2026-07-17-db4-r3-hostile-candidate-completion-authorization.md
 ```
 
 ---

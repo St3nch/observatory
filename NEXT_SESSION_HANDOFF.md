@@ -20,7 +20,7 @@ DB-5 through DB-10 — inactive
 Current authority:
 
 ```text
-decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md
+decisions/2026-07-17-db4-r3-hostile-candidate-completion-authorization.md
 ```
 
 Accepted implementation authority remains:
@@ -98,12 +98,12 @@ one disposable campaign
 independent closure audit
 ```
 
-Current batch is R2 only. R2 rewires missing-rights, missing-retention, duplicate evidence, append-only mutation, and concurrent identity mint checks onto real Observatory relations while removing the three project-relation surrogate tables. It does not create R3 fixtures, retire R4 profiles/tests, change `ob-dev`, or execute PostgreSQL.
+Current batch is R3 only. R3 completes and redesigns the sixteen concrete hostile fixtures, classifies PostgreSQL-native versus runner-detected rejection, updates the existing eight SHA-bound profile rows, and enforces exact fixture-manifest conformance. It does not retire R4 profiles/tests, change `ob-dev`, wire unsupported executor IDs, or execute PostgreSQL.
 
-Current R2 authority:
+Current R3 authority:
 
 ```text
-decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md
+decisions/2026-07-17-db4-r3-hostile-candidate-completion-authorization.md
 ```
 
 No PostgreSQL execution begins without the later separate owner gate.

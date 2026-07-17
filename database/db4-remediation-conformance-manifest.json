@@ -1,143 +1,44 @@
 {
   "schema_version": "1",
-  "authority": "decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md",
-  "baseline_commit": "da15bd529ae7b6304bc5c7d473e3b769590df1e6",
+  "authority": "decisions/2026-07-17-db4-r3-hostile-candidate-completion-authorization.md",
+  "baseline_commit": "d83458f53fe2d2bec4f99c3f8b5d84c0dddd5a8d",
   "completion_route": "route_c_reconcile_then_complete",
-  "forward_migrations": [
-    "001_identity_namespaces.sql",
-    "002_governance_scope.sql",
-    "003_capture_provider.sql",
-    "004_evidence_identity.sql",
-    "005_raw_support.sql",
-    "006_audit_append_only.sql",
-    "007_scope_rls_roles.sql",
-    "008_typed_read.sql",
-    "010_recovery_verification.sql"
-  ],
-  "rollbacks": [
-    "001_identity_namespaces.sql",
-    "002_governance_scope.sql",
-    "003_capture_provider.sql",
-    "004_evidence_identity.sql",
-    "005_raw_support.sql",
-    "006_audit_append_only.sql",
-    "007_scope_rls_roles.sql",
-    "008_typed_read.sql",
-    "010_recovery_verification.sql"
-  ],
-  "active_profiles": [
-    "db4-preconditions.json",
-    "db4-behavioral-core.json",
-    "db4-broken-candidates.json",
-    "db4-role-rls.json",
-    "db4-concurrency.json",
-    "db4-migration-history.json",
-    "db4-cleanup.json",
-    "db4-restore-semantic.json"
-  ],
-  "stale_profiles_pending_r4_retirement": [
-    "db4_invariants_v1.json",
-    "db4_migration_v1.json",
-    "db4_roles_v1.json",
-    "db4_concurrency_v1.json",
-    "db4_restore_verification_v1.json"
-  ],
-  "present_diagnostic_fixtures_pending_r3_redesign": [
-    "009_dirty_constraint_seed.sql",
-    "009_excess_role_privilege.sql",
-    "009_missing_audit_pair.sql",
-    "009_missing_scope_boundary.sql",
-    "009_mutable_evidence.sql",
-    "009_partial_migration_failure.sql",
-    "009_schema_version_divergence.sql",
-    "009_unbounded_raw_locator.sql"
-  ],
-  "required_absent_fixtures_for_r3": [
-    "009_search_path_hijack.sql",
-    "009_owner_bypass_rls.sql",
-    "009_rls_without_force.sql",
-    "009_missing_with_check.sql",
-    "009_default_privilege_leak.sql",
-    "009_public_schema_create.sql",
-    "009_not_valid_constraint.sql",
-    "009_cross_scope_foreign_key.sql"
+  "forward_migrations": ["001_identity_namespaces.sql","002_governance_scope.sql","003_capture_provider.sql","004_evidence_identity.sql","005_raw_support.sql","006_audit_append_only.sql","007_scope_rls_roles.sql","008_typed_read.sql","010_recovery_verification.sql"],
+  "rollbacks": ["001_identity_namespaces.sql","002_governance_scope.sql","003_capture_provider.sql","004_evidence_identity.sql","005_raw_support.sql","006_audit_append_only.sql","007_scope_rls_roles.sql","008_typed_read.sql","010_recovery_verification.sql"],
+  "active_profiles": ["db4-preconditions.json","db4-behavioral-core.json","db4-broken-candidates.json","db4-role-rls.json","db4-concurrency.json","db4-migration-history.json","db4-cleanup.json","db4-restore-semantic.json"],
+  "stale_profiles_pending_r4_retirement": ["db4_invariants_v1.json","db4_migration_v1.json","db4_roles_v1.json","db4_concurrency_v1.json","db4_restore_verification_v1.json"],
+  "present_concrete_fixtures": ["009_dirty_constraint_seed.sql","009_excess_role_privilege.sql","009_missing_audit_pair.sql","009_missing_scope_boundary.sql","009_mutable_evidence.sql","009_partial_migration_failure.sql","009_schema_version_divergence.sql","009_unbounded_raw_locator.sql","009_search_path_hijack.sql","009_owner_bypass_rls.sql","009_rls_without_force.sql","009_missing_with_check.sql","009_default_privilege_leak.sql","009_public_schema_create.sql","009_not_valid_constraint.sql","009_cross_scope_foreign_key.sql"],
+  "required_absent_fixtures_for_r3": [],
+  "concrete_fixture_manifest": [
+    {"fixture":"009_dirty_constraint_seed.sql","rejection_class":"postgresql_native","expected_sqlstate":"23514"},
+    {"fixture":"009_excess_role_privilege.sql","rejection_class":"runner_detected","expected_sqlstate":"none"},
+    {"fixture":"009_missing_audit_pair.sql","rejection_class":"runner_detected","expected_sqlstate":"none"},
+    {"fixture":"009_missing_scope_boundary.sql","rejection_class":"runner_detected","expected_sqlstate":"none"},
+    {"fixture":"009_mutable_evidence.sql","rejection_class":"runner_detected","expected_sqlstate":"none"},
+    {"fixture":"009_partial_migration_failure.sql","rejection_class":"postgresql_native","expected_sqlstate":"22012"},
+    {"fixture":"009_schema_version_divergence.sql","rejection_class":"postgresql_native","expected_sqlstate":"23514"},
+    {"fixture":"009_unbounded_raw_locator.sql","rejection_class":"runner_detected","expected_sqlstate":"none"},
+    {"fixture":"009_search_path_hijack.sql","rejection_class":"runner_detected","expected_sqlstate":"none"},
+    {"fixture":"009_owner_bypass_rls.sql","rejection_class":"runner_detected","expected_sqlstate":"none"},
+    {"fixture":"009_rls_without_force.sql","rejection_class":"runner_detected","expected_sqlstate":"none"},
+    {"fixture":"009_missing_with_check.sql","rejection_class":"runner_detected","expected_sqlstate":"none"},
+    {"fixture":"009_default_privilege_leak.sql","rejection_class":"runner_detected","expected_sqlstate":"none"},
+    {"fixture":"009_public_schema_create.sql","rejection_class":"runner_detected","expected_sqlstate":"none"},
+    {"fixture":"009_not_valid_constraint.sql","rejection_class":"runner_detected","expected_sqlstate":"none"},
+    {"fixture":"009_cross_scope_foreign_key.sql","rejection_class":"postgresql_native","expected_sqlstate":"23503"}
   ],
   "folded_behavioral_obligations": [
-    {
-      "former_fixture": "009_history_rewrite.sql",
-      "batch": "R2",
-      "profile": "db4-migration-history.json",
-      "check_id": "HISTORY_REWRITE_DENIED"
-    },
-    {
-      "former_fixture": "009_duplicate_version_changed_sha.sql",
-      "batch": "R2",
-      "profile": "db4-migration-history.json",
-      "check_id": "DUPLICATE_VERSION_CHANGED_SHA_DENIED"
-    },
-    {
-      "former_fixture": "009_history_without_schema.sql",
-      "batch": "R2",
-      "profile": "db4-migration-history.json",
-      "check_id": "HISTORY_WITHOUT_SCHEMA_DENIED"
-    },
-    {
-      "former_fixture": "009_schema_without_history.sql",
-      "batch": "R2",
-      "profile": "db4-migration-history.json",
-      "check_id": "SCHEMA_WITHOUT_HISTORY_DENIED"
-    },
-    {
-      "former_fixture": "009_disable_trigger_attempt.sql",
-      "batch": "R2",
-      "profile": "db4-behavioral-core.json",
-      "check_id": "APPEND_ONLY_TRIGGER_DISABLE_DENIED"
-    },
-    {
-      "former_fixture": "009_duplicate_evidence_mint.sql",
-      "batch": "R2",
-      "profile": "db4-concurrency.json",
-      "check_id": "CONCURRENT_REAL_EVIDENCE_MINT"
-    },
-    {
-      "former_fixture": "009_concurrent_migration_without_lock.sql",
-      "batch": "R2",
-      "profile": "db4-concurrency.json",
-      "check_id": "CONCURRENT_MIGRATION_LOCK_REQUIRED"
-    }
+    {"former_fixture":"009_history_rewrite.sql","batch":"R2","profile":"db4-migration-history.json","check_id":"HISTORY_REWRITE_DENIED"},
+    {"former_fixture":"009_duplicate_version_changed_sha.sql","batch":"R2","profile":"db4-migration-history.json","check_id":"DUPLICATE_VERSION_CHANGED_SHA_DENIED"},
+    {"former_fixture":"009_history_without_schema.sql","batch":"R2","profile":"db4-migration-history.json","check_id":"HISTORY_WITHOUT_SCHEMA_DENIED"},
+    {"former_fixture":"009_schema_without_history.sql","batch":"R2","profile":"db4-migration-history.json","check_id":"SCHEMA_WITHOUT_HISTORY_DENIED"},
+    {"former_fixture":"009_disable_trigger_attempt.sql","batch":"R2","profile":"db4-behavioral-core.json","check_id":"APPEND_ONLY_TRIGGER_DISABLE_DENIED"},
+    {"former_fixture":"009_duplicate_evidence_mint.sql","batch":"R2","profile":"db4-concurrency.json","check_id":"CONCURRENT_REAL_EVIDENCE_MINT"},
+    {"former_fixture":"009_concurrent_migration_without_lock.sql","batch":"R2","profile":"db4-concurrency.json","check_id":"CONCURRENT_MIGRATION_LOCK_REQUIRED"}
   ],
-  "current_stale_postgres_tests_pending_r4_rewrite": [
-    "test_db4_invariants.py",
-    "test_db4_migrations.py",
-    "test_db4_roles.py",
-    "test_db4_concurrency.py",
-    "test_db4_restore.py"
-  ],
-  "required_absent_postgres_tests_for_r4": [
-    "test_db4_history_atomicity.py",
-    "test_db4_profile_manifest.py",
-    "test_db4_broken_candidate_manifest.py",
-    "test_db4_result_register.py",
-    "test_db4_cleanup.py",
-    "test_db4_security_posture.py"
-  ],
-  "proof_paths": [
-    "database/proof/README.md",
-    "database/proof/result-register.schema.json",
-    "database/proof/campaign-register.schema.json",
-    "database/proof/supersession.schema.json",
-    "database/proof/accepted/.gitkeep"
-  ],
+  "current_stale_postgres_tests_pending_r4_rewrite": ["test_db4_invariants.py","test_db4_migrations.py","test_db4_roles.py","test_db4_concurrency.py","test_db4_restore.py"],
+  "required_absent_postgres_tests_for_r4": ["test_db4_history_atomicity.py","test_db4_profile_manifest.py","test_db4_broken_candidate_manifest.py","test_db4_result_register.py","test_db4_cleanup.py","test_db4_security_posture.py"],
+  "proof_paths": ["database/proof/README.md","database/proof/result-register.schema.json","database/proof/campaign-register.schema.json","database/proof/supersession.schema.json","database/proof/accepted/.gitkeep"],
   "explicit_deferrals": [],
-  "counts": {
-    "hostile_candidate_obligations": 23,
-    "present_diagnostic_fixtures": 8,
-    "required_absent_fixtures": 8,
-    "folded_behavioral_obligations": 7,
-    "postgres_test_obligations": 11,
-    "current_stale_postgres_tests": 5,
-    "required_absent_postgres_tests": 6,
-    "active_profiles": 8,
-    "stale_profiles": 5
-  }
+  "counts": {"hostile_candidate_obligations":23,"present_concrete_fixtures":16,"required_absent_fixtures":0,"folded_behavioral_obligations":7,"postgres_test_obligations":11,"current_stale_postgres_tests":5,"required_absent_postgres_tests":6,"active_profiles":8,"stale_profiles":5}
 }

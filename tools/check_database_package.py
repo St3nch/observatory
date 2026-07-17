@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFORMANCE_PATH = ROOT / "database/db4-remediation-conformance-manifest.json"
 R1_DECISION_PATH = "decisions/2026-07-16-db4-r1-schema-hole-correction-authorization.md"
 R2_DECISION_PATH = "decisions/2026-07-17-db4-r2-real-spine-behavioral-proof-authorization.md"
+R3_DECISION_PATH = "decisions/2026-07-17-db4-r3-hostile-candidate-completion-authorization.md"
 R2_REMOVED_SURROGATES = (
     "obs_meta.db4_admission_probe",
     "obs_meta.db4_evidence_probe",
@@ -47,6 +48,14 @@ FIXTURES = (
     "009_partial_migration_failure.sql",
     "009_schema_version_divergence.sql",
     "009_unbounded_raw_locator.sql",
+    "009_search_path_hijack.sql",
+    "009_owner_bypass_rls.sql",
+    "009_rls_without_force.sql",
+    "009_missing_with_check.sql",
+    "009_default_privilege_leak.sql",
+    "009_public_schema_create.sql",
+    "009_not_valid_constraint.sql",
+    "009_cross_scope_foreign_key.sql",
 )
 
 PROFILES = (
@@ -108,6 +117,7 @@ def expected_paths() -> set[str]:
         "decisions/2026-07-16-db4-remediation-reconciliation-and-r0-authorization.md",
         R1_DECISION_PATH,
         R2_DECISION_PATH,
+        R3_DECISION_PATH,
         *PROOF_PATHS,
     }
     paths |= {f"database/migrations/{name}" for name in FORWARD}
@@ -248,8 +258,9 @@ def _validate_conformance_manifest() -> list[str]:
         "rollbacks",
         "active_profiles",
         "stale_profiles_pending_r4_retirement",
-        "present_diagnostic_fixtures_pending_r3_redesign",
+        "present_concrete_fixtures",
         "required_absent_fixtures_for_r3",
+        "concrete_fixture_manifest",
         "folded_behavioral_obligations",
         "current_stale_postgres_tests_pending_r4_rewrite",
         "required_absent_postgres_tests_for_r4",
@@ -273,7 +284,7 @@ def _validate_conformance_manifest() -> list[str]:
     expected_forward = set(data.get("forward_migrations", []))
     expected_rollbacks = set(data.get("rollbacks", []))
     expected_profiles = set(data.get("active_profiles", [])) | set(data.get("stale_profiles_pending_r4_retirement", []))
-    present_fixtures = set(data.get("present_diagnostic_fixtures_pending_r3_redesign", []))
+    present_fixtures = set(data.get("present_concrete_fixtures", []))
     absent_fixtures = set(data.get("required_absent_fixtures_for_r3", []))
     current_tests = set(data.get("current_stale_postgres_tests_pending_r4_rewrite", []))
     absent_tests = set(data.get("required_absent_postgres_tests_for_r4", []))
@@ -306,6 +317,49 @@ def _validate_conformance_manifest() -> list[str]:
     if unexpected_future_tests:
         errors.append("conformance-test-status-stale:" + ",".join(sorted(unexpected_future_tests)))
 
+    fixture_manifest = data.get("concrete_fixture_manifest", [])
+    manifested_fixtures: set[str] = set()
+    required_metadata = (
+        "fixture_id",
+        "violated_invariant",
+        "rejection_class",
+        "rejection_point",
+        "expected_sqlstate",
+        "residue_relation",
+        "history_expectation",
+        "cleanup_expectation",
+    )
+    for item in fixture_manifest if isinstance(fixture_manifest, list) else []:
+        if not isinstance(item, dict) or set(item) != {"fixture", "rejection_class", "expected_sqlstate"}:
+            errors.append("conformance-fixture-manifest-shape")
+            continue
+        fixture = item.get("fixture")
+        rejection_class = item.get("rejection_class")
+        expected_sqlstate = item.get("expected_sqlstate")
+        if not isinstance(fixture, str) or fixture in manifested_fixtures:
+            errors.append(f"conformance-fixture-manifest-duplicate:{fixture}")
+            continue
+        manifested_fixtures.add(fixture)
+        if rejection_class not in {"postgresql_native", "runner_detected"}:
+            errors.append(f"conformance-fixture-class:{fixture}")
+        if rejection_class == "postgresql_native":
+            if not isinstance(expected_sqlstate, str) or not re.fullmatch(r"[0-9A-Z]{5}", expected_sqlstate):
+                errors.append(f"conformance-fixture-sqlstate:{fixture}")
+        elif expected_sqlstate != "none":
+            errors.append(f"conformance-fixture-sqlstate:{fixture}")
+        fixture_path = ROOT / "database/hammer-fixtures" / fixture
+        if fixture_path.is_file():
+            text = fixture_path.read_text(encoding="utf-8")
+            for field in required_metadata:
+                if f"-- {field}:" not in text:
+                    errors.append(f"conformance-fixture-metadata:{fixture}:{field}")
+            if f"-- rejection_class: {rejection_class}" not in text:
+                errors.append(f"conformance-fixture-class-drift:{fixture}")
+            if f"-- expected_sqlstate: {expected_sqlstate}" not in text:
+                errors.append(f"conformance-fixture-sqlstate-drift:{fixture}")
+    if manifested_fixtures != present_fixtures:
+        errors.append("conformance-fixture-manifest-inventory")
+
     folded = data.get("folded_behavioral_obligations", [])
     former_fixtures: set[str] = set()
     for item in folded if isinstance(folded, list) else []:
@@ -327,7 +381,7 @@ def _validate_conformance_manifest() -> list[str]:
     else:
         computed = {
             "hostile_candidate_obligations": len(present_fixtures | absent_fixtures | former_fixtures),
-            "present_diagnostic_fixtures": len(present_fixtures),
+            "present_concrete_fixtures": len(present_fixtures),
             "required_absent_fixtures": len(absent_fixtures),
             "folded_behavioral_obligations": len(former_fixtures),
             "postgres_test_obligations": len(current_tests | absent_tests),
