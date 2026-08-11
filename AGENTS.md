@@ -5,13 +5,17 @@
 Read in this order:
 
 1. VISION.md
-2. decisions/decisions.md
-3. decisions/deferred.md
-4. Relevant ticket
-5. Relevant ADR, when one exists
+2. VOCABULARY.md
+3. decisions/decisions.md
+4. decisions/deferred.md
+5. Relevant ticket
+6. Relevant ADR, when one exists
 
-CONTEXT.md is a glossary only. Files under docs-temp/ are ignored working notes and are
-never project authority.
+VOCABULARY.md defines canonical domain language. Do not silently invent synonyms, overload
+a defined term, or introduce a new domain concept in code alone. Proposed vocabulary
+changes require Project Steward reconciliation with existing authority.
+
+Files under docs-temp/ are ignored working notes and are never project authority.
 
 ## Roles
 

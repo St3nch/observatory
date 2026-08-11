@@ -13,17 +13,17 @@ the storage schema, API contract, and first provider adapter have not yet been i
 ## Read first
 
 1. VISION.md
-2. decisions/decisions.md
-3. decisions/deferred.md
-4. CONTEXT.md
+2. VOCABULARY.md
+3. decisions/decisions.md
+4. decisions/deferred.md
 5. AGENTS.md
 
 ## Repository shape
 
     VISION.md                  Product north star and boundaries
+    VOCABULARY.md              Canonical domain language
     decisions/decisions.md     Settled decisions and rejected alternatives
     decisions/deferred.md      Deferred work with observable triggers
-    CONTEXT.md                 Glossary only
     AGENTS.md                  Rules for coding agents
     docs/adr/                  Created only when the ADR bar is met
 
