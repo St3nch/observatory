@@ -5,18 +5,22 @@ description: Shared vocabulary for designing deep modules. Use when the user wan
 
 # Codebase Design
 
-## Observatory rules
+## Observatory preflight
 
-- Read `VOCABULARY.md` and the decision registers before naming a seam or module.
-- `API` remains the canonical name for Observatory's versioned public HTTP contract.
-  Use **interface** for an internal module surface; do not rename the public API.
-- Treat TypeScript snippets below as language-neutral illustrations; implement in the
-  repository's Python style.
-- Use real PostgreSQL tests when behavior depends on transactions, constraints, locking,
-  migrations, or SQL semantics. An in-memory substitute cannot prove those claims.
-- External-provider fixtures and live adapters may share a seam, but ordinary automated
-  tests must never call a provider.
-- Propose authority changes to the Project Steward; do not edit authority as a side effect.
+1. Report the absolute path of this loaded file:
+   `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+   Prefer the resolved project-local path. Project-local skills override plugin copies.
+2. Read `VOCABULARY.md` and the decision registers before naming a seam or module.
+3. Require an active VedaOps lease before any filesystem write.
+4. `API` remains the canonical name for Observatory's versioned public HTTP contract.
+   Use **interface** for an internal module surface; do not rename the public API.
+5. Treat TypeScript snippets below as language-neutral illustrations; implement in the
+   repository's Python style.
+6. Use real PostgreSQL tests when behavior depends on transactions, constraints, locking,
+   migrations, or SQL semantics. An in-memory substitute cannot prove those claims.
+7. External-provider fixtures and live adapters may share a seam, but ordinary automated
+   tests must never call a provider.
+8. Propose authority changes to the Project Steward; do not edit authority as a side effect.
 
 Design **deep modules**: a lot of behaviour behind a small interface, placed at a clean seam, testable through that interface. Use this language and these principles wherever code is being designed or restructured. The aim is leverage for callers, locality for maintainers, and testability for everyone.
 

@@ -5,17 +5,21 @@ description: Diagnosis loop for hard bugs and performance regressions. Use when 
 
 # Diagnosing Bugs
 
-## Observatory rules
+## Observatory preflight
 
-- Scale the ceremony to the bug. A simple deterministic failure may compress the phases;
-  preserve the reproduce-before-fix discipline.
-- Read `VOCABULARY.md`, relevant decisions, the ticket, and any applicable ADR.
-- Never make a live provider call from an ordinary automated test or debugging loop.
-- Use real PostgreSQL when the suspected cause depends on database behavior.
-- Put temporary captures and notes under ignored `docs-temp/`; redact secrets and delete
-  disposable artifacts after the fix.
-- Show ranked hypotheses only when the bug is genuinely ambiguous. Continue with the best
-  falsifiable test instead of creating a routine approval stop.
+1. Report the absolute path of this loaded file:
+   `/home/chaz/projects/vedaops/observatory/.grok/skills/diagnosing-bugs/SKILL.md`
+   Prefer the resolved project-local path. Project-local skills override plugin copies.
+2. Require an active VedaOps lease before any filesystem write, including `docs-temp/`.
+3. Scale the ceremony to the bug. A simple deterministic failure may compress the phases;
+   preserve the reproduce-before-fix discipline.
+4. Read `VOCABULARY.md`, relevant decisions, the ticket, and any applicable ADR.
+5. Never make a live provider call from an ordinary automated test or debugging loop.
+6. Use real PostgreSQL when the suspected cause depends on database behavior.
+7. Put temporary captures and notes under ignored `docs-temp/`; redact secrets and delete
+   disposable artifacts after the fix.
+8. Show ranked hypotheses only when the bug is genuinely ambiguous. Continue with the best
+   falsifiable test instead of creating a routine approval stop.
 
 A discipline for hard bugs. Skip phases only when explicitly justified.
 

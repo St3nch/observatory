@@ -1,0 +1,5 @@
+interface:
+  display_name: "To Spec"
+  short_description: "Synthesize a compact Observatory spec draft"
+policy:
+  allow_implicit_invocation: false
