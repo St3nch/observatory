@@ -1,2 +1,16 @@
 # Local steward notes and uncommitted research
 /docs-temp/
+
+# Python and tooling
+/.venv/
+/.pytest_cache/
+/.mypy_cache/
+/.ruff_cache/
+**/__pycache__/
+*.py[cod]
+
+# Local configuration
+/.env
+
+# Build artifacts
+/dist/
