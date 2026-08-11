@@ -1,0 +1,5 @@
+schema_version = 1
+id = "observatory"
+name = "Observatory"
+mutable = false
+capabilities = ["read"]
