@@ -68,6 +68,32 @@ These are the intended repository commands once the Python project scaffold exis
     uv run python -m observatory.migrate
     uv run python -m observatory.derive
 
+## Grok skill policy
+
+The approved Grok skills for Observatory are the project-local copies under
+`.grok/skills/`:
+
+- `setup-matt-pocock-skills`
+- `implement`
+- `tdd`
+- `code-review`
+- `diagnosing-bugs`
+- `research`
+- `domain-modeling`
+- `codebase-design`
+- `handoff`
+- `wait-what`
+
+These project copies override same-named user-plugin skills. Do not invoke another
+Pocock/plugin skill in Observatory unless the Project Steward explicitly directs it.
+The setup skill validates this existing project layout; it must not create a parallel
+`CONTEXT.md`, `docs/agents/`, issue-tracker configuration, or triage system.
+
+Skill output is working input, not project authority. Skills may propose vocabulary,
+decision, or architecture changes, but only the Project Steward reconciles and records
+them. An approved ticket supplies the implementation scope, acceptance behavior, and
+test seams; do not repeatedly ask the product owner to reconfirm them.
+
 ## Completion
 
 A ticket is complete only when:
