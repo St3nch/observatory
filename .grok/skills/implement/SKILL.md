@@ -15,16 +15,14 @@ disable-model-invocation: true
    `ready-for-agent` or `in-progress`.
 3. Read `VISION.md`, `VOCABULARY.md`, both decision registers, `AGENTS.md`, the ticket,
    its parent spec when named, and any relevant ADR.
-4. Require an active VedaOps lease before any filesystem write (including `docs-temp/`).
-   Renew when fewer than 30 minutes remain. Align `expected_git_head` with reality.
-5. Record the starting commit on the ticket. Working tree must have no unexplained changes.
-6. Do not edit product authority to make code fit. Propose changes to the Steward.
+4. Record the starting commit on the ticket. Working tree must have no unexplained changes.
+5. Do not edit product authority to make code fit. Propose changes to the Steward.
 
 ## Process
 
 1. Restate ticket boundary, acceptance behavior, approved seams, and deferred work. Stop
    only for a contradiction that materially changes the implementation.
-2. Set ticket **Status** to `in-progress` when starting (under lease).
+2. Set ticket **Status** to `in-progress` when starting.
 3. Use project-local `tdd` in small vertical slices. The ticket pre-authorizes its seams.
 4. Run the narrow relevant test after each slice. Run Ruff and mypy regularly.
 5. Never make live provider calls from ordinary tests. Use real PostgreSQL when the claim

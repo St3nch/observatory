@@ -19,7 +19,6 @@ Both axes run as **parallel sub-agents**, then this skill aggregates findings.
    Prefer the resolved project-local path. Project-local skills override plugin copies.
 2. Read `VISION.md`, `VOCABULARY.md`, the decision registers, `AGENTS.md`, and the ticket.
 3. Do not run setup, create `docs/agents/`, or invent an issue-tracker convention.
-4. Require an active VedaOps lease only if applying fixes; pure review is read-only.
 
 ## Process
 

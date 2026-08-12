@@ -14,10 +14,9 @@ A prototype is **throwaway code that answers a question**. The question decides 
 1. Report the absolute path of this loaded file:
    `/home/chaz/projects/vedaops/observatory/.grok/skills/prototype/SKILL.md`
    Prefer the resolved project-local path. Project-local skills override plugin copies.
-2. Require an active VedaOps lease before any filesystem write.
-3. Do not edit authority, accepted specs, or tickets except to leave a pointer the Steward
+2. Do not edit authority, accepted specs, or tickets except to leave a pointer the Steward
    or a draft already allows.
-4. Fold validated decisions into durable artifacts only via Steward reconciliation or an
+3. Fold validated decisions into durable artifacts only via Steward reconciliation or an
    explicit draft update under `docs-temp/specs/` / ticket draft — never silent authority edit.
 
 ## Pick a branch
@@ -41,8 +40,8 @@ surrounding code (backend → logic; page → UI) and state the assumption at th
    clearly named scratch DB or local file marked wipe-me.
 4. **Skip polish.** No tests, no extra abstractions, only enough error handling to run.
 5. **Surface the state** after every action or variant switch.
-6. **Capture the verdict.** Record the question and answer in the session and, under lease,
-   optionally `docs-temp/` or a throwaway branch. Point a draft spec or ticket at that
+6. **Capture the verdict.** Record the question and answer in the session and optionally
+   in `docs-temp/` or a throwaway branch. Point a draft spec or ticket at that
    verdict when the Steward wants it retained. Keep main free of unvalidated prototype code.
 
 ## Completion

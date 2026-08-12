@@ -15,10 +15,9 @@ Not part of the default Observatory main chain.
    `/home/chaz/projects/vedaops/observatory/.grok/skills/wayfinder/SKILL.md`
    Prefer the resolved project-local path. Project-local skills override plugin copies.
 2. Read `VISION.md`, `VOCABULARY.md`, and both decision registers when product-related.
-3. Require an active VedaOps lease before any filesystem write.
-4. Maps are working state under `docs-temp/` only — never authority, never
+3. Maps are working state under `docs-temp/` only — never authority, never
    `tickets/`, never an issue tracker, never `.scratch/` or `docs/agents/`.
-5. Material decisions still require **Steward reconciliation** before authority or specs change.
+4. Material decisions still require **Steward reconciliation** before authority or specs change.
 
 ## Plan, don't do
 
@@ -84,7 +83,7 @@ Never resolve more than one non-research decision ticket per session.
 1. Name the destination with `grilling` + `domain-modeling`.
 2. Breadth-first grill for the first takeable decisions. If no fog remains and the work fits
    one session, stop and ask whether to skip Wayfinder.
-3. Under lease, write the map under `docs-temp/wayfinder/`.
+3. Write the map under `docs-temp/wayfinder/`.
 4. Add only the decision tickets you can specify now; keep the rest as fog.
 5. Fire research subagents for research tickets when useful; capture under `docs-temp/`.
 6. Stop — charting hand-resolves nothing.

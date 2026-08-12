@@ -13,9 +13,8 @@ description: Grill the user relentlessly about a plan, decision, or idea. Use wh
    Project-local skills override plugin copies.
 2. When the topic touches Observatory product work, read `VISION.md`, `VOCABULARY.md`,
    `decisions/decisions.md`, and `decisions/deferred.md` before asking product questions.
-3. Require an active VedaOps lease before any filesystem write, including under `docs-temp/`.
-4. Produce no durable authority. Optional working notes go only under
-   `docs-temp/grilling/<slug>.md` after lease check.
+3. Produce no durable authority. Optional working notes go only under
+   `docs-temp/grilling/<slug>.md`.
 
 ## Process
 

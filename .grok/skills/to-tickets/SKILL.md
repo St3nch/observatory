@@ -14,9 +14,8 @@ disable-model-invocation: true
 2. Prefer an accepted parent at `docs/specs/<slug>.md`. If only conversation is available,
    require Steward confirmation that it is enough to ticket.
 3. Read `VOCABULARY.md` and relevant decisions/ADRs.
-4. Require an active VedaOps lease before any filesystem write.
-5. Do not use an issue tracker, triage labels, `.scratch/`, or `docs/agents/`.
-6. Create no ticket index or README under `tickets/`.
+4. Do not use an issue tracker, triage labels, `.scratch/`, or `docs/agents/`.
+5. Create no ticket index or README under `tickets/`.
 
 ## Process
 
@@ -56,7 +55,7 @@ Ask: granularity, blocking edges, merge/split. Iterate until the breakdown is ap
 
 ### 5. Publish tickets under `tickets/`
 
-After approval, under lease, write one file per ticket:
+After approval, write one file per ticket:
 
 `tickets/<feature-prefix>-<ordinal>-<slug>.md`
 

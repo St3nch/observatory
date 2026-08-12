@@ -12,7 +12,6 @@ This section supersedes the generic storage instructions below for Observatory.
 1. Report the absolute path of this loaded file:
    `/home/chaz/projects/vedaops/observatory/.grok/skills/research/SKILL.md`
    Prefer the resolved project-local path. Project-local skills override plugin copies.
-2. Require an active VedaOps lease before any filesystem write, including `docs-temp/`.
 
 Use a background agent when independent reading can proceed alongside useful work; direct
 research is fine for a small question.

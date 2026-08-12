@@ -14,7 +14,6 @@ disable-model-invocation: true
 2. Read `VISION.md`, `VOCABULARY.md`, `decisions/decisions.md`, `decisions/deferred.md`,
    and any relevant accepted ticket or `docs/specs/` file before questioning.
 3. Invoke project-local `grilling` and `domain-modeling` only.
-4. Require an active VedaOps lease before any filesystem write, including `docs-temp/`.
 
 ## Process
 
@@ -22,7 +21,7 @@ disable-model-invocation: true
    invent product facts.
 2. Use `domain-modeling` to challenge terms, scenarios, and ADR candidacy. Propose precise
    language; do not write `VOCABULARY.md`, decisions, ADRs, or `VISION.md`.
-3. End with a **proposal package** (conversation summary and, under lease, optional
+3. End with a **proposal package** (conversation summary and optional
    `docs-temp/grilling/<slug>-proposals.md`) listing:
    - proposed vocabulary entries (term, definition, avoided synonyms)
    - proposed decision entries (decision, why, cost, rejected alternative)

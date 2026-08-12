@@ -10,14 +10,13 @@ description: Writing documents for agents. Use when creating or editing skills, 
 1. Report the absolute path of this loaded file:
    `/home/chaz/projects/vedaops/observatory/.grok/skills/writing-for-agents/SKILL.md`
    Prefer the resolved project-local path. Project-local skills override plugin copies.
-2. Require an active VedaOps lease before any filesystem write.
-3. When authoring Observatory skills: keep `SKILL.md` concise, imperative, under 500 lines;
+2. When authoring Observatory skills: keep `SKILL.md` concise, imperative, under 500 lines;
    put shared skill mechanics in sibling files behind pointers; add no auxiliary README,
    changelog, or setup docs inside skill folders.
-4. Do not create `CONTEXT.md`, `CONTEXT-MAP.md`, `docs/agents/`, or `.scratch/`.
-5. Do not embed product-feature architecture (specific tickets, stashed work, provider
-   designs) into reusable workflow skills — only process, paths, lease, and Steward gates.
-6. `skills-lock.json` holds installer upstream provenance only. Do not invent schema fields.
+3. Do not create `CONTEXT.md`, `CONTEXT-MAP.md`, `docs/agents/`, or `.scratch/`.
+4. Do not embed product-feature architecture (specific tickets, stashed work, provider
+   designs) into reusable workflow skills — only process, paths, and Steward gates.
+5. `skills-lock.json` holds installer upstream provenance only. Do not invent schema fields.
    Git history records local adaptations. Warn: a future skills update must not blindly
    overwrite adapted project-local skills.
 

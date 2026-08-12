@@ -14,8 +14,7 @@ disable-model-invocation: true
 2. Read `VISION.md`, `VOCABULARY.md`, both decision registers, and any Steward-reconciled
    proposals already in authority.
 3. Do not interview. Synthesize what is already settled.
-4. Require an active VedaOps lease before any filesystem write.
-5. Do not use an issue tracker, labels, `.scratch/`, or `docs/agents/`.
+4. Do not use an issue tracker, labels, `.scratch/`, or `docs/agents/`.
 
 ## Process
 
@@ -25,7 +24,7 @@ disable-model-invocation: true
 3. Write the draft under `docs-temp/specs/<kebab-slug>.md` using the template below.
 4. Stop for **Steward acceptance**. Do not write `docs/specs/` unless the Steward
    explicitly directs promotion of this accepted draft.
-5. On explicit promote instruction only: under lease, write
+5. On explicit promote instruction only, write
    `docs/specs/<kebab-slug>.md` with status **normative**, and leave or remove the draft
    as the Steward directs. Create `docs/specs/` lazily.
 

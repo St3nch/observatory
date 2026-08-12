@@ -133,12 +133,6 @@ Optional and situational: `prototype` (throwaway design question), `wayfinder`
 Do not create `CONTEXT.md`, `CONTEXT-MAP.md`, `docs/agents/`, `.scratch/`, or external
 issue-tracker scaffolding.
 
-## VedaOps lease
-
-Require an active Observatory lease before every filesystem mutation, including under
-`docs-temp/`. Renew when fewer than 30 minutes remain. Align lease `expected_git_head`
-with the repository HEAD you intend to mutate.
-
 ## Commands
 
 Intended repository commands as modules exist:

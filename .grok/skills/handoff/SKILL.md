@@ -12,8 +12,7 @@ disable-model-invocation: true
 1. Report the absolute path of this loaded file:
    `/home/chaz/projects/vedaops/observatory/.grok/skills/handoff/SKILL.md`
    Prefer the resolved project-local path. Project-local skills override plugin copies.
-2. Require an active VedaOps lease before writing.
-3. Overwrite only `docs-temp/GROK-HANDOFF.md`. That path is ignored and is never authority.
+2. Overwrite only `docs-temp/GROK-HANDOFF.md`. That path is ignored and is never authority.
 
 ## Process
 

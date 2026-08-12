@@ -14,8 +14,8 @@ description: Build and sharpen a project's domain model. Use when the user wants
    `CONTEXT-MAP.md`. Ignore [CONTEXT-FORMAT.md](CONTEXT-FORMAT.md) for this repository.
 3. Read `VISION.md`, both decision registers, `AGENTS.md`, and the relevant ticket or spec
    before proposing model changes.
-4. Require an active VedaOps lease before any filesystem write. This skill normally
-   **proposes** only; the Project Steward reconciles accepted changes into authority.
+4. This skill normally **proposes** only; the Project Steward reconciles accepted
+   changes into authority.
 5. ADRs use [ADR-FORMAT.md](ADR-FORMAT.md) only when the Steward accepts a decision that
    meets the three-part bar. Create `docs/adr/` lazily.
 

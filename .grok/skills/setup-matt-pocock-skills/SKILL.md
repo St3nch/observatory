@@ -16,8 +16,7 @@ scaffolding process below.
 1. Report the absolute path of this loaded file:
    `/home/chaz/projects/vedaops/observatory/.grok/skills/setup-matt-pocock-skills/SKILL.md`
    Prefer the resolved project-local path. Project-local skills override plugin copies.
-2. Require an active VedaOps lease before any filesystem write. This skill must not write
-   in Observatory mode.
+2. This skill must not write in Observatory mode.
 
 ### Validate only
 

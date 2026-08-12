@@ -11,13 +11,12 @@ description: Test-driven development. Use when the user wants to build features 
    `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
    Prefer the resolved project-local path. Project-local skills override plugin copies.
 2. Read `VOCABULARY.md`, relevant decisions, the approved ticket, and any applicable ADR.
-3. Require an active VedaOps lease before any filesystem write.
-4. The approved ticket pre-agrees its public seams. Do not re-confirm them with Chaz.
+3. The approved ticket pre-agrees its public seams. Do not re-confirm them with Chaz.
    Escalate only a newly discovered seam that changes the contract.
-5. Ordinary TDD is not hammer testing. Never call a live provider from an ordinary
+4. Ordinary TDD is not hammer testing. Never call a live provider from an ordinary
    automated test. Use real PostgreSQL when behavior depends on transactions, constraints,
    locking, migrations, SQL, or recovery.
-6. Treat TypeScript examples in [tests.md](tests.md) and [mocking.md](mocking.md) as
+5. Treat TypeScript examples in [tests.md](tests.md) and [mocking.md](mocking.md) as
    language-neutral illustrations; implement in this repo's Python/pytest style.
 
 ## What a good test is
