@@ -4,13 +4,15 @@
 
 Read in this order:
 
-1. VISION.md
-2. VOCABULARY.md
-3. decisions/decisions.md
-4. decisions/deferred.md
+1. `VISION.md`
+2. `VOCABULARY.md`
+3. `decisions/decisions.md`
+4. `decisions/deferred.md`
 5. Relevant ticket under `tickets/`
 6. Relevant ADR under `docs/adr/`, when one exists
-7. Parent spec under `docs/specs/`, when the ticket names one
+7. Normative capture/evidence contract: `docs/specs/capture-event-v2.md` when the work
+   touches Attempt, Capture, Evidence, Evidence Store, derive-from-capture, or fixture
+   capture
 
 VOCABULARY.md defines canonical domain language. Do not silently invent synonyms, overload
 a defined term, or introduce a new domain concept in code alone. Proposed vocabulary
@@ -19,6 +21,17 @@ changes require Project Steward reconciliation with existing authority.
 Files under `docs-temp/` are ignored working notes and are never project authority.
 External design drafts and stashed work are not repository authority until the Steward
 reconciles them into the files above.
+
+### Authority hierarchy (capture/evidence)
+
+- Product doctrine and lifecycle: `VISION.md`
+- Term meanings: `VOCABULARY.md`
+- Settled decisions (including D8): `decisions/decisions.md`
+- Why the boundary is hard to reverse: `docs/adr/0001-capture-event-evidence-boundary.md`
+- Normative implementation contract: `docs/specs/capture-event-v2.md`
+
+D5’s original text is preserved for history and is superseded by D8 for the
+capture/evidence storage boundary and Outcome-as-history phrasing.
 
 ## Roles
 
@@ -37,24 +50,47 @@ reconciles them into the files above.
 ## Hard boundaries
 
 - Observatory is a standalone observation-data service.
-- Every consumer uses the versioned API; never create direct database or file access for a
-  project, LLM, agent, or script.
+- Every consumer uses the versioned API for data access; never create direct database or
+  Evidence Store access for a project, LLM, agent, or script consumer.
 - Keep strategy, recommendations, conclusions, scoring, reporting narratives, customer
   overlays, and campaign workflow outside Observatory.
-- Preserve exact evidence and immutable attempt/outcome history; make query projections
-  rebuildable and versioned.
-- Never collapse missing, refused, failed, partial, malformed, or inapplicable states.
-- Never make provider calls from ordinary automated tests.
-- Never claim fixture or mock success proves real PostgreSQL, crash, concurrency, or
-  recovery behavior.
+- **Evidence** is committed Attempt and Capture manifests plus body objects on the
+  filesystem Evidence Store. PostgreSQL is **not** authoritative Evidence.
+- Do not store authoritative Attempt/Capture history or raw request/response bodies as
+  PostgreSQL/`BYTEA` source of truth.
+- Do not treat Outcome as an Evidence event, Capture substitute, or parent of Evidence.
+  Outcome is a derived, versioned classification.
+- Lifecycle is Attempt → Capture → derived Outcome → Derivation → Observation → API.
+  Do not implement attempt → outcome → observation as if Outcome were the transport
+  archive.
+- `attempt_id`, `capture_id`, and body addresses are full 64-character lowercase SHA-256
+  values—not UUIDs and not truncated digests.
+- No fixture or provider transport before a committed Attempt.
+- Authorized/unresolved (Attempt without Capture) must not be treated as definitely unsent.
+- Partial, no-response, refused, failed, malformed, and unresolved paths must never
+  masquerade as Observations.
+- Every Observation cites verified `capture_id` and `attempt_id`.
+- Preserve immutable Evidence; re-derive rebuildable Outcomes/Observations without
+  rewriting events or bodies.
+- Never collapse missing, unstated, inapplicable, refused, failed, partial, or malformed
+  states.
+- Never make real provider network calls from ordinary automated tests. First
+  implementation remains fixture-only (`fixture-panel-v1`).
+- Never claim fixture or mock success proves real PostgreSQL behavior, Evidence Store
+  crash/fsync/commit behavior, concurrency of Attempt authorization, or recovery.
+- Ordinary hardlinks from event bundles into the content-addressed object pool are
+  forbidden.
 - Do not weaken durability to improve development convenience.
+- Do not implement capture-event storage against obsolete models (flat payload without
+  Capture root, Outcome-as-Evidence-parent, PG-as-Evidence).
+- Do not implement deferred work (F1–F10) before its recorded trigger fires.
 
 ## Work method
 
 - Work from one ticket with observable acceptance criteria.
 - Ordinary tests are the default.
 - Add a hammer candidate only when the invariant, consequence, and required proof substrate
-  can be named.
+  can be named (Evidence Store vs PostgreSQL as appropriate under D6/D8).
 - Create an ADR only when the choice is hard to reverse, surprising without context, and
   the result of a real trade-off.
 - Do not generate planning, audit, closure, or status document trees.
@@ -105,13 +141,19 @@ with the repository HEAD you intend to mutate.
 
 ## Commands
 
-These are the intended repository commands once the Python project scaffold exists:
+Intended repository commands as modules exist:
 
     uv run pytest -q
     uv run ruff check .
     uv run mypy
     uv run python -m observatory.migrate
+    uv run python -m observatory.capture
     uv run python -m observatory.derive
+    uv run python -m observatory.evidence status
+    uv run python -m observatory.evidence scrub
+
+Migration, capture, derivation, and evidence commands remain placeholders until
+implemented.
 
 ## Grok skill policy
 
@@ -158,6 +200,6 @@ A ticket is complete only when the Project Steward closes it and:
 
 - its acceptance behavior is observable;
 - relevant ordinary tests pass on the correct substrate;
-- data and API boundary rules remain intact;
+- data, Evidence Store, and API boundary rules remain intact;
 - the exact unproven limits are stated;
 - authority docs changed only if the ticket made a real decision.
