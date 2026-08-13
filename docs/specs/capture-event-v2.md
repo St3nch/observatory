@@ -148,25 +148,40 @@ are further constrained to `0 ≤ n ≤ 9007199254740991` by their own field rul
 ### I-JSON admissibility (complete set)
 
 RFC 8785 requires I-JSON input, so an identity-bearing document is admissible only if it
-satisfies **every** constraint below. This list is exhaustive as of RFC 7493; an
-implementation that satisfies all five needs no further Unicode or number admissibility
-rule. It is enumerated here because these were previously discovered one defect at a time.
+satisfies **every** constraint below. These are the RFC 7493 **MUST**-level constraints,
+plus the integer range Observatory hardens from a SHOULD to a MUST. It is enumerated here
+because these were previously discovered one defect at a time.
 
 | # | Requirement | Source |
 |---|---|---|
 | 1 | Encoded as UTF-8 | RFC 7493 §2.1 |
 | 2 | No surrogate code points in object names or string values | RFC 7493 §2.1 |
 | 3 | No Unicode **noncharacters** in object names or string values | RFC 7493 §2.1 |
-| 4 | Integers within the safe range above | RFC 7493 §2.2, as hardened by Observatory |
+| 4 | Integers within the safe range above | RFC 7493 §2.2, hardened by Observatory |
 | 5 | No duplicate object member names | RFC 7493 §2.3 |
+
+RFC 7493 §2.2 carries a second, SHOULD-level constraint: avoid numbers exceeding IEEE 754
+binary64 magnitude or precision, such as `1E400`. Observatory subsumes it by forbidding
+floating-point values outright, which is stricter. It is therefore absent from the table by
+satisfaction, not by oversight.
+
+RFC 7493 §4 constraints — top-level object or array, must-ignore, ISO 8601 timestamps,
+base64url — are protocol-design SHOULDs rather than message admissibility rules, and closed
+schemas deliberately contradict must-ignore. Well-formed JSON is a prerequisite of §2, not a
+sixth rule.
 
 Constraints 2 and 3 apply to code points **however they arrive** — encoded directly or
 arriving as `\u` escapes in parsed input. Rejecting them at serialization alone is
 insufficient when a document is validated from stored bytes.
 
+A **valid surrogate pair is not a surrogate.** `"\uD800\uDEAD"` is legal I-JSON: it decodes
+to a single scalar value, and rejecting it would be a conformance defect in the opposite
+direction. Only unpaired surrogates are inadmissible.
+
 The noncharacters are the 66 code points `U+FDD0`–`U+FDEF`, plus the last two of every
 plane: any code point where `cp & 0xFFFE == 0xFFFE`, which covers `U+FFFE`, `U+FFFF`,
-`U+1FFFE`, `U+1FFFF`, through `U+10FFFE` and `U+10FFFF`.
+`U+1FFFE`, `U+1FFFF`, through `U+10FFFE` and `U+10FFFF`. `U+FDCF` and `U+FDF0` sit just
+outside the block and are ordinary characters.
 
 Inadmissible input is rejected. It is never serialized, substituted, or repaired — a
 repaired document would carry an identity for content that was never received.

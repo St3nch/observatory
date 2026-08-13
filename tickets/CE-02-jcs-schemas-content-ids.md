@@ -1,6 +1,6 @@
 # CE-02 — Canonical JCS, closed schemas, and content-ID vectors
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** necessary prefactor
 **Blocked by:** None — can start immediately
@@ -233,20 +233,32 @@ Identity IDs are `content_digest(canonical_json(document))` after validation.
 
 <!-- Project Steward only -->
 
-**Reopened a second time.** The Steward closed at `c0a2189`; [GPT] then found that Unicode
-noncharacters are accepted, which RFC 7493 §2.1 forbids with a MUST NOT. Reopened to close
-the full I-JSON admissibility set rather than patch one more defect.
+- Closed at commit: `ff7bc697012a9b1ba215f14021d21b559114d089`
+- Evidence accepted: **yes**
 
-- Closed at commit:
-- Evidence accepted: not yet
+### Completion criterion — met
 
-### Completion criterion for the encoder
+The encoder is complete when all five I-JSON admissibility constraints in
+`docs/specs/capture-event-v2.md` hold with a test each. Verified at `ff7bc69`:
 
-The first three review rounds each found one I-JSON violation at a time, and the Steward
-closed the ticket twice with violations outstanding. The set is finite, so it is now
-enumerated in `docs/specs/capture-event-v2.md` §I-JSON admissibility. The encoder is
-complete when all five constraints hold and each has a test. Not before, and — absent a new
-finding against that list — not after.
+| # | Constraint | Enforced at |
+|---|---|---|
+| 1 | UTF-8 | explicit decode raising `DocumentError("invalid UTF-8")` |
+| 2 | No unpaired surrogates | `_reject_inadmissible_code_point` |
+| 3 | No noncharacters | `_is_noncharacter`: `0xFDD0 ≤ c ≤ 0xFDEF or c & 0xFFFE == 0xFFFE` |
+| 4 | Safe integers | `_jcs_int` at encoder, validator, and `body_ref` |
+| 5 | No duplicate member names | `json.loads(object_pairs_hook=_object_pairs)` |
+
+`_reject_inadmissible_strings` runs on both the bytes-parse path and the in-memory path, so
+an inadmissible code point is caught however it arrives. Bytes-path tests assert on error
+text, so a schema failure cannot masquerade as an admissibility pass.
+
+### Steward verification at ff7bc69
+
+Checked directly rather than taken from the implementation report: 77 tests pass; `ruff` and
+`mypy` clean; golden constants traced to spec lines 83, 595, and 629, confirming
+expectations are fixed from the spec rather than derived from implementation output; the
+five enforcement points above read in source.
 
 Implementation landed across three commits: `cca1191` (initial), `780f7b2` (escape,
 surrogate, and proof-coverage remediation), `c0a2189` (integer bound). The Implementation
@@ -263,29 +275,38 @@ through `_jcs_int`, with `bool` tested before `int`; the safe-integer bound is e
 the encoder, the validator, and the `body_ref` constructor, so an oversized body length
 fails before serialization.
 
-### Review history — three rounds, three defect classes
+### Review history — four rounds, four defect classes
 
-All three were invisible behind a green suite, and none was caught by the published vectors,
-which are ASCII and small-integer.
+All four were invisible behind a green suite, and none was catchable by the published
+vectors, which are ASCII and small-integer.
 
 1. **U+2028/U+2029 escaped.** Found independently by [GPT] and [CLAUDE]. The committed test
    asserted the wrong output, entrenching it.
-2. **Lone surrogates leaked `UnicodeEncodeError`.** Found by [GPT]. The module declares
-   `DocumentError` as its canonicalization failure.
-3. **Unbounded `str(int)`.** Found by [CLAUDE], understated as a 2⁵³ precision issue,
-   recorded as an accepted limit, and the ticket closed. [GPT] demonstrated by hostile test
-   that `10**30` renders as thirty-one digits where JCS requires `1e+30`, and that closing
-   was wrong.
+2. **Lone surrogates leaked `UnicodeEncodeError`.** Found by [GPT].
+3. **Unbounded `str(int)`.** Found by [CLAUDE], understated, recorded as an accepted limit,
+   and the ticket closed. [GPT] demonstrated `10**30` renders as thirty-one digits where
+   JCS requires `1e+30`.
+4. **Unicode noncharacters accepted.** Found by [GPT] after the second closure. RFC 7493
+   §2.1 forbids them by MUST NOT alongside surrogates; treating lone surrogates as the whole
+   invalid-Unicode set was wrong.
 
 [GROK] predicted this entire class in his first report — that a wrong escape or number rule
 would pass every golden — before either reviewer looked. Encoder correctness now rests on
-RFC-derived and non-ASCII tests rather than on the project's own vectors.
+RFC-derived tests rather than the project's own vectors.
 
-**Steward error, recorded because it should not recur:** accepting a known conformance
-divergence in identity-bearing serialization on the grounds that it was unreachable by the
-current document set. Reachability bears on urgency, never on whether a wrong identity is
-acceptable. Separately, the first written rationale for the bound overstated RFC 8785 in
-three places and was corrected in `c099d3a` after [GPT] caught it.
+**Steward errors, recorded because they should not recur.** Closed this ticket twice with
+MUST-level violations outstanding. Accepted a known conformance divergence on the grounds it
+was unreachable by the current document set — reachability bears on urgency, never on
+whether a wrong identity is acceptable. Patched one defect per round instead of enumerating
+a finite set until round four. And overstated the standards four times in writing: that no
+integer above 2⁵³−1 is exact, that rejection was an RFC 8785 mandate, that 10²¹ was below
+2⁵³, and that the five-constraint table was exhaustive of RFC 7493. Each was a confident
+technical assertion made from memory without checking; each was caught by another reader.
+
+[GROK] caught the fourth by reading RFC 7493 top to bottom when asked whether the list was
+complete. §2.2's SHOULD-level constraint on numbers exceeding binary64 magnitude or
+precision was missing from the table; it is subsumed by the float ban, and the spec now says
+so rather than claiming exhaustiveness.
 
 ### Decisions recorded here
 
@@ -300,13 +321,11 @@ three places and was corrected in `c099d3a` after [GPT] caught it.
 ### Unproven limits
 
 - Behaviour differs from a conforming JCS implementation only in being **fail-closed**: we
-  reject floats, out-of-range integers, lone surrogates, and non-JSON types rather than
-  serializing them. No divergence remains on a value we accept.
+  reject floats, out-of-range integers, inadmissible code points, duplicate member names,
+  and non-JSON types rather than serializing them. No divergence remains on a value we
+  accept.
 - C1 controls and U+007F as string content are untested, but take the literal-BMP branch
   already covered by non-ASCII tests — same path, not a separate rule.
-- Duplicate keys on the bytes-parse path resolve last-wins via `json.loads`, which is parser
-  behaviour rather than encoder output. I-JSON forbids duplicate names; this is not
-  currently rejected. Revisit if any input arrives from outside our own construction.
 - A lone surrogate in an object key raises `DocumentError` via the `canonical_json`
   `UnicodeEncodeError` wrapper rather than the `_jcs_string` boundary check, so its message
   reads "JCS output is not valid UTF-8" instead of naming surrogates. Contract holds;
