@@ -39,9 +39,11 @@ capture/evidence storage boundary and Outcome-as-history phrasing.
   decisions, and release approval.
 - The Project Steward owns sequencing, architectural coherence, authority maintenance,
   ticket quality, integration, acceptance evidence, and drift control.
-- The Project Steward holds no memory between sessions. Every decision, sequencing choice,
-  and acceptance judgement must be written into this repository when it is made. Authority
-  on disk is the only continuity this project has; Steward recall is not evidence.
+- The Project Steward holds no memory between sessions. **Durable** decisions — sequencing,
+  acceptance, supersession, and anything a later session would otherwise have to
+  re-derive — must be written into this repository when made. Transient judgement is not
+  recorded; recording everything would violate D7. Authority on disk is the only continuity
+  this project has; Steward recall is not evidence.
 - Coding and review agents implement or inspect bounded assignments under the current
   authority and ticket. They do not replace the Project Steward or silently redefine
   project direction.
@@ -54,9 +56,21 @@ capture/evidence storage boundary and Outcome-as-history phrasing.
 
 | Agent | Lane | May write | May read |
 |---|---|---|---|
-| Grok | Implementer | `src/`, `tests/`, and the assigned ticket's Implementation report | everything |
-| Claude | Project Steward | authority documents, `tickets/`, `decisions/`; never `src/` or `tests/` | everything |
+| Grok | Implementer | everything outside the authority set, plus the assigned ticket's status fields and Implementation report | everything |
+| Claude | Project Steward | the authority set and `tickets/`; never `src/` or `tests/` | everything |
 | GPT and any other agent | Reviewer | nothing in the repository; findings are reported to the Steward | everything |
+
+**The authority set** is `AGENTS.md`, `VISION.md`, `VOCABULARY.md`, `decisions/`, and
+`docs/`. Only the Steward writes these.
+
+The implementer writes everything else his ticket requires — `src/`, `tests/`, and tooling
+or configuration such as `pyproject.toml`, `.githooks/`, and `README.md` — plus, **in the
+assigned ticket only**, the `Start commit` field, the `Status` field (never `done`), and the
+Implementation report. He does not touch any other ticket.
+
+The assigned ticket is therefore the one authority-adjacent file that intentionally travels
+in an implementation commit. That is deliberate: the evidence of work and the work itself
+land together, or the record can drift from the code.
 
 **Every agent may read the entire repository.** Read access is not a lane. A reviewer who
 cannot open the code cannot distinguish a test that proves a criterion from one that merely
@@ -77,9 +91,11 @@ reports the finding; it does not write, patch, or "just fix" `src/` or `tests/`,
 does not repair a broken build it happens to notice. An agent editing files outside its
 lane has already drifted—stop and report instead.
 
-An agent works under exactly one ticket ID at a time. No ticket ID means no implementation
-work. Every skill invocation reports the absolute path of the project-local `SKILL.md` it
-loaded and the ticket ID it is working under.
+An **implementer** works under exactly one ticket ID at a time; no ticket ID means no
+implementation work. Steward and reviewer activity — audits, sequencing, reconciliation,
+authority maintenance — is legitimately unticketed and always has been. Every skill
+invocation that performs implementation reports the absolute path of the project-local
+`SKILL.md` it loaded and the ticket ID it is working under.
 
 ## Hard boundaries
 
@@ -168,8 +184,11 @@ The handoff between lanes is a commit, not a working tree.
 - `implement` ends with a commit. Uncommitted work is not delivered work, and a ticket is
   never moved to `review` from a dirty tree.
 - `code-review` starts from a named commit and refuses to review uncommitted work.
-- Before any ticket status changes: `git status` is clean and `uv run pytest -q` exits 0.
-  A suite that fails to collect is a red suite, not a partial pass.
+- Implementation begins from a clean tree at a named commit and ends with a commit. A
+  ticket's status change and Implementation report travel inside that implementation
+  commit; the tree is clean before the work begins and clean once it lands.
+- `uv run pytest -q` must exit 0 at any commit that carries a ticket status change. A
+  suite that fails to collect is a red suite, not a partial pass.
 - An abandoned or interrupted assignment leaves no untracked files behind. Record the
   stopping point in the ticket's Implementation report and leave the tree clean.
 - A ticket's **Start commit** is stamped when implementation actually begins, and names the
