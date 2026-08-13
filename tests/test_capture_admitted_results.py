@@ -300,7 +300,7 @@ def test_post_committed_verify_failure_prevents_transport(
     store = _store(tmp_path)
     calls: list[object] = []
 
-    def spy(attempt: object) -> capture_mod.FixtureTransportResult:
+    def spy(attempt: object) -> Any:
         calls.append(attempt)
         raise AssertionError("transport must not run")
 

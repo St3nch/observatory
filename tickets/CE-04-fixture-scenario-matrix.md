@@ -1,11 +1,11 @@
 # CE-04 — Full fixture-panel-v1 matrix and all transport branches
 
-**Status:** ready-for-agent
+**Status:** review
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** tracer bullet
 **Blocked by:** CE-03B — admitted_results tracer: Attempt, transport, Capture, CLI
 **Approved by:** Project Steward
-**Start commit:**
+**Start commit:** eb6695c665e3659d57d7f86b8d9529756312ee60
 
 ## What to build
 
@@ -91,10 +91,47 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- implement fills; may set Status: review; never Status: done -->
 
-- End commit:
+- End commit: supplied in the implementer handoff report (a commit cannot
+  embed its own final hash).
 - Acceptance evidence:
+  - `uv run pytest -q` — 330 passed
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Ten scenarios × depths 1..16 (algorithm):
+    `test_algorithm_all_scenarios_all_depths`
+  - Durable store path, all ten scenarios:
+    `test_store_all_scenarios_durable`
+  - Character classes / min / max / other-subject:
+    `test_algorithm_panel_and_subject_tokens`,
+    `test_algorithm_min_length_tokens`,
+    `test_extra_subject_alt_key_and_other_subject_branch`,
+    `test_store_extra_subject_other_subject_key`
+  - Branch rules: `wrong_media_type` /
+    `test_wrong_media_type_body_matches_admitted_empty`;
+    partial / malformed in `test_algorithm_all_scenarios_all_depths`;
+    `test_malformed_bytes_are_exactly_45_and_have_no_trailing_newline`
+  - Published AR/RP/NR:
+    `test_ar_entrypoint_still_matches_published_ids`,
+    `test_published_rp_identities_and_partial_body`,
+    `test_published_nr_identities_and_no_response_body`
+  - ≤1 Capture: `test_second_capture_for_same_attempt_rejected`,
+    `test_uncommitted_capture_residue_is_ignored_by_uniqueness`,
+    `test_corrupt_committed_capture_during_uniqueness_is_integrity_failure`
+  - D8 every scenario: `test_attempt_before_transport_every_scenario`
+    plus existing CE-03B forgery/store-type tests
+  - CLI: `test_cli_vector_rp`, `test_cli_scenario_covers_matrix`,
+    existing `test_cli_prints_both_full_ids`
 - Unproven limits:
+  - Durable store path is all 10 scenarios at depth 2 (plus published vectors).
+    Depths 1..16 are proven on the pure algorithm, not 160 full Evidence commits.
+  - panel_id/subject_key coverage is representative tokens, not every string
+    matching `[A-Za-z0-9._:-]{1,128}`.
+  - Uniqueness scan is O(committed captures) with full D5 per bundle; one writer.
+  - No derive, Observations, PostgreSQL, concurrent writers, or crash recovery.
 - Review findings remaining:
+  - `capture_admitted_results` and `--evidence-root` alone still produce published
+    AR. `--vector AR|RP|NR` and `--scenario NAME` cover the matrix. Classification
+    and Observation count are returned, not persisted.
 
 ## Closure
 

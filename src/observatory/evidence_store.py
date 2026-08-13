@@ -144,6 +144,7 @@ class EvidenceStore:
             validated = validate_capture(document, attempt=parent)
         except DocumentError as exc:
             raise StoreError("Capture does not agree with its parent Attempt") from exc
+        self._require_unique_capture(parent_id)
         manifest = canonical_json(validated)
         capture_id = content_digest(manifest)
         if response_body is not None:
@@ -383,6 +384,21 @@ class EvidenceStore:
             include_response=True,
         )
         return document
+
+    def _require_unique_capture(self, attempt_id: str) -> None:
+        """Reject a second Capture for *attempt_id*. Scan committed bundles only (D6)."""
+
+        base = self.root / "captures" / "v1"
+        if not base.is_dir():
+            return
+        for marker in base.rglob("COMMITTED"):
+            bundle = marker.parent
+            capture_id = bundle.name
+            document = self._verify_capture_bundle(bundle, capture_id)
+            if document.get("attempt_id") == attempt_id:
+                raise StoreError(
+                    f"Attempt {attempt_id} already has committed Capture {capture_id}"
+                )
 
     def _find_bundle(self, kind: str, event_id: str) -> Path | None:
         base = self.root / kind / "v1"
