@@ -130,6 +130,11 @@ def _build_transport_gate() -> tuple[object, object, type]:
         document: Mapping[str, object],
         request_body: bytes,
     ) -> _VerifiedAttempt:
+        if not isinstance(store, EvidenceStore):
+            raise TypeError(
+                "fixture transport requires a real EvidenceStore; "
+                "a duck-typed store cannot attest a verified committed Attempt"
+            )
         attempt_id = store.commit_attempt(document, request_body=request_body)
         read_back = store.read_attempt(attempt_id)
         if read_back is None:
@@ -216,6 +221,11 @@ def capture_admitted_results(
     which is the authorized fixture journal-skip condition.
     """
 
+    if not isinstance(store, EvidenceStore):
+        raise TypeError(
+            "fixture transport requires a real EvidenceStore; "
+            "a duck-typed store cannot attest a verified committed Attempt"
+        )
     parameters = validate_parameters(
         {
             "contract": "fixture-panel-v1",

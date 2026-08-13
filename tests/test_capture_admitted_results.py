@@ -200,6 +200,43 @@ def test_mutating_capability_cannot_change_transport_output(tmp_path: Path) -> N
     )
 
 
+def test_public_runner_rejects_pretend_store_before_transport(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class PretendStore:
+        def commit_attempt(
+            self, document: Mapping[str, object], *, request_body: bytes | None
+        ) -> str:
+            return "0" * 64
+
+        def read_attempt(self, attempt_id: str) -> dict[str, object]:
+            return {
+                "parameters": {
+                    "contract": "fixture-panel-v1",
+                    "depth": 2,
+                    "panel_id": "panel-alpha",
+                    "scenario": "admitted_results",
+                    "subject_key": "subject-one",
+                }
+            }
+
+        def commit_capture(
+            self, document: Mapping[str, object], *, response_body: bytes | None
+        ) -> str:
+            return "1" * 64
+
+    calls: list[object] = []
+
+    def spy(attempt: object) -> Any:
+        calls.append(attempt)
+        raise AssertionError("transport must not run")
+
+    monkeypatch.setattr(capture_mod, "_admitted_results_transport", spy)
+    with pytest.raises(TypeError, match="EvidenceStore"):
+        capture_admitted_results(PretendStore(), PUBLISHED_AR_INPUTS)  # type: ignore[arg-type]
+    assert calls == []
+
+
 def test_attempt_commit_failure_prevents_transport(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

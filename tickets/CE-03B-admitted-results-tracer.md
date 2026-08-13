@@ -126,7 +126,8 @@ This ticket adds **no** behavior beyond committed authority.
     `test_mutating_capability_cannot_change_transport_output`,
     `test_attempt_commit_failure_prevents_transport`,
     `test_post_committed_verify_failure_prevents_transport`,
-    `test_only_issued_capability_reaches_transport_from_runner`
+    `test_only_issued_capability_reaches_transport_from_runner`,
+    `test_public_runner_rejects_pretend_store_before_transport`
   - Journal skip: `test_journal_is_not_written`
   - CLI: `test_cli_prints_both_full_ids`, `test_cli_module_entrypoint_prints_ids`,
     `test_cli_does_not_derive_or_touch_postgresql`
@@ -138,15 +139,17 @@ This ticket adds **no** behavior beyond committed authority.
   - CLI uses frozen published AR inputs only (`--evidence-root` required).
   - Journal skip is the authorized in-process-retention exception, not a journal product.
   - No PostgreSQL, derive, HTTP, other scenarios, or crash/hardware claims.
-  - D8 gate: ordinary module/API construction and every in-repo call path.
-    Not a cryptographic or hostile-runtime claim.
+  - D8 gate: ordinary module/API construction, including a duck-typed store
+    passed to `capture_admitted_results`. Not a claim against monkeypatching a
+    genuine `EvidenceStore`, closure-cell introspection, or function replacement.
 - Review findings remaining:
   - Public surface: `capture_admitted_results(store, inputs)`,
     `AdmittedResultsInputs`, `PUBLISHED_AR_INPUTS`, `main`. The transport
     capability is not supported public API. Ordinary construction and field
     copies are rejected; transport reads frozen scalars taken from committed
-    request bytes at issuance. This is not a claim against `object.__new__`
-    plus closure-cell introspection or arbitrary monkeypatching.
+    request bytes at issuance. Issuance requires `isinstance(store, EvidenceStore)`.
+    This is not a claim against `object.__new__` plus closure-cell introspection
+    or monkeypatching a genuine store instance.
 
 ## Closure
 
