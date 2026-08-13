@@ -94,22 +94,31 @@ This ticket adds **no** behavior beyond committed authority.
 - End commit: supplied in the implementer handoff report (a commit cannot
   embed its own final hash).
 - Acceptance evidence:
-  - `uv run pytest -q` — 330 passed
+  - `uv run pytest -q` — 401 passed
   - `uv run ruff check .` — clean
   - `uv run mypy` — clean
-  - Ten scenarios × depths 1..16 (algorithm):
+  - Issued capability slots reject ordinary assignment:
+    `test_ordinary_assignment_cannot_change_issued_transport_scalars`
+    (`_panel_id`, `_subject_key`, `_depth`, `_scenario`; transport still
+    matches committed AR request bytes).
+  - Ten scenarios × depths 1..16 (algorithm, independent body fields):
     `test_algorithm_all_scenarios_all_depths`
-  - Durable store path, all ten scenarios:
-    `test_store_all_scenarios_durable`
-  - Character classes / min / max / other-subject:
-    `test_algorithm_panel_and_subject_tokens`,
-    `test_algorithm_min_length_tokens`,
-    `test_extra_subject_alt_key_and_other_subject_branch`,
-    `test_store_extra_subject_other_subject_key`
-  - Branch rules: `wrong_media_type` /
-    `test_wrong_media_type_body_matches_admitted_empty`;
-    partial / malformed in `test_algorithm_all_scenarios_all_depths`;
+  - Named independent body oracles:
+    `test_normative_admitted_results_fields`,
+    `test_normative_admitted_empty_object`,
+    `test_normative_provider_refusal_object`,
+    `test_normative_provider_failure_object`,
+    `test_normative_wrong_media_type_empty_bytes_and_plain_header`,
+    `test_normative_response_partial_is_first_32_of_independent_full`,
+    `test_normative_extra_subject_identity_and_other_subject_branch`,
+    `test_normative_too_many_results_is_depth_plus_one`,
     `test_malformed_bytes_are_exactly_45_and_have_no_trailing_newline`
+  - Generated parameter corpus (alphabet, lengths 1/128, mixed keys,
+    independent P/S, `other-subject`, depths 1..16):
+    `test_generated_parameter_corpus`
+  - Durable store path, all ten scenarios (independent stored-body
+    checks): `test_store_all_scenarios_durable`,
+    `test_store_extra_subject_other_subject_key`
   - Published AR/RP/NR:
     `test_ar_entrypoint_still_matches_published_ids`,
     `test_published_rp_identities_and_partial_body`,
@@ -122,16 +131,23 @@ This ticket adds **no** behavior beyond committed authority.
   - CLI: `test_cli_vector_rp`, `test_cli_scenario_covers_matrix`,
     existing `test_cli_prints_both_full_ids`
 - Unproven limits:
-  - Durable store path is all 10 scenarios at depth 2 (plus published vectors).
-    Depths 1..16 are proven on the pure algorithm, not 160 full Evidence commits.
-  - panel_id/subject_key coverage is representative tokens, not every string
-    matching `[A-Za-z0-9._:-]{1,128}`.
-  - Uniqueness scan is O(committed captures) with full D5 per bundle; one writer.
-  - No derive, Observations, PostgreSQL, concurrent writers, or crash recovery.
+  - Ordinary assignment is rejected. `object.__setattr__`, closure
+    introspection, function replacement, and monkeypatching are not
+    defended.
+  - Durable store path is all 10 scenarios at depth 2 (plus published
+    vectors). Depths 1..16 are proven on the pure algorithm, not 160
+    full Evidence commits.
+  - panel_id/subject_key coverage is a deterministic corpus, not every
+    string matching `[A-Za-z0-9._:-]{1,128}`.
+  - Uniqueness scan is O(committed captures) with full D5 per bundle;
+    one writer.
+  - No derive, Observations, PostgreSQL, concurrent writers, or crash
+    recovery.
 - Review findings remaining:
-  - `capture_admitted_results` and `--evidence-root` alone still produce published
-    AR. `--vector AR|RP|NR` and `--scenario NAME` cover the matrix. Classification
-    and Observation count are returned, not persisted.
+  - `capture_admitted_results` and `--evidence-root` alone still produce
+    published AR. `--vector AR|RP|NR` and `--scenario NAME` cover the
+    matrix. Classification and Observation count are returned, not
+    persisted.
 
 ## Closure
 

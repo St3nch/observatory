@@ -208,6 +208,12 @@ def _build_transport_gate() -> tuple[object, object, type]:
         def __init__(self, *args: object, **kwargs: object) -> None:
             raise TypeError("cannot construct a transport capability")
 
+        def __setattr__(self, name: str, value: object) -> None:
+            raise AttributeError("issued transport capability is immutable")
+
+        def __delattr__(self, name: str) -> None:
+            raise AttributeError("issued transport capability is immutable")
+
     def _is_issued(attempt: object) -> bool:
         return any(candidate is attempt for candidate in issued)
 

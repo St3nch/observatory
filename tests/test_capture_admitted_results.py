@@ -19,7 +19,13 @@ from observatory.capture import (
     capture_admitted_results,
     main,
 )
-from observatory.capture_event import DocumentError, canonical_json, content_digest
+from observatory.capture_event import (
+    DocumentError,
+    attempt_document,
+    canonical_json,
+    content_digest,
+    validate_parameters,
+)
 from observatory.evidence_store import (
     EvidenceStore,
     IntegrityError,
@@ -167,6 +173,41 @@ def test_copying_genuine_capability_fields_is_not_accepted(tmp_path: Path) -> No
         object.__setattr__(copy, name, getattr(genuine, name))
     with pytest.raises(TypeError, match="verified committed Attempt"):
         capture_mod._admitted_results_transport(copy)
+
+
+def test_ordinary_assignment_cannot_change_issued_transport_scalars(
+    tmp_path: Path,
+) -> None:
+    store = _store(tmp_path)
+    parameters = validate_parameters(
+        {
+            "contract": "fixture-panel-v1",
+            "depth": PUBLISHED_AR_INPUTS.depth,
+            "panel_id": PUBLISHED_AR_INPUTS.panel_id,
+            "scenario": "admitted_results",
+            "subject_key": PUBLISHED_AR_INPUTS.subject_key,
+        }
+    )
+    request_body = canonical_json(parameters)
+    document = attempt_document(
+        parameters=parameters,
+        attempt_nonce=PUBLISHED_AR_INPUTS.attempt_nonce,
+        authorized_at=PUBLISHED_AR_INPUTS.authorized_at,
+        observatory_version=PUBLISHED_AR_INPUTS.observatory_version,
+    )
+    issued = capture_mod._issue_verified_attempt(store, document, request_body)
+    for name, value in (
+        ("_panel_id", "mutated-panel"),
+        ("_subject_key", "mutated-subject"),
+        ("_depth", 16),
+        ("_scenario", "provider_refusal"),
+    ):
+        with pytest.raises((AttributeError, TypeError)):
+            setattr(issued, name, value)
+    result = capture_mod._admitted_results_transport(issued)
+    assert result.body == AR_RESPONSE_BODY
+    assert result.classification == "observation_admitted"
+    assert result.observation_count == 2
 
 
 def test_mutating_capability_cannot_change_transport_output(tmp_path: Path) -> None:
