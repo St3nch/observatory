@@ -1,41 +1,226 @@
-"""HTTP application boundary."""
+"""HTTP application boundary: read-only fixture/dev API."""
 
-from typing import Literal
+from __future__ import annotations
 
-from fastapi import APIRouter, FastAPI
+import re
+from typing import Any, Final, Literal
+
+import psycopg
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from pydantic import BaseModel
 
 from observatory import __version__
+from observatory.evidence_store import EvidenceStore, IntegrityError, open_store
 from observatory.settings import Settings, get_settings
+
+_HEX64: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
+INTEGRITY_SIGNAL: Final[str] = "evidence_integrity_failure"
 
 
 class HealthResponse(BaseModel):
-    """Stable process-liveness response."""
+    """Process-liveness payload used by the pre-existing /healthz route."""
 
     status: Literal["ok"]
     service: Literal["observatory"]
     version: str
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+class OutcomeEnvelope(BaseModel):
+    attempt_id: str
+    capture_id: str | None
+    derivation_version_id: str
+    classification: str
+    observation_count: int
+
+
+class ObservationEnvelope(BaseModel):
+    capture_id: str
+    derivation_version_id: str
+    within_capture_result_id: str
+    attempt_id: str
+    provider: str
+    panel_id: str
+    subject_key: str
+    result_index: int
+    label: str
+    score: int
+
+
+class AttemptResource(BaseModel):
+    attempt_id: str
+    derivation_version_id: str
+    attempt_outcome: OutcomeEnvelope
+    capture_outcome: OutcomeEnvelope | None
+    observations: list[ObservationEnvelope]
+
+
+def _read_connect(dsn: str) -> psycopg.Connection[Any]:
+    return psycopg.connect(dsn, options="-c default_transaction_read_only=on")
+
+
+def _as_int(value: object, name: str) -> int:
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise TypeError(f"{name} must be an integer")
+    return value
+
+
+def _outcome_envelope(row: tuple[object, ...]) -> OutcomeEnvelope:
+    capture_id = row[1]
+    return OutcomeEnvelope(
+        attempt_id=str(row[0]),
+        capture_id=None if capture_id is None else str(capture_id),
+        derivation_version_id=str(row[2]),
+        classification=str(row[3]),
+        observation_count=_as_int(row[4], "observation_count"),
+    )
+
+
+def _observation_envelope(row: tuple[object, ...]) -> ObservationEnvelope:
+    return ObservationEnvelope(
+        capture_id=str(row[0]),
+        derivation_version_id=str(row[1]),
+        within_capture_result_id=str(row[2]),
+        attempt_id=str(row[3]),
+        provider=str(row[4]),
+        panel_id=str(row[5]),
+        subject_key=str(row[6]),
+        result_index=_as_int(row[7], "result_index"),
+        label=str(row[8]),
+        score=_as_int(row[9], "score"),
+    )
+
+
+def _require_store(request: Request) -> EvidenceStore:
+    store = getattr(request.app.state, "store", None)
+    if isinstance(store, EvidenceStore):
+        return store
+    raise HTTPException(status_code=503, detail="evidence store is not configured")
+
+
+def _require_dsn(settings: Settings) -> str:
+    if settings.database_url is None:
+        raise HTTPException(status_code=503, detail="database URL is not configured")
+    return settings.database_url
+
+
+def _verify_backing(
+    store: EvidenceStore, attempt_id: str, capture_ids: set[str]
+) -> None:
+    try:
+        attempt = store.read_attempt(attempt_id)
+    except IntegrityError as exc:
+        raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
+    if attempt is None:
+        raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL)
+    for capture_id in sorted(capture_ids):
+        try:
+            capture = store.read_capture(capture_id)
+        except IntegrityError as exc:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
+        if capture is None:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL)
+
+
+def create_app(settings: Settings | None = None, *, store: EvidenceStore | None = None) -> FastAPI:
     """Create an isolated application instance."""
 
     runtime = settings or get_settings()
+    if store is None and runtime.evidence_root is not None:
+        store = open_store(runtime.evidence_root)
     application = FastAPI(
         title="Observatory",
         version=__version__,
         docs_url=f"{runtime.api_prefix}/docs",
         openapi_url=f"{runtime.api_prefix}/openapi.json",
     )
+    application.state.settings = runtime
+    application.state.store = store
+
     operations = APIRouter(tags=["operations"])
 
     @operations.get("/healthz", response_model=HealthResponse)
-    async def health() -> HealthResponse:
+    async def healthz() -> HealthResponse:
         """Report process liveness without claiming dependency health."""
 
         return HealthResponse(status="ok", service="observatory", version=__version__)
 
     application.include_router(operations)
+
+    v1 = APIRouter(tags=["v1"])
+
+    @v1.get("/health")
+    async def health() -> dict[str, str]:
+        """Process liveness only. Does not inspect PostgreSQL or Evidence."""
+
+        return {"status": "ok"}
+
+    @v1.get("/attempts/{attempt_id}")
+    async def get_attempt_resource(attempt_id: str, request: Request) -> AttemptResource:
+        if _HEX64.fullmatch(attempt_id) is None:
+            raise HTTPException(status_code=404, detail="not found")
+        settings = request.app.state.settings
+        if not isinstance(settings, Settings):
+            raise HTTPException(status_code=503, detail="settings are not configured")
+        version = settings.derivation_version_id
+        evidence = _require_store(request)
+        dsn = _require_dsn(settings)
+        with _read_connect(dsn) as connection:
+            outcome_rows = connection.execute(
+                """
+                SELECT attempt_id, capture_id, derivation_version_id,
+                       classification, observation_count
+                FROM outcomes
+                WHERE attempt_id = %s AND derivation_version_id = %s
+                ORDER BY capture_id NULLS FIRST
+                """,
+                (attempt_id, version),
+            ).fetchall()
+            if not outcome_rows:
+                raise HTTPException(status_code=404, detail="not found")
+            observation_rows = connection.execute(
+                """
+                SELECT
+                    capture_id,
+                    derivation_version_id,
+                    within_capture_result_id,
+                    attempt_id,
+                    provider,
+                    panel_id,
+                    subject_key,
+                    result_index,
+                    label,
+                    score
+                FROM observations
+                WHERE attempt_id = %s AND derivation_version_id = %s
+                ORDER BY result_index, within_capture_result_id
+                """,
+                (attempt_id, version),
+            ).fetchall()
+        attempt_stage: OutcomeEnvelope | None = None
+        capture_stage: OutcomeEnvelope | None = None
+        capture_ids: set[str] = set()
+        for row in outcome_rows:
+            envelope = _outcome_envelope(row)
+            if envelope.capture_id is None:
+                attempt_stage = envelope
+            else:
+                capture_stage = envelope
+                capture_ids.add(envelope.capture_id)
+        if attempt_stage is None:
+            raise HTTPException(status_code=404, detail="not found")
+        observations = [_observation_envelope(row) for row in observation_rows]
+        for item in observations:
+            capture_ids.add(item.capture_id)
+        _verify_backing(evidence, attempt_id, capture_ids)
+        return AttemptResource(
+            attempt_id=attempt_id,
+            derivation_version_id=version,
+            attempt_outcome=attempt_stage,
+            capture_outcome=capture_stage,
+            observations=observations,
+        )
+
+    application.include_router(v1, prefix="/v1")
     return application
 
 

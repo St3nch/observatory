@@ -1,11 +1,11 @@
 # CE-07 — Read API: health and attempt envelope
 
-**Status:** ready-for-agent
+**Status:** review
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** tracer bullet
 **Blocked by:** CE-06 — Derive completion: matrix, rebuild, multi-version, damaged refuse
 **Approved by:** Project Steward
-**Start commit:**
+**Start commit:** 93038934330b7698bafa9d87077ce58c03f50366
 
 ## What to build
 
@@ -88,10 +88,40 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- implement fills; may set Status: review; never Status: done -->
 
-- End commit:
+- End commit: supplied in the implementer handoff report (a commit cannot
+  embed its own final hash).
 - Acceptance evidence:
+  - `uv run pytest -q` — 443 passed
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Health: `test_v1_health_is_process_liveness_only`
+  - No auth: `test_v1_routes_require_no_authentication`
+  - Loopback: `test_configured_bind_is_loopback`
+  - Ten classifications:
+    `test_attempt_envelope_distinguishes_all_ten_classifications`
+  - Observation identities/values/provenance:
+    `test_admitted_observations_identities_values_and_provenance`
+  - Version selection: `test_configured_version_is_not_mixed`
+  - Integrity 409:
+    `test_damaged_attempt_returns_integrity_409`,
+    `test_damaged_capture_returns_integrity_409`,
+    `test_damaged_response_body_returns_integrity_409`
+  - Logical API rebuild:
+    `test_logical_api_rebuild_equivalence`
+  - Read-only: `test_api_reads_do_not_mutate_evidence_or_postgres`
 - Unproven limits:
+  - `/healthz` is left in place and unclaimed; `/v1/health` is the
+    authorized health route.
+  - Missing/malformed attempt IDs return 404 without a frozen error
+    schema.
+  - Health JSON is `{"status":"ok"}` and is not a field contract.
+  - No list/collection, query-parameter version selection, or write
+    routes.
+  - Loopback is enforced by `bind_host` in `python -m observatory.serve`;
+    ASGI tests do not open a real TCP socket.
 - Review findings remaining:
+  - FastAPI `TestClient` emits an upstream Starlette deprecation
+    warning; not an Observatory contract.
 
 ## Closure
 
