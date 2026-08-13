@@ -96,7 +96,7 @@ This ticket adds **no** behavior beyond committed authority.
 - End commit: supplied in the implementer handoff report (a commit cannot
   embed its own final hash).
 - Acceptance evidence:
-  - `uv run pytest -q` — 416 passed
+  - `uv run pytest -q` — 418 passed
   - `uv run ruff check .` — clean
   - `uv run mypy` — clean
   - Real PostgreSQL 18.6 via ephemeral `postgres:18-alpine` container
@@ -120,7 +120,11 @@ This ticket adds **no** behavior beyond committed authority.
   - Capture-unit atomicity / rollback:
     `test_capture_unit_rollback_leaves_no_partial_rows`
   - CLI: `test_derive_cli_on_real_postgres`
-  - CE-02–CE-04 remain green in the same 416-pass run
+  - Media-type admission (AR attempt + H_plain Capture):
+    `test_admitted_results_plain_media_type_is_not_admitted`
+  - Conflicting derivation-version registration:
+    `test_conflicting_adapter_contract_fails_before_derived_rows`
+  - CE-02–CE-04 remain green in the same suite run
 - Unproven limits:
   - Only `admitted_results` receives a Capture-stage Outcome.
     Other scenarios get Attempt-stage `authorized_unresolved` only.

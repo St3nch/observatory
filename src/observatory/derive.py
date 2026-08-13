@@ -22,8 +22,13 @@ DEFAULT_VERSION: Final[str] = "fixture-panel-v1-derive-v1"
 ATTEMPT_CLASSIFICATION: Final[str] = "authorized_unresolved"
 CAPTURE_CLASSIFICATION: Final[str] = "observation_admitted"
 PROVIDER: Final[str] = "fixture"
+H_JSON: Final[list[list[str]]] = [["content-type", "application/json"]]
 
 Interrupt = Callable[[str], None]
+
+
+class DerivationError(Exception):
+    """Derivation refused to proceed."""
 
 
 @dataclass(frozen=True)
@@ -114,18 +119,37 @@ def _admit_ok_results(
     return admitted
 
 
+def _json_media_type(response: Mapping[str, object]) -> bool:
+    return response.get("headers") == H_JSON
+
+
 def _register_version(connection: Connection[Any], derivation_version_id: str) -> None:
     with connection.transaction():
-        connection.execute(
+        existing = connection.execute(
             """
-            INSERT INTO derivation_versions (
-                derivation_version_id, adapter_contract, registered_at
-            )
-            VALUES (%s, %s, now())
-            ON CONFLICT (derivation_version_id) DO NOTHING
+            SELECT adapter_contract
+            FROM derivation_versions
+            WHERE derivation_version_id = %s
             """,
-            (derivation_version_id, ADAPTER_CONTRACT),
-        )
+            (derivation_version_id,),
+        ).fetchone()
+        if existing is None:
+            connection.execute(
+                """
+                INSERT INTO derivation_versions (
+                    derivation_version_id, adapter_contract, registered_at
+                )
+                VALUES (%s, %s, now())
+                """,
+                (derivation_version_id, ADAPTER_CONTRACT),
+            )
+            return
+        registered = existing[0]
+        if registered != ADAPTER_CONTRACT:
+            raise DerivationError(
+                f"derivation version {derivation_version_id!r} is already "
+                f"registered with conflicting adapter_contract {registered!r}"
+            )
 
 
 def _write_attempt_outcome(
@@ -280,6 +304,8 @@ def derive_admitted_results(
             continue
         response = capture.get("response")
         if not isinstance(response, Mapping) or response.get("completeness") != "complete":
+            continue
+        if not _json_media_type(response):
             continue
         try:
             body = store.read_capture_body(capture_id)

@@ -20,9 +20,29 @@ from observatory.capture import (
     capture_admitted_results,
     capture_fixture,
 )
-from observatory.derive import DEFAULT_VERSION, derive_admitted_results, main
+from observatory.capture_event import (
+    attempt_document,
+    body_ref,
+    canonical_json,
+    capture_document,
+    validate_parameters,
+)
+from observatory.derive import (
+    DEFAULT_VERSION,
+    DerivationError,
+    derive_admitted_results,
+    main,
+)
 from observatory.evidence_store import EvidenceStore, IntegrityError, create_store
 from observatory.migrate import apply_migrations, apply_schema, connect
+
+AR_RESPONSE_BODY = (
+    b'{"contract":"fixture-panel-v1","panel_id":"panel-alpha","result_count":2,'
+    b'"results":[{"label":"fixture-result-1","result_index":1,"score":999,'
+    b'"subject_key":"subject-one"},{"label":"fixture-result-2","result_index":2,'
+    b'"score":998,"subject_key":"subject-one"}],"status":"ok",'
+    b'"subject_key":"subject-one"}'
+)
 
 PUBLISHED_AR_OBSERVATIONS = (
     {
@@ -319,6 +339,103 @@ def test_non_admitted_scenario_gets_attempt_stage_only(
     assert outcomes[0][0] == nr.attempt_id
     assert outcomes[0][1] is None
     assert outcomes[0][3] == "authorized_unresolved"
+
+
+def test_admitted_results_plain_media_type_is_not_admitted(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = _store(tmp_path)
+    parameters = validate_parameters(
+        {
+            "contract": "fixture-panel-v1",
+            "depth": PUBLISHED_AR_INPUTS.depth,
+            "panel_id": PUBLISHED_AR_INPUTS.panel_id,
+            "scenario": "admitted_results",
+            "subject_key": PUBLISHED_AR_INPUTS.subject_key,
+        }
+    )
+    request_body = canonical_json(parameters)
+    attempt = attempt_document(
+        parameters=parameters,
+        attempt_nonce=PUBLISHED_AR_INPUTS.attempt_nonce,
+        authorized_at=PUBLISHED_AR_INPUTS.authorized_at,
+        observatory_version=PUBLISHED_AR_INPUTS.observatory_version,
+    )
+    attempt_id = store.commit_attempt(attempt, request_body=request_body)
+    parent = store.read_attempt(attempt_id)
+    assert parent is not None
+    capture = capture_document(
+        attempt=parent,
+        request_started_at=PUBLISHED_AR_INPUTS.request_started_at,
+        transport_ended_at=PUBLISHED_AR_INPUTS.transport_ended_at,
+        transport_state="response_complete",
+        response={
+            "headers": [["content-type", "text/plain"]],
+            "body": {"state": "present_nonempty", "body": body_ref(AR_RESPONSE_BODY)},
+            "completeness": "complete",
+        },
+        transport_failure=None,
+        response_headers_at=PUBLISHED_AR_INPUTS.response_headers_at,
+        response_body_ended_at=PUBLISHED_AR_INPUTS.response_body_ended_at,
+    )
+    capture_id = store.commit_capture(capture, response_body=AR_RESPONSE_BODY)
+    verified = store.read_capture(capture_id)
+    assert verified is not None
+    assert verified["transport_state"] == "response_complete"
+    response = verified["response"]
+    assert isinstance(response, dict)
+    assert response["completeness"] == "complete"
+    assert response["headers"] == [["content-type", "text/plain"]]
+    with connect(postgres_dsn) as connection:
+        derive_admitted_results(store, connection, DEFAULT_VERSION)
+        outcomes = _fetch_outcomes(connection)
+        observations = _fetch_observations(connection)
+    assert observations == []
+    assert len(outcomes) == 1
+    assert outcomes[0][0] == PUBLISHED_AR_ATTEMPT_ID
+    assert outcomes[0][1] is None
+    assert outcomes[0][3] == "authorized_unresolved"
+
+
+def test_conflicting_adapter_contract_fails_before_derived_rows(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = _store(tmp_path)
+    capture_admitted_results(store, PUBLISHED_AR_INPUTS)
+    with connect(postgres_dsn) as connection:
+        apply_schema(connection)
+        connection.execute(
+            """
+            INSERT INTO derivation_versions (
+                derivation_version_id, adapter_contract, registered_at
+            )
+            VALUES (%s, %s, TIMESTAMPTZ '2026-01-01 00:00:00+00')
+            """,
+            (DEFAULT_VERSION, "not-fixture-panel-v1"),
+        )
+        connection.commit()
+        before = connection.execute(
+            """
+            SELECT derivation_version_id, adapter_contract, registered_at
+            FROM derivation_versions
+            """
+        ).fetchone()
+        with pytest.raises(DerivationError, match="conflicting adapter_contract"):
+            derive_admitted_results(store, connection, DEFAULT_VERSION)
+        after = connection.execute(
+            """
+            SELECT derivation_version_id, adapter_contract, registered_at
+            FROM derivation_versions
+            """
+        ).fetchone()
+        outcomes = _fetch_outcomes(connection)
+        observations = _fetch_observations(connection)
+    assert before == after
+    assert before is not None
+    assert before[0] == DEFAULT_VERSION
+    assert before[1] == "not-fixture-panel-v1"
+    assert outcomes == []
+    assert observations == []
 
 
 def test_same_version_rerun_does_not_duplicate_or_mutate(
