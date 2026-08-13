@@ -523,9 +523,90 @@ Every verified Attempt also yields Attempt-stage Outcome `authorized_unresolved`
 
 ## Commit visibility
 
-Evidence only after verified manifest + bodies + `COMMITTED`. One durability module:
-no-overwrite, fsync file and parent directories, COMMITTED-last. Journal ≠ Evidence.
-Fixture journal skip only when full in-process result retained before Capture construction.
+Evidence only after verified manifest + bodies + `COMMITTED`. Journal ≠ Evidence. Fixture
+journal skip only when full in-process result retained before Capture construction.
+
+### Durability profile `local-posix-fsync-v1`
+
+Normative. One durability module implements this; nothing else writes into the Evidence
+root. Steps are ordered; an implementation must not reorder them.
+
+**Scope of the claim.** This protocol is defined against a single local POSIX filesystem
+that honours `fsync` and provides atomic `link(2)` and `rename(2)` within that filesystem.
+It does not claim protection against hardware that acknowledges `fsync` without persisting,
+filesystems lacking those guarantees, writes spanning two filesystems, or concurrent writers
+— multi-process writer safety is deferred (F7). Tests prove the protocol, not the hardware.
+
+#### D1 — Durable file materialization
+
+Every file entering the store is materialized identically:
+
+1. Create a uniquely named file under `.tmp/` and write its complete bytes.
+2. `fsync` that file descriptor, then close it.
+3. Install it at its final path by `link(2)` from the temporary path. `link(2)` fails with
+   `EEXIST` if the target exists; this is the required exclusive no-overwrite install.
+   `rename(2)` **must not** be used to install, because it silently replaces.
+4. `unlink` the temporary path, leaving link count 1 at the final path.
+5. `fsync` the directory containing the final path.
+
+A partially written file therefore never occupies a final path, and no install can
+overwrite.
+
+#### D2 — Durable directory creation
+
+Directories are created parent-first. After each newly created directory, `fsync` its
+parent. A directory must be durable before any child is installed within it.
+
+#### D3 — `EEXIST` handling differs by kind
+
+- **Object pool** (`objects/sha256/...`): paths are content-addressed, so recurrence is
+  normal. Read the existing object, verify its byte length and SHA-256 against the expected
+  values, and accept it on match. On mismatch, fail closed as store corruption. Never
+  overwrite, never truncate, never trust the path without verifying the content.
+- **Bundle directories, manifests, body files, and `COMMITTED`**: `EEXIST` is an anomaly.
+  Fail closed. Event identities are digest-derived and Attempts carry a fresh nonce, so a
+  collision indicates corruption or a defect, never ordinary recurrence.
+
+#### D4 — Bundle commit order
+
+A bundle is built at its final path, not staged and moved. An incomplete bundle is
+invisible as Evidence because `COMMITTED` is absent — that is the mechanism.
+
+1. Create the bundle directory chain per D2.
+2. Install the manifest (`attempt.json` / `capture.json`) per D1.
+3. Install body files (`request.body` / `response.body`) per D1, when present. Materialize
+   by independent copy or COW reflink from the pool object. **Ordinary hardlinks from a
+   bundle into the object pool are forbidden**: a bundle body file must have link count 1
+   and must not share an inode with its pool object.
+4. `fsync` the bundle directory.
+5. Install `COMMITTED` per D1, content exactly `<event_id>\n`. This is always last.
+6. `fsync` the bundle directory again.
+
+After step 6 the event is Evidence. Before it, it is not — at any interruption point.
+
+#### D5 — Verify after commit
+
+After step 6, read the event back from disk and verify before the caller may rely on it:
+re-hash the stored manifest bytes and compare to the event ID, verify each body object's
+digest and length, and confirm `COMMITTED` content equals `<event_id>\n`. A commit that
+cannot be verified is a failure, not a success with a warning.
+
+#### D6 — Reading
+
+A bundle directory without `COMMITTED` is **ignored** — not Evidence, and not an error. It
+is the expected residue of an interrupted commit. A bundle with `COMMITTED` that fails D5
+verification is an integrity failure and must be reported as one, never silently skipped.
+
+#### D7 — `FORMAT.json`
+
+Written once at store creation per D1, followed by `fsync` of the Evidence root. Opening
+requires exact canonical bytes and matching digest; anything else fails closed.
+
+#### D8 — No transport before durable Attempt
+
+Fixture or provider transport must not begin until the Attempt has completed D4 and passed
+D5. This ordering is structural, not advisory: the transport call must be unreachable from
+any path that has not first obtained a verified committed Attempt.
 
 ---
 

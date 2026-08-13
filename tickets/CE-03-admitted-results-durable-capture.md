@@ -22,7 +22,10 @@ This ticket covers only the **`response_complete`** transport branch as exercise
 
 - `docs/specs/capture-event-v2.md` — §FORMAT.json (exact bytes and digest)
 - `docs/specs/capture-event-v2.md` — §Paths and bundles
-- `docs/specs/capture-event-v2.md` — §Commit visibility (COMMITTED-last; no-overwrite; fsync file and parent directories; Evidence only after verified manifest + bodies + COMMITTED)
+- `docs/specs/capture-event-v2.md` — §Commit visibility, and §Durability profile
+  `local-posix-fsync-v1` D1–D8 (normative ordering: durable file materialization, durable
+  directory creation, `EEXIST` handling by kind, bundle commit order, verify-after-commit,
+  reading rules, `FORMAT.json`, no transport before durable Attempt)
 - `docs/specs/capture-event-v2.md` — §Normative construction order
 - `docs/specs/capture-event-v2.md` — §Closed schemas (Attempt, Capture, request, body)
 - `docs/specs/capture-event-v2.md` — §Conformance vectors Set AR
@@ -59,6 +62,7 @@ This ticket covers only the **`response_complete`** transport branch as exercise
 - [ ] Using frozen published AR vector inputs, on-disk Attempt and Capture identities match published `attempt_id` and `capture_id`; paths follow format-2 layout.
 - [ ] Request/response bodies are content-addressed; digests and sizes verify; ordinary hardlinks into the object pool are not used.
 - [ ] Durable install uses no-overwrite behavior; required fsync operations and directory fsync occur per committed protocol; `COMMITTED` is last; uncommitted directories are not admitted as Evidence.
+- [ ] Each of D1–D8 in §Durability profile `local-posix-fsync-v1` has at least one named test. `link(2)` is used for exclusive install and `rename(2)` is not used to install. Bundle body files have link count 1 and do not share an inode with their pool object. A pool object recurring at an existing path is verified and accepted; a mismatching one fails closed. A bundle lacking `COMMITTED` is ignored rather than erroring; a bundle with `COMMITTED` that fails verification is reported as an integrity failure.
 - [ ] Automated proof: fixture transport for this path does not begin until Attempt commit is visible and verified.
 - [ ] Capture CLI completes admitted_results Attempt→Capture and prints `attempt_id` and `capture_id`; it does not write PostgreSQL or derive.
 - [ ] Verify-on-read of the committed AR events succeeds; bit-flip of those events fails closed.
