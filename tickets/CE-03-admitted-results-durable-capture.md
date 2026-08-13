@@ -58,7 +58,7 @@ CE-03B consumes this to produce the first real vertical capture.
 ## Acceptance criteria
 
 - [ ] A format-2 root can be created and opened; FORMAT exact JCS bytes (no trailing newline) and SHA-256 `67fb338d3237a22a29f50110c705e552cd9af29f830c1bfffa9ee1cafa876c7e` are enforced.
-- [ ] Missing, malformed, noncanonical, unsupported, or conflicting FORMAT fails closed on open. Opening purges `.tmp/` before any other operation.
+- [ ] Missing, malformed, noncanonical, unsupported, or conflicting FORMAT fails closed on open **with nothing modified**; `.tmp/` is purged only after FORMAT validation succeeds, per D7.
 - [ ] Bundles built from published AR vector inputs land at format-2 paths; date components derive only from Attempt `authorized_at`.
 - [ ] Request and response bodies are content-addressed; digests and sizes verify in both the pool object and the bundle body file.
 - [ ] Each of D1, D2, D3, D4, D4a, D5, D6, D7 has at least one named test. `link(2)` is used for exclusive install and `rename(2)` is not used to install. Bundle body files have link count 1 after a store open and do not share an inode with their pool object. A pool object recurring at an existing path is verified and accepted; a mismatching one fails closed. Shared path directories recur without error; a terminal event bundle directory that already exists fails closed.
@@ -77,7 +77,8 @@ CE-03B consumes this to produce the first real vertical capture.
 
 ## Required automated tests
 
-- FORMAT create, open, and each fail-closed case; `.tmp/` purge on open
+- FORMAT create, open, and each fail-closed case; a failed open leaves `.tmp/` untouched;
+  `.tmp/` purged only after successful validation
 - Path layout and sharding for AR-derived events
 - Pool object install, digest and size verification, recurrence accepted, mismatch fails
   closed

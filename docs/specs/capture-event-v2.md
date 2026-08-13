@@ -536,10 +536,11 @@ that honours `fsync` and provides atomic `link(2)` within that filesystem. It do
 protection against hardware that acknowledges `fsync` without persisting, filesystems
 lacking those guarantees, or writes spanning two filesystems.
 
-**Concurrency.** One writer at a time; multi-process writer safety is deferred (F7).
-Concurrent *readers* are permitted, and D4a and D6 define what they may conclude. A reader
-never observes a partially written file, because D1 installs only complete files, and never
-observes a partial bundle as Evidence, because `COMMITTED` is installed last.
+**Concurrency.** One writer at a time; multi-process writer safety is deferred (F7). Readers
+of a **quiescent** store are supported; a reader racing an active writer is not, and D4a
+says why. A reader never observes a partially written file, because D1 installs only
+complete files, and never observes a partial bundle as Evidence, because `COMMITTED` is
+installed last.
 
 Tests prove the protocol, not the hardware.
 
@@ -563,9 +564,10 @@ On `EEXIST` at step 3, unlink the temporary path first, then apply D3.
 **`.tmp/` is scratch, never Evidence.** Step 4's `unlink` is deliberately not made durable —
 `.tmp/` is not `fsync`ed here, because the cost buys nothing. A crash between steps 3 and 4
 may therefore leave a temporary name after recovery, so the installed file can show link
-count 2 until cleanup. Opening a store purges `.tmp/` before any other operation, restoring
-link count 1. The link-count-1 requirement in D4 is therefore asserted of bundle body files
-**after** a store open, and `.tmp/` residue is expected interruption debris, not corruption.
+count 2 until cleanup. Opening a store purges `.tmp/` — after `FORMAT.json` validation, per
+D7 — restoring link count 1. The link-count-1 requirement in D4 is therefore asserted of
+bundle body files **after** a store open, and `.tmp/` residue is expected interruption
+debris, not corruption.
 
 #### D2 — Durable directory creation
 
@@ -616,26 +618,32 @@ one. Neither contains the other's: the Attempt is committed before transport and
 hold a response, and the Capture cites its parent `attempt_id`, so duplicating
 `request.body` would store identical bytes twice without adding recoverability.
 
-#### D4a — Commit point and the durability window
+#### D4a — Commit completion and concurrency
 
-D4 has two distinct moments, and conflating them is a defect:
+A commit is complete only when `COMMITTED`'s D1 has fully finished — `link`, temporary
+unlink, and directory `fsync` — **and** D5 verification has passed. Only then is the event
+Evidence, and only then may the writer report success. Nothing before that point is
+Evidence, consistent with `VOCABULARY.md`, which defines Attempt and Capture as durably
+committed.
 
-- **Visibility.** The event becomes Evidence the instant `link(COMMITTED)` succeeds. A
-  concurrent reader that sees `COMMITTED` and passes D5 is correct to accept it — the
-  manifest and bodies were already durable, so the content is complete.
-- **Durability.** `COMMITTED` becomes crash-durable when the `fsync` in its own D1 step 5
-  completes.
+**Concurrency scope.** One writer, plus readers of a **quiescent** store. A reader racing an
+active writer is out of scope: CE-03 does not support it, and coordinating the two waits
+until the service actually needs it, alongside multi-process writer safety (F7).
 
-Between those two moments the event is valid Evidence that is not yet crash-durable. A crash
-in that window loses only the `COMMITTED` entry; the bundle reverts to uncommitted and D6
-ignores it. That is safe, and is the intended failure direction: the protocol may lose an
-unacknowledged commit, but can never present a partial bundle as Evidence. Nothing on disk
-distinguishes that interruption from a commit that never reached `COMMITTED`, and nothing
-needs to.
+**After an interruption**, whatever survives on disk is judged by D6 alone. There is no
+separate record of writer intent, and none is needed, because of D4's ordering: D1 makes the
+manifest and every body file durable *before* `COMMITTED` is linked. Therefore a surviving
+`COMMITTED` implies durable, complete content, and D6's predicate is sound.
 
-A writer **must not report success** until `COMMITTED`'s D1 completes and D5 passes. A
-reader that accepted an event inside the durability window and later finds it absent after a
-crash must treat that as an interrupted commit, not as corruption or deletion.
+The two interruption outcomes are both safe:
+
+- `COMMITTED` did not survive — the bundle is uncommitted and D6 ignores it. An
+  unacknowledged commit is lost, which is the intended failure direction.
+- `COMMITTED` survived — the content behind it is durable and complete by the ordering
+  above, so D5 either verifies it or reports an integrity failure.
+
+The protocol may lose an unacknowledged commit. It can never present a partial bundle as
+Evidence.
 
 #### D5 — Verify after commit
 
@@ -662,9 +670,19 @@ verification is an integrity failure and must be reported as one, never silently
 
 #### D7 — `FORMAT.json`
 
-Written once at store creation per D1, followed by `fsync` of the Evidence root. Opening
-requires exact canonical bytes and matching digest; anything else fails closed. Opening also
-purges `.tmp/` before any other operation, per D1.
+Written once at store creation per D1, followed by `fsync` of the Evidence root.
+
+Opening is strictly ordered, because the store must be **recognised before it is touched**:
+
+1. Read `FORMAT.json` and require exact canonical bytes and matching digest. Missing,
+   malformed, noncanonical, unsupported, or conflicting content fails closed here, with
+   nothing modified.
+2. Only once the root is confirmed to be an Observatory Evidence Store, purge its `.tmp/`
+   per D1.
+3. Proceed with Evidence operations.
+
+Purging before validation would let a mistaken or misidentified path be mutated — unrelated
+files under some other directory's `.tmp/` could be destroyed before the open failed.
 
 #### D8 — No transport before durable Attempt
 
