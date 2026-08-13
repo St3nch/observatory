@@ -1,11 +1,11 @@
 # CE-03 — Evidence Store foundation: format, durable install, commit and read
 
-**Status:** ready-for-agent
+**Status:** review
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** necessary prefactor
 **Blocked by:** CE-02 — Canonical JCS, closed schemas, and content-ID vectors
 **Approved by:** Project Steward
-**Start commit:**
+**Start commit:** 2c41e56
 
 ## What to build
 
@@ -114,10 +114,60 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- implement fills; may set Status: review; never Status: done -->
 
-- End commit:
+- End commit: 2c41e56
 - Acceptance evidence:
+  - `uv run pytest -q` — 100 passed
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+
+  ### D1–D7 / D4a mapping
+
+  | Invariant | Named test |
+  |---|---|
+  | D1 exclusive `link(2)` install, no `rename(2)` | `test_d1_exclusive_install_uses_link_not_rename` |
+  | D1 occupied final path fails closed | `test_d1_occupied_final_path_fails_closed` |
+  | D2 shared dirs recur; terminal `EEXIST` fails | `test_d2_shared_directories_recur_terminal_eexist_fails_closed` |
+  | D3 pool recurrence accepted; mismatch fails | `test_d3_pool_recurrence_accepted_mismatch_fails_closed` |
+  | D4 COMMITTED last; bodies independent | `test_d4_committed_is_installed_last`, `test_d4_bundle_bodies_are_independent_copies_with_link_count_1` |
+  | D4a evidence only after verify | `test_d4a_commit_is_evidence_only_after_verify` |
+  | D5 full six-step verify-on-read | `test_d5_verify_after_commit_runs_full_sequence` |
+  | D6 uncommitted ignored; bad COMMITTED is integrity | `test_d6_uncommitted_bundle_is_ignored`, `test_d6_committed_but_unreadable_is_integrity_failure` |
+  | D7 FORMAT exact; fail closed with `.tmp/` untouched; purge after success | `test_create_and_open_enforces_exact_format_bytes_and_digest`, `test_d7_open_rejects_missing_format_without_modifying_tmp`, `test_d7_open_rejects_malformed_format_without_purging_tmp`, `test_d7_open_rejects_noncanonical_format_without_purging_tmp`, `test_d7_open_rejects_unsupported_format_without_purging_tmp`, `test_d7_successful_open_purges_tmp_only_after_format_validation` |
+
+  ### Acceptance criteria
+
+  | Criterion | Test |
+  |---|---|
+  | FORMAT-2 create/open, exact JCS bytes and digest | `test_create_and_open_enforces_exact_format_bytes_and_digest` |
+  | Failed open modifies nothing; `.tmp/` purged only after FORMAT ok | the `test_d7_*` cases |
+  | AR vector bundles at format-2 paths; date from `authorized_at` | `test_ar_paths_follow_format2_and_authorized_at_date` |
+  | Bodies content-addressed; pool and bundle verified | `test_d5_verify_after_commit_runs_full_sequence`, tamper tests |
+  | Each of D1–D7 and D4a named; `link` not `rename`; nlink 1; no shared inode; pool recurrence vs mismatch; shared vs terminal dirs | D-table above |
+  | Missing COMMITTED ignored; failed COMMITTED bundle is integrity failure | `test_d6_uncommitted_bundle_is_ignored`, `test_d6_committed_but_unreadable_is_integrity_failure` |
+  | Verify-on-read is the six-step sequence | `test_d5_verify_after_commit_runs_full_sequence` plus implementation `_verify_*_bundle` |
+  | Bit-flip of manifest, pool, or bundle body fails closed | `test_tamper_manifest_fails_closed`, `test_tamper_pool_object_fails_closed`, `test_tamper_bundle_body_fails_closed`, `test_tamper_capture_response_body_fails_closed`, `test_tamper_request_pool_fails_capture_verify` |
+
 - Unproven limits:
+  - Protocol on one local POSIX temp root, one writer. Not hardware fsync, not multi-filesystem, not crash/power-loss, not concurrent readers or writers.
+  - Body materialization is an independent copy via D1. Reflink/COW was not used (not available as a portable primitive here).
+  - Lookup of an event by id walks `attempts/v1` or `captures/v1`; there is no index.
+  - Capture D5 verifies the cited request body in the pool only (Capture bundles do not hold `request.body`).
+  - No fixture transport, CLI, or D8.
 - Review findings remaining:
+  - Public surface is `observatory.evidence_store`: `create_store`, `open_store`, `EvidenceStore.commit_attempt` / `commit_capture` / `read_attempt` / `read_capture` / `install_object`, plus path helpers. `read_*` returns `None` for uncommitted (D6 ignore) and raises `IntegrityError` when `COMMITTED` exists but D5 fails.
+
+### Public module surface (`observatory.evidence_store`)
+
+- `FormatError`, `IntegrityError`, `StoreError`
+- `FORMAT_BYTES`, `FORMAT_DIGEST`
+- `create_store(root: Path) -> EvidenceStore`
+- `open_store(root: Path) -> EvidenceStore` — FORMAT first; then `.tmp/` purge
+- `EvidenceStore.commit_attempt(document, *, request_body) -> str`
+- `EvidenceStore.commit_capture(document, *, response_body) -> str`
+- `EvidenceStore.read_attempt(attempt_id) -> dict | None`
+- `EvidenceStore.read_capture(capture_id) -> dict | None`
+- `EvidenceStore.install_object(data) -> str`
+- Path helpers: `object_path`, `attempt_path`, `capture_path`
 
 ## Closure
 
