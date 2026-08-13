@@ -29,6 +29,11 @@ reconciles them into the files above.
 - Settled decisions (including D8): `decisions/decisions.md`
 - Why the boundary is hard to reverse: `docs/adr/0001-capture-event-evidence-boundary.md`
 - Normative implementation contract: `docs/specs/capture-event-v2.md`
+- Work cut only: `tickets/`
+
+A ticket says which slice of the contract to build; the spec says what correct means. Where
+they disagree, the spec wins and the ticket is defective — stop and report it rather than
+implementing either reading.
 
 D5’s original text is preserved for history and is superseded by D8 for the
 capture/evidence storage boundary and Outcome-as-history phrasing.
@@ -120,8 +125,8 @@ add the smallest rule that addresses that failure — nothing more.
 - Ordinary tests are the default.
 - Add a hammer candidate only when the invariant, consequence, and required proof substrate
   can be named (Evidence Store vs PostgreSQL as appropriate under D6/D8).
-- Create an ADR only when the choice is hard to reverse, surprising without context, and
-  the result of a real trade-off.
+- Propose an ADR to the Steward only when the choice is hard to reverse, surprising without
+  context, and the result of a real trade-off. The Steward writes it.
 - Do not generate planning, audit, closure, or status document trees.
 - When a decision changes, update the existing authority instead of adding a competing file.
 - Do not implement deferred work before its recorded trigger fires.

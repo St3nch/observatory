@@ -26,6 +26,11 @@ it (ticket inventory must come from the resulting commit; hooks cannot import `s
 via pytest's `pythonpath`; a lane test must use a valid agent value or it proves nothing)
 are real and would be rediscovered otherwise. Treat it as research, not as approved work.
 
+**Stale reference warning:** the rules below cite an `AGENTS.md` §Agent lanes "three path
+groups" taxonomy (core authority / `tickets/` / implementation paths). That taxonomy was
+removed at `3ee73b4` and no longer exists. Anyone reviving this ticket must re-derive path
+classification from whatever `AGENTS.md` says at that time.
+
 ## What to build
 
 End-to-end behaviour this ticket makes work: once `core.hooksPath` is configured on a
