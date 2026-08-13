@@ -107,7 +107,7 @@ reflink only.
 |---|---|
 | Timestamp string | `YYYY-MM-DDTHH:MM:SS.ffffffZ` only (six fractional digits, uppercase `Z`) |
 | Digest / ID / fingerprint / nonce hex | lowercase `[0-9a-f]{64}` only |
-| Non-negative integer | JSON number without fraction/exponent; integer ≥ 0 |
+| Non-negative integer | JSON number without fraction/exponent; `0 ≤ n ≤ 9007199254740991` (2⁵³−1) |
 | `depth` | JSON integer 1..16 inclusive |
 | `observatory_version` | `[A-Za-z0-9._+:-]{1,128}` |
 | `panel_id` / `subject_key` | `[A-Za-z0-9._:-]{1,128}` |
@@ -115,6 +115,28 @@ reflink only.
 | Pair | JSON array of exactly two strings |
 
 No floating-point values in identity-bearing documents.
+
+**Integer range is normative, not incidental.** Every integer in an identity-bearing
+document must satisfy `-9007199254740991 ≤ n ≤ 9007199254740991` — the IEEE 754
+safe-integer range. Values outside it must be rejected, not serialized.
+
+This follows from RFC 8785 itself, which adopts I-JSON's requirement that JSON number data
+be expressible as IEEE 754 double-precision values, and which defers number serialization to
+ECMAScript. Two divergences appear outside the safe range, and the single bound closes both:
+
+- **Precision.** Above 2⁵³−1, an integer has no exact double representation, so a conforming
+  serializer emits the shortest string identifying the nearest double rather than the exact
+  value: `9007199254740993` becomes `9007199254740992`.
+- **Format.** At magnitude 10²¹ and above, ECMAScript switches to exponential notation, so
+  `10³⁰` serializes as `1e+30`, not as thirty-one digits.
+
+Because 2⁵³−1 is far below 10²¹, every permitted value is both exactly representable and
+below the exponential threshold. Within this range, and only within it, a plain decimal
+rendering of the integer is byte-identical to conforming JCS output.
+
+Discovered during CE-02 implementation: the bound was previously unstated, and an
+implementation rendering integers as plain decimals would silently produce non-conforming
+identities for large values.
 
 ### Canonicalization and verify-on-read
 
