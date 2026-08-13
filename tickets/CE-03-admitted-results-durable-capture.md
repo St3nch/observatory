@@ -11,8 +11,8 @@
 
 End-to-end behaviour this ticket makes work: create and open a format-2 Evidence Store, and
 durably commit, read, and verify a Capture Event bundle under the committed durability
-protocol — such that an interrupted commit is never admitted as Evidence and a tampered
-committed event fails closed.
+protocol — such that a partial or unverifiable bundle is never admitted as Evidence and a
+tampered committed event fails closed.
 
 This ticket builds the **store mechanism only**. It performs no fixture transport, builds no
 documents from the fixture algorithm, and ships no CLI. Bundles under test are constructed
@@ -99,8 +99,8 @@ CE-03B consumes this to produce the first real vertical capture.
 ## One implementation commit must prove
 
 A format-2 Evidence Store can durably commit, read, and verify an event bundle under the
-committed protocol, and fails closed on tamper and on interruption — without needing later
-tickets for that claim to be true.
+committed protocol, fails closed on tamper, and never admits partial state after interruption
+— without needing later tickets for that claim to be true.
 
 ## Later tickets
 

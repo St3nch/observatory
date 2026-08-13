@@ -61,16 +61,18 @@ capture/evidence storage boundary and Outcome-as-history phrasing.
 
 - **[GROK]** implements. He is the only agent who writes code and tests. One ticket at a
   time; no ticket, no implementation.
-- **[GPT]** reviews the committed code and tests independently. He writes nothing in the
-  repository — he reports.
-- **[CLAUDE]** is Project Steward: maintains authority and tickets, reconciles reviews,
-  decides acceptance and what comes next. Writes no code or tests, ever.
+- **[GPT]** is Project Steward and primary reviewer: maintains authority and tickets,
+  sequences work, issues bounded prompts, reviews [GROK]'s committed implementation,
+  reconciles findings, and records acceptance. Writes no code or tests.
+- **[CLAUDE]** has no standing role in the project loop. [CHAZ] may explicitly invite
+  Claude or another model for a read-only milestone audit; audit findings are inputs, not
+  authority.
 - **[CHAZ]** decides. He relays all traffic; agents never contact each other directly.
 
-Every agent may read the whole repository, and reviewers may run `uv run pytest -q`,
-`uv run ruff check .`, and `uv run mypy` against a named commit. Reviewing an implementer's
-account of his own work is not an independent check. Reviewers do not commit, do not modify
-tracked files, and report rather than repair.
+Every agent may read the whole repository, and [GPT] may run `uv run pytest -q`,
+`uv run ruff check .`, and `uv run mypy` against a named implementation commit.
+Reviewing an implementer's account of his own work is not an independent check. [GPT] does
+not modify `src/` or `tests/`; authority and ticket changes are explicit Steward work.
 
 Only the Steward writes `AGENTS.md`, `VISION.md`, `VOCABULARY.md`, `decisions/`, `docs/`,
 and `tickets/` — except that the implementer fills his own assigned ticket's `Start commit`,
@@ -183,22 +185,21 @@ The handoff between lanes is a commit, not a working tree.
 
 All agent traffic is relayed by [CHAZ]. No agent contacts another directly.
 
-1. [CLAUDE] (Steward) issues a bounded work prompt naming exactly one ticket.
+1. [GPT] (Steward) issues a bounded work prompt naming exactly one ticket.
 2. [GROK] implements and returns an implementation report.
-3. [CHAZ] relays that report to [GPT], who returns a review.
-4. [CHAZ] relays [GROK]'s report, then [GPT]'s review, to [CLAUDE].
-5. [CLAUDE] reconciles both against authority and issues the next prompt or accepts the
-   ticket.
+3. [CHAZ] relays that report to [GPT].
+4. [GPT] reviews the committed code and tests, reconciles the report and findings against
+   authority, and accepts the ticket or issues the next bounded prompt through [CHAZ].
 
 [GROK] is the only agent writing the working code, and the only one carrying the working
 context of having built it. His judgement on what is weak, fragile, or under-tested is a
 first-class input, and every work prompt must solicit it explicitly. This does not make him
-the only reader: [GPT] and [CLAUDE] read the committed code and tests directly when
-reviewing, because an implementer's account of their own work cannot be the only evidence.
+the only reader: [GPT] reads the committed code and tests directly when reviewing,
+because an implementer's account of their own work cannot be the only evidence.
 Such findings are inputs, not authority: they change the project only after the Steward
 reconciles them and records the result.
 
-[CLAUDE] asks [GROK] or [GPT] direct questions when an answer is uncertain rather than
+[GPT] asks [GROK] direct questions when an answer is uncertain rather than
 assuming. A question relayed through [CHAZ] costs less than a wrong sequencing decision.
 
 Do not create `CONTEXT.md`, `CONTEXT-MAP.md`, `docs/agents/`, `.scratch/`, or external
