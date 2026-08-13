@@ -13,6 +13,11 @@ EMPTY_BODY_SHA256: Final[str] = (
     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 )
 
+# I-JSON / IEEE 754 safe-integer range. Observatory policy on identity-bearing
+# integers; see capture-event-v2.md §Scalar constraints.
+_SAFE_INTEGER_MAX: Final[int] = 9007199254740991
+_SAFE_INTEGER_MIN: Final[int] = -9007199254740991
+
 _HEX64_RE: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
 _TIMESTAMP_RE: Final[re.Pattern[str]] = re.compile(
     r"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6}Z$"
@@ -145,7 +150,10 @@ def canonical_json(value: object) -> bytes:
 def body_ref(data: bytes) -> dict[str, int | str]:
     """Return a closed `body_ref` for the exact *data* bytes."""
 
-    return {"bytes": len(data), "sha256": content_digest(data)}
+    size = len(data)
+    if size > _SAFE_INTEGER_MAX:
+        raise DocumentError("body length is outside the I-JSON safe-integer range")
+    return {"bytes": size, "sha256": content_digest(data)}
 
 
 def fixture_request(*, body: bytes) -> dict[str, object]:
@@ -310,7 +318,7 @@ def _jcs(value: object) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
     if isinstance(value, int):
-        return str(value)
+        return _jcs_int(value)
     if isinstance(value, float):
         raise DocumentError("floating-point values are forbidden in identity documents")
     if isinstance(value, str):
@@ -326,6 +334,12 @@ def _jcs(value: object) -> str:
         inner = ",".join(_jcs(item) for item in value)
         return f"[{inner}]"
     raise DocumentError(f"unsupported JSON value type: {type(value).__name__}")
+
+
+def _jcs_int(value: int) -> str:
+    if value < _SAFE_INTEGER_MIN or value > _SAFE_INTEGER_MAX:
+        raise DocumentError("integer is outside the I-JSON safe-integer range")
+    return str(value)
 
 
 def _utf16_key(key: object) -> bytes:
@@ -409,6 +423,8 @@ def _timestamp(value: object, name: str) -> str:
 def _json_int(value: object, name: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
         raise DocumentError(f"{name} must be a JSON integer")
+    if value < _SAFE_INTEGER_MIN or value > _SAFE_INTEGER_MAX:
+        raise DocumentError(f"{name} is outside the I-JSON safe-integer range")
     return value
 
 

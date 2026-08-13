@@ -239,6 +239,61 @@ def test_canonical_json_rejects_lone_surrogates_as_document_error() -> None:
         canonical_json({"\ud800": 1})
 
 
+_SAFE_INTEGER = 9007199254740991
+
+
+def test_canonical_json_accepts_safe_integer_boundaries() -> None:
+    assert canonical_json(_SAFE_INTEGER) == b"9007199254740991"
+    assert canonical_json(-_SAFE_INTEGER) == b"-9007199254740991"
+    assert canonical_json(0) == b"0"
+    assert canonical_json(1) == b"1"
+    assert canonical_json(-1) == b"-1"
+
+
+def test_canonical_json_rejects_integers_outside_safe_range() -> None:
+    with pytest.raises(DocumentError):
+        canonical_json(_SAFE_INTEGER + 1)
+    with pytest.raises(DocumentError):
+        canonical_json(-_SAFE_INTEGER - 1)
+    with pytest.raises(DocumentError):
+        canonical_json(10**21)
+    with pytest.raises(DocumentError):
+        canonical_json(10**30)
+
+
+def test_canonical_json_applies_integer_bound_in_objects_and_arrays() -> None:
+    with pytest.raises(DocumentError):
+        canonical_json({"n": _SAFE_INTEGER + 1})
+    with pytest.raises(DocumentError):
+        canonical_json([_SAFE_INTEGER + 1])
+
+
+def test_body_ref_bytes_rejects_integer_outside_safe_range() -> None:
+    request = fixture_request(body=AR_REQUEST_BODY)
+    body_state = request["body"]
+    assert isinstance(body_state, dict)
+    ref = body_state["body"]
+    assert isinstance(ref, dict)
+    with pytest.raises(DocumentError):
+        canonical_json({**ref, "bytes": _SAFE_INTEGER + 1})
+    with pytest.raises(DocumentError):
+        validate_fixture_request(
+            {
+                **request,
+                "body": {**body_state, "body": {**ref, "bytes": _SAFE_INTEGER + 1}},
+            }
+        )
+
+
+def test_canonical_json_escapes_controls_and_quotes_in_object_keys() -> None:
+    assert canonical_json({"\n": 1}) == b'{"\\n":1}'
+    assert canonical_json({'"': 1}) == b'{"\\"":1}'
+
+
+def test_canonical_json_empty_object() -> None:
+    assert canonical_json({}) == b"{}"
+
+
 def test_content_digest_is_lowercase_sha256_of_exact_bytes() -> None:
     data = b"abc"
 

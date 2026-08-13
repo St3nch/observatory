@@ -89,9 +89,14 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- implement fills; may set Status: review; never Status: done -->
 
-- End commit: cca1191
+- End commit: c099d3a
 - Acceptance evidence:
-  - `uv run pytest -q` — 66 passed after remediation (cca1191 had 52)
+  - `uv run pytest -q` — 72 passed after integer-bound remediation
+  - I-JSON safe-integer bound on every identity-bearing integer
+    (`test_canonical_json_accepts_safe_integer_boundaries`,
+    `test_canonical_json_rejects_integers_outside_safe_range`,
+    `test_canonical_json_applies_integer_bound_in_objects_and_arrays`,
+    `test_body_ref_bytes_rejects_integer_outside_safe_range`).
   - `uv run ruff check .` — clean
   - `uv run mypy` — clean
   - Published AR/RP/NR request bodies, fingerprint preimages, Attempt/Capture
@@ -154,9 +159,9 @@ This ticket adds **no** behavior beyond committed authority.
     (`test_capture_rejects_parent_attempt_mismatch`).
 - Unproven limits:
   - JCS is the in-repo subset needed for this document set (UTF-16 key sort,
-    integer-only numbers, RFC 8785 string escapes, no trailing newline). It is
-    not a general RFC 8785 suite and does not implement IEEE-754 number
-    serialization because floats are forbidden.
+    integer-only numbers inside the I-JSON safe-integer range, RFC 8785 string
+    escapes, no trailing newline). Floats are rejected. Integers outside
+    ±9007199254740991 are rejected; there is no exponential serializer.
   - `validate_fixture_request` always enforces fixture-panel-v1 request
     constants. There is no general-request mode.
   - Capture `response.headers` are validated as lowercase pairs, not restricted
@@ -177,6 +182,9 @@ This ticket adds **no** behavior beyond committed authority.
     exact-constant tests; `validate_request` renamed to
     `validate_fixture_request`. RFC 8785 string tests added so goldens are not
     the only escape-table proof.
+  - Remediation after 780f7b2 / c099d3a: encoder and `_json_int` reject
+    integers outside ±9007199254740991. Also key-escape, empty-object, and
+    signed-boundary tests.
 
 ### Public module surface (`observatory.capture_event`)
 
