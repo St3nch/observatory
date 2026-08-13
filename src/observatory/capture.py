@@ -5,9 +5,10 @@ from __future__ import annotations
 import argparse
 import sys
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Final, Literal
+from types import MappingProxyType
+from typing import Any, Final, Literal
 
 from observatory.capture_event import (
     attempt_document,
@@ -23,8 +24,6 @@ from observatory.evidence_store import (
     open_store,
 )
 
-_ISSUER: Final[object] = object()
-
 PUBLISHED_AR_ATTEMPT_ID: Final[str] = (
     "46d5fb97c109b9f64a42ff3a5e62978e2c25551d6b7274603fc88456acfd9a0f"
 )
@@ -38,7 +37,6 @@ __all__ = [
     "PUBLISHED_AR_CAPTURE_ID",
     "PUBLISHED_AR_ATTEMPT_ID",
     "PUBLISHED_AR_INPUTS",
-    "VerifiedAttempt",
     "capture_admitted_results",
     "main",
 ]
@@ -75,27 +73,6 @@ PUBLISHED_AR_INPUTS: Final[AdmittedResultsInputs] = AdmittedResultsInputs(
 
 
 @dataclass(frozen=True)
-class VerifiedAttempt:
-    """Capability: a committed Attempt that has passed D5 verify-on-read.
-
-    Only `_issue_verified_attempt` may construct a valid instance. Transport
-    accepts this type and nothing else, so the transport call is unreachable
-    without a verified commit result.
-    """
-
-    attempt_id: str
-    document: Mapping[str, object]
-    request_body: bytes
-    _issued_by: object = field(repr=False, compare=False)
-
-    def __post_init__(self) -> None:
-        if self._issued_by is not _ISSUER:
-            raise TypeError(
-                "VerifiedAttempt is issued only after a verified Attempt commit"
-            )
-
-
-@dataclass(frozen=True)
 class FixtureTransportResult:
     """Complete in-process transport result, retained until Capture commit."""
 
@@ -111,27 +88,100 @@ class CaptureOutcome:
     capture_id: str
 
 
-def _issue_verified_attempt(
-    store: EvidenceStore,
-    document: Mapping[str, object],
-    request_body: bytes,
-) -> VerifiedAttempt:
-    """Commit+verify an Attempt, then issue the transport capability.
+def _freeze_maps(value: object) -> object:
+    if isinstance(value, Mapping):
+        return MappingProxyType({key: _freeze_maps(item) for key, item in value.items()})
+    if isinstance(value, list):
+        return [_freeze_maps(item) for item in value]
+    return value
 
-    `store.commit_attempt` returns only after D4 and D5. A raise here means
-    no VerifiedAttempt exists, so `_admitted_results_transport` cannot be called.
-    """
 
-    attempt_id = store.commit_attempt(document, request_body=request_body)
-    read_back = store.read_attempt(attempt_id)
-    if read_back is None:
-        raise StoreError("committed Attempt is not readable as Evidence")
-    return VerifiedAttempt(
-        attempt_id=attempt_id,
-        document=read_back,
-        request_body=request_body,
-        _issued_by=_ISSUER,
-    )
+def _build_transport_gate() -> tuple[object, object, type]:
+    """Closure-held issuance registry. Ordinary code cannot mint membership."""
+
+    issued: list[object] = []
+
+    class _VerifiedAttempt:
+        """Internal capability. Not supported public API."""
+
+        __slots__ = (
+            "attempt_id",
+            "document",
+            "request_body",
+            "_panel_id",
+            "_subject_key",
+            "_depth",
+        )
+        attempt_id: str
+        document: Mapping[str, object]
+        request_body: bytes
+        _panel_id: str
+        _subject_key: str
+        _depth: int
+
+        def __init__(self, *args: object, **kwargs: object) -> None:
+            raise TypeError("cannot construct a transport capability")
+
+    def _is_issued(attempt: object) -> bool:
+        return any(candidate is attempt for candidate in issued)
+
+    def issue(
+        store: EvidenceStore,
+        document: Mapping[str, object],
+        request_body: bytes,
+    ) -> _VerifiedAttempt:
+        attempt_id = store.commit_attempt(document, request_body=request_body)
+        read_back = store.read_attempt(attempt_id)
+        if read_back is None:
+            raise StoreError("committed Attempt is not readable as Evidence")
+        # Transport input is taken from the committed request bytes, not a
+        # caller-held mutable document.
+        frozen_parameters = validate_parameters(request_body)
+        if frozen_parameters.get("scenario") != "admitted_results":
+            raise StoreError("this tracer implements only scenario=admitted_results")
+        panel_id = frozen_parameters["panel_id"]
+        subject_key = frozen_parameters["subject_key"]
+        depth = frozen_parameters["depth"]
+        if not isinstance(panel_id, str) or not isinstance(subject_key, str):
+            raise StoreError("panel_id and subject_key must be strings")
+        if not isinstance(depth, int) or isinstance(depth, bool):
+            raise StoreError("depth must be an integer")
+        capability = object.__new__(_VerifiedAttempt)
+        object.__setattr__(capability, "attempt_id", attempt_id)
+        object.__setattr__(capability, "document", _freeze_maps(read_back))
+        object.__setattr__(capability, "request_body", bytes(request_body))
+        object.__setattr__(capability, "_panel_id", panel_id)
+        object.__setattr__(capability, "_subject_key", subject_key)
+        object.__setattr__(capability, "_depth", depth)
+        issued.append(capability)
+        return capability
+
+    def transport(attempt: object) -> FixtureTransportResult:
+        if type(attempt) is not _VerifiedAttempt or not _is_issued(attempt):
+            raise TypeError("fixture transport requires a verified committed Attempt")
+        body = canonical_json(
+            _admitted_results_body(
+                attempt._panel_id,
+                attempt._subject_key,
+                attempt._depth,
+            )
+        )
+        return FixtureTransportResult(
+            transport_state="response_complete",
+            headers=[["content-type", "application/json"]],
+            completeness="complete",
+            body=body,
+        )
+
+    return issue, transport, _VerifiedAttempt
+
+
+_issue_verified_attempt: Any
+_admitted_results_transport: Any
+_VerifiedAttempt: type
+_issue_verified_attempt, _admitted_results_transport, _VerifiedAttempt = (
+    _build_transport_gate()
+)
 
 
 def _admitted_results_body(panel_id: str, subject_key: str, depth: int) -> dict[str, object]:
@@ -153,34 +203,6 @@ def _admitted_results_body(panel_id: str, subject_key: str, depth: int) -> dict[
         "status": "ok",
         "subject_key": subject_key,
     }
-
-
-def _admitted_results_transport(attempt: VerifiedAttempt) -> FixtureTransportResult:
-    """In-process admitted_results transport. Requires a VerifiedAttempt capability."""
-
-    if not isinstance(attempt, VerifiedAttempt):
-        raise TypeError("fixture transport requires a VerifiedAttempt")
-    if attempt._issued_by is not _ISSUER:
-        raise TypeError("fixture transport requires an issued VerifiedAttempt")
-    parameters = attempt.document["parameters"]
-    if not isinstance(parameters, Mapping):
-        raise StoreError("Attempt parameters are missing")
-    if parameters.get("scenario") != "admitted_results":
-        raise StoreError("this tracer implements only scenario=admitted_results")
-    panel_id = parameters["panel_id"]
-    subject_key = parameters["subject_key"]
-    depth = parameters["depth"]
-    if not isinstance(panel_id, str) or not isinstance(subject_key, str):
-        raise StoreError("panel_id and subject_key must be strings")
-    if not isinstance(depth, int) or isinstance(depth, bool):
-        raise StoreError("depth must be an integer")
-    body = canonical_json(_admitted_results_body(panel_id, subject_key, depth))
-    return FixtureTransportResult(
-        transport_state="response_complete",
-        headers=[["content-type", "application/json"]],
-        completeness="complete",
-        body=body,
-    )
 
 
 def capture_admitted_results(

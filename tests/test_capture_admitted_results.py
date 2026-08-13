@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import inspect
 import os
 import subprocess
 import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -16,7 +16,6 @@ from observatory.capture import (
     PUBLISHED_AR_ATTEMPT_ID,
     PUBLISHED_AR_CAPTURE_ID,
     PUBLISHED_AR_INPUTS,
-    VerifiedAttempt,
     capture_admitted_results,
     main,
 )
@@ -105,24 +104,100 @@ def test_d4_body_placement_request_on_attempt_response_on_capture(tmp_path: Path
     assert not (capture_dir / "request.body").exists()
 
 
-def test_transport_requires_issued_verified_attempt() -> None:
-    hints = inspect.get_annotations(
-        capture_mod._admitted_results_transport,
-        eval_str=True,
-    )
-    assert hints["attempt"] is VerifiedAttempt
-    with pytest.raises(TypeError):
-        capture_mod._admitted_results_transport(object())  # type: ignore[arg-type]
-
-
-def test_verified_attempt_cannot_be_forged() -> None:
-    with pytest.raises(TypeError, match="issued only after"):
-        VerifiedAttempt(
+def test_module_issuer_token_bypass_no_longer_works() -> None:
+    assert not hasattr(capture_mod, "_ISSUER")
+    with pytest.raises(TypeError, match="cannot construct"):
+        capture_mod._VerifiedAttempt(
             attempt_id=PUBLISHED_AR_ATTEMPT_ID,
-            document={},
+            document={"parameters": {"scenario": "admitted_results", "depth": 2}},
             request_body=AR_REQUEST_BODY,
             _issued_by=object(),
         )
+    forged: Any = object.__new__(capture_mod._VerifiedAttempt)
+    object.__setattr__(forged, "attempt_id", PUBLISHED_AR_ATTEMPT_ID)
+    object.__setattr__(
+        forged,
+        "document",
+        {"parameters": {"scenario": "admitted_results", "depth": 2, "panel_id": "x"}},
+    )
+    object.__setattr__(forged, "request_body", AR_REQUEST_BODY)
+    object.__setattr__(forged, "_panel_id", "panel-alpha")
+    object.__setattr__(forged, "_subject_key", "subject-one")
+    object.__setattr__(forged, "_depth", 2)
+    with pytest.raises(TypeError, match="verified committed Attempt"):
+        capture_mod._admitted_results_transport(forged)
+
+
+def test_transport_rejects_non_capability_and_unissued_instance() -> None:
+    with pytest.raises(TypeError):
+        capture_mod._admitted_results_transport(object())
+    with pytest.raises(TypeError, match="cannot construct"):
+        capture_mod._VerifiedAttempt()
+
+
+def test_copying_genuine_capability_fields_is_not_accepted(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    issued: list[object] = []
+    real_issue = capture_mod._issue_verified_attempt
+
+    def wrap(
+        inner_store: EvidenceStore,
+        document: Mapping[str, object],
+        request_body: bytes,
+    ) -> object:
+        capability = real_issue(inner_store, document, request_body)
+        issued.append(capability)
+        return capability
+
+    capture_mod._issue_verified_attempt = wrap
+    try:
+        capture_admitted_results(store, PUBLISHED_AR_INPUTS)
+    finally:
+        capture_mod._issue_verified_attempt = real_issue
+    genuine = issued[0]
+    copy: Any = object.__new__(capture_mod._VerifiedAttempt)
+    for name in (
+        "attempt_id",
+        "document",
+        "request_body",
+        "_panel_id",
+        "_subject_key",
+        "_depth",
+    ):
+        object.__setattr__(copy, name, getattr(genuine, name))
+    with pytest.raises(TypeError, match="verified committed Attempt"):
+        capture_mod._admitted_results_transport(copy)
+
+
+def test_mutating_capability_cannot_change_transport_output(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    issued: list[object] = []
+    real_issue = capture_mod._issue_verified_attempt
+
+    def wrap(
+        inner_store: EvidenceStore,
+        document: Mapping[str, object],
+        request_body: bytes,
+    ) -> object:
+        capability = real_issue(inner_store, document, request_body)
+        issued.append(capability)
+        return capability
+
+    capture_mod._issue_verified_attempt = wrap
+    try:
+        capture_admitted_results(store, PUBLISHED_AR_INPUTS)
+    finally:
+        capture_mod._issue_verified_attempt = real_issue
+    genuine: Any = issued[0]
+    document = genuine.document
+    parameters = document["parameters"]
+    with pytest.raises(TypeError):
+        parameters["depth"] = 16
+    result = capture_mod._admitted_results_transport(genuine)
+    assert result.body == AR_RESPONSE_BODY
+    assert content_digest(result.body) == (
+        "40735fbc1cd0f98e140857bec1b1e8c6d6f666baa0fb49bfd0e782aaa6513eac"
+    )
 
 
 def test_attempt_commit_failure_prevents_transport(
@@ -131,7 +206,7 @@ def test_attempt_commit_failure_prevents_transport(
     store = _store(tmp_path)
     calls: list[object] = []
 
-    def spy(attempt: VerifiedAttempt) -> capture_mod.FixtureTransportResult:
+    def spy(attempt: object) -> Any:
         calls.append(attempt)
         return capture_mod._admitted_results_transport(attempt)
 
@@ -151,7 +226,7 @@ def test_post_committed_verify_failure_prevents_transport(
     store = _store(tmp_path)
     calls: list[object] = []
 
-    def spy(attempt: VerifiedAttempt) -> capture_mod.FixtureTransportResult:
+    def spy(attempt: object) -> capture_mod.FixtureTransportResult:
         calls.append(attempt)
         raise AssertionError("transport must not run")
 
@@ -173,18 +248,26 @@ def test_post_committed_verify_failure_prevents_transport(
     assert calls == []
 
 
-def test_no_alternate_path_invokes_transport_before_verified_attempt() -> None:
-    source = Path(capture_mod.__file__).read_text(encoding="utf-8")
-    call_sites = [
-        line.strip()
-        for line in source.splitlines()
-        if "_admitted_results_transport(" in line and not line.strip().startswith("def ")
-    ]
-    assert call_sites == ["transport_result = _admitted_results_transport(verified)"]
-    assert "verified = _issue_verified_attempt" in source
-    issue_idx = source.index("verified = _issue_verified_attempt")
-    transport_idx = source.index("transport_result = _admitted_results_transport(verified)")
-    assert issue_idx < transport_idx
+def test_only_issued_capability_reaches_transport_from_runner(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = _store(tmp_path)
+    seen: list[object] = []
+    real_transport = capture_mod._admitted_results_transport
+
+    def spy(attempt: object) -> Any:
+        seen.append(attempt)
+        assert type(attempt) is capture_mod._VerifiedAttempt
+        return real_transport(attempt)
+
+    monkeypatch.setattr(capture_mod, "_admitted_results_transport", spy)
+    outcome = capture_admitted_results(store, PUBLISHED_AR_INPUTS)
+    assert outcome.attempt_id == PUBLISHED_AR_ATTEMPT_ID
+    assert len(seen) == 1
+    assert capture_mod._admitted_results_transport is spy
+    # The runner is the only production call path; a second transport on the
+    # issued object is allowed (same capability) but forgeries are not.
+    assert real_transport(seen[0]).body == AR_RESPONSE_BODY
 
 
 def test_journal_is_not_written(tmp_path: Path) -> None:

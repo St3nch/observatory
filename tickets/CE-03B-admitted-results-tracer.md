@@ -119,12 +119,14 @@ This ticket adds **no** behavior beyond committed authority.
     `test_ar_request_and_response_bodies_match_published_vector`
   - D4 body placement:
     `test_d4_body_placement_request_on_attempt_response_on_capture`
-  - D8 structural gate:
-    `test_transport_requires_issued_verified_attempt`,
-    `test_verified_attempt_cannot_be_forged`,
+  - D8 structural gate (closure-held issuance registry; no module token):
+    `test_module_issuer_token_bypass_no_longer_works`,
+    `test_transport_rejects_non_capability_and_unissued_instance`,
+    `test_copying_genuine_capability_fields_is_not_accepted`,
+    `test_mutating_capability_cannot_change_transport_output`,
     `test_attempt_commit_failure_prevents_transport`,
     `test_post_committed_verify_failure_prevents_transport`,
-    `test_no_alternate_path_invokes_transport_before_verified_attempt`
+    `test_only_issued_capability_reaches_transport_from_runner`
   - Journal skip: `test_journal_is_not_written`
   - CLI: `test_cli_prints_both_full_ids`, `test_cli_module_entrypoint_prints_ids`,
     `test_cli_does_not_derive_or_touch_postgresql`
@@ -136,12 +138,15 @@ This ticket adds **no** behavior beyond committed authority.
   - CLI uses frozen published AR inputs only (`--evidence-root` required).
   - Journal skip is the authorized in-process-retention exception, not a journal product.
   - No PostgreSQL, derive, HTTP, other scenarios, or crash/hardware claims.
+  - D8 gate: ordinary module/API construction and every in-repo call path.
+    Not a cryptographic or hostile-runtime claim.
 - Review findings remaining:
   - Public surface: `capture_admitted_results(store, inputs)`,
-    `AdmittedResultsInputs`, `PUBLISHED_AR_INPUTS`, `VerifiedAttempt` (unforgeable
-    capability), `main`. Transport is `_admitted_results_transport` and requires
-    `VerifiedAttempt` issued only by `_issue_verified_attempt` after
-    `commit_attempt` returns.
+    `AdmittedResultsInputs`, `PUBLISHED_AR_INPUTS`, `main`. The transport
+    capability is not supported public API. Ordinary construction and field
+    copies are rejected; transport reads frozen scalars taken from committed
+    request bytes at issuance. This is not a claim against `object.__new__`
+    plus closure-cell introspection or arbitrary monkeypatching.
 
 ## Closure
 
