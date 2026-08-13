@@ -104,9 +104,8 @@ def postgres_admin_dsn() -> Iterator[str]:
         _docker("stop", "-t", "2", name)
 
 
-@pytest.fixture
-def postgres_dsn(postgres_admin_dsn: str) -> Iterator[str]:
-    dbname = "ce05_" + uuid.uuid4().hex
+def _temporary_database(postgres_admin_dsn: str) -> Iterator[str]:
+    dbname = "obs_" + uuid.uuid4().hex
     with psycopg.connect(postgres_admin_dsn, autocommit=True) as admin:
         admin.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(dbname)))
     dsn = _replace_dbname(postgres_admin_dsn, dbname)
@@ -117,3 +116,13 @@ def postgres_dsn(postgres_admin_dsn: str) -> Iterator[str]:
             admin.execute(
                 sql.SQL("DROP DATABASE IF EXISTS {} WITH (FORCE)").format(sql.Identifier(dbname))
             )
+
+
+@pytest.fixture
+def postgres_dsn(postgres_admin_dsn: str) -> Iterator[str]:
+    yield from _temporary_database(postgres_admin_dsn)
+
+
+@pytest.fixture
+def postgres_second_dsn(postgres_admin_dsn: str) -> Iterator[str]:
+    yield from _temporary_database(postgres_admin_dsn)

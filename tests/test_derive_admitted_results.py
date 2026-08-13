@@ -335,10 +335,14 @@ def test_non_admitted_scenario_gets_attempt_stage_only(
         outcomes = _fetch_outcomes(connection)
         observations = _fetch_observations(connection)
     assert observations == []
-    assert len(outcomes) == 1
+    assert len(outcomes) == 2
     assert outcomes[0][0] == nr.attempt_id
     assert outcomes[0][1] is None
     assert outcomes[0][3] == "authorized_unresolved"
+    assert outcomes[1][0] == nr.attempt_id
+    assert outcomes[1][1] == nr.capture_id
+    assert outcomes[1][3] == "no_response"
+    assert outcomes[1][4] == 0
 
 
 def test_admitted_results_plain_media_type_is_not_admitted(
@@ -391,10 +395,14 @@ def test_admitted_results_plain_media_type_is_not_admitted(
         outcomes = _fetch_outcomes(connection)
         observations = _fetch_observations(connection)
     assert observations == []
-    assert len(outcomes) == 1
+    assert len(outcomes) == 2
     assert outcomes[0][0] == PUBLISHED_AR_ATTEMPT_ID
     assert outcomes[0][1] is None
     assert outcomes[0][3] == "authorized_unresolved"
+    assert outcomes[1][0] == PUBLISHED_AR_ATTEMPT_ID
+    assert outcomes[1][1] == capture_id
+    assert outcomes[1][3] == "transport_complete_non_admissible"
+    assert outcomes[1][4] == 0
 
 
 def test_conflicting_adapter_contract_fails_before_derived_rows(

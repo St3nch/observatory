@@ -1,11 +1,11 @@
 # CE-06 — Derive completion: matrix, rebuild, multi-version, damaged refuse
 
-**Status:** ready-for-agent
+**Status:** review
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** tracer bullet
 **Blocked by:** CE-05 — Derive admitted_results into real PostgreSQL
 **Approved by:** Project Steward
-**Start commit:**
+**Start commit:** d26d5a002199449dd221bd770940ddf0d31fa8e6
 
 ## What to build
 
@@ -109,10 +109,50 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- implement fills; may set Status: review; never Status: done -->
 
-- End commit:
+- End commit: supplied in the implementer handoff report (a commit cannot
+  embed its own final hash).
 - Acceptance evidence:
+  - `uv run pytest -q` — 431 passed
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Ten Attempt-stage + Capture-stage Outcomes:
+    `test_all_ten_attempt_and_capture_stage_outcomes`
+  - Observation counts / only admitted_results:
+    `test_observation_counts_only_admitted_results`
+  - AR identity/values/provenance:
+    `test_admitted_results_identity_values_and_provenance`
+  - admitted_empty zero Observations:
+    `test_admitted_empty_success_has_zero_observations`
+  - Depth 1 and 16 AR:
+    `test_admitted_results_depth_boundaries`
+  - Classification from Capture, not scenario name:
+    `test_classification_follows_capture_not_scenario_name`
+  - Logical rebuild, two real DBs:
+    `test_logical_rebuild_equivalence_two_real_databases`
+  - Multi-version append + prior xmin:
+    `test_new_version_appends_without_mutating_prior`
+  - Damaged Attempt isolation:
+    `test_damaged_attempt_refuses_only_that_chain`
+  - Damaged Capture / body, Attempt preserved:
+    `test_damaged_capture_preserves_valid_attempt_and_other_chain`,
+    `test_damaged_response_body_preserves_attempt_stage`
+  - Uncommitted ignored: `test_uncommitted_material_is_ignored`
+  - CE-05 media-type / atomicity / idempotency / CLI /
+    conflict-registration remain in
+    `tests/test_derive_admitted_results.py`
 - Unproven limits:
+  - Durable matrix uses depth 2 plus AR depths 1 and 16, not 160
+    Evidence commits.
+  - Header eligibility is exact-list equality.
+  - No physical dump, crash/fsync, concurrency, or off-host claims.
+  - Damage cases are representative, not the CE-08 scrub product.
+  - `0 < result_count < depth` is treated as `observation_admitted`
+    with that many Observations (admission success); fixture
+    construction never produces that body.
 - Review findings remaining:
+  - `interrupt=` remains a test seam on `derive`.
+  - CE-05 planted H_plain-on-AR now also writes Capture-stage
+    `transport_complete_non_admissible` (still zero Observations).
 
 ## Closure
 

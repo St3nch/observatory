@@ -1,4 +1,4 @@
-"""Derive admitted_results Outcomes and Observations from verified Evidence."""
+"""Derive fixture-panel-v1 Outcomes and Observations from verified Evidence."""
 
 from __future__ import annotations
 
@@ -20,9 +20,11 @@ VERSION_RE: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z0-9._+:-]{1,128}$")
 ADAPTER_CONTRACT: Final[str] = "fixture-panel-v1"
 DEFAULT_VERSION: Final[str] = "fixture-panel-v1-derive-v1"
 ATTEMPT_CLASSIFICATION: Final[str] = "authorized_unresolved"
-CAPTURE_CLASSIFICATION: Final[str] = "observation_admitted"
 PROVIDER: Final[str] = "fixture"
 H_JSON: Final[list[list[str]]] = [["content-type", "application/json"]]
+REFUSAL_FIELDS: Final[frozenset[str]] = frozenset(
+    {"code", "contract", "panel_id", "status", "subject_key"}
+)
 
 Interrupt = Callable[[str], None]
 
@@ -123,6 +125,64 @@ def _json_media_type(response: Mapping[str, object]) -> bool:
     return response.get("headers") == H_JSON
 
 
+def _closed_status_body(
+    parsed: Mapping[str, object],
+    parameters: Mapping[str, object],
+    *,
+    status: str,
+    code: str,
+) -> bool:
+    return (
+        set(parsed) == REFUSAL_FIELDS
+        and parsed.get("code") == code
+        and parsed.get("contract") == ADAPTER_CONTRACT
+        and parsed.get("status") == status
+        and parsed.get("panel_id") == parameters["panel_id"]
+        and parsed.get("subject_key") == parameters["subject_key"]
+    )
+
+
+def _classify_capture(
+    parameters: Mapping[str, object],
+    capture: Mapping[str, object],
+    body: bytes | None,
+) -> tuple[str, list[dict[str, object]]] | None:
+    """Classify from verified Capture branch, headers, body, and admission."""
+
+    state = capture.get("transport_state")
+    if state == "no_response":
+        return "no_response", []
+    if state == "response_partial":
+        return "response_partial", []
+    if state != "response_complete":
+        return None
+    response = capture.get("response")
+    if not isinstance(response, Mapping) or response.get("completeness") != "complete":
+        return "transport_complete_non_admissible", []
+    if not _json_media_type(response):
+        return "transport_complete_non_admissible", []
+    if body is None:
+        return "transport_complete_non_admissible", []
+    try:
+        parsed = json.loads(body)
+    except json.JSONDecodeError:
+        return "transport_complete_non_admissible", []
+    if not isinstance(parsed, dict):
+        return "transport_complete_non_admissible", []
+    if _closed_status_body(parsed, parameters, status="refused", code="fixture_refusal"):
+        return "provider_refusal", []
+    if _closed_status_body(parsed, parameters, status="failed", code="fixture_failure"):
+        return "provider_failure", []
+    if parsed.get("status") == "ok":
+        admitted = _admit_ok_results(parameters, body)
+        if admitted is None:
+            return "admission_rejected", []
+        if len(admitted) == 0:
+            return "observation_admitted_empty", []
+        return "observation_admitted", admitted
+    return "transport_complete_non_admissible", []
+
+
 def _register_version(connection: Connection[Any], derivation_version_id: str) -> None:
     with connection.transaction():
         existing = connection.execute(
@@ -181,6 +241,7 @@ def _write_capture_unit(
     capture_id: str,
     panel_id: str,
     subject_key: str,
+    classification: str,
     results: list[dict[str, object]],
     interrupt: Interrupt | None,
 ) -> None:
@@ -201,7 +262,7 @@ def _write_capture_unit(
                 attempt_id,
                 capture_id,
                 derivation_version_id,
-                CAPTURE_CLASSIFICATION,
+                classification,
                 len(results),
             ),
         )
@@ -246,7 +307,7 @@ def _write_capture_unit(
                 interrupt("observation")
 
 
-def derive_admitted_results(
+def derive(
     store: EvidenceStore,
     connection: Connection[Any],
     derivation_version_id: str,
@@ -298,32 +359,21 @@ def derive_admitted_results(
         parameters = attempt["parameters"]
         if not isinstance(parameters, Mapping):
             continue
-        if parameters.get("scenario") != "admitted_results":
-            continue
-        if capture.get("transport_state") != "response_complete":
-            continue
-        response = capture.get("response")
-        if not isinstance(response, Mapping) or response.get("completeness") != "complete":
-            continue
-        if not _json_media_type(response):
-            continue
-        try:
-            body = store.read_capture_body(capture_id)
-        except IntegrityError:
-            integrity_failures += 1
-            continue
-        if body is None:
-            continue
-        admitted = _admit_ok_results(parameters, body)
-        if admitted is None:
-            continue
-        depth = parameters["depth"]
-        if not isinstance(depth, int) or isinstance(depth, bool) or len(admitted) != depth:
-            continue
-        panel_id = parameters["panel_id"]
-        subject_key = parameters["subject_key"]
+        panel_id = parameters.get("panel_id")
+        subject_key = parameters.get("subject_key")
         if not isinstance(panel_id, str) or not isinstance(subject_key, str):
             continue
+        body: bytes | None = None
+        if capture.get("transport_state") != "no_response":
+            try:
+                body = store.read_capture_body(capture_id)
+            except IntegrityError:
+                integrity_failures += 1
+                continue
+        classified = _classify_capture(parameters, capture, body)
+        if classified is None:
+            continue
+        classification, results = classified
         _write_capture_unit(
             connection,
             version,
@@ -331,11 +381,12 @@ def derive_admitted_results(
             capture_id,
             panel_id,
             subject_key,
-            admitted,
+            classification,
+            results,
             interrupt,
         )
         capture_written += 1
-        observation_written += len(admitted)
+        observation_written += len(results)
     return DeriveSummary(
         derivation_version_id=version,
         attempt_outcomes=attempt_written,
@@ -348,7 +399,7 @@ def derive_admitted_results(
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="observatory.derive",
-        description="Derive admitted_results Outcomes and Observations from Evidence.",
+        description="Derive fixture-panel-v1 Outcomes and Observations from Evidence.",
     )
     parser.add_argument("--evidence-root", required=True, type=Path)
     parser.add_argument("--database-url", default=None)
@@ -366,13 +417,16 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     store = open_store(args.evidence_root)
     with connect(dsn) as connection:
-        summary = derive_admitted_results(store, connection, version)
+        summary = derive(store, connection, version)
     sys.stdout.write(f"derivation_version {summary.derivation_version_id}\n")
     sys.stdout.write(f"attempt_outcomes {summary.attempt_outcomes}\n")
     sys.stdout.write(f"capture_outcomes {summary.capture_outcomes}\n")
     sys.stdout.write(f"observations {summary.observations}\n")
     sys.stdout.write(f"integrity_failures {summary.integrity_failures}\n")
     return 0
+
+
+derive_admitted_results = derive
 
 
 if __name__ == "__main__":
