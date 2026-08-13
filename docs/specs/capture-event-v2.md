@@ -815,7 +815,7 @@ Partial body = first 32 bytes of JCS(`admitted_results_body(panel-alpha, subject
 | Field | Value |
 |---|---|
 | Hex | `7b22636f6e7472616374223a22666978747572652d70616e656c2d7631222c22` |
-| UTF-8 | `{"contract":"fixture-panel-v1",` |
+| UTF-8 | `{"contract":"fixture-panel-v1","` |
 | Byte length | `32` |
 | SHA-256 | `02e3821de6b9055e97976f31da2896fd48f513e011459a84841665990fed04df` |
 

@@ -1,6 +1,6 @@
 # CE-04 — Full fixture-panel-v1 matrix and all transport branches
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** tracer bullet
 **Blocked by:** CE-03B — admitted_results tracer: Attempt, transport, Capture, CLI
@@ -43,15 +43,15 @@ nonces) are used; and enforcement that each Attempt has at most one Capture.
 
 ## Acceptance criteria
 
-- [ ] For every scenario in the closed ten-value enum and every valid `(panel_id, subject_key, depth)`, the fixture algorithm produces the mandated `transport_state`, headers (or no response), completeness, body state, and `transport_failure`, together with the authority-prescribed expected classification and Observation count; this ticket does not derive Outcomes or Observations.
-- [ ] Automated verification exhaustively covers all ten scenarios at every valid depth `1..16` and uses parameter-general or property-based checks for schema-valid `panel_id` and `subject_key` values, including minimum- and maximum-length strings, permitted character classes, and the special `subject_key="other-subject"` branch. Generative tests prove the general construction rule; they do not claim to enumerate every possible valid string.
-- [ ] `wrong_media_type` uses the deterministic admitted_empty body for the same parameters with `text/plain` content-type header.
-- [ ] `response_partial` body is the first 32 UTF-8 bytes of JCS(`admitted_results_body(P,S,D)`).
-- [ ] `extra_subject` and `too_many_results` commit Capture Evidence with correct transport completeness; they do not require Observations in this ticket.
-- [ ] The published RP and NR identity digests match when the frozen published vector inputs, including their nonces, are used.
-- [ ] A second Capture commit for the same Attempt is rejected; at most one Capture per Attempt holds.
-- [ ] Branch null rules for `no_response` / partial / complete are enforced (closed Capture schema).
-- [ ] Attempt remains committed before transport for every scenario path.
+- [x] For every scenario in the closed ten-value enum and every valid `(panel_id, subject_key, depth)`, the fixture algorithm produces the mandated `transport_state`, headers (or no response), completeness, body state, and `transport_failure`, together with the authority-prescribed expected classification and Observation count; this ticket does not derive Outcomes or Observations.
+- [x] Automated verification exhaustively covers all ten scenarios at every valid depth `1..16` and uses parameter-general or property-based checks for schema-valid `panel_id` and `subject_key` values, including minimum- and maximum-length strings, permitted character classes, and the special `subject_key="other-subject"` branch. Generative tests prove the general construction rule; they do not claim to enumerate every possible valid string.
+- [x] `wrong_media_type` uses the deterministic admitted_empty body for the same parameters with `text/plain` content-type header.
+- [x] `response_partial` body is the first 32 UTF-8 bytes of JCS(`admitted_results_body(P,S,D)`).
+- [x] `extra_subject` and `too_many_results` commit Capture Evidence with correct transport completeness; they do not require Observations in this ticket.
+- [x] The published RP and NR identity digests match when the frozen published vector inputs, including their nonces, are used.
+- [x] A second Capture commit for the same Attempt is rejected; at most one Capture per Attempt holds.
+- [x] Branch null rules for `no_response` / partial / complete are enforced (closed Capture schema).
+- [x] Attempt remains committed before transport for every scenario path.
 
 ## Verification
 
@@ -153,5 +153,14 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- Project Steward only -->
 
-- Closed at commit:
-- Evidence accepted: yes/no
+- Closed at commit: `aae4e3b722db9d40d0d19a815acf96efb3e2112a`
+- Evidence accepted: yes
+- Steward verification:
+  - Exact comparison: `eb6695c665e3659d57d7f86b8d9529756312ee60` through
+    `aae4e3b722db9d40d0d19a815acf96efb3e2112a`
+  - `uv run pytest -q` — 401 passed
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Isolated ordinary-mutation regression — 402 passed in the disposable review tree
+  - Corrected the RP UTF-8 display to agree with its normative 32-byte hex and digest;
+    no vector identity changed
