@@ -117,26 +117,35 @@ reflink only.
 No floating-point values in identity-bearing documents.
 
 **Integer range is normative, not incidental.** Every integer in an identity-bearing
-document must satisfy `-9007199254740991 ≤ n ≤ 9007199254740991` — the IEEE 754
-safe-integer range. Values outside it must be rejected, not serialized.
+document must satisfy `-9007199254740991 ≤ n ≤ 9007199254740991` — the I-JSON
+safe-integer range. Values outside it are rejected, not serialized.
 
-This follows from RFC 8785 itself, which adopts I-JSON's requirement that JSON number data
-be expressible as IEEE 754 double-precision values, and which defers number serialization to
-ECMAScript. Two divergences appear outside the safe range, and the single bound closes both:
+This bound is **Observatory policy**, not a rule RFC 8785 imposes. RFC 8785 requires I-JSON
+conformance and defers number serialization to ECMAScript; I-JSON (RFC 7493 §2.2) states
+that a sender cannot expect a receiver to treat an integer outside
+`[-(2**53)+1, (2**53)-1]` as an exact value. We turn that interoperability guidance into a
+hard limit because these integers are identity-bearing: a value a receiver may not preserve
+exactly is a value whose digest may not reproduce.
 
-- **Precision.** Above 2⁵³−1, an integer has no exact double representation, so a conforming
-  serializer emits the shortest string identifying the nearest double rather than the exact
-  value: `9007199254740993` becomes `9007199254740992`.
-- **Format.** At magnitude 10²¹ and above, ECMAScript switches to exponential notation, so
-  `10³⁰` serializes as `1e+30`, not as thirty-one digits.
+What the bound buys, stated precisely:
 
-Because 2⁵³−1 is far below 10²¹, every permitted value is both exactly representable and
-below the exponential threshold. Within this range, and only within it, a plain decimal
-rendering of the integer is byte-identical to conforming JCS output.
+- **Exactness.** Every integer within the range has an exact IEEE 754 double
+  representation. Outside it, *some* integers remain exact — 2⁵⁴ and other larger powers of
+  two among them — but the representable set grows sparse, and inexact values round to a
+  neighbour: `9007199254740993` becomes `9007199254740992`.
+- **Plain decimal rendering.** ECMAScript switches to exponential notation at magnitude
+  10²¹ and above, so a conforming serializer emits `1e+30` for `10³⁰`. That threshold sits
+  far **above** 2⁵³−1 (≈ 9.007×10¹⁵), so the safe-integer bound binds first and exponential
+  formatting never arises for a permitted value.
 
-Discovered during CE-02 implementation: the bound was previously unstated, and an
-implementation rendering integers as plain decimals would silently produce non-conforming
-identities for large values.
+Together these mean a plain decimal rendering of any permitted integer is byte-identical to
+conforming JCS output. An implementation needs no exponential serializer — but only because
+the range is bounded. Rendering unbounded integers as plain decimals is not JCS.
+
+The encoder applies the signed range. Fields that this specification defines as non-negative
+are further constrained to `0 ≤ n ≤ 9007199254740991` by their own field rules.
+
+Discovered during CE-02 implementation: the bound was previously unstated.
 
 ### Canonicalization and verify-on-read
 
