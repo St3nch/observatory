@@ -1,6 +1,6 @@
 # CE-03 — Evidence Store foundation: format, durable install, commit and read
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** necessary prefactor
 **Blocked by:** CE-02 — Canonical JCS, closed schemas, and content-ID vectors
@@ -176,5 +176,5 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- Project Steward only -->
 
-- Closed at commit:
-- Evidence accepted: yes/no
+- Closed at commit: 3bb13e818f76ab86bbe1e48ca9976c869f5bee8e
+- Evidence accepted: yes
