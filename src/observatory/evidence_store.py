@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Final
 
 from observatory.capture_event import (
+    DocumentError,
     canonical_json,
     content_digest,
     validate_attempt,
@@ -119,6 +120,15 @@ class EvidenceStore:
         self._verify_attempt_bundle(bundle, attempt_id)
         return attempt_id
 
+    def _require_verified_parent(self, attempt_id: str) -> dict[str, object]:
+        try:
+            parent = self.read_attempt(attempt_id)
+        except IntegrityError:
+            raise
+        if parent is None:
+            raise StoreError("cited Attempt is missing or uncommitted")
+        return parent
+
     def commit_capture(
         self,
         document: Mapping[str, object],
@@ -127,7 +137,13 @@ class EvidenceStore:
     ) -> str:
         """Durably commit a Capture bundle. Success only after D5 verification."""
 
-        validated = validate_capture(document)
+        preliminary = validate_capture(document)
+        parent_id = _require_hex(preliminary["attempt_id"], "attempt_id")
+        parent = self._require_verified_parent(parent_id)
+        try:
+            validated = validate_capture(document, attempt=parent)
+        except DocumentError as exc:
+            raise StoreError("Capture does not agree with its parent Attempt") from exc
         manifest = canonical_json(validated)
         capture_id = content_digest(manifest)
         if response_body is not None:
@@ -237,10 +253,18 @@ class EvidenceStore:
         self._record("unlink_tmp", tmp)
         self._fsync_dir(final.parent)
 
+    def _read_verified_bytes(self, path: Path) -> bytes:
+        try:
+            return path.read_bytes()
+        except FileNotFoundError as exc:
+            raise IntegrityError(f"missing file {path}") from exc
+        except OSError as exc:
+            raise IntegrityError(f"unreadable file {path}") from exc
+
     def _verify_pool_object(self, path: Path, digest: str, size: int) -> None:
         if not path.is_file():
             raise IntegrityError(f"missing pool object {digest}")
-        existing = path.read_bytes()
+        existing = self._read_verified_bytes(path)
         if len(existing) != size or content_digest(existing) != digest:
             raise IntegrityError(f"pool object mismatch at {path}")
 
@@ -297,7 +321,7 @@ class EvidenceStore:
             body_path = bundle / name
             if not body_path.is_file():
                 raise IntegrityError(f"missing bundle body {name}")
-            payload = body_path.read_bytes()
+            payload = self._read_verified_bytes(body_path)
             if len(payload) != size or content_digest(payload) != digest:
                 raise IntegrityError(f"bundle body mismatch at {body_path}")
             if body_path.stat().st_ino == pool.stat().st_ino:
@@ -307,16 +331,19 @@ class EvidenceStore:
         marker = bundle / "COMMITTED"
         if not marker.is_file():
             raise IntegrityError(f"missing COMMITTED in {bundle}")
-        if marker.read_bytes() != f"{event_id}\n".encode():
+        if self._read_verified_bytes(marker) != f"{event_id}\n".encode():
             raise IntegrityError(f"COMMITTED does not match {event_id}")
 
     def _verify_attempt_bundle(self, bundle: Path, attempt_id: str) -> dict[str, object]:
         # D5 / six-step verify-on-read.
-        raw = (bundle / "attempt.json").read_bytes()  # 1
+        raw = self._read_verified_bytes(bundle / "attempt.json")  # 1
         if content_digest(raw) != attempt_id or bundle.name != attempt_id:  # 2
             raise IntegrityError("attempt identity does not match stored bytes")
         self._verify_committed_marker(bundle, attempt_id)
-        document = validate_attempt(raw)  # 3 schema+re-JCS, 4 cross-field
+        try:
+            document = validate_attempt(raw)  # 3 schema+re-JCS, 4 cross-field
+        except DocumentError as exc:
+            raise IntegrityError("attempt schema or re-JCS failed") from exc
         if canonical_json(document) != raw:
             raise IntegrityError("re-JCS does not equal stored Attempt bytes")
         self._verify_bodies(  # 5 both locations
@@ -328,11 +355,25 @@ class EvidenceStore:
         return document  # 6: any mismatch already raised
 
     def _verify_capture_bundle(self, bundle: Path, capture_id: str) -> dict[str, object]:
-        raw = (bundle / "capture.json").read_bytes()
+        raw = self._read_verified_bytes(bundle / "capture.json")
         if content_digest(raw) != capture_id or bundle.name != capture_id:
             raise IntegrityError("capture identity does not match stored bytes")
         self._verify_committed_marker(bundle, capture_id)
-        document = validate_capture(raw)
+        try:
+            preliminary = validate_capture(raw)
+        except DocumentError as exc:
+            raise IntegrityError("capture schema or re-JCS failed") from exc
+        parent_id = _require_hex(preliminary["attempt_id"], "attempt_id")
+        try:
+            parent = self.read_attempt(parent_id)
+        except IntegrityError:
+            raise
+        if parent is None:
+            raise IntegrityError("cited Attempt is missing or uncommitted")
+        try:
+            document = validate_capture(raw, attempt=parent)
+        except DocumentError as exc:
+            raise IntegrityError("Capture does not agree with its parent Attempt") from exc
         if canonical_json(document) != raw:
             raise IntegrityError("re-JCS does not equal stored Capture bytes")
         self._verify_bodies(

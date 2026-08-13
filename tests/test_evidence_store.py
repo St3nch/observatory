@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 from typing import Any
@@ -9,10 +10,13 @@ from typing import Any
 import pytest
 
 from observatory.capture_event import (
+    DocumentError,
     attempt_document,
     body_ref,
+    canonical_json,
     capture_document,
     content_digest,
+    validate_attempt,
 )
 from observatory.evidence_store import (
     FORMAT_BYTES,
@@ -168,6 +172,24 @@ def test_d7_open_rejects_unsupported_format_without_purging_tmp(tmp_path: Path) 
     with pytest.raises(FormatError):
         open_store(root)
     assert marker.exists()
+
+
+def test_d7_open_rejects_canonical_conflicting_format_without_purging_tmp(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "conflict"
+    root.mkdir()
+    conflicting = json.loads(FORMAT_BYTES)
+    conflicting["store_format"] = 1
+    (root / "FORMAT.json").write_bytes(canonical_json(conflicting))
+    tmp = root / ".tmp"
+    tmp.mkdir()
+    marker = tmp / "keep-me"
+    marker.write_bytes(b"x")
+    with pytest.raises(FormatError):
+        open_store(root)
+    assert marker.exists()
+    assert marker.read_bytes() == b"x"
 
 
 def test_d7_successful_open_purges_tmp_only_after_format_validation(tmp_path: Path) -> None:
@@ -328,6 +350,26 @@ def test_d4a_commit_is_evidence_only_after_verify(tmp_path: Path) -> None:
     assert document["attempt_nonce"] == AR_NONCE
 
 
+def test_d4a_commit_does_not_report_success_when_post_committed_verify_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store = _store(tmp_path)
+    calls = {"n": 0}
+
+    def fail_after_commit(value: object) -> dict[str, object]:
+        calls["n"] += 1
+        if calls["n"] >= 2:
+            raise DocumentError("forced post-COMMITTED verify failure")
+        return validate_attempt(value)
+
+    monkeypatch.setattr(
+        "observatory.evidence_store.validate_attempt",
+        fail_after_commit,
+    )
+    with pytest.raises(IntegrityError):
+        store.commit_attempt(_ar_attempt(), request_body=AR_REQUEST_BODY)
+
+
 def test_d6_uncommitted_bundle_is_ignored(tmp_path: Path) -> None:
     store = _store(tmp_path)
     store.commit_attempt(_ar_attempt(), request_body=AR_REQUEST_BODY)
@@ -423,3 +465,120 @@ def test_tamper_capture_response_body_fails_closed(tmp_path: Path) -> None:
     body.write_bytes(b"z" * len(AR_RESPONSE_BODY))
     with pytest.raises(IntegrityError):
         store.read_capture(AR_CAPTURE_ID)
+
+
+def _other_attempt() -> dict[str, Any]:
+    return attempt_document(
+        parameters={**AR_PARAMETERS, "scenario": "no_response"},
+        attempt_nonce=ALT_NONCE,
+        authorized_at=AUTHORIZED_AT,
+        observatory_version=OBSERVATORY_VERSION,
+    )
+
+
+def test_commit_capture_rejects_missing_parent_before_writing_bundle(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    capture = _ar_capture(_ar_attempt())
+    with pytest.raises(StoreError, match="Attempt"):
+        store.commit_capture(capture, response_body=AR_RESPONSE_BODY)
+    captures = store.root / "captures"
+    assert not captures.exists() or list(captures.rglob("COMMITTED")) == []
+    assert not captures.exists() or list(captures.rglob("capture.json")) == []
+
+
+def test_commit_capture_rejects_parent_field_mismatch(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    store.commit_attempt(_ar_attempt(), request_body=AR_REQUEST_BODY)
+    other = _other_attempt()
+    other_id = store.commit_attempt(
+        other,
+        request_body=canonical_json(other["parameters"]),
+    )
+    mismatched = {**_ar_capture(_ar_attempt()), "attempt_id": other_id}
+    with pytest.raises(StoreError, match="parent"):
+        store.commit_capture(mismatched, response_body=AR_RESPONSE_BODY)
+    assert not any(
+        path.name == "COMMITTED" and AR_CAPTURE_ID in path.parts
+        for path in (store.root / "captures").rglob("COMMITTED")
+    )
+
+
+def test_read_capture_integrity_error_when_parent_missing(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    _commit_ar(store)
+    attempt_dir = store.attempt_path(AR_FINGERPRINT, AUTHORIZED_AT, AR_ATTEMPT_ID)
+    for child in attempt_dir.iterdir():
+        child.unlink()
+    attempt_dir.rmdir()
+    with pytest.raises(IntegrityError):
+        store.read_capture(AR_CAPTURE_ID)
+
+
+def test_read_capture_integrity_error_when_parent_uncommitted(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    _commit_ar(store)
+    committed = store.attempt_path(AR_FINGERPRINT, AUTHORIZED_AT, AR_ATTEMPT_ID) / "COMMITTED"
+    committed.unlink()
+    with pytest.raises(IntegrityError):
+        store.read_capture(AR_CAPTURE_ID)
+
+
+def test_read_capture_integrity_error_when_parent_corrupt(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    _commit_ar(store)
+    manifest = store.attempt_path(AR_FINGERPRINT, AUTHORIZED_AT, AR_ATTEMPT_ID) / "attempt.json"
+    data = bytearray(manifest.read_bytes())
+    data[0] ^= 0x01
+    manifest.write_bytes(bytes(data))
+    with pytest.raises(IntegrityError):
+        store.read_capture(AR_CAPTURE_ID)
+
+
+def test_read_capture_integrity_error_when_parent_mismatched(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    store.commit_attempt(_ar_attempt(), request_body=AR_REQUEST_BODY)
+    other_capture = capture_document(
+        attempt=_other_attempt(),
+        request_started_at=REQUEST_STARTED_AT,
+        transport_ended_at=TRANSPORT_ENDED_AT,
+        transport_state="no_response",
+        response=None,
+        transport_failure={"code": "fixture_no_response", "phase": "receive_response"},
+        response_headers_at=None,
+        response_body_ended_at=None,
+    )
+    planted = {**other_capture, "attempt_id": AR_ATTEMPT_ID}
+    raw = canonical_json(planted)
+    capture_id = content_digest(raw)
+    bundle = store.capture_path(capture_id)
+    bundle.mkdir(parents=True)
+    (bundle / "capture.json").write_bytes(raw)
+    (bundle / "COMMITTED").write_bytes(f"{capture_id}\n".encode())
+    with pytest.raises(IntegrityError, match="parent"):
+        store.read_capture(capture_id)
+
+
+def test_committed_bundle_missing_manifest_is_integrity_error(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    store.commit_attempt(_ar_attempt(), request_body=AR_REQUEST_BODY)
+    manifest = store.attempt_path(AR_FINGERPRINT, AUTHORIZED_AT, AR_ATTEMPT_ID) / "attempt.json"
+    manifest.unlink()
+    with pytest.raises(IntegrityError) as caught:
+        store.read_attempt(AR_ATTEMPT_ID)
+    assert not isinstance(caught.value, FileNotFoundError)
+    assert caught.value.__cause__ is None or isinstance(caught.value.__cause__, OSError)
+
+
+def test_committed_schema_failure_is_integrity_error(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    invalid = b'{"schema":"observatory.attempt-event","version":1}'
+    event_id = content_digest(invalid)
+    bundle = (
+        store.root / "attempts" / "v1" / "00" / "00" / ("a" * 64) / "2026" / "08" / "11" / event_id
+    )
+    bundle.mkdir(parents=True)
+    (bundle / "attempt.json").write_bytes(invalid)
+    (bundle / "COMMITTED").write_bytes(f"{event_id}\n".encode())
+    with pytest.raises(IntegrityError) as caught:
+        store.read_attempt(event_id)
+    assert isinstance(caught.value.__cause__, DocumentError)

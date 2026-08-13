@@ -114,9 +114,11 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- implement fills; may set Status: review; never Status: done -->
 
-- End commit: 2c41e56
+- End commit: supplied in the implementer handoff report (a commit cannot
+  embed its own final hash). Reviewed implementation is 83c40ea; this
+  remediation is the commit that carries this report.
 - Acceptance evidence:
-  - `uv run pytest -q` — 100 passed
+  - `uv run pytest -q` — 110 passed after parent/IntegrityError remediation
   - `uv run ruff check .` — clean
   - `uv run mypy` — clean
 
@@ -129,7 +131,7 @@ This ticket adds **no** behavior beyond committed authority.
   | D2 shared dirs recur; terminal `EEXIST` fails | `test_d2_shared_directories_recur_terminal_eexist_fails_closed` |
   | D3 pool recurrence accepted; mismatch fails | `test_d3_pool_recurrence_accepted_mismatch_fails_closed` |
   | D4 COMMITTED last; bodies independent | `test_d4_committed_is_installed_last`, `test_d4_bundle_bodies_are_independent_copies_with_link_count_1` |
-  | D4a evidence only after verify | `test_d4a_commit_is_evidence_only_after_verify` |
+  | D4a evidence only after verify | `test_d4a_commit_is_evidence_only_after_verify`, `test_d4a_commit_does_not_report_success_when_post_committed_verify_fails` |
   | D5 full six-step verify-on-read | `test_d5_verify_after_commit_runs_full_sequence` |
   | D6 uncommitted ignored; bad COMMITTED is integrity | `test_d6_uncommitted_bundle_is_ignored`, `test_d6_committed_but_unreadable_is_integrity_failure` |
   | D7 FORMAT exact; fail closed with `.tmp/` untouched; purge after success | `test_create_and_open_enforces_exact_format_bytes_and_digest`, `test_d7_open_rejects_missing_format_without_modifying_tmp`, `test_d7_open_rejects_malformed_format_without_purging_tmp`, `test_d7_open_rejects_noncanonical_format_without_purging_tmp`, `test_d7_open_rejects_unsupported_format_without_purging_tmp`, `test_d7_successful_open_purges_tmp_only_after_format_validation` |
@@ -139,7 +141,7 @@ This ticket adds **no** behavior beyond committed authority.
   | Criterion | Test |
   |---|---|
   | FORMAT-2 create/open, exact JCS bytes and digest | `test_create_and_open_enforces_exact_format_bytes_and_digest` |
-  | Failed open modifies nothing; `.tmp/` purged only after FORMAT ok | the `test_d7_*` cases |
+  | Failed open modifies nothing; `.tmp/` purged only after FORMAT ok | the `test_d7_*` cases, including `test_d7_open_rejects_canonical_conflicting_format_without_purging_tmp` |
   | AR vector bundles at format-2 paths; date from `authorized_at` | `test_ar_paths_follow_format2_and_authorized_at_date` |
   | Bodies content-addressed; pool and bundle verified | `test_d5_verify_after_commit_runs_full_sequence`, tamper tests |
   | Each of D1–D7 and D4a named; `link` not `rename`; nlink 1; no shared inode; pool recurrence vs mismatch; shared vs terminal dirs | D-table above |
@@ -151,10 +153,11 @@ This ticket adds **no** behavior beyond committed authority.
   - Protocol on one local POSIX temp root, one writer. Not hardware fsync, not multi-filesystem, not crash/power-loss, not concurrent readers or writers.
   - Body materialization is an independent copy via D1. Reflink/COW was not used (not available as a portable primitive here).
   - Lookup of an event by id walks `attempts/v1` or `captures/v1`; there is no index.
-  - Capture D5 verifies the cited request body in the pool only (Capture bundles do not hold `request.body`).
+  - Capture D5 verifies the cited request body in the pool only (Capture bundles do not hold `request.body`). `commit_capture` and `read_capture` now require a verified parent Attempt and `validate_capture(..., attempt=parent)`.
   - No fixture transport, CLI, or D8.
+  - Committed-corruption paths raise `IntegrityError` wrapping `DocumentError` / `FileNotFoundError` / `OSError`. Uncommitted bundles still return None.
 - Review findings remaining:
-  - Public surface is `observatory.evidence_store`: `create_store`, `open_store`, `EvidenceStore.commit_attempt` / `commit_capture` / `read_attempt` / `read_capture` / `install_object`, plus path helpers. `read_*` returns `None` for uncommitted (D6 ignore) and raises `IntegrityError` when `COMMITTED` exists but D5 fails.
+  - Public surface is `observatory.evidence_store`: `create_store`, `open_store`, `EvidenceStore.commit_attempt` / `commit_capture` / `read_attempt` / `read_capture` / `install_object`, plus path helpers. `read_*` returns `None` for uncommitted (D6 ignore) and raises `IntegrityError` when `COMMITTED` exists but D5 fails. `commit_capture` refuses a missing/uncommitted parent with `StoreError` before writing a Capture bundle.
 
 ### Public module surface (`observatory.evidence_store`)
 
