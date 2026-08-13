@@ -6,7 +6,7 @@ import os
 import secrets
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Final
+from typing import Final, Literal
 
 from observatory.capture_event import (
     DocumentError,
@@ -183,6 +183,34 @@ class EvidenceStore:
         if not committed.is_file():
             return None
         return self._verify_capture_bundle(bundle, capture_id)
+
+    def list_committed_ids(self, kind: Literal["attempts", "captures"]) -> list[str]:
+        """Return directory names that have a COMMITTED marker. Uncommitted residue is omitted.
+
+        Callers must still use ``read_attempt`` / ``read_capture`` for full verify-on-read.
+        """
+
+        if kind not in {"attempts", "captures"}:
+            raise ValueError(f"unknown evidence kind: {kind}")
+        base = self.root / kind / "v1"
+        if not base.is_dir():
+            return []
+        found: list[str] = []
+        for marker in sorted(base.rglob("COMMITTED")):
+            if marker.is_file():
+                found.append(marker.parent.name)
+        return found
+
+    def read_capture_body(self, capture_id: str) -> bytes | None:
+        """Return the verified Capture response body, or None when absent/uncommitted."""
+
+        document = self.read_capture(capture_id)
+        if document is None:
+            return None
+        path = self.capture_path(capture_id) / "response.body"
+        if not path.is_file():
+            return None
+        return self._read_verified_bytes(path)
 
     def _tmp_dir(self) -> Path:
         return self.root / ".tmp"

@@ -1,11 +1,11 @@
 # CE-05 — Derive admitted_results into real PostgreSQL
 
-**Status:** ready-for-agent
+**Status:** review
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** tracer bullet
 **Blocked by:** CE-04 — Full fixture-panel-v1 matrix and all transport branches
 **Approved by:** Project Steward
-**Start commit:**
+**Start commit:** 08f0b36923926cdecfe17da47e23dad8fa966687
 
 ## What to build
 
@@ -93,10 +93,52 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- implement fills; may set Status: review; never Status: done -->
 
-- End commit:
+- End commit: supplied in the implementer handoff report (a commit cannot
+  embed its own final hash).
 - Acceptance evidence:
+  - `uv run pytest -q` — 416 passed
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Real PostgreSQL 18.6 via ephemeral `postgres:18-alpine` container
+    (or `OBSERVATORY_TEST_DATABASE_URL`); per-test `CREATE DATABASE` /
+    `DROP DATABASE … WITH (FORCE)`. Tests fail closed, never skip.
+  - Schema: `test_migrate_creates_authorized_tables`,
+    `test_migrate_cli_on_real_postgres`
+  - Version registration: `test_derive_registers_derivation_version`
+  - Attempt-stage `authorized_unresolved` / `capture_id IS NULL`:
+    `test_published_ar_attempt_stage_outcome`
+  - Capture-stage `observation_admitted` + exact `depth` Observations:
+    `test_published_ar_capture_stage_and_observations`,
+    `test_depth_governs_observation_count`
+  - Natural identity / axes / provenance: same two tests, independent
+    published AR literals (not production body helpers)
+  - Verify-on-read refuse: `test_tampered_capture_yields_no_observations`
+  - Uncommitted residue ignored: `test_uncommitted_capture_residue_is_not_derived`,
+    `test_list_committed_ids_ignores_uncommitted_residue`
+  - Same-version idempotency (full row content + `xmin`):
+    `test_same_version_rerun_does_not_duplicate_or_mutate`
+  - Capture-unit atomicity / rollback:
+    `test_capture_unit_rollback_leaves_no_partial_rows`
+  - CLI: `test_derive_cli_on_real_postgres`
+  - CE-02–CE-04 remain green in the same 416-pass run
 - Unproven limits:
+  - Only `admitted_results` receives a Capture-stage Outcome.
+    Other scenarios get Attempt-stage `authorized_unresolved` only.
+  - `object.__setattr__` / monkeypatch of derive internals not defended.
+  - No multi-version append, empty-DB full-matrix rebuild, concurrency,
+    crash/fsync of PostgreSQL, or off-host recovery.
+  - Docker leftover if the pytest process is killed before fixture teardown.
+  - Derivation-version identity is an operator-supplied string, not a
+    content-addressed recipe document.
 - Review findings remaining:
+  - `interrupt=` on `derive_admitted_results` is a test seam for
+    atomicity injection, not public product API.
+  - Operator-supplied `derivation_version_id` should be ratified before
+    CE-06 / API freeze if a closed derivation-version document is wanted.
+  - Spec review: Capture-stage now also requires `transport_state =
+    response_complete`, `completeness=complete`, and admitted count ==
+    `depth`. Other silent-continue paths (failed admission, non-AR) still
+    produce no Capture-stage row rather than a CE-06 classification.
 
 ## Closure
 
