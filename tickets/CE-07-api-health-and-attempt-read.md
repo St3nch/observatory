@@ -1,6 +1,6 @@
 # CE-07 — Read API: health and attempt envelope
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** tracer bullet
 **Blocked by:** CE-06 — Derive completion: matrix, rebuild, multi-version, damaged refuse
@@ -44,11 +44,11 @@ equivalent API-visible Attempt data in a separate empty PostgreSQL instance.
 
 ## Acceptance criteria
 
-- [ ] `GET /v1/health` returns **HTTP 200** when the process is live and expresses process-liveness semantics only (no dependency-health claims).
-- [ ] `GET /v1/attempts/{attempt_id}` returns Outcomes and Observations for derived fixture Evidence, distinguishing fixture-v1 classifications and including provenance citing verified `attempt_id` and `capture_id` as applicable.
-- [ ] When verify-on-read fails for Evidence that would back the response, the handler returns **HTTP 409** and the response body **contains** the stable signal `evidence_integrity_failure`; it does not return a normal success payload of stale derived rows for that damaged aggregate.
-- [ ] Deriving the same verified Evidence with the same authorized derivation-version identity into an originally populated PostgreSQL instance and a separate empty PostgreSQL instance yields logically equivalent domain content from `GET /v1/attempts/{attempt_id}`: Outcomes, Observations, classifications, provenance, identities, values, and counts match after normalizing implementation-dependent ordering. Byte-identical HTTP responses are not required.
-- [ ] Fixture/dev operation is consistent with loopback and no-authentication requirements (no production auth model claimed).
+- [x] `GET /v1/health` returns **HTTP 200** when the process is live and expresses process-liveness semantics only (no dependency-health claims).
+- [x] `GET /v1/attempts/{attempt_id}` returns Outcomes and Observations for derived fixture Evidence, distinguishing fixture-v1 classifications and including provenance citing verified `attempt_id` and `capture_id` as applicable.
+- [x] When verify-on-read fails for Evidence that would back the response, the handler returns **HTTP 409** and the response body **contains** the stable signal `evidence_integrity_failure`; it does not return a normal success payload of stale derived rows for that damaged aggregate.
+- [x] Deriving the same verified Evidence with the same authorized derivation-version identity into an originally populated PostgreSQL instance and a separate empty PostgreSQL instance yields logically equivalent domain content from `GET /v1/attempts/{attempt_id}`: Outcomes, Observations, classifications, provenance, identities, values, and counts match after normalizing implementation-dependent ordering. Byte-identical HTTP responses are not required.
+- [x] Fixture/dev operation is consistent with loopback and no-authentication requirements (no production auth model claimed).
 
 ## Verification
 
@@ -122,10 +122,27 @@ This ticket adds **no** behavior beyond committed authority.
 - Review findings remaining:
   - FastAPI `TestClient` emits an upstream Starlette deprecation
     warning; not an Observatory contract.
+  - Steward decision: when selected PostgreSQL rows exist but their
+    authoritative Attempt is absent or lacks `COMMITTED`, HTTP 409 with
+    `evidence_integrity_failure` is correct. PostgreSQL has identified the
+    aggregate, but its required Evidence backing cannot verify; HTTP 404 would
+    misstate that conflict as ordinary absence. A disposable formal-review test
+    removed `COMMITTED` after derive and proved fail-closed 409 behavior.
 
 ## Closure
 
 <!-- Project Steward only -->
 
-- Closed at commit:
-- Evidence accepted: yes/no
+- Closed at commit: `167975830094cb08200ec1db3a82e0b02bb83252`
+- Evidence accepted: yes
+- Steward verification:
+  - Exact comparison: `93038934330b7698bafa9d87077ce58c03f50366`
+    through `167975830094cb08200ec1db3a82e0b02bb83252`
+  - `uv run pytest -q` — 443 passed on real PostgreSQL 18
+  - Disposable formal-review test for stale rows plus missing
+    `COMMITTED` — 444 passed
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Ten-classification envelopes, provenance, configured-version isolation,
+    Attempt/Capture/body integrity 409s, two-database API rebuild equivalence,
+    loopback/no-auth posture, and read-only behavior accepted
