@@ -3,7 +3,7 @@
 **Status:** ready-for-agent
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** tracer bullet
-**Blocked by:** CE-03 — First durable Capture Event: admitted_results
+**Blocked by:** CE-03B — admitted_results tracer: Attempt, transport, Capture, CLI
 **Approved by:** Project Steward
 **Start commit:**
 

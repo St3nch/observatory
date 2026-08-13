@@ -532,10 +532,16 @@ Normative. One durability module implements this; nothing else writes into the E
 root. Steps are ordered; an implementation must not reorder them.
 
 **Scope of the claim.** This protocol is defined against a single local POSIX filesystem
-that honours `fsync` and provides atomic `link(2)` and `rename(2)` within that filesystem.
-It does not claim protection against hardware that acknowledges `fsync` without persisting,
-filesystems lacking those guarantees, writes spanning two filesystems, or concurrent writers
-— multi-process writer safety is deferred (F7). Tests prove the protocol, not the hardware.
+that honours `fsync` and provides atomic `link(2)` within that filesystem. It does not claim
+protection against hardware that acknowledges `fsync` without persisting, filesystems
+lacking those guarantees, or writes spanning two filesystems.
+
+**Concurrency.** One writer at a time; multi-process writer safety is deferred (F7).
+Concurrent *readers* are permitted, and D4a and D6 define what they may conclude. A reader
+never observes a partially written file, because D1 installs only complete files, and never
+observes a partial bundle as Evidence, because `COMMITTED` is installed last.
+
+Tests prove the protocol, not the hardware.
 
 #### D1 — Durable file materialization
 
@@ -546,50 +552,107 @@ Every file entering the store is materialized identically:
 3. Install it at its final path by `link(2)` from the temporary path. `link(2)` fails with
    `EEXIST` if the target exists; this is the required exclusive no-overwrite install.
    `rename(2)` **must not** be used to install, because it silently replaces.
-4. `unlink` the temporary path, leaving link count 1 at the final path.
+4. `unlink` the temporary path.
 5. `fsync` the directory containing the final path.
 
 A partially written file therefore never occupies a final path, and no install can
 overwrite.
+
+On `EEXIST` at step 3, unlink the temporary path first, then apply D3.
+
+**`.tmp/` is scratch, never Evidence.** Step 4's `unlink` is deliberately not made durable —
+`.tmp/` is not `fsync`ed here, because the cost buys nothing. A crash between steps 3 and 4
+may therefore leave a temporary name after recovery, so the installed file can show link
+count 2 until cleanup. Opening a store purges `.tmp/` before any other operation, restoring
+link count 1. The link-count-1 requirement in D4 is therefore asserted of bundle body files
+**after** a store open, and `.tmp/` residue is expected interruption debris, not corruption.
 
 #### D2 — Durable directory creation
 
 Directories are created parent-first. After each newly created directory, `fsync` its
 parent. A directory must be durable before any child is installed within it.
 
+Two kinds of directory, with different existence rules:
+
+- **Shared path directories** — pool shards, fingerprint shards, date components, capture
+  shards. Many events share these and they recur constantly. Creation is idempotent:
+  already existing is success, and only a newly created directory requires the parent
+  `fsync`.
+- **Terminal event bundle directories** — the directory named by `attempt_id` or
+  `capture_id`. Created **exclusively**; `EEXIST` is an anomaly under D3.
+
 #### D3 — `EEXIST` handling differs by kind
 
-- **Object pool** (`objects/sha256/...`): paths are content-addressed, so recurrence is
-  normal. Read the existing object, verify its byte length and SHA-256 against the expected
-  values, and accept it on match. On mismatch, fail closed as store corruption. Never
-  overwrite, never truncate, never trust the path without verifying the content.
-- **Bundle directories, manifests, body files, and `COMMITTED`**: `EEXIST` is an anomaly.
-  Fail closed. Event identities are digest-derived and Attempts carry a fresh nonce, so a
-  collision indicates corruption or a defect, never ordinary recurrence.
+- **Object pool files** (`objects/sha256/...`): paths are content-addressed, so recurrence
+  is normal. Read the existing object, verify its byte length and SHA-256 against the
+  expected values, and accept it on match. On mismatch, fail closed as store corruption.
+  Never overwrite, never truncate, never trust the path without verifying the content.
+- **Shared path directories** (D2): already existing is success, not an anomaly.
+- **Terminal event bundle directories, manifests, bundle body files, and `COMMITTED`**:
+  `EEXIST` is an anomaly. Fail closed. Event identities are digest-derived and Attempts
+  carry a fresh nonce, so a collision indicates corruption or a defect, never ordinary
+  recurrence.
 
 #### D4 — Bundle commit order
 
-A bundle is built at its final path, not staged and moved. An incomplete bundle is
-invisible as Evidence because `COMMITTED` is absent — that is the mechanism.
+A bundle is built at its final path, not staged and moved. An incomplete bundle is not
+Evidence because `COMMITTED` is absent — that is the mechanism.
 
-1. Create the bundle directory chain per D2.
+1. Create the shared path directories, then the terminal bundle directory, per D2.
 2. Install the manifest (`attempt.json` / `capture.json`) per D1.
-3. Install body files (`request.body` / `response.body`) per D1, when present. Materialize
-   by independent copy or COW reflink from the pool object. **Ordinary hardlinks from a
-   bundle into the object pool are forbidden**: a bundle body file must have link count 1
-   and must not share an inode with its pool object.
-4. `fsync` the bundle directory.
-5. Install `COMMITTED` per D1, content exactly `<event_id>\n`. This is always last.
-6. `fsync` the bundle directory again.
+3. Install body files per D1, when present. Materialize by independent copy or COW reflink
+   from the pool object. **Ordinary hardlinks from a bundle into the object pool are
+   forbidden**: a bundle body file must not share an inode with its pool object, and must
+   have link count 1 once `.tmp/` has been purged.
+4. Install `COMMITTED` per D1, content exactly `<event_id>\n`. This is always last.
 
-After step 6 the event is Evidence. Before it, it is not — at any interruption point.
+No separate bundle-directory `fsync` step is required. D1 step 5 already `fsync`s the
+containing directory after every install, so the manifest and bodies are durable before
+`COMMITTED` is linked, and `COMMITTED` is durable when its own D1 completes.
+
+**Which bundle holds which body.** The Attempt bundle contains `request.body` when the
+request carries one. The Capture bundle contains `response.body` when the response carries
+one. Neither contains the other's: the Attempt is committed before transport and cannot
+hold a response, and the Capture cites its parent `attempt_id`, so duplicating
+`request.body` would store identical bytes twice without adding recoverability.
+
+#### D4a — Commit point and the durability window
+
+D4 has two distinct moments, and conflating them is a defect:
+
+- **Visibility.** The event becomes Evidence the instant `link(COMMITTED)` succeeds. A
+  concurrent reader that sees `COMMITTED` and passes D5 is correct to accept it — the
+  manifest and bodies were already durable, so the content is complete.
+- **Durability.** `COMMITTED` becomes crash-durable when the `fsync` in its own D1 step 5
+  completes.
+
+Between those two moments the event is valid Evidence that is not yet crash-durable. A crash
+in that window loses only the `COMMITTED` entry; the bundle reverts to uncommitted and D6
+ignores it. That is safe, and is the intended failure direction: the protocol may lose an
+unacknowledged commit, but can never present a partial bundle as Evidence. Nothing on disk
+distinguishes that interruption from a commit that never reached `COMMITTED`, and nothing
+needs to.
+
+A writer **must not report success** until `COMMITTED`'s D1 completes and D5 passes. A
+reader that accepted an event inside the durability window and later finds it absent after a
+crash must treat that as an interrupted commit, not as corruption or deletion.
 
 #### D5 — Verify after commit
 
-After step 6, read the event back from disk and verify before the caller may rely on it:
-re-hash the stored manifest bytes and compare to the event ID, verify each body object's
-digest and length, and confirm `COMMITTED` content equals `<event_id>\n`. A commit that
-cannot be verified is a failure, not a success with a warning.
+Before the caller may rely on a committed event, read it back from disk and run the full
+**Verify-on-read** sequence in §Canonicalization and verify-on-read — all six steps, not a
+reduced form: stored manifest bytes; SHA-256 equal to the directory and `COMMITTED`
+identity; schema validation with re-JCS of the parsed value equal to the stored bytes;
+cross-field rules; every cited body digest and size; fail closed on any mismatch with no
+silent repair.
+
+In addition, confirm `COMMITTED` content equals `<event_id>\n` exactly.
+
+**Bodies are verified in both locations.** The pool object and the bundle's independently
+materialized body file are separate copies on disk and can rot independently, so each is
+verified against the cited digest and length. Verifying one leaves the other unproven.
+
+A commit that cannot be verified is a failure, not a success with a warning.
 
 #### D6 — Reading
 
@@ -600,7 +663,8 @@ verification is an integrity failure and must be reported as one, never silently
 #### D7 — `FORMAT.json`
 
 Written once at store creation per D1, followed by `fsync` of the Evidence root. Opening
-requires exact canonical bytes and matching digest; anything else fails closed.
+requires exact canonical bytes and matching digest; anything else fails closed. Opening also
+purges `.tmp/` before any other operation, per D1.
 
 #### D8 — No transport before durable Attempt
 
