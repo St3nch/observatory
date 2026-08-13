@@ -1,6 +1,6 @@
 # CE-02 — Canonical JCS, closed schemas, and content-ID vectors
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** necessary prefactor
 **Blocked by:** None — can start immediately
@@ -211,5 +211,49 @@ Identity IDs are `content_digest(canonical_json(document))` after validation.
 
 <!-- Project Steward only -->
 
-- Closed at commit:
-- Evidence accepted: yes/no
+- Closed at commit: `780f7b2c0f469d45dbb127e542e34cded937e720` (remediation on top of
+  `cca1191d350807f6816b23f5ec5acbbab0641e96`, the initial implementation). The
+  Implementation report's `End commit` names the parent by design — a commit cannot contain
+  its own hash. This line is authoritative.
+- Evidence accepted: **yes**
+
+### Steward verification
+
+Verified directly at `780f7b2`, not taken from the implementation report: 66 tests pass;
+`ruff` and `mypy` clean; golden constants traced to `docs/specs/capture-event-v2.md` at
+lines 83, 595, and 629, confirming expectations are fixed from the spec rather than derived
+from implementation output; `validate_request` has zero occurrences repository-wide,
+confirming the rename is complete.
+
+Two review rounds. [GPT] and [CLAUDE] independently found the U+2028/U+2029 escaping
+defect; [GPT] additionally found the lone-surrogate error-contract leak and two
+proof-coverage gaps. All four remediated in `780f7b2`.
+
+### Decisions recorded here
+
+- Calendar-valid timestamps: `strptime`, so a syntactically valid impossible date such as
+  Feb 31 is rejected. Slightly beyond a literal regex reading of the frozen syntax, and
+  correct — an impossible date is not a valid timestamp.
+- Fixture constants are enforced on every request validation, consistent with the
+  fixture-only boundary. The function is named `validate_fixture_request` so no later
+  ticket mistakes it for a general validator.
+- Response headers accept any lowercase pairs. Scenario-specific headers belong to CE-04.
+
+### Unproven limits
+
+Accepted knowingly; none reachable by the current document set. Revisit if that changes.
+
+- **Integers above 2^53.** `str(int)` is the whole number implementation. ECMAScript, which
+  RFC 8785 defers to, would serialize `9007199254740993` as `9007199254740992`. Every
+  integer in these documents is small and non-negative, so this is latent, not live. It
+  becomes live if any future document carries a large integer.
+- Object keys containing control characters or quotes are serialized by the same
+  `_jcs_string` as values but are not directly tested; a future split of key and value
+  serialization could regress without the value tests catching it.
+- Empty objects are untested; no document in this set contains one.
+- A lone surrogate in an object key raises `DocumentError` via the `canonical_json`
+  `UnicodeEncodeError` wrapper rather than the `_jcs_string` boundary check, so its message
+  reads "JCS output is not valid UTF-8" instead of naming surrogates. The contract holds;
+  the wording is imprecise. All `_jcs` entry points route through that wrapper.
+- Nothing here proves Evidence Store, durability, `COMMITTED`, derive, API, PostgreSQL, or
+  the seven fixture scenarios outside AR/RP/NR.
