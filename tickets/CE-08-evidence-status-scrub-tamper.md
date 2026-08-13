@@ -1,6 +1,6 @@
 # CE-08 — Evidence status, report-only scrub, and refuse verification
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** tracer bullet
 **Blocked by:** CE-07 — Read API: health and attempt envelope
@@ -68,14 +68,14 @@ CE-04; multi-Capture inventory is **not** a CE-08 reporting taxonomy.
 
 ## Acceptance criteria
 
-- [ ] `python -m observatory.evidence status` successfully recognizes a valid, openable format-2 Evidence Store.
-- [ ] `python -m observatory.evidence status` fails closed when FORMAT validation prevents opening the store.
-- [ ] `python -m observatory.evidence scrub` processes clean, commitment-claiming Attempt and Capture candidates without falsely reporting verification failures; clean verified candidates remain admissible as Evidence.
-- [ ] `python -m observatory.evidence scrub` is report-only: for each commitment-claiming candidate that fails normative verification, it reports the candidate path and does not mutate, repair, delete, quarantine, or accept it as valid Evidence.
-- [ ] Scrub does not mutate either clean or damaged candidates.
-- [ ] Fault injection for each of the three verification families above causes scrub to report the candidate path and causes the candidate not to be used as valid Evidence.
-- [ ] Uncommitted directories (no `COMMITTED`) are not admitted as Evidence.
-- [ ] Against the same planted failures, derive refuses only rows that depend on damaged Evidence: a damaged Attempt yields no Outcomes or Observations from that Attempt, while damage limited to a Capture or cited body yields no Capture-stage Outcome or Observations from that Capture and does not suppress the independently verified parent Attempt's Attempt-stage Outcome; API still returns HTTP 409 with a body containing `evidence_integrity_failure` when a read would surface damaged cited Evidence (CE-07 behavior).
+- [x] `python -m observatory.evidence status` successfully recognizes a valid, openable format-2 Evidence Store.
+- [x] `python -m observatory.evidence status` fails closed when FORMAT validation prevents opening the store.
+- [x] `python -m observatory.evidence scrub` processes clean, commitment-claiming Attempt and Capture candidates without falsely reporting verification failures; clean verified candidates remain admissible as Evidence.
+- [x] `python -m observatory.evidence scrub` is report-only: for each commitment-claiming candidate that fails normative verification, it reports the candidate path and does not mutate, repair, delete, quarantine, or accept it as valid Evidence.
+- [x] Scrub does not mutate either clean or damaged candidates.
+- [x] Fault injection for each of the three verification families above causes scrub to report the candidate path and causes the candidate not to be used as valid Evidence.
+- [x] Uncommitted directories (no `COMMITTED`) are not admitted as Evidence.
+- [x] Against the same planted failures, derive refuses only rows that depend on damaged Evidence: a damaged Attempt yields no Outcomes or Observations from that Attempt, while damage limited to a Capture or cited body yields no Capture-stage Outcome or Observations from that Capture and does not suppress the independently verified parent Attempt's Attempt-stage Outcome; API still returns HTTP 409 with a body containing `evidence_integrity_failure` when a read would surface damaged cited Evidence (CE-07 behavior).
 
 ## Verification
 
@@ -162,10 +162,27 @@ This ticket adds **no** behavior beyond committed authority.
   - Report lines are candidate paths only; not a frozen schema.
 - Review findings remaining:
   - Scrub exit 1 means one or more failed candidates; 2 is FORMAT.
+  - Steward decision: `status` remains an ordinary openability check and
+    therefore uses `open_store`, including D7 post-FORMAT `.tmp/` purge on
+    a valid root. Report-only `scrub` uses non-mutating `inspect_store`.
+  - Formal review found and remediation closed a full-path verification gap:
+    a self-consistent valid bundle at a wrong shard or Attempt branch is now
+    rejected by the shared authoritative verifier, not only by scrub.
+  - True noncanonical JSON with matching stored-byte identity, marker, terminal
+    name, and normative path is independently rejected by re-JCS verification.
 
 ## Closure
 
 <!-- Project Steward only -->
 
-- Closed at commit:
-- Evidence accepted: yes/no
+- Closed at commit: `53cf44f00aa0d93afc79392fedc4089eb730ef4a`
+- Evidence accepted: yes
+- Steward verification:
+  - Exact comparison: `b5d43bb5ffc14e563fccb51fe8f801d1ec8e3a0e`
+    through `53cf44f00aa0d93afc79392fedc4089eb730ef4a`
+  - `uv run pytest -q` — 468 passed on real PostgreSQL 18
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Status fail-closed, exact marker-parent discovery, report-only
+    nonmutation, all verification families, normative full-path enforcement,
+    dependency-bounded derive refusal, and API integrity 409 accepted
