@@ -121,7 +121,7 @@ This ticket adds **no** behavior beyond committed authority.
 - End commit: supplied in the implementer handoff report (a commit cannot
   embed its own final hash).
 - Acceptance evidence:
-  - `uv run pytest -q` — 464 passed
+  - `uv run pytest -q` — 468 passed
   - `uv run ruff check .` — clean
   - `uv run mypy` — clean
   - Status: `test_status_recognizes_openable_format2_store`,
@@ -135,6 +135,10 @@ This ticket adds **no** behavior beyond committed authority.
     `test_scrub_reports_wrong_committed_contents`,
     `test_scrub_reports_manifest_digest_mismatch`,
     `test_scrub_reports_incorrect_terminal_identity`,
+    `test_scrub_reports_valid_capture_at_wrong_shard`,
+    `test_scrub_reports_valid_attempt_at_wrong_branch`,
+    `test_correctly_located_bundles_remain_accepted`,
+    `test_scrub_reports_noncanonical_jcs_with_matching_identity`,
     `test_scrub_reports_self_consistent_schema_failure`
   - Body family:
     `test_scrub_reports_request_body_tamper`,

@@ -394,6 +394,10 @@ class EvidenceStore:
         if self._read_verified_bytes(marker) != f"{event_id}\n".encode():
             raise IntegrityError(f"COMMITTED does not match {event_id}")
 
+    def _require_exact_bundle_path(self, bundle: Path, expected: Path) -> None:
+        if bundle.resolve() != expected.resolve():
+            raise IntegrityError("bundle is not at the normative store path")
+
     def _verify_attempt_bundle(self, bundle: Path, attempt_id: str) -> dict[str, object]:
         # D5 / six-step verify-on-read.
         raw = self._read_verified_bytes(bundle / "attempt.json")  # 1
@@ -406,6 +410,13 @@ class EvidenceStore:
             raise IntegrityError("attempt schema or re-JCS failed") from exc
         if canonical_json(document) != raw:
             raise IntegrityError("re-JCS does not equal stored Attempt bytes")
+        fingerprint = document["request_fingerprint"]
+        authorized_at = document["authorized_at"]
+        if not isinstance(fingerprint, str) or not isinstance(authorized_at, str):
+            raise IntegrityError("attempt path fields are not strings")
+        self._require_exact_bundle_path(
+            bundle, self.attempt_path(fingerprint, authorized_at, attempt_id)
+        )
         self._verify_bodies(  # 5 both locations
             document,
             bundle,
@@ -419,6 +430,7 @@ class EvidenceStore:
         if content_digest(raw) != capture_id or bundle.name != capture_id:
             raise IntegrityError("capture identity does not match stored bytes")
         self._verify_committed_marker(bundle, capture_id)
+        self._require_exact_bundle_path(bundle, self.capture_path(capture_id))
         try:
             preliminary = validate_capture(raw)
         except DocumentError as exc:

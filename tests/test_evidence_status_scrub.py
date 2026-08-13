@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import os
 import secrets
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -14,6 +16,7 @@ from fastapi.testclient import TestClient
 from observatory.api import create_app
 from observatory.capture import FixtureCaptureInputs, capture_fixture
 from observatory.capture_event import (
+    attempt_document,
     canonical_json,
     content_digest,
     fingerprint_document,
@@ -63,6 +66,13 @@ def _snapshot(root: Path) -> dict[str, bytes]:
         if path.is_file():
             files[path.relative_to(root).as_posix()] = path.read_bytes()
     return files
+
+
+def _copy_bundle(source: Path, destination: Path) -> None:
+    destination.mkdir(parents=True)
+    for child in source.iterdir():
+        if child.is_file():
+            (destination / child.name).write_bytes(child.read_bytes())
 
 
 def _plant_tmp(root: Path) -> Path:
@@ -235,6 +245,117 @@ def test_scrub_reports_incorrect_terminal_identity(tmp_path: Path) -> None:
     assert _snapshot(store.root) == before
     discovered = inspect_store(store.root).list_commitment_claiming_directories("captures")
     assert misplaced in discovered
+
+
+def test_scrub_reports_valid_capture_at_wrong_shard(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    outcome = capture_fixture(store, _inputs("admitted_results"))
+    original = store.capture_path(outcome.capture_id)
+    misplaced = (
+        store.root / "captures" / "v1" / "ff" / "ee" / outcome.capture_id
+    )
+    _copy_bundle(original, misplaced)
+    discovered = inspect_store(store.root).list_commitment_claiming_directories("captures")
+    assert misplaced in discovered
+    assert original in discovered
+    before = _snapshot(store.root)
+    code, output = _run_scrub(store.root)
+    assert code == 1
+    assert report_path(store.root, misplaced) in output
+    assert report_path(store.root, original) not in output
+    assert _snapshot(store.root) == before
+    assert store.verify_capture_directory(original) is not None
+    with pytest.raises(IntegrityError):
+        store.verify_capture_directory(misplaced)
+
+
+def test_scrub_reports_valid_attempt_at_wrong_branch(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    outcome = capture_fixture(store, _inputs("admitted_results"))
+    parent = store.read_attempt(outcome.attempt_id)
+    assert parent is not None
+    fingerprint = parent["request_fingerprint"]
+    assert isinstance(fingerprint, str)
+    original = store.attempt_path(
+        fingerprint, SHARED_TIMES["authorized_at"], outcome.attempt_id
+    )
+    misplaced = (
+        store.root
+        / "attempts"
+        / "v1"
+        / fingerprint[:2]
+        / fingerprint[2:4]
+        / fingerprint
+        / "1999"
+        / "01"
+        / "01"
+        / outcome.attempt_id
+    )
+    _copy_bundle(original, misplaced)
+    shutil.rmtree(original)
+    assert inspect_store(store.root).list_commitment_claiming_directories("attempts") == [
+        misplaced
+    ]
+    before = _snapshot(store.root)
+    code, output = _run_scrub(store.root)
+    assert code == 1
+    assert report_path(store.root, misplaced) in output
+    assert _snapshot(store.root) == before
+    with pytest.raises(IntegrityError):
+        store.verify_attempt_directory(misplaced)
+    with pytest.raises(IntegrityError):
+        store.read_attempt(outcome.attempt_id)
+
+
+def test_correctly_located_bundles_remain_accepted(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    outcome = capture_fixture(store, _inputs("admitted_results"))
+    parent = store.read_attempt(outcome.attempt_id)
+    assert parent is not None
+    fingerprint = parent["request_fingerprint"]
+    assert isinstance(fingerprint, str)
+    attempt_dir = store.attempt_path(
+        fingerprint, SHARED_TIMES["authorized_at"], outcome.attempt_id
+    )
+    capture_dir = store.capture_path(outcome.capture_id)
+    assert store.verify_attempt_directory(attempt_dir) is not None
+    assert store.verify_capture_directory(capture_dir) is not None
+    assert main(["scrub", "--evidence-root", str(store.root)]) == 0
+
+
+def test_scrub_reports_noncanonical_jcs_with_matching_identity(tmp_path: Path) -> None:
+    store = _store(tmp_path)
+    capture_fixture(store, _inputs("admitted_results"))
+    document = attempt_document(
+        parameters={
+            "contract": "fixture-panel-v1",
+            "depth": 2,
+            "panel_id": "panel-alpha",
+            "scenario": "admitted_results",
+            "subject_key": "subject-one",
+        },
+        attempt_nonce="9" * 64,
+        authorized_at=SHARED_TIMES["authorized_at"],
+        observatory_version="conformance-v1",
+    )
+    raw = json.dumps(document).encode("utf-8")
+    assert raw != canonical_json(document)
+    event_id = content_digest(raw)
+    fingerprint = document["request_fingerprint"]
+    assert isinstance(fingerprint, str)
+    bundle = store.attempt_path(fingerprint, SHARED_TIMES["authorized_at"], event_id)
+    bundle.mkdir(parents=True)
+    (bundle / "attempt.json").write_bytes(raw)
+    (bundle / "COMMITTED").write_bytes(f"{event_id}\n".encode())
+    assert content_digest((bundle / "attempt.json").read_bytes()) == event_id
+    assert bundle.name == event_id
+    before = _snapshot(store.root)
+    code, output = _run_scrub(store.root)
+    assert code == 1
+    assert report_path(store.root, bundle) in output
+    assert _snapshot(store.root) == before
+    with pytest.raises(IntegrityError, match="re-JCS|schema"):
+        store.verify_attempt_directory(bundle)
 
 
 def test_scrub_reports_self_consistent_schema_failure(tmp_path: Path) -> None:
