@@ -52,11 +52,21 @@ capture/evidence storage boundary and Outcome-as-history phrasing.
 
 ### Agent lanes
 
-| Agent | Lane | May write |
-|---|---|---|
-| Grok | Implementer | `src/`, `tests/`, and the assigned ticket's Implementation report |
-| Claude | Project Steward | authority documents, `tickets/`, `decisions/`; never `src/` or `tests/` |
-| GPT and any other agent | Reviewer | nothing in the repository; findings are reported to the Steward |
+| Agent | Lane | May write | May read |
+|---|---|---|---|
+| Grok | Implementer | `src/`, `tests/`, and the assigned ticket's Implementation report | everything |
+| Claude | Project Steward | authority documents, `tickets/`, `decisions/`; never `src/` or `tests/` | everything |
+| GPT and any other agent | Reviewer | nothing in the repository; findings are reported to the Steward | everything |
+
+**Every agent may read the entire repository.** Read access is not a lane. A reviewer who
+cannot open the code cannot distinguish a test that proves a criterion from one that merely
+appears to, and a review built only on an implementer's own account of their work is not an
+independent check.
+
+Reviewers may also run non-mutating verification against a named commit — `uv run pytest
+-q`, `uv run ruff check .`, `uv run mypy`, and read-only Git inspection. A reviewer must not
+commit, must not modify tracked files, and must report rather than repair if the working
+tree is dirty or the suite is red.
 
 Grok is the sole implementer. The Steward role is an authority role, not an implementation
 lane: the Steward sequences, maintains authority, judges ticket quality and acceptance
@@ -179,8 +189,11 @@ All agent traffic is relayed by [CHAZ]. No agent contacts another directly.
 5. [CLAUDE] reconciles both against authority and issues the next prompt or accepts the
    ticket.
 
-[GROK] is the only agent reading the working code. His judgement on what is weak, fragile,
-or under-tested is a first-class input, and every work prompt must solicit it explicitly.
+[GROK] is the only agent writing the working code, and the only one carrying the working
+context of having built it. His judgement on what is weak, fragile, or under-tested is a
+first-class input, and every work prompt must solicit it explicitly. This does not make him
+the only reader: [GPT] and [CLAUDE] read the committed code and tests directly when
+reviewing, because an implementer's account of their own work cannot be the only evidence.
 Such findings are inputs, not authority: they change the project only after the Steward
 reconciles them and records the result.
 
