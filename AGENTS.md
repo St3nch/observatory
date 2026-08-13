@@ -54,48 +54,27 @@ capture/evidence storage boundary and Outcome-as-history phrasing.
 
 ### Agent lanes
 
-| Agent | Lane | May write | May read |
-|---|---|---|---|
-| Grok | Implementer | everything outside the authority set, plus the assigned ticket's status fields and Implementation report | everything |
-| Claude | Project Steward | the authority set and `tickets/`; never `src/` or `tests/` | everything |
-| GPT and any other agent | Reviewer | nothing in the repository; findings are reported to the Steward | everything |
+- **[GROK]** implements. He is the only agent who writes code and tests. One ticket at a
+  time; no ticket, no implementation.
+- **[GPT]** reviews the committed code and tests independently. He writes nothing in the
+  repository — he reports.
+- **[CLAUDE]** is Project Steward: maintains authority and tickets, reconciles reviews,
+  decides acceptance and what comes next. Writes no code or tests, ever.
+- **[CHAZ]** decides. He relays all traffic; agents never contact each other directly.
 
-**The authority set** is `AGENTS.md`, `VISION.md`, `VOCABULARY.md`, `decisions/`, and
-`docs/`. Only the Steward writes these.
+Every agent may read the whole repository, and reviewers may run `uv run pytest -q`,
+`uv run ruff check .`, and `uv run mypy` against a named commit. Reviewing an implementer's
+account of his own work is not an independent check. Reviewers do not commit, do not modify
+tracked files, and report rather than repair.
 
-The implementer writes everything else his ticket requires — `src/`, `tests/`, and tooling
-or configuration such as `pyproject.toml`, `.githooks/`, and `README.md` — plus, **in the
-assigned ticket only**, the `Start commit` field, the `Status` field (never `done`), and the
-Implementation report. He does not touch any other ticket.
+Only the Steward writes `AGENTS.md`, `VISION.md`, `VOCABULARY.md`, `decisions/`, `docs/`,
+and `tickets/` — except that the implementer fills his own assigned ticket's `Start commit`,
+`Status` (never `done`), and Implementation report, which travel in his implementation
+commit. An agent editing outside its lane has already drifted: stop and report.
 
-The assigned ticket is therefore the one authority-adjacent file that intentionally travels
-in an implementation commit. That is deliberate: the evidence of work and the work itself
-land together, or the record can drift from the code.
-
-**Every agent may read the entire repository.** Read access is not a lane. A reviewer who
-cannot open the code cannot distinguish a test that proves a criterion from one that merely
-appears to, and a review built only on an implementer's own account of their work is not an
-independent check.
-
-Reviewers may also run non-mutating verification against a named commit — `uv run pytest
--q`, `uv run ruff check .`, `uv run mypy`, and read-only Git inspection. A reviewer must not
-commit, must not modify tracked files, and must report rather than repair if the working
-tree is dirty or the suite is red.
-
-Grok is the sole implementer. The Steward role is an authority role, not an implementation
-lane: the Steward sequences, maintains authority, judges ticket quality and acceptance
-evidence, and sets `done` — but does not write `src/` or `tests/` under any circumstance.
-
-A review agent that concludes code is required stops and
-reports the finding; it does not write, patch, or "just fix" `src/` or `tests/`, and it
-does not repair a broken build it happens to notice. An agent editing files outside its
-lane has already drifted—stop and report instead.
-
-An **implementer** works under exactly one ticket ID at a time; no ticket ID means no
-implementation work. Steward and reviewer activity — audits, sequencing, reconciliation,
-authority maintenance — is legitimately unticketed and always has been. Every skill
-invocation reports the absolute path of the project-local `SKILL.md` it loaded, per §Grok
-skill policy; an implementing invocation also reports the ticket ID it is working under.
+This is the whole model. It exists because one unbounded implementation left a broken test
+suite, not because the project needs a permissions system. If a real failure exposes a gap,
+add the smallest rule that addresses that failure — nothing more.
 
 ## Hard boundaries
 
@@ -185,17 +164,15 @@ Optional and situational: `prototype` (throwaway design question), `wayfinder`
 
 The handoff between lanes is a commit, not a working tree.
 
-- Implementation begins from a clean tree at a named commit and ends with a commit.
-  Uncommitted work is not delivered work. The ticket's status change and Implementation
-  report travel inside that implementation commit; the tree is clean before the work begins
-  and clean once it lands.
-- `code-review` starts from a named commit and refuses to review uncommitted work.
-- `uv run pytest -q` must exit 0 at any commit that carries a ticket status change. A
-  suite that fails to collect is a red suite, not a partial pass.
-- An abandoned or interrupted assignment leaves no untracked files behind. Record the
-  stopping point in the ticket's Implementation report and leave the tree clean.
-- A ticket's **Start commit** is stamped when implementation actually begins, and names the
-  commit the work started from.
+- Implementation begins from a clean tree at a named commit and ends with one commit. The
+  ticket's status change and Implementation report travel inside it. Uncommitted work is
+  not delivered work.
+- Review starts from that named commit. A red suite never lands — `uv run pytest -q` exits
+  0 at every commit on `main`, and a suite that fails to collect is red, not a partial
+  pass. Intermediate red states are fine in the working tree and resolved before the
+  commit.
+- An abandoned assignment leaves no untracked files behind. Record where you stopped in the
+  ticket and leave the tree clean.
 
 ### Review loop
 
