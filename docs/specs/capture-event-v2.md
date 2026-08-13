@@ -700,6 +700,14 @@ any path that has not first obtained a verified committed Attempt.
 `(capture_id, derivation_version_id, within_capture_result_id)` with
 `within_capture_result_id = "result:"` + decimal index; provider `fixture`.
 
+For fixture v1, `derivation_version_id` is an operator-supplied semantic label matching
+`[A-Za-z0-9._+:-]{1,128}`. It is the immutable identity of one derivation meaning under
+its registered `adapter_contract`; changing derivation behavior requires a new label.
+Registering an absent label creates it. Reusing a label is permitted only when its
+immutable registration metadata agrees exactly. A conflicting `adapter_contract` fails
+closed before any Outcome or Observation write and never mutates the existing registration.
+A content-addressed derivation-recipe document is not part of fixture v1.
+
 ---
 
 ## Conformance vectors

@@ -1,6 +1,6 @@
 # CE-05 — Derive admitted_results into real PostgreSQL
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** tracer bullet
 **Blocked by:** CE-04 — Full fixture-panel-v1 matrix and all transport branches
