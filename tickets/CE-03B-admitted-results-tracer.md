@@ -1,6 +1,6 @@
 # CE-03B — admitted_results tracer: Attempt, transport, Capture, CLI
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** tracer bullet
 **Blocked by:** CE-03 — Evidence Store foundation: format, durable install, commit and read
@@ -57,13 +57,13 @@ CE-03 supplies the store. This ticket supplies the vertical path through it.
 
 ## Acceptance criteria
 
-- [ ] Using frozen published AR vector inputs, the on-disk Attempt and Capture identities match published `attempt_id` `46d5fb97c109b9f64a42ff3a5e62978e2c25551d6b7274603fc88456acfd9a0f` and `capture_id` `604663f0e7842f1e076189652667357083d4c4a5e56a44d67ea4596ef624ad44`.
-- [ ] The Attempt bundle contains `request.body`; the Capture bundle contains `response.body`; neither contains the other's, per §Durability profile D4.
-- [ ] Automated proof that fixture transport cannot begin until the Attempt is committed and verified. An ordering assertion inside one happy-path function is not proof — show why the transport call is unreachable otherwise.
-- [ ] `admitted_results` transport is deterministic and in-process, and produces exactly the published AR response body bytes and digest.
-- [ ] Capture CLI completes the admitted_results Attempt→Capture path and prints `attempt_id` and `capture_id`; it does not write PostgreSQL and does not derive.
-- [ ] The journal is not written for this path, and the authorized full in-process retention condition holds.
-- [ ] Verify-on-read of the committed AR events succeeds; bit-flip of those events fails closed.
+- [x] Using frozen published AR vector inputs, the on-disk Attempt and Capture identities match published `attempt_id` `46d5fb97c109b9f64a42ff3a5e62978e2c25551d6b7274603fc88456acfd9a0f` and `capture_id` `604663f0e7842f1e076189652667357083d4c4a5e56a44d67ea4596ef624ad44`.
+- [x] The Attempt bundle contains `request.body`; the Capture bundle contains `response.body`; neither contains the other's, per §Durability profile D4.
+- [x] Automated proof that fixture transport cannot begin until the Attempt is committed and verified. An ordering assertion inside one happy-path function is not proof — show why the transport call is unreachable otherwise.
+- [x] `admitted_results` transport is deterministic and in-process, and produces exactly the published AR response body bytes and digest.
+- [x] Capture CLI completes the admitted_results Attempt→Capture path and prints `attempt_id` and `capture_id`; it does not write PostgreSQL and does not derive.
+- [x] The journal is not written for this path, and the authorized full in-process retention condition holds.
+- [x] Verify-on-read of the committed AR events succeeds; bit-flip of those events fails closed.
 
 ## Verification
 
@@ -110,7 +110,7 @@ This ticket adds **no** behavior beyond committed authority.
 - End commit: supplied in the implementer handoff report (a commit cannot
   embed its own final hash).
 - Acceptance evidence:
-  - `uv run pytest -q` — 124 passed
+  - `uv run pytest -q` — 128 passed
   - `uv run ruff check .` — clean
   - `uv run mypy` — clean
   - Published AR IDs on disk:
@@ -159,5 +159,12 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- Project Steward only -->
 
-- Closed at commit:
-- Evidence accepted: yes/no
+- Closed at commit: `daee57d6434394a1750bbdd2864a869a3b97d326`
+- Evidence accepted: yes
+- Steward verification:
+  - Exact comparison: `79ac903d2fb5be82926699dac4d0563b3c21ceb9` through
+    `daee57d6434394a1750bbdd2864a869a3b97d326`
+  - `uv run pytest -q` — 128 passed
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Isolated direct-issuer D8 regression — 129 passed in the disposable review tree
