@@ -39,6 +39,9 @@ capture/evidence storage boundary and Outcome-as-history phrasing.
   decisions, and release approval.
 - The Project Steward owns sequencing, architectural coherence, authority maintenance,
   ticket quality, integration, acceptance evidence, and drift control.
+- The Project Steward holds no memory between sessions. Every decision, sequencing choice,
+  and acceptance judgement must be written into this repository when it is made. Authority
+  on disk is the only continuity this project has; Steward recall is not evidence.
 - Coding and review agents implement or inspect bounded assignments under the current
   authority and ticket. They do not replace the Project Steward or silently redefine
   project direction.
@@ -46,6 +49,27 @@ capture/evidence storage boundary and Outcome-as-history phrasing.
   reconciles it with existing authority and records any resulting decision.
 - No agent may broaden its assignment merely because it discovers adjacent work; report
   the finding and keep the current ticket bounded.
+
+### Agent lanes
+
+| Agent | Lane | May write |
+|---|---|---|
+| Grok | Implementer | `src/`, `tests/`, and the assigned ticket's Implementation report |
+| Claude | Project Steward | authority documents, `tickets/`, `decisions/`; never `src/` or `tests/` |
+| GPT and any other agent | Reviewer | nothing in the repository; findings are reported to the Steward |
+
+Grok is the sole implementer. The Steward role is an authority role, not an implementation
+lane: the Steward sequences, maintains authority, judges ticket quality and acceptance
+evidence, and sets `done` — but does not write `src/` or `tests/` under any circumstance.
+
+A review agent that concludes code is required stops and
+reports the finding; it does not write, patch, or "just fix" `src/` or `tests/`, and it
+does not repair a broken build it happens to notice. An agent editing files outside its
+lane has already drifted—stop and report instead.
+
+An agent works under exactly one ticket ID at a time. No ticket ID means no implementation
+work. Every skill invocation reports the absolute path of the project-local `SKILL.md` it
+loaded and the ticket ID it is working under.
 
 ## Hard boundaries
 
@@ -127,8 +151,41 @@ Main chain:
 8. implement sets ticket status to `review` and records evidence; never `done`
 9. `handoff` as needed; **Steward closure** sets `done`
 
+### Commit boundary
+
+The handoff between lanes is a commit, not a working tree.
+
+- `implement` ends with a commit. Uncommitted work is not delivered work, and a ticket is
+  never moved to `review` from a dirty tree.
+- `code-review` starts from a named commit and refuses to review uncommitted work.
+- Before any ticket status changes: `git status` is clean and `uv run pytest -q` exits 0.
+  A suite that fails to collect is a red suite, not a partial pass.
+- An abandoned or interrupted assignment leaves no untracked files behind. Record the
+  stopping point in the ticket's Implementation report and leave the tree clean.
+- A ticket's **Start commit** is stamped when implementation actually begins, and names the
+  commit the work started from.
+
 Optional and situational: `prototype` (throwaway design question), `wayfinder`
 (multi-session decision fog in `docs-temp/wayfinder/` only).
+
+### Review loop
+
+All agent traffic is relayed by [CHAZ]. No agent contacts another directly.
+
+1. [CLAUDE] (Steward) issues a bounded work prompt naming exactly one ticket.
+2. [GROK] implements and returns an implementation report.
+3. [CHAZ] relays that report to [GPT], who returns a review.
+4. [CHAZ] relays [GROK]'s report, then [GPT]'s review, to [CLAUDE].
+5. [CLAUDE] reconciles both against authority and issues the next prompt or accepts the
+   ticket.
+
+[GROK] is the only agent reading the working code. His judgement on what is weak, fragile,
+or under-tested is a first-class input, and every work prompt must solicit it explicitly.
+Such findings are inputs, not authority: they change the project only after the Steward
+reconciles them and records the result.
+
+[CLAUDE] asks [GROK] or [GPT] direct questions when an answer is uncertain rather than
+assuming. A question relayed through [CHAZ] costs less than a wrong sequencing decision.
 
 Do not create `CONTEXT.md`, `CONTEXT-MAP.md`, `docs/agents/`, `.scratch/`, or external
 issue-tracker scaffolding.
