@@ -94,8 +94,8 @@ lane has already drifted—stop and report instead.
 An **implementer** works under exactly one ticket ID at a time; no ticket ID means no
 implementation work. Steward and reviewer activity — audits, sequencing, reconciliation,
 authority maintenance — is legitimately unticketed and always has been. Every skill
-invocation that performs implementation reports the absolute path of the project-local
-`SKILL.md` it loaded and the ticket ID it is working under.
+invocation reports the absolute path of the project-local `SKILL.md` it loaded, per §Grok
+skill policy; an implementing invocation also reports the ticket ID it is working under.
 
 ## Hard boundaries
 
@@ -171,31 +171,31 @@ Main chain:
 3. `to-spec` → draft at `docs-temp/specs/`; promote to `docs/specs/` only on explicit
    Steward direction
 4. **Steward acceptance** of the durable spec
-5. `to-tickets` → files under `tickets/` after breakdown approval
+5. `to-tickets` → breakdown proposed to the Steward, who files the result under `tickets/`.
+   Only the Steward writes `tickets/`, except for an implementer's own assigned ticket.
 6. **Steward acceptance** of the ticket set
 7. `implement` → `tdd` → `code-review` → remediation
 8. implement sets ticket status to `review` and records evidence; never `done`
 9. `handoff` as needed; **Steward closure** sets `done`
 
+Optional and situational: `prototype` (throwaway design question), `wayfinder`
+(multi-session decision fog in `docs-temp/wayfinder/` only).
+
 ### Commit boundary
 
 The handoff between lanes is a commit, not a working tree.
 
-- `implement` ends with a commit. Uncommitted work is not delivered work, and a ticket is
-  never moved to `review` from a dirty tree.
+- Implementation begins from a clean tree at a named commit and ends with a commit.
+  Uncommitted work is not delivered work. The ticket's status change and Implementation
+  report travel inside that implementation commit; the tree is clean before the work begins
+  and clean once it lands.
 - `code-review` starts from a named commit and refuses to review uncommitted work.
-- Implementation begins from a clean tree at a named commit and ends with a commit. A
-  ticket's status change and Implementation report travel inside that implementation
-  commit; the tree is clean before the work begins and clean once it lands.
 - `uv run pytest -q` must exit 0 at any commit that carries a ticket status change. A
   suite that fails to collect is a red suite, not a partial pass.
 - An abandoned or interrupted assignment leaves no untracked files behind. Record the
   stopping point in the ticket's Implementation report and leave the tree clean.
 - A ticket's **Start commit** is stamped when implementation actually begins, and names the
   commit the work started from.
-
-Optional and situational: `prototype` (throwaway design question), `wayfinder`
-(multi-session decision fog in `docs-temp/wayfinder/` only).
 
 ### Review loop
 
