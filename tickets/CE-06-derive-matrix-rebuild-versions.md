@@ -1,6 +1,6 @@
 # CE-06 — Derive completion: matrix, rebuild, multi-version, damaged refuse
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** tracer bullet
 **Blocked by:** CE-05 — Derive admitted_results into real PostgreSQL
@@ -63,12 +63,12 @@ expressly makes them normative (it does not).
 
 ## Acceptance criteria
 
-- [ ] For every verified Attempt across all ten scenarios, derive produces an Attempt-stage `authorized_unresolved` Outcome with `capture_id` null, and the corresponding verified Capture produces the scenario-authorized Capture-stage Outcome.
-- [ ] Observations are produced only for admitted cases and have the normative count for each scenario.
-- [ ] After derive into a populated DB, an empty PostgreSQL instance re-derived from the same verified Evidence is logically equivalent per the definition above.
-- [ ] A new derivation version appends its Outcomes/Observations without rewriting or deleting prior derivation-version rows.
-- [ ] A Capture or cited body that fails verify-on-read produces no Capture-stage Outcome or Observations from that damaged Capture, while an independently verified parent Attempt still produces its Attempt-stage `authorized_unresolved` Outcome; material lacking `COMMITTED` visibility is not used as Evidence.
-- [ ] CE-05 admitted_results behavior remains true under the expanded matrix.
+- [x] For every verified Attempt across all ten scenarios, derive produces an Attempt-stage `authorized_unresolved` Outcome with `capture_id` null, and the corresponding verified Capture produces the scenario-authorized Capture-stage Outcome.
+- [x] Observations are produced only for admitted cases and have the normative count for each scenario.
+- [x] After derive into a populated DB, an empty PostgreSQL instance re-derived from the same verified Evidence is logically equivalent per the definition above.
+- [x] A new derivation version appends its Outcomes/Observations without rewriting or deleting prior derivation-version rows.
+- [x] A Capture or cited body that fails verify-on-read produces no Capture-stage Outcome or Observations from that damaged Capture, while an independently verified parent Attempt still produces its Attempt-stage `authorized_unresolved` Outcome; material lacking `COMMITTED` visibility is not used as Evidence.
+- [x] CE-05 admitted_results behavior remains true under the expanded matrix.
 
 ## Verification
 
@@ -150,6 +150,12 @@ This ticket adds **no** behavior beyond committed authority.
     with that many Observations (admission success); fixture
     construction never produces that body.
 - Review findings remaining:
+  - Steward answer: CE-06 completes the already-authorized fixture-v1
+    derivation meaning; it does not redefine that meaning. A later semantic
+    behavior change must use a new `derivation_version_id`. Reusing a label
+    under changed code would violate authority. With fixture-v1's deliberately
+    minimal registration metadata, no additional code-level comparison can
+    detect such a change when `adapter_contract` still matches.
   - `interrupt=` remains a test seam on `derive`.
   - CE-05 planted H_plain-on-AR now also writes Capture-stage
     `transport_complete_non_admissible` (still zero Observations).
@@ -158,5 +164,13 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- Project Steward only -->
 
-- Closed at commit:
-- Evidence accepted: yes/no
+- Closed at commit: `85c60c84addab26bc66f3150675d177c49b26e93`
+- Evidence accepted: yes
+- Steward verification:
+  - Exact comparison: `d26d5a002199449dd221bd770940ddf0d31fa8e6` through
+    `85c60c84addab26bc66f3150675d177c49b26e93`
+  - `uv run pytest -q` — 431 passed on real PostgreSQL 18
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Full matrix, two-database logical rebuild, multi-version append,
+    dependency-bounded damage refusal, and uncommitted-ignore proofs accepted
