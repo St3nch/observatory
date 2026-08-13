@@ -1,6 +1,6 @@
 # CE-02 — Canonical JCS, closed schemas, and content-ID vectors
 
-**Status:** done
+**Status:** review
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** necessary prefactor
 **Blocked by:** None — can start immediately
@@ -219,8 +219,20 @@ Identity IDs are `content_digest(canonical_json(document))` after validation.
 
 <!-- Project Steward only -->
 
-- Closed at commit: `c0a2189a66adcd4807c1b2ae3ce886f7810cd5d9`
-- Evidence accepted: **yes**
+**Reopened a second time.** The Steward closed at `c0a2189`; [GPT] then found that Unicode
+noncharacters are accepted, which RFC 7493 §2.1 forbids with a MUST NOT. Reopened to close
+the full I-JSON admissibility set rather than patch one more defect.
+
+- Closed at commit:
+- Evidence accepted: not yet
+
+### Completion criterion for the encoder
+
+The first three review rounds each found one I-JSON violation at a time, and the Steward
+closed the ticket twice with violations outstanding. The set is finite, so it is now
+enumerated in `docs/specs/capture-event-v2.md` §I-JSON admissibility. The encoder is
+complete when all five constraints hold and each has a test. Not before, and — absent a new
+finding against that list — not after.
 
 Implementation landed across three commits: `cca1191` (initial), `780f7b2` (escape,
 surrogate, and proof-coverage remediation), `c0a2189` (integer bound). The Implementation

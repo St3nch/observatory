@@ -145,6 +145,32 @@ the range is bounded. Rendering unbounded integers as plain decimals is not JCS.
 The encoder applies the signed range. Fields that this specification defines as non-negative
 are further constrained to `0 ≤ n ≤ 9007199254740991` by their own field rules.
 
+### I-JSON admissibility (complete set)
+
+RFC 8785 requires I-JSON input, so an identity-bearing document is admissible only if it
+satisfies **every** constraint below. This list is exhaustive as of RFC 7493; an
+implementation that satisfies all five needs no further Unicode or number admissibility
+rule. It is enumerated here because these were previously discovered one defect at a time.
+
+| # | Requirement | Source |
+|---|---|---|
+| 1 | Encoded as UTF-8 | RFC 7493 §2.1 |
+| 2 | No surrogate code points in object names or string values | RFC 7493 §2.1 |
+| 3 | No Unicode **noncharacters** in object names or string values | RFC 7493 §2.1 |
+| 4 | Integers within the safe range above | RFC 7493 §2.2, as hardened by Observatory |
+| 5 | No duplicate object member names | RFC 7493 §2.3 |
+
+Constraints 2 and 3 apply to code points **however they arrive** — encoded directly or
+arriving as `\u` escapes in parsed input. Rejecting them at serialization alone is
+insufficient when a document is validated from stored bytes.
+
+The noncharacters are the 66 code points `U+FDD0`–`U+FDEF`, plus the last two of every
+plane: any code point where `cp & 0xFFFE == 0xFFFE`, which covers `U+FFFE`, `U+FFFF`,
+`U+1FFFE`, `U+1FFFF`, through `U+10FFFE` and `U+10FFFF`.
+
+Inadmissible input is rejected. It is never serialized, substituted, or repaired — a
+repaired document would carry an identity for content that was never received.
+
 Discovered during CE-02 implementation: the bound was previously unstated.
 
 ### Canonicalization and verify-on-read
