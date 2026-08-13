@@ -119,8 +119,8 @@ __all__ = [
     "validate_attempt",
     "validate_capture",
     "validate_fingerprint",
+    "validate_fixture_request",
     "validate_parameters",
-    "validate_request",
 ]
 
 
@@ -136,7 +136,10 @@ def canonical_json(value: object) -> bytes:
     Floats are rejected: identity-bearing documents have no floating-point values.
     """
 
-    return _jcs(value).encode("utf-8")
+    try:
+        return _jcs(value).encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise DocumentError("JCS output is not valid UTF-8") from exc
 
 
 def body_ref(data: bytes) -> dict[str, int | str]:
@@ -150,7 +153,7 @@ def fixture_request(*, body: bytes) -> dict[str, object]:
 
     if len(body) < 1:
         raise DocumentError("fixture request body must be present_nonempty")
-    return _validate_request(
+    return _validate_fixture_request(
         {
             "body": {"body": body_ref(body), "state": "present_nonempty"},
             "headers": [list(pair) for pair in _FIXTURE_HEADERS],
@@ -258,11 +261,11 @@ def validate_parameters(value: object) -> dict[str, object]:
     return document
 
 
-def validate_request(value: object) -> dict[str, object]:
+def validate_fixture_request(value: object) -> dict[str, object]:
     """Validate a closed fixture-panel-v1 `request` object."""
 
     parsed, original = _parse(value)
-    document = _validate_request(parsed)
+    document = _validate_fixture_request(parsed)
     _require_re_jcs(document, original)
     return document
 
@@ -338,7 +341,9 @@ def _jcs_string(value: str) -> str:
         escape = _STRING_ESCAPES.get(code)
         if escape is not None:
             chunks.append(escape)
-        elif code < 0x20 or code in {0x2028, 0x2029}:
+        elif 0xD800 <= code <= 0xDFFF:
+            raise DocumentError("lone UTF-16 surrogates are forbidden in JCS strings")
+        elif code < 0x20:
             chunks.append(f"\\u{code:04x}")
         else:
             chunks.append(char)
@@ -475,7 +480,7 @@ def _validate_body_state(value: object, name: str) -> dict[str, object]:
     raise DocumentError(f"{name}.state is not a valid body_state")
 
 
-def _validate_request(value: object) -> dict[str, object]:
+def _validate_fixture_request(value: object) -> dict[str, object]:
     obj = _object(value, "request")
     _reject_unknown(obj, _REQUEST_KEYS, "request")
     method = _nonempty_string(_require(obj, "method", "request"), "request.method")
@@ -590,7 +595,7 @@ def _validate_fingerprint(value: object) -> dict[str, object]:
         "fixture-panel-v1",
         "fingerprint.adapter_contract",
     )
-    request = _validate_request(_require(obj, "request", "fingerprint"))
+    request = _validate_fixture_request(_require(obj, "request", "fingerprint"))
     return {
         "adapter_contract": adapter,
         "provider": provider,
@@ -655,7 +660,7 @@ def _validate_attempt(value: object) -> dict[str, object]:
         _require(obj, "request_fingerprint", "attempt"),
         "attempt.request_fingerprint",
     )
-    request = _validate_request(_require(obj, "request", "attempt"))
+    request = _validate_fixture_request(_require(obj, "request", "attempt"))
     parameters = _validate_parameters(_require(obj, "parameters", "attempt"))
     policy = _validate_policy(_require(obj, "policy", "attempt"))
     software = _validate_software(_require(obj, "software", "attempt"))
@@ -818,7 +823,7 @@ def _validate_capture(
     transport_state = _require(obj, "transport_state", "capture")
     if transport_state not in {"response_complete", "response_partial", "no_response"}:
         raise DocumentError("capture.transport_state is invalid")
-    request = _validate_request(_require(obj, "request", "capture"))
+    request = _validate_fixture_request(_require(obj, "request", "capture"))
     request_fingerprint = _hex64(
         _require(obj, "request_fingerprint", "capture"),
         "capture.request_fingerprint",

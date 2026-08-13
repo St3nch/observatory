@@ -89,9 +89,9 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- implement fills; may set Status: review; never Status: done -->
 
-- End commit: fa77f9a
+- End commit: cca1191
 - Acceptance evidence:
-  - `uv run pytest -q` — 52 passed (51 new + existing health test)
+  - `uv run pytest -q` — 66 passed after remediation (cca1191 had 52)
   - `uv run ruff check .` — clean
   - `uv run mypy` — clean
   - Published AR/RP/NR request bodies, fingerprint preimages, Attempt/Capture
@@ -103,9 +103,15 @@ This ticket adds **no** behavior beyond committed authority.
     `test_fingerprint_id_matches_published_ar_vector`).
   - Unknown properties rejected at document and nested depth
     (`test_parameters_rejects_unknown_property`,
+    `test_body_ref_rejects_unknown_property`,
+    `test_request_rejects_unknown_top_level_property`,
     `test_request_rejects_unknown_property_at_nested_body`,
+    `test_policy_rejects_unknown_property`,
+    `test_software_rejects_unknown_property`,
     `test_fingerprint_rejects_unknown_property`,
     `test_attempt_rejects_embedded_attempt_id`,
+    `test_transport_failure_rejects_unknown_property`,
+    `test_capture_rejects_unknown_top_level_property`,
     `test_capture_rejects_unknown_property_at_response_depth`).
   - `attempt_nonce` charset/length
     (`test_attempt_nonce_rejects_invalid_length_and_charset`).
@@ -114,7 +120,9 @@ This ticket adds **no** behavior beyond committed authority.
   - Closed enums/constants
     (`test_parameters_rejects_unknown_scenario`,
     `test_request_rejects_non_fixture_constants`,
-    `test_attempt_rejects_wrong_schema_version_provider_or_contract`).
+    `test_attempt_rejects_wrong_schema_version_provider_or_contract`,
+    `test_fingerprint_rejects_wrong_schema_version_provider_or_contract`,
+    `test_capture_rejects_wrong_schema_version_provider_or_contract`).
   - `prior_attempt_id` omit-not-null
     (`test_attempt_omits_prior_attempt_id_when_absent`,
     `test_attempt_rejects_null_prior_attempt_id`,
@@ -149,8 +157,8 @@ This ticket adds **no** behavior beyond committed authority.
     integer-only numbers, RFC 8785 string escapes, no trailing newline). It is
     not a general RFC 8785 suite and does not implement IEEE-754 number
     serialization because floats are forbidden.
-  - `validate_request` always enforces fixture-panel-v1 request constants. There
-    is no general-request mode.
+  - `validate_fixture_request` always enforces fixture-panel-v1 request
+    constants. There is no general-request mode.
   - Capture `response.headers` are validated as lowercase pairs, not restricted
     to the two fixture header arrays `H_json` / `H_plain`.
   - Timestamps must match the frozen syntax and also parse as a calendar datetime
@@ -164,8 +172,11 @@ This ticket adds **no** behavior beyond committed authority.
   - `test_vector_validation_does_not_write_the_filesystem` only proves one
     constructor left `tmp_path` empty; the real proof is that the suite needs
     no store.
-  - Self-review only (code-review skill checklist). Independent [GPT] review
-    has not run.
+  - Remediation after cca1191: U+2028/U+2029 no longer escaped; lone surrogates
+    raise DocumentError; per-object unknown-key tests; fingerprint and Capture
+    exact-constant tests; `validate_request` renamed to
+    `validate_fixture_request`. RFC 8785 string tests added so goldens are not
+    the only escape-table proof.
 
 ### Public module surface (`observatory.capture_event`)
 
@@ -174,7 +185,7 @@ In-repo JCS; no new dependency; pydantic not used.
 - `DocumentError(ValueError)` — canonicalization or closed-schema failure.
 - `EMPTY_BODY_SHA256: str` — published empty-bytes digest.
 - `canonical_json(value: object) -> bytes` — RFC 8785 JCS UTF-8, no trailing
-  newline; rejects floats.
+  newline; rejects floats and lone surrogates. U+2028/U+2029 are literal.
 - `content_digest(data: bytes) -> str` — 64-char lowercase hex SHA-256.
 - `body_ref(data: bytes) -> dict[str, int | str]` — `{bytes, sha256}`.
 - `fixture_request(*, body: bytes) -> dict[str, object]` — closed fixture
@@ -189,7 +200,7 @@ In-repo JCS; no new dependency; pydantic not used.
   transport_state, response, transport_failure, response_headers_at,
   response_body_ended_at, observatory_version=None) -> dict[str, object]` —
   cites parent Attempt identity; software defaults to the Attempt's.
-- `validate_parameters/request/fingerprint/attempt(value) -> dict[str, object]`
+- `validate_parameters/fixture_request/fingerprint/attempt(value) -> dict[str, object]`
   — `value` is a mapping or UTF-8 JSON `bytes`. Bytes require re-JCS equality.
 - `validate_capture(value, *, attempt=None) -> dict[str, object]` — same, plus
   parent cross-field rules when `attempt` is supplied.

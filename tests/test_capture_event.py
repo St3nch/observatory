@@ -21,8 +21,8 @@ from observatory.capture_event import (
     validate_attempt,
     validate_capture,
     validate_fingerprint,
+    validate_fixture_request,
     validate_parameters,
-    validate_request,
 )
 
 # ---------------------------------------------------------------------------
@@ -113,6 +113,51 @@ FORMAT_JSON = (
 FORMAT_JSON_SHA256 = "67fb338d3237a22a29f50110c705e552cd9af29f830c1bfffa9ee1cafa876c7e"
 
 
+def _ar_attempt() -> dict[str, Any]:
+    return attempt_document(
+        parameters=AR_PARAMETERS,
+        attempt_nonce=AR_NONCE,
+        authorized_at=AUTHORIZED_AT,
+        observatory_version=OBSERVATORY_VERSION,
+    )
+
+
+def _ar_capture() -> dict[str, Any]:
+    return capture_document(
+        attempt=_ar_attempt(),
+        request_started_at=REQUEST_STARTED_AT,
+        transport_ended_at=TRANSPORT_ENDED_AT,
+        transport_state="response_complete",
+        response={
+            "headers": [["content-type", "application/json"]],
+            "body": {"state": "present_nonempty", "body": body_ref(AR_RESPONSE_BODY)},
+            "completeness": "complete",
+        },
+        transport_failure=None,
+        response_headers_at=RESPONSE_HEADERS_AT,
+        response_body_ended_at="2026-08-11T20:15:30.950000Z",
+    )
+
+
+def _nr_capture() -> dict[str, Any]:
+    attempt = attempt_document(
+        parameters=NR_PARAMETERS,
+        attempt_nonce=NR_NONCE,
+        authorized_at=AUTHORIZED_AT,
+        observatory_version=OBSERVATORY_VERSION,
+    )
+    return capture_document(
+        attempt=attempt,
+        request_started_at=REQUEST_STARTED_AT,
+        transport_ended_at=TRANSPORT_ENDED_AT,
+        transport_state="no_response",
+        response=None,
+        transport_failure={"code": "fixture_no_response", "phase": "receive_response"},
+        response_headers_at=None,
+        response_body_ended_at=None,
+    )
+
+
 # ===========================================================================
 # JCS and content digest
 # ===========================================================================
@@ -144,10 +189,54 @@ def test_canonical_json_rejects_bool_as_integer_lookalike_in_array() -> None:
     assert encoded == b"[true,false,null,0]"
 
 
-def test_canonical_json_escapes_controls_quotes_and_line_separators() -> None:
-    encoded = canonical_json("\"\\\b\t\n\f\r\u0001\u2028\u2029")
+def test_canonical_json_string_matches_rfc8785_section_3_2_2_example() -> None:
+    """RFC 8785 §3.2.2 string member; expected bytes from §3.2.4 hex dump."""
 
-    assert encoded == b'"\\"\\\\\\b\\t\\n\\f\\r\\u0001\\u2028\\u2029"'
+    # Transcribed from RFC 8785 §3.2.2: "\u20ac$\u000F\u000aA'\u0042\u0022\u005c\\\"\/"
+    parsed = json.loads('"\\u20ac$\\u000F\\u000aA\'\\u0042\\u0022\\u005c\\\\\\"\\/"')
+    # String token hex from RFC 8785 §3.2.4:
+    # 22 e2 82 ac 24 5c 75 30 30 30 66 5c 6e 41 27 42 5c 22 5c 5c 5c 5c 5c 22 2f 22
+    expected = bytes.fromhex("22e282ac245c75303030665c6e4127425c225c5c5c5c5c222f22")
+
+    assert parsed == '€$\x0f\nA\'B"\\\\"/'
+    assert canonical_json(parsed) == expected
+
+
+def test_canonical_json_emits_bmp_and_astral_characters_literally() -> None:
+    assert canonical_json("ö") == '"ö"'.encode()
+    assert canonical_json("\U0001f600") == '"\U0001f600"'.encode()
+    assert b"\\u" not in canonical_json("ö")
+    assert b"\\u" not in canonical_json("\U0001f600")
+
+
+def test_canonical_json_does_not_escape_u2028_or_u2029() -> None:
+    encoded = canonical_json("\u2028\u2029")
+
+    assert encoded == '"\u2028\u2029"'.encode()
+    assert b"\\u2028" not in encoded
+    assert b"\\u2029" not in encoded
+
+
+def test_canonical_json_uses_rfc8785_short_form_control_escapes() -> None:
+    assert canonical_json("\b\t\n\f\r") == b'"\\b\\t\\n\\f\\r"'
+
+
+def test_canonical_json_uses_lowercase_u_escapes_for_other_controls() -> None:
+    assert canonical_json("\u0000\u0001\u000e\u001f") == b'"\\u0000\\u0001\\u000e\\u001f"'
+
+
+def test_canonical_json_does_not_escape_forward_slash() -> None:
+    assert canonical_json("/") == b'"/"'
+    assert canonical_json("http://x") == b'"http://x"'
+
+
+def test_canonical_json_rejects_lone_surrogates_as_document_error() -> None:
+    with pytest.raises(DocumentError):
+        canonical_json("\ud800")
+    with pytest.raises(DocumentError):
+        canonical_json("\udead")
+    with pytest.raises(DocumentError):
+        canonical_json({"\ud800": 1})
 
 
 def test_content_digest_is_lowercase_sha256_of_exact_bytes() -> None:
@@ -220,6 +309,55 @@ def test_parameters_rejects_invalid_panel_id() -> None:
         validate_parameters({**AR_PARAMETERS, "panel_id": "has space"})
 
 
+def test_body_ref_rejects_unknown_property() -> None:
+    request = fixture_request(body=AR_REQUEST_BODY)
+    body_state = request["body"]
+    assert isinstance(body_state, dict)
+    ref = body_state["body"]
+    assert isinstance(ref, dict)
+
+    with pytest.raises(DocumentError):
+        validate_fixture_request(
+            {**request, "body": {**body_state, "body": {**ref, "representation": "raw"}}}
+        )
+
+
+def test_request_rejects_unknown_top_level_property() -> None:
+    request = fixture_request(body=AR_REQUEST_BODY)
+    with pytest.raises(DocumentError):
+        validate_fixture_request({**request, "timeout_ms": 1})
+
+
+def test_policy_rejects_unknown_property() -> None:
+    document = _ar_attempt()
+    policy = document["policy"]
+    assert isinstance(policy, dict)
+    with pytest.raises(DocumentError):
+        validate_attempt({**document, "policy": {**policy, "spend_limit": 0}})
+
+
+def test_software_rejects_unknown_property() -> None:
+    document = _ar_attempt()
+    software = document["software"]
+    assert isinstance(software, dict)
+    with pytest.raises(DocumentError):
+        validate_attempt({**document, "software": {**software, "git_sha": "deadbeef"}})
+
+
+def test_transport_failure_rejects_unknown_property() -> None:
+    document = _nr_capture()
+    failure = document["transport_failure"]
+    assert isinstance(failure, dict)
+    with pytest.raises(DocumentError):
+        validate_capture({**document, "transport_failure": {**failure, "message": "nope"}})
+
+
+def test_capture_rejects_unknown_top_level_property() -> None:
+    document = _ar_capture()
+    with pytest.raises(DocumentError):
+        validate_capture({**document, "elapsed_ms": 1})
+
+
 def test_request_rejects_unknown_property_at_nested_body() -> None:
     request = fixture_request(body=AR_REQUEST_BODY)
     nested = request["body"]
@@ -227,37 +365,37 @@ def test_request_rejects_unknown_property_at_nested_body() -> None:
     nested = {**nested, "representation": "raw"}
 
     with pytest.raises(DocumentError):
-        validate_request({**request, "body": nested})
+        validate_fixture_request({**request, "body": nested})
 
 
 def test_request_rejects_non_fixture_constants() -> None:
     request = fixture_request(body=AR_REQUEST_BODY)
 
     with pytest.raises(DocumentError):
-        validate_request({**request, "method": "GET"})
+        validate_fixture_request({**request, "method": "GET"})
     with pytest.raises(DocumentError):
-        validate_request({**request, "port": 443})
+        validate_fixture_request({**request, "port": 443})
     with pytest.raises(DocumentError):
-        validate_request({**request, "headers": [["Content-Type", "application/json"]]})
+        validate_fixture_request({**request, "headers": [["Content-Type", "application/json"]]})
 
 
 def test_body_state_absent_rejects_null_body() -> None:
     request = fixture_request(body=AR_REQUEST_BODY)
     with pytest.raises(DocumentError):
-        validate_request({**request, "body": {"state": "absent", "body": None}})
+        validate_fixture_request({**request, "body": {"state": "absent", "body": None}})
 
 
 def test_body_state_absent_omits_body() -> None:
     request = fixture_request(body=AR_REQUEST_BODY)
     with pytest.raises(DocumentError):
         # fixture requests must be present_nonempty; absent is the wrong discriminant
-        validate_request({**request, "body": {"state": "absent"}})
+        validate_fixture_request({**request, "body": {"state": "absent"}})
 
 
 def test_body_state_present_zero_requires_empty_digest() -> None:
     request = fixture_request(body=AR_REQUEST_BODY)
     with pytest.raises(DocumentError):
-        validate_request(
+        validate_fixture_request(
             {
                 **request,
                 "body": {
@@ -303,7 +441,7 @@ def test_body_state_present_zero_accepted_on_complete_response() -> None:
 def test_body_state_present_nonempty_rejects_zero_bytes() -> None:
     request = fixture_request(body=AR_REQUEST_BODY)
     with pytest.raises(DocumentError):
-        validate_request(
+        validate_fixture_request(
             {
                 **request,
                 "body": {
@@ -317,7 +455,7 @@ def test_body_state_present_nonempty_rejects_zero_bytes() -> None:
 def test_pair_array_rejects_extra_element() -> None:
     request = fixture_request(body=AR_REQUEST_BODY)
     with pytest.raises(DocumentError):
-        validate_request({**request, "query": [["a", "b", "c"]]})
+        validate_fixture_request({**request, "query": [["a", "b", "c"]]})
 
 
 # ===========================================================================
@@ -452,6 +590,30 @@ def test_attempt_rejects_wrong_schema_version_provider_or_contract() -> None:
         validate_attempt({**document, "provider": "dataforseo"})
     with pytest.raises(DocumentError):
         validate_attempt({**document, "adapter_contract": "other-v1"})
+
+
+def test_fingerprint_rejects_wrong_schema_version_provider_or_contract() -> None:
+    document = fingerprint_document(request=fixture_request(body=AR_REQUEST_BODY))
+    with pytest.raises(DocumentError):
+        validate_fingerprint({**document, "schema": "observatory.attempt-event"})
+    with pytest.raises(DocumentError):
+        validate_fingerprint({**document, "version": 2})
+    with pytest.raises(DocumentError):
+        validate_fingerprint({**document, "provider": "dataforseo"})
+    with pytest.raises(DocumentError):
+        validate_fingerprint({**document, "adapter_contract": "other-v1"})
+
+
+def test_capture_rejects_wrong_schema_version_provider_or_contract() -> None:
+    document = _ar_capture()
+    with pytest.raises(DocumentError):
+        validate_capture({**document, "schema": "observatory.attempt-event"})
+    with pytest.raises(DocumentError):
+        validate_capture({**document, "version": 2})
+    with pytest.raises(DocumentError):
+        validate_capture({**document, "provider": "dataforseo"})
+    with pytest.raises(DocumentError):
+        validate_capture({**document, "adapter_contract": "other-v1"})
 
 
 def test_attempt_rejects_embedded_attempt_id() -> None:
