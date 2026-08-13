@@ -47,12 +47,12 @@ ten-scenario derive completion.
 
 ## Acceptance criteria
 
-- [ ] Starting from verified admitted_results Evidence and empty or freshly migrated PostgreSQL, derive produces the Attempt-stage Outcome (`authorized_unresolved`, `capture_id` null for that stage row) and the Capture-stage Outcome (`observation_admitted`) under a registered derivation version.
-- [ ] Exactly `depth` Observations are written with correct natural identities, provider/fixture axes, labels/scores, and provenance citing verified `attempt_id` and `capture_id`.
-- [ ] Derive uses verify-on-read; unverifiable Evidence for this path does not produce normal Observation rows.
-- [ ] Re-running the same derivation version does not duplicate or mutate existing Outcome/Observation rows for this slice (idempotency).
-- [ ] The Capture-stage Outcome and its Observations for this Capture are written atomically (no partial Observation set without the corresponding Capture-stage Outcome for a successful completion of the derive unit).
-- [ ] `python -m observatory.derive` performs this derivation.
+- [x] Starting from verified admitted_results Evidence and empty or freshly migrated PostgreSQL, derive produces the Attempt-stage Outcome (`authorized_unresolved`, `capture_id` null for that stage row) and the Capture-stage Outcome (`observation_admitted`) under a registered derivation version.
+- [x] Exactly `depth` Observations are written with correct natural identities, provider/fixture axes, labels/scores, and provenance citing verified `attempt_id` and `capture_id`.
+- [x] Derive uses verify-on-read; unverifiable Evidence for this path does not produce normal Observation rows.
+- [x] Re-running the same derivation version does not duplicate or mutate existing Outcome/Observation rows for this slice (idempotency).
+- [x] The Capture-stage Outcome and its Observations for this Capture are written atomically (no partial Observation set without the corresponding Capture-stage Outcome for a successful completion of the derive unit).
+- [x] `python -m observatory.derive` performs this derivation.
 
 ## Verification
 
@@ -137,8 +137,9 @@ This ticket adds **no** behavior beyond committed authority.
 - Review findings remaining:
   - `interrupt=` on `derive_admitted_results` is a test seam for
     atomicity injection, not public product API.
-  - Operator-supplied `derivation_version_id` should be ratified before
-    CE-06 / API freeze if a closed derivation-version document is wanted.
+  - Steward decision: fixture v1 keeps the operator-supplied semantic label;
+    same-label registration metadata must agree, and changed derivation
+    behavior requires a new label.
   - Spec review: Capture-stage now also requires `transport_state =
     response_complete`, `completeness=complete`, and admitted count ==
     `depth`. Other silent-continue paths (failed admission, non-AR) still
@@ -148,5 +149,13 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- Project Steward only -->
 
-- Closed at commit:
-- Evidence accepted: yes/no
+- Closed at commit: `4d9471671400e58eb0533b409d30fa78478c50bb`
+- Evidence accepted: yes
+- Steward verification:
+  - Exact comparison: `08f0b36923926cdecfe17da47e23dad8fa966687` through
+    `4d9471671400e58eb0533b409d30fa78478c50bb`
+  - `uv run pytest -q` — 418 passed on real PostgreSQL 18
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Disposable review regressions exposed and remediation closed media-type
+    admission and conflicting derivation-version registration
