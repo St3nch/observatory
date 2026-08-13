@@ -1,11 +1,11 @@
 # CE-03B — admitted_results tracer: Attempt, transport, Capture, CLI
 
-**Status:** ready-for-agent
+**Status:** review
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** tracer bullet
 **Blocked by:** CE-03 — Evidence Store foundation: format, durable install, commit and read
 **Approved by:** Project Steward
-**Start commit:**
+**Start commit:** 79ac903d2fb5be82926699dac4d0563b3c21ceb9
 
 ## What to build
 
@@ -107,10 +107,41 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- implement fills; may set Status: review; never Status: done -->
 
-- End commit:
+- End commit: supplied in the implementer handoff report (a commit cannot
+  embed its own final hash).
 - Acceptance evidence:
+  - `uv run pytest -q` — 124 passed
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Published AR IDs on disk:
+    `test_frozen_ar_inputs_produce_published_ids_on_disk`
+  - Published AR body bytes/digests:
+    `test_ar_request_and_response_bodies_match_published_vector`
+  - D4 body placement:
+    `test_d4_body_placement_request_on_attempt_response_on_capture`
+  - D8 structural gate:
+    `test_transport_requires_issued_verified_attempt`,
+    `test_verified_attempt_cannot_be_forged`,
+    `test_attempt_commit_failure_prevents_transport`,
+    `test_post_committed_verify_failure_prevents_transport`,
+    `test_no_alternate_path_invokes_transport_before_verified_attempt`
+  - Journal skip: `test_journal_is_not_written`
+  - CLI: `test_cli_prints_both_full_ids`, `test_cli_module_entrypoint_prints_ids`,
+    `test_cli_does_not_derive_or_touch_postgresql`
+  - Verify-on-read / tamper:
+    `test_committed_ar_events_pass_verify_on_read`,
+    `test_bit_flip_of_committed_ar_evidence_fails_closed`
 - Unproven limits:
+  - One scenario (`admitted_results`) and one transport branch (`response_complete`).
+  - CLI uses frozen published AR inputs only (`--evidence-root` required).
+  - Journal skip is the authorized in-process-retention exception, not a journal product.
+  - No PostgreSQL, derive, HTTP, other scenarios, or crash/hardware claims.
 - Review findings remaining:
+  - Public surface: `capture_admitted_results(store, inputs)`,
+    `AdmittedResultsInputs`, `PUBLISHED_AR_INPUTS`, `VerifiedAttempt` (unforgeable
+    capability), `main`. Transport is `_admitted_results_transport` and requires
+    `VerifiedAttempt` issued only by `_issue_verified_attempt` after
+    `commit_attempt` returns.
 
 ## Closure
 
