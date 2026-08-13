@@ -1,6 +1,6 @@
 # CE-02 — Canonical JCS, closed schemas, and content-ID vectors
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** necessary prefactor
 **Blocked by:** None — can start immediately
@@ -219,59 +219,71 @@ Identity IDs are `content_digest(canonical_json(document))` after validation.
 
 <!-- Project Steward only -->
 
-**Reopened after premature closure.** The Steward closed this ticket at `780f7b2` and was
-wrong to. See §Premature closure below.
+- Closed at commit: `c0a2189a66adcd4807c1b2ae3ce886f7810cd5d9`
+- Evidence accepted: **yes**
 
-- Closed at commit:
-- Evidence accepted: not yet
+Implementation landed across three commits: `cca1191` (initial), `780f7b2` (escape,
+surrogate, and proof-coverage remediation), `c0a2189` (integer bound). The Implementation
+report's `End commit` names a parent by design — a commit cannot contain its own hash. This
+line is authoritative.
 
-### Premature closure — Steward error
+### Steward verification at c0a2189
 
-The Steward identified the integer-serialization divergence during review, understated it as
-a 2⁵³ precision issue, recorded it as an accepted unproven limit, and closed the ticket.
-[GPT] then demonstrated by hostile test that `canonical_json(10**30)` yields
-`1000000000000000000000000000000` where RFC 8785 requires `1e+30` — a *formatting*
-divergence beginning at 10²¹, lower and broader than the precision issue described.
+Checked directly, not taken from the implementation report: 72 tests pass; `ruff` and `mypy`
+clean; golden constants traced to `docs/specs/capture-event-v2.md` lines 83, 595, and 629,
+confirming expectations are fixed from the spec rather than derived from implementation
+output; `validate_request` has zero occurrences repository-wide; `_jcs` routes integers
+through `_jcs_int`, with `bool` tested before `int`; the safe-integer bound is enforced at
+the encoder, the validator, and the `body_ref` constructor, so an oversized body length
+fails before serialization.
 
-Accepting a known conformance divergence in identity-bearing serialization was the wrong
-call regardless of reachability. D4 requires this data to survive changing software; an
-identity that only reproduces under our own encoder does not. "Not reachable by the current
-document set" is an argument for low urgency, never for accepting a wrong identity.
+### Review history — three rounds, three defect classes
 
-The spec was silent on integer range, so this was a normative gap rather than an
-implementation defect. `docs/specs/capture-event-v2.md` §Scalar constraints now fixes the
-bound at the IEEE 754 safe-integer range.
+All three were invisible behind a green suite, and none was caught by the published vectors,
+which are ASCII and small-integer.
 
-### Verified at 780f7b2
+1. **U+2028/U+2029 escaped.** Found independently by [GPT] and [CLAUDE]. The committed test
+   asserted the wrong output, entrenching it.
+2. **Lone surrogates leaked `UnicodeEncodeError`.** Found by [GPT]. The module declares
+   `DocumentError` as its canonicalization failure.
+3. **Unbounded `str(int)`.** Found by [CLAUDE], understated as a 2⁵³ precision issue,
+   recorded as an accepted limit, and the ticket closed. [GPT] demonstrated by hostile test
+   that `10**30` renders as thirty-one digits where JCS requires `1e+30`, and that closing
+   was wrong.
 
-Directly, not taken from the implementation report: 66 tests pass; `ruff` and `mypy` clean;
-golden constants traced to spec lines 83, 595, and 629, confirming expectations are fixed
-from the spec rather than derived from implementation output; `validate_request` has zero
-occurrences repository-wide, confirming the rename is complete. U+2028/U+2029 remain
-literal; lone surrogates raise `DocumentError` including in object keys.
+[GROK] predicted this entire class in his first report — that a wrong escape or number rule
+would pass every golden — before either reviewer looked. Encoder correctness now rests on
+RFC-derived and non-ASCII tests rather than on the project's own vectors.
+
+**Steward error, recorded because it should not recur:** accepting a known conformance
+divergence in identity-bearing serialization on the grounds that it was unreachable by the
+current document set. Reachability bears on urgency, never on whether a wrong identity is
+acceptable. Separately, the first written rationale for the bound overstated RFC 8785 in
+three places and was corrected in `c099d3a` after [GPT] caught it.
 
 ### Decisions recorded here
 
-- Calendar-valid timestamps: `strptime`, so a syntactically valid impossible date such as
-  Feb 31 is rejected. An impossible date is not a valid timestamp.
-- Fixture constants are enforced on every request validation, consistent with the
-  fixture-only boundary. Named `validate_fixture_request` so no later ticket mistakes it
-  for a general validator.
+- Calendar-valid timestamps: `strptime`, so an impossible date such as Feb 31 is rejected.
+- Fixture constants enforced on every request validation, consistent with the fixture-only
+  boundary. Named `validate_fixture_request` so no later ticket mistakes it for a general
+  validator.
 - Response headers accept any lowercase pairs. Scenario-specific headers belong to CE-04.
-- Integer range bounded to ±(2⁵³−1), recorded in the spec rather than the ticket because it
-  constrains every future document, not just this slice.
+- Integer range bounded to ±(2⁵³−1). Recorded in the spec, not here, because it constrains
+  every future document. The encoder applies the signed range; field rules add `≥ 0`.
 
-### Remaining unproven limits
+### Unproven limits
 
-Accepted knowingly once the integer bound lands.
-
-- Object keys containing control characters or quotes are serialized by the same
-  `_jcs_string` as values but are not directly tested; a future split of key and value
-  serialization could regress without the value tests catching it.
-- Empty objects are untested; no document in this set contains one.
+- Behaviour differs from a conforming JCS implementation only in being **fail-closed**: we
+  reject floats, out-of-range integers, lone surrogates, and non-JSON types rather than
+  serializing them. No divergence remains on a value we accept.
+- C1 controls and U+007F as string content are untested, but take the literal-BMP branch
+  already covered by non-ASCII tests — same path, not a separate rule.
+- Duplicate keys on the bytes-parse path resolve last-wins via `json.loads`, which is parser
+  behaviour rather than encoder output. I-JSON forbids duplicate names; this is not
+  currently rejected. Revisit if any input arrives from outside our own construction.
 - A lone surrogate in an object key raises `DocumentError` via the `canonical_json`
   `UnicodeEncodeError` wrapper rather than the `_jcs_string` boundary check, so its message
-  reads "JCS output is not valid UTF-8" instead of naming surrogates. The contract holds;
-  the wording is imprecise. All `_jcs` entry points route through that wrapper.
+  reads "JCS output is not valid UTF-8" instead of naming surrogates. Contract holds;
+  wording imprecise.
 - Nothing here proves Evidence Store, durability, `COMMITTED`, derive, API, PostgreSQL, or
   the seven fixture scenarios outside AR/RP/NR.
