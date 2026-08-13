@@ -89,9 +89,20 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- implement fills; may set Status: review; never Status: done -->
 
-- End commit: c099d3a
+- End commit: 142d9b2
 - Acceptance evidence:
-  - `uv run pytest -q` — 72 passed after integer-bound remediation
+  - `uv run pytest -q` — 77 passed after I-JSON noncharacter/duplicate remediation
+  - I-JSON five constraints:
+    1. UTF-8 — `test_i_json_requires_utf8`
+    2. No surrogates — `test_canonical_json_rejects_lone_surrogates_as_document_error`,
+       `test_i_json_rejects_surrogates_from_bytes_escapes`
+    3. No noncharacters — `test_i_json_rejects_noncharacters_in_keys_and_values`,
+       `test_i_json_rejects_noncharacters_from_bytes_escapes`
+    4. Safe integers — `test_canonical_json_accepts_safe_integer_boundaries`,
+       `test_canonical_json_rejects_integers_outside_safe_range`,
+       `test_canonical_json_applies_integer_bound_in_objects_and_arrays`,
+       `test_body_ref_bytes_rejects_integer_outside_safe_range`
+    5. No duplicate names — `test_i_json_rejects_duplicate_member_names`
   - I-JSON safe-integer bound on every identity-bearing integer
     (`test_canonical_json_accepts_safe_integer_boundaries`,
     `test_canonical_json_rejects_integers_outside_safe_range`,
@@ -185,6 +196,9 @@ This ticket adds **no** behavior beyond committed authority.
   - Remediation after 780f7b2 / c099d3a: encoder and `_json_int` reject
     integers outside ±9007199254740991. Also key-escape, empty-object, and
     signed-boundary tests.
+  - Remediation after c0a2189 / 142d9b2: noncharacters and duplicate member
+    names rejected on construction and bytes-parse (`\u` escapes count).
+    Never repaired.
 
 ### Public module surface (`observatory.capture_event`)
 

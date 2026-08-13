@@ -294,6 +294,60 @@ def test_canonical_json_empty_object() -> None:
     assert canonical_json({}) == b"{}"
 
 
+# ===========================================================================
+# I-JSON admissibility (capture-event-v2.md §I-JSON; RFC 7493)
+# ===========================================================================
+
+
+def test_i_json_requires_utf8() -> None:
+    with pytest.raises(DocumentError, match="UTF-8"):
+        validate_parameters(b'{"panel_id":"\xff"}')
+    assert validate_parameters(AR_REQUEST_BODY)["panel_id"] == "panel-alpha"
+
+
+def test_i_json_rejects_surrogates_from_bytes_escapes() -> None:
+    with pytest.raises(DocumentError, match="surrogate"):
+        validate_parameters(b'{"k":"\\uDEAD"}')
+    with pytest.raises(DocumentError, match="surrogate"):
+        validate_parameters(b'{"\\uD800":1}')
+
+
+def test_i_json_rejects_noncharacters_in_keys_and_values() -> None:
+    rejected = (0xFDD0, 0xFDEF, 0xFFFE, 0xFFFF, 0x10FFFE, 0x10FFFF)
+    for code_point in rejected:
+        char = chr(code_point)
+        with pytest.raises(DocumentError, match="noncharacter"):
+            canonical_json(char)
+        with pytest.raises(DocumentError, match="noncharacter"):
+            canonical_json({char: 1})
+    assert canonical_json("\ufdcf") == '"\ufdcf"'.encode()
+    assert canonical_json("\ufdf0") == '"\ufdf0"'.encode()
+
+
+def test_i_json_rejects_noncharacters_from_bytes_escapes() -> None:
+    for escape in (r"\uFDD0", r"\uFDEF", r"\uFFFE", r"\uFFFF"):
+        raw = f'{{"k":"{escape}"}}'.encode()
+        with pytest.raises(DocumentError, match="noncharacter"):
+            validate_parameters(raw)
+        raw_key = f'{{"{escape}":1}}'.encode()
+        with pytest.raises(DocumentError, match="noncharacter"):
+            validate_parameters(raw_key)
+    # U+10FFFE / U+10FFFF as JSON surrogate-pair escapes (RFC 7493 §2.1).
+    with pytest.raises(DocumentError, match="noncharacter"):
+        validate_parameters(b'{"k":"\\uDBFF\\uDFFE"}')
+    with pytest.raises(DocumentError, match="noncharacter"):
+        validate_parameters(b'{"k":"\\uDBFF\\uDFFF"}')
+
+
+def test_i_json_rejects_duplicate_member_names() -> None:
+    with pytest.raises(DocumentError, match="duplicate"):
+        validate_parameters(b'{"a":1,"a":2}')
+    with pytest.raises(DocumentError, match="duplicate"):
+        validate_parameters(b'{"outer":{"a":1,"a":2}}')
+    with pytest.raises(DocumentError, match="duplicate"):
+        validate_parameters(b'{"a":1,"\\u0061":2}')
+
+
 def test_content_digest_is_lowercase_sha256_of_exact_bytes() -> None:
     data = b"abc"
 

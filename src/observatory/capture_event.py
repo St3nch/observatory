@@ -348,15 +348,25 @@ def _utf16_key(key: object) -> bytes:
     return key.encode("utf-16-be")
 
 
+def _is_noncharacter(code: int) -> bool:
+    return 0xFDD0 <= code <= 0xFDEF or code & 0xFFFE == 0xFFFE
+
+
+def _reject_inadmissible_code_point(code: int) -> None:
+    if 0xD800 <= code <= 0xDFFF:
+        raise DocumentError("surrogate code points are forbidden")
+    if _is_noncharacter(code):
+        raise DocumentError("noncharacter code points are forbidden")
+
+
 def _jcs_string(value: str) -> str:
     chunks: list[str] = ['"']
     for char in value:
         code = ord(char)
+        _reject_inadmissible_code_point(code)
         escape = _STRING_ESCAPES.get(code)
         if escape is not None:
             chunks.append(escape)
-        elif 0xD800 <= code <= 0xDFFF:
-            raise DocumentError("lone UTF-16 surrogates are forbidden in JCS strings")
         elif code < 0x20:
             chunks.append(f"\\u{code:04x}")
         else:
@@ -365,14 +375,48 @@ def _jcs_string(value: str) -> str:
     return "".join(chunks)
 
 
+def _reject_inadmissible_strings(value: object) -> None:
+    if isinstance(value, str):
+        for char in value:
+            _reject_inadmissible_code_point(ord(char))
+        return
+    if isinstance(value, Mapping):
+        for key, item in value.items():
+            if isinstance(key, str):
+                for char in key:
+                    _reject_inadmissible_code_point(ord(char))
+            _reject_inadmissible_strings(item)
+        return
+    if isinstance(value, Sequence) and not isinstance(value, (bytes, bytearray)):
+        for item in value:
+            _reject_inadmissible_strings(item)
+
+
+def _object_pairs(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    seen: set[str] = set()
+    result: dict[str, object] = {}
+    for key, item in pairs:
+        if key in seen:
+            raise DocumentError("duplicate object member name")
+        seen.add(key)
+        result[key] = item
+    return result
+
+
 def _parse(value: object) -> tuple[object, bytes | None]:
     if isinstance(value, (bytes, bytearray)):
         raw = bytes(value)
         try:
-            parsed: object = json.loads(raw.decode("utf-8"))
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise DocumentError("invalid UTF-8") from exc
+        try:
+            parsed: object = json.loads(text, object_pairs_hook=_object_pairs)
+        except json.JSONDecodeError as exc:
             raise DocumentError("invalid JSON") from exc
+        _reject_inadmissible_strings(parsed)
         return parsed, raw
+    _reject_inadmissible_strings(value)
     return value, None
 
 
