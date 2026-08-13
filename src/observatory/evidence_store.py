@@ -39,6 +39,7 @@ __all__ = [
     "IntegrityError",
     "StoreError",
     "create_store",
+    "inspect_store",
     "open_store",
 ]
 
@@ -200,6 +201,36 @@ class EvidenceStore:
             if marker.is_file():
                 found.append(marker.parent.name)
         return found
+
+    def list_commitment_claiming_directories(
+        self, kind: Literal["attempts", "captures"]
+    ) -> list[Path]:
+        """Return exact ``COMMITTED`` parent directories under *kind* ``/v1``.
+
+        Discovery uses the marker path itself. It does not look up another
+        directory by event id.
+        """
+
+        if kind not in {"attempts", "captures"}:
+            raise ValueError(f"unknown evidence kind: {kind}")
+        base = self.root / kind / "v1"
+        if not base.is_dir():
+            return []
+        found: list[Path] = []
+        for marker in sorted(base.rglob("COMMITTED")):
+            if marker.is_file():
+                found.append(marker.parent)
+        return found
+
+    def verify_attempt_directory(self, bundle: Path) -> dict[str, object]:
+        """Verify this exact Attempt directory. Does not substitute another path."""
+
+        return self._verify_attempt_bundle(bundle, bundle.name)
+
+    def verify_capture_directory(self, bundle: Path) -> dict[str, object]:
+        """Verify this exact Capture directory. Does not substitute another path."""
+
+        return self._verify_capture_bundle(bundle, bundle.name)
 
     def read_capture_body(self, capture_id: str) -> bytes | None:
         """Return the verified Capture response body, or None when absent/uncommitted."""
@@ -534,11 +565,17 @@ def create_store(root: Path) -> EvidenceStore:
     return store
 
 
-def open_store(root: Path) -> EvidenceStore:
-    """Open a format-2 root. FORMAT is validated before any mutation, including `.tmp/` purge."""
+def inspect_store(root: Path) -> EvidenceStore:
+    """Validate FORMAT.json and return a store handle without mutating the root."""
 
     data = _read_format(root)
     _require_format_bytes(data)
-    store = EvidenceStore(root)
+    return EvidenceStore(root)
+
+
+def open_store(root: Path) -> EvidenceStore:
+    """Open a format-2 root. FORMAT is validated before any mutation, including `.tmp/` purge."""
+
+    store = inspect_store(root)
     store._purge_tmp()
     return store

@@ -1,11 +1,11 @@
 # CE-08 — Evidence status, report-only scrub, and refuse verification
 
-**Status:** ready-for-agent
+**Status:** review
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** tracer bullet
 **Blocked by:** CE-07 — Read API: health and attempt envelope
 **Approved by:** Project Steward
-**Start commit:**
+**Start commit:** b5d43bb5ffc14e563fccb51fe8f801d1ec8e3a0e
 
 ## What to build
 
@@ -118,10 +118,46 @@ This ticket adds **no** behavior beyond committed authority.
 
 <!-- implement fills; may set Status: review; never Status: done -->
 
-- End commit:
+- End commit: supplied in the implementer handoff report (a commit cannot
+  embed its own final hash).
 - Acceptance evidence:
+  - `uv run pytest -q` — 464 passed
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Status: `test_status_recognizes_openable_format2_store`,
+    `test_status_fails_closed_on_missing_format`,
+    `test_status_fails_closed_on_wrong_format_without_tmp_purge`
+  - Read-only inspect: `test_inspect_store_does_not_purge_tmp`,
+    `test_scrub_format_failure_does_not_purge_tmp`
+  - Clean scrub: `test_scrub_accepts_clean_committed_attempt_and_capture`,
+    `test_scrub_cli_module_entrypoint_clean`
+  - Identity family:
+    `test_scrub_reports_wrong_committed_contents`,
+    `test_scrub_reports_manifest_digest_mismatch`,
+    `test_scrub_reports_incorrect_terminal_identity`,
+    `test_scrub_reports_self_consistent_schema_failure`
+  - Body family:
+    `test_scrub_reports_request_body_tamper`,
+    `test_scrub_reports_response_body_tamper`,
+    `test_scrub_reports_pool_object_tamper`
+  - Aggregate family:
+    `test_scrub_reports_capture_request_mismatch`,
+    `test_scrub_reports_uncommitted_parent_attempt`
+  - Uncommitted: `test_uncommitted_directory_is_not_admitted_or_reported`
+  - Failed not valid: `test_failed_candidates_are_not_valid_evidence`
+  - Derive + API:
+    `test_derive_and_api_against_damaged_attempt`,
+    `test_derive_and_api_against_damaged_capture`,
+    `test_derive_and_api_against_damaged_response_body`
 - Unproven limits:
+  - Status uses ordinary `open_store` and may purge `.tmp/` on a
+    valid root. Scrub never does.
+  - Paths are POSIX-relative to the Evidence root.
+  - No orphan-object, duplicate-Capture, or uncommitted inventories.
+  - Not off-host, crash, or concurrent-writer proof.
+  - Report lines are candidate paths only; not a frozen schema.
 - Review findings remaining:
+  - Scrub exit 1 means one or more failed candidates; 2 is FORMAT.
 
 ## Closure
 
