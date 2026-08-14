@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS outcomes (
     derivation_version_id TEXT NOT NULL
         REFERENCES derivation_versions (derivation_version_id),
     classification TEXT NOT NULL,
-    observation_count INTEGER NOT NULL
+    observation_count BIGINT NOT NULL
         CHECK (observation_count >= 0 AND observation_count <= 9007199254740991),
     CONSTRAINT outcomes_identity
         UNIQUE NULLS NOT DISTINCT (derivation_version_id, attempt_id, capture_id)
@@ -49,10 +49,10 @@ CREATE TABLE IF NOT EXISTS observations (
     provider TEXT NOT NULL,
     panel_id TEXT NOT NULL,
     subject_key TEXT NOT NULL,
-    result_index INTEGER NOT NULL
+    result_index BIGINT NOT NULL
         CHECK (result_index >= 1 AND result_index <= 9007199254740991),
     label TEXT NOT NULL,
-    score INTEGER NOT NULL
+    score BIGINT NOT NULL
         CHECK (score >= -9007199254740991 AND score <= 9007199254740991),
     PRIMARY KEY (capture_id, derivation_version_id, within_capture_result_id)
 )
@@ -62,6 +62,12 @@ SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     DERIVATION_VERSIONS_SQL,
     OUTCOMES_SQL,
     OBSERVATIONS_SQL,
+)
+
+WIDEN_IJSON_COLUMNS_SQL: Final[tuple[str, ...]] = (
+    "ALTER TABLE outcomes ALTER COLUMN observation_count TYPE BIGINT",
+    "ALTER TABLE observations ALTER COLUMN result_index TYPE BIGINT",
+    "ALTER TABLE observations ALTER COLUMN score TYPE BIGINT",
 )
 
 
@@ -79,9 +85,11 @@ def connect(dsn: str) -> Connection[Any]:
 
 
 def apply_schema(connection: Connection[Any]) -> None:
-    """Create derivation_versions, outcomes, and observations if they are missing."""
+    """Create rebuildable tables if missing; widen leftover INTEGER I-JSON columns."""
 
     for statement in SCHEMA_STATEMENTS:
+        connection.execute(statement)
+    for statement in WIDEN_IJSON_COLUMNS_SQL:
         connection.execute(statement)
     connection.commit()
 

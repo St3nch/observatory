@@ -1,11 +1,11 @@
 # AUD-01 — Fixture milestone audit cleanup
 
-**Status:** ready-for-agent
+**Status:** review
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** milestone audit remediation
 **Blocked by:** none
 **Approved by:** Project Steward
-**Start commit:**
+**Start commit:** fc94b80849ed1e068a08f8e7a659fcf8b73bb32d
 
 ## Why this ticket exists
 
@@ -95,6 +95,40 @@ than depending on presentation text.
 ## Implementation report
 
 <!-- Implementer fills; may set Status: review; never Status: done. -->
+
+- End commit: supplied in the implementer handoff report (a commit cannot
+  embed its own final hash).
+- Start commit: `fc94b80849ed1e068a08f8e7a659fcf8b73bb32d`
+- Acceptance evidence:
+  - `uv run pytest -q` — 471 passed on real PostgreSQL 18
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Exercised major version 18:
+    `test_real_postgres_is_postgresql` reads `SHOW server_version_num` on the
+    same `postgres_dsn` connection the suite uses (including when
+    `OBSERVATORY_TEST_DATABASE_URL` selects the server) and requires
+    `int(server_version_num) // 10000 == 18`. It does not parse
+    `server_version` text or the Docker image name.
+  - Fresh-schema types: `test_fresh_schema_ijson_columns_are_bigint`
+  - I-JSON bounds accepted and adjacent values rejected by PostgreSQL CHECK:
+    `test_ijson_column_bounds_accepted_and_adjacent_rejected`
+  - INTEGER → BIGINT upgrade with row preservation and repeated apply:
+    `test_apply_schema_upgrades_integer_columns_and_preserves_rows`
+- Unproven limits:
+  - The major-18 assertion lives in this module because `tests/conftest.py`
+    is outside the ticket's permitted paths. A pytest invocation that
+    excludes `test_real_postgres_is_postgresql` can still run other tests
+    against a non-18 server.
+  - `ALTER COLUMN … TYPE BIGINT` is a lossless widen, not crash/fsync/
+    concurrency proof. PostgreSQL remains disposable, not Evidence.
+  - Upgrade proof reconstructs the prior INTEGER CREATE TABLE shape in the
+    test; it is not a restore of a production dump.
+- Remaining review findings:
+  - Standards: 0 hard / judgement-only duplication of the prior INTEGER
+    CREATE TABLE (intentional so the prior shape cannot track the live
+    schema). Duplicate major-18 test removed after review.
+  - Spec: 0 findings.
+
 
 ## Closure
 

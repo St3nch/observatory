@@ -10,6 +10,7 @@ from pathlib import Path
 
 import psycopg
 import pytest
+from psycopg.errors import CheckViolation
 
 from observatory.capture import (
     PUBLISHED_AR_ATTEMPT_ID,
@@ -146,11 +147,324 @@ def _snapshot(
 def test_real_postgres_is_postgresql(postgres_dsn: str) -> None:
     with connect(postgres_dsn) as connection:
         row = connection.execute("SELECT version()").fetchone()
-        vendor = connection.execute("SHOW server_version").fetchone()
+        numeric = connection.execute("SHOW server_version_num").fetchone()
     assert row is not None
     assert str(row[0]).startswith("PostgreSQL")
-    assert vendor is not None
-    assert str(vendor[0])
+    assert numeric is not None
+    assert int(numeric[0]) // 10000 == 18
+
+
+def _ijson_column_types(
+    connection: psycopg.Connection[tuple[object, ...]],
+) -> dict[tuple[str, str], str]:
+    rows = connection.execute(
+        """
+        SELECT table_name, column_name, data_type
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND (
+                (table_name = 'outcomes' AND column_name = 'observation_count')
+             OR (table_name = 'observations' AND column_name IN ('result_index', 'score'))
+          )
+        """
+    ).fetchall()
+    return {(str(table), str(column)): str(data_type) for table, column, data_type in rows}
+
+
+def _seed_derivation_version(
+    connection: psycopg.Connection[tuple[object, ...]], version: str
+) -> None:
+    connection.execute(
+        """
+        INSERT INTO derivation_versions (
+            derivation_version_id, adapter_contract, registered_at
+        )
+        VALUES (%s, 'fixture-panel-v1', TIMESTAMPTZ '2026-08-14T00:00:00Z')
+        """,
+        (version,),
+    )
+
+
+def _hex_id(nibble: str) -> str:
+    return nibble * 64
+
+
+def test_fresh_schema_ijson_columns_are_bigint(postgres_dsn: str) -> None:
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        types = _ijson_column_types(connection)
+    assert types == {
+        ("outcomes", "observation_count"): "bigint",
+        ("observations", "result_index"): "bigint",
+        ("observations", "score"): "bigint",
+    }
+
+
+def test_ijson_column_bounds_accepted_and_adjacent_rejected(postgres_dsn: str) -> None:
+    apply_migrations(postgres_dsn)
+    version = "v-aud01-bounds"
+    with connect(postgres_dsn) as connection:
+        _seed_derivation_version(connection, version)
+        connection.execute(
+            """
+            INSERT INTO outcomes (
+                attempt_id, capture_id, derivation_version_id,
+                classification, observation_count
+            )
+            VALUES
+                (%s, NULL, %s, 'authorized_unresolved', 0),
+                (%s, %s, %s, 'observation_admitted', 9007199254740991)
+            """,
+            (_hex_id("a"), version, _hex_id("b"), _hex_id("c"), version),
+        )
+        connection.execute(
+            """
+            INSERT INTO observations (
+                capture_id, derivation_version_id, within_capture_result_id,
+                attempt_id, provider, panel_id, subject_key,
+                result_index, label, score
+            )
+            VALUES
+                (%s, %s, 'result:1', %s, 'fixture', 'panel-alpha', 'subject-one',
+                 1, 'low-index', -9007199254740991),
+                (%s, %s, 'result:9007199254740991', %s, 'fixture', 'panel-alpha',
+                 'subject-one', 9007199254740991, 'high-index', 9007199254740991)
+            """,
+            (_hex_id("c"), version, _hex_id("b"), _hex_id("d"), version, _hex_id("e")),
+        )
+        counts = connection.execute(
+            """
+            SELECT observation_count FROM outcomes
+            ORDER BY observation_count
+            """
+        ).fetchall()
+        observation_bounds = connection.execute(
+            """
+            SELECT result_index, score FROM observations
+            ORDER BY result_index
+            """
+        ).fetchall()
+        connection.commit()
+    assert counts == [(0,), (9007199254740991,)]
+    assert observation_bounds == [
+        (1, -9007199254740991),
+        (9007199254740991, 9007199254740991),
+    ]
+
+    rejections = (
+        (
+            """
+            INSERT INTO outcomes (
+                attempt_id, capture_id, derivation_version_id,
+                classification, observation_count
+            )
+            VALUES (%s, NULL, %s, 'authorized_unresolved', -1)
+            """,
+            (_hex_id("1"), version),
+        ),
+        (
+            """
+            INSERT INTO outcomes (
+                attempt_id, capture_id, derivation_version_id,
+                classification, observation_count
+            )
+            VALUES (%s, %s, %s, 'observation_admitted', 9007199254740992)
+            """,
+            (_hex_id("2"), _hex_id("3"), version),
+        ),
+        (
+            """
+            INSERT INTO observations (
+                capture_id, derivation_version_id, within_capture_result_id,
+                attempt_id, provider, panel_id, subject_key,
+                result_index, label, score
+            )
+            VALUES (
+                %s, %s, 'result:1', %s, 'fixture', 'panel-alpha', 'subject-one',
+                0, 'below', 0
+            )
+            """,
+            (_hex_id("4"), version, _hex_id("5")),
+        ),
+        (
+            """
+            INSERT INTO observations (
+                capture_id, derivation_version_id, within_capture_result_id,
+                attempt_id, provider, panel_id, subject_key,
+                result_index, label, score
+            )
+            VALUES (
+                %s, %s, 'result:9007199254740992', %s, 'fixture', 'panel-alpha',
+                'subject-one', 9007199254740992, 'above', 0
+            )
+            """,
+            (_hex_id("6"), version, _hex_id("7")),
+        ),
+        (
+            """
+            INSERT INTO observations (
+                capture_id, derivation_version_id, within_capture_result_id,
+                attempt_id, provider, panel_id, subject_key,
+                result_index, label, score
+            )
+            VALUES (
+                %s, %s, 'result:2', %s, 'fixture', 'panel-alpha', 'subject-one',
+                2, 'score-low', -9007199254740992
+            )
+            """,
+            (_hex_id("8"), version, _hex_id("9")),
+        ),
+        (
+            """
+            INSERT INTO observations (
+                capture_id, derivation_version_id, within_capture_result_id,
+                attempt_id, provider, panel_id, subject_key,
+                result_index, label, score
+            )
+            VALUES (
+                %s, %s, 'result:3', %s, 'fixture', 'panel-alpha', 'subject-one',
+                3, 'score-high', 9007199254740992
+            )
+            """,
+            (_hex_id("0"), version, _hex_id("f")),
+        ),
+    )
+    with connect(postgres_dsn) as connection:
+        for statement, params in rejections:
+            with pytest.raises(CheckViolation):
+                connection.execute(statement, params)
+            connection.rollback()
+
+
+_PRIOR_INTEGER_SCHEMA: tuple[str, ...] = (
+    """
+CREATE TABLE IF NOT EXISTS derivation_versions (
+    derivation_version_id TEXT PRIMARY KEY
+        CHECK (derivation_version_id ~ '^[A-Za-z0-9._+:-]{1,128}$'),
+    adapter_contract TEXT NOT NULL,
+    registered_at TIMESTAMPTZ NOT NULL
+)
+""",
+    """
+CREATE TABLE IF NOT EXISTS outcomes (
+    attempt_id TEXT NOT NULL
+        CHECK (attempt_id ~ '^[0-9a-f]{64}$'),
+    capture_id TEXT
+        CHECK (capture_id IS NULL OR capture_id ~ '^[0-9a-f]{64}$'),
+    derivation_version_id TEXT NOT NULL
+        REFERENCES derivation_versions (derivation_version_id),
+    classification TEXT NOT NULL,
+    observation_count INTEGER NOT NULL
+        CHECK (observation_count >= 0 AND observation_count <= 9007199254740991),
+    CONSTRAINT outcomes_identity
+        UNIQUE NULLS NOT DISTINCT (derivation_version_id, attempt_id, capture_id)
+)
+""",
+    """
+CREATE TABLE IF NOT EXISTS observations (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '^[0-9a-f]{64}$'),
+    derivation_version_id TEXT NOT NULL
+        REFERENCES derivation_versions (derivation_version_id),
+    within_capture_result_id TEXT NOT NULL
+        CHECK (within_capture_result_id ~ '^result:[1-9][0-9]*$'),
+    attempt_id TEXT NOT NULL
+        CHECK (attempt_id ~ '^[0-9a-f]{64}$'),
+    provider TEXT NOT NULL,
+    panel_id TEXT NOT NULL,
+    subject_key TEXT NOT NULL,
+    result_index INTEGER NOT NULL
+        CHECK (result_index >= 1 AND result_index <= 9007199254740991),
+    label TEXT NOT NULL,
+    score INTEGER NOT NULL
+        CHECK (score >= -9007199254740991 AND score <= 9007199254740991),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_result_id)
+)
+""",
+)
+
+
+def _prior_integer_rows(
+    connection: psycopg.Connection[tuple[object, ...]],
+) -> tuple[list[tuple[object, ...]], list[tuple[object, ...]]]:
+    outcomes = connection.execute(
+        """
+        SELECT attempt_id, capture_id, derivation_version_id,
+               classification, observation_count
+        FROM outcomes
+        ORDER BY attempt_id
+        """
+    ).fetchall()
+    observations = connection.execute(
+        """
+        SELECT capture_id, derivation_version_id, within_capture_result_id,
+               attempt_id, provider, panel_id, subject_key,
+               result_index, label, score
+        FROM observations
+        ORDER BY result_index
+        """
+    ).fetchall()
+    return list(outcomes), list(observations)
+
+
+def test_apply_schema_upgrades_integer_columns_and_preserves_rows(
+    postgres_dsn: str,
+) -> None:
+    version = "v-aud01-upgrade"
+    attempt_id = _hex_id("a")
+    capture_id = _hex_id("b")
+    with connect(postgres_dsn) as connection:
+        for statement in _PRIOR_INTEGER_SCHEMA:
+            connection.execute(statement)
+        _seed_derivation_version(connection, version)
+        connection.execute(
+            """
+            INSERT INTO outcomes (
+                attempt_id, capture_id, derivation_version_id,
+                classification, observation_count
+            )
+            VALUES
+                (%s, NULL, %s, 'authorized_unresolved', 0),
+                (%s, %s, %s, 'observation_admitted', 7)
+            """,
+            (attempt_id, version, attempt_id, capture_id, version),
+        )
+        connection.execute(
+            """
+            INSERT INTO observations (
+                capture_id, derivation_version_id, within_capture_result_id,
+                attempt_id, provider, panel_id, subject_key,
+                result_index, label, score
+            )
+            VALUES (
+                %s, %s, 'result:3', %s, 'fixture', 'panel-alpha', 'subject-one',
+                3, 'kept', -42
+            )
+            """,
+            (capture_id, version, attempt_id),
+        )
+        before = _prior_integer_rows(connection)
+        assert _ijson_column_types(connection) == {
+            ("outcomes", "observation_count"): "integer",
+            ("observations", "result_index"): "integer",
+            ("observations", "score"): "integer",
+        }
+        connection.commit()
+
+    with connect(postgres_dsn) as connection:
+        apply_schema(connection)
+
+    with connect(postgres_dsn) as connection:
+        assert _ijson_column_types(connection) == {
+            ("outcomes", "observation_count"): "bigint",
+            ("observations", "result_index"): "bigint",
+            ("observations", "score"): "bigint",
+        }
+        after_first = _prior_integer_rows(connection)
+        apply_schema(connection)
+        after_second = _prior_integer_rows(connection)
+    assert after_first == before
+    assert after_second == before
 
 
 def test_migrate_creates_authorized_tables(postgres_dsn: str) -> None:
