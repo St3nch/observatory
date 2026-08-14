@@ -1,6 +1,6 @@
 # AUD-01 — Fixture milestone audit cleanup
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md
 **Kind:** milestone audit remediation
 **Blocked by:** none
@@ -41,21 +41,21 @@ than depending on presentation text.
 
 ## Acceptance criteria
 
-- [ ] The permanent suite fails closed unless its exercised PostgreSQL server is major
+- [x] The permanent suite fails closed unless its exercised PostgreSQL server is major
       version 18.
-- [ ] A newly created schema declares all three named columns as `BIGINT`.
-- [ ] Their existing domain rules remain true and database-enforced:
+- [x] A newly created schema declares all three named columns as `BIGINT`.
+- [x] Their existing domain rules remain true and database-enforced:
   - `observation_count` accepts 0 through 9007199254740991;
   - `result_index` accepts 1 through 9007199254740991;
   - `score` accepts -9007199254740991 through 9007199254740991.
-- [ ] Real-PostgreSQL tests demonstrate that representative safe boundary values are
+- [x] Real-PostgreSQL tests demonstrate that representative safe boundary values are
       accepted and values just outside the stated bounds are rejected by PostgreSQL.
-- [ ] Starting from the prior `INTEGER` column shape with existing rows, schema
+- [x] Starting from the prior `INTEGER` column shape with existing rows, schema
       application upgrades the three columns to `BIGINT` without losing or changing
       those rows.
-- [ ] Applying the schema again is successful and does not change existing row values.
-- [ ] Existing fixture-v1 derivation, rebuild, API, and Evidence behavior remains green.
-- [ ] `uv run pytest -q`, `uv run ruff check .`, and `uv run mypy` pass.
+- [x] Applying the schema again is successful and does not change existing row values.
+- [x] Existing fixture-v1 derivation, rebuild, API, and Evidence behavior remains green.
+- [x] `uv run pytest -q`, `uv run ruff check .`, and `uv run mypy` pass.
 
 ## Required automated tests
 
@@ -132,4 +132,17 @@ than depending on presentation text.
 
 ## Closure
 
-<!-- Project Steward only -->
+- Closed at commit: `0c014e7eecb82f52919a8d54b25dca148ad2f3e4`
+- Evidence accepted: yes
+- Steward verification:
+  - Exact comparison:
+    `fc94b80849ed1e068a08f8e7a659fcf8b73bb32d` through
+    `0c014e7eecb82f52919a8d54b25dca148ad2f3e4`
+  - `uv run pytest -q` — 471 passed on real PostgreSQL 18
+  - `uv run ruff check .` — clean
+  - `uv run mypy` — clean
+  - Fresh-schema BIGINT types, PostgreSQL-enforced safe-integer boundaries,
+    lossless prior-INTEGER widening, row preservation, and repeated schema
+    application accepted
+  - Scope and claims accepted; PostgreSQL remains rebuildable and is not
+    authoritative Evidence
