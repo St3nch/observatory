@@ -690,6 +690,12 @@ Fixture or provider transport must not begin until the Attempt has completed D4 
 D5. This ordering is structural, not advisory: the transport call must be unreachable from
 any path that has not first obtained a verified committed Attempt.
 
+Pure deterministic calculation of bytes prescribed by a fixture conformance algorithm is
+not, by itself, a transport call: it performs no acquisition and cannot create Evidence.
+Any service path that adopts calculated bytes as transport testimony or commits a Capture
+remains subject to the structural gate above. Importability of a pure conformance helper
+does not authorize transport or Evidence creation.
+
 ---
 
 ## Rebuildable PostgreSQL / entrypoints / API
