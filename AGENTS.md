@@ -110,8 +110,9 @@ add the smallest rule that addresses that failure — nothing more.
   rewriting events or bodies.
 - Never collapse missing, unstated, inapplicable, refused, failed, partial, or malformed
   states.
-- Never make real provider network calls from ordinary automated tests. First
-  implementation remains fixture-only (`fixture-panel-v1`).
+- Never make real provider network calls from ordinary automated tests. The accepted
+  first proof remains fixture-only (`fixture-panel-v1`); provider work is limited by D9
+  and the deferred register.
 - Never claim fixture or mock success proves real PostgreSQL behavior, Evidence Store
   crash/fsync/commit behavior, concurrency of Attempt authorization, or recovery.
 - Ordinary hardlinks from event bundles into the content-addressed object pool are

@@ -209,3 +209,58 @@ protect the Evidence Store off-host, not only the database.
 vs PostgreSQL tests). **Supersedes:** only D5’s storage-boundary and Outcome-as-history
 phrasing; D5’s original text remains above for history. The broader D5 idea that
 rebuildable forms are not sole authority remains in force under D8.
+
+## D9 — Provider HTTP foundation is versioned, sandboxed, and Evidence-first
+
+**Decision:** The next bounded provider proof adds HTTP event version 2 on the existing
+Evidence Store format 2 and bundle layouts v1. Event version 1 remains byte-for-byte
+frozen. One HTTP exchange is one committed Attempt and at most one Capture; redirects are
+disabled so transport never performs an uncommitted follow-up request. The first real
+adapter is one DataForSEO Google Organic Live Advanced request against
+`sandbox.dataforseo.com` under `sandbox_no_spend` policy.
+
+The Attempt preserves the exact credential-free prepared request semantics and exact body
+bytes. Credentials are injected only inside transport after the Attempt is durably
+committed and verified, and never enter Evidence, logs, URLs, or error text. The Capture
+preserves raw response-body bytes and bounded HTTP testimony. Secret-class response-header
+values are omitted under a closed rule and their names/counts are recorded so omission
+cannot masquerade as absence.
+
+The sandbox tracer is Evidence-only: fixture derivation explicitly skips its adapter
+contract before writing any PostgreSQL row. It creates no provider Outcome or Observation
+and therefore has no read-API resource yet. A later provider-specific Derivation must emit
+an Attempt-stage Outcome for every verified Attempt before it may expose provider Captures
+through the API.
+
+**Why:** The completed fixture slice proves the Evidence boundary but cannot admit real
+HTTP manifests because its closed event-v1 schemas are intentionally fixture-specific.
+Versioned HTTP testimony extends the durable substrate without reinterpreting historical
+Evidence, leaking credentials, or prematurely defining strategy-facing provider data.
+
+**Cost:** Mixed stores require version dispatch and explicit adapter filtering. The first
+provider Capture is not queryable through PostgreSQL or the API until a provider
+Derivation is deliberately designed. Asynchronous provider workflows may require a later
+event version with explicit provenance from a source Capture.
+
+**Rejected:**
+
+- changing `FORMAT.json` or the bundle layout merely to add an event schema;
+- adding HTTP keys to event version 1;
+- following redirects inside one Attempt/Capture exchange;
+- using `prior_attempt_id` to imply that a later request was constructed from earlier
+  response testimony;
+- committing credential headers, cookies, secret-derived hashes, or free-text transport
+  errors;
+- running fixture admission over provider bodies or writing provider rows under a fixture
+  derivation label;
+- treating a coarse Outcome as a substitute for the first raw provider Evidence;
+- implementing Standard/asynchronous calls, paid transport, a provider catalog, provider
+  Observations, project goals, tactics, or strategy in this proof.
+
+**Sequencing authorization:** This is a bounded exception to F3's unmet broad-provider
+trigger, authorized by the Product Owner and Steward for sandbox HTTP foundation only.
+Paid transport remains blocked by F4, off-host protection by F6, concurrent writers by F7,
+HTTP write APIs by F9, and projections by F10.
+
+**Normative detail:** `docs/specs/capture-event-v2.md`, section “Provider HTTP event
+version 2.”

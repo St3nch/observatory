@@ -44,6 +44,11 @@ paid-provider sequencing.
 **Cost of forgetting:** Observatory may prove a sound data path but remain too narrow for
 the next consumer.
 
+**Bounded activation:** D9 authorizes only the provider-neutral HTTP event foundation and
+one DataForSEO Google Organic Live Advanced tracer against the free sandbox. This does not
+fire broad provider coverage, paid transport, Standard/asynchronous operation, provider
+derivation, or a capability catalog. Those remain deferred to their recorded triggers.
+
 ## F4 — Dedicated hammer ticket
 
 **Deferred by:** D6 (substrate clarified by D8).

@@ -57,7 +57,8 @@ PostgreSQL as the sole surviving record.
 10. Ordinary hardlinks into the object pool forbidden.
 11. No secrets in Evidence.
 12. Local commit ≠ off-host protection.
-13. Fixture-first (`fixture-panel-v1`); no real provider network.
+13. The accepted first proof is fixture-only (`fixture-panel-v1`); provider network is
+    permitted only under D9 and never from ordinary automated tests.
 14. Recursive unknown-key rejection on all identity-bearing objects.
 15. fixture-panel-v1 transport is in-process, not HTTP; Capture v1 response has no HTTP
     status, `http_version`, or `url`.
@@ -388,9 +389,253 @@ Always: `request_started_at <= transport_ended_at`.
 `capture_id` = SHA-256(JCS(Capture manifest)). **Forbidden** inside preimage: `capture_id`,
 Outcome fields, secrets, unknown keys, `elapsed_ms`.
 
-### Future HTTP adapters
+### Provider HTTP event version 2
 
-Must introduce a new Capture layout/manifest version. Must not add keys to capture-event v1.
+D9 authorizes this section. It does not change `FORMAT.json`, store format 2, or either
+bundle layout v1. “New Capture layout/manifest version” means a new event-manifest
+version in the existing layout, not a new Evidence Store format.
+
+#### Dispatch and compatibility
+
+`observatory.request-fingerprint`, `observatory.attempt-event`, and
+`observatory.capture-event` version 1 remain exact and continue to mean
+`fixture-panel-v1`. Version 2 is the HTTP envelope below. A reader may inspect only
+`schema` and `version` to choose a validator; the selected validator must then re-check
+both fields, the complete closed schema, cross-field rules, and re-JCS equality. Unknown
+schema/version or adapter contract fails closed. A committed unknown event is an integrity
+failure, not an ignored event.
+
+Store paths remain `attempts/v1/...` and `captures/v1/...`. Scrub verifies every candidate
+under its event version. A mixed store containing valid event versions 1 and 2 is healthy.
+Fixture derivation must select `adapter_contract == "fixture-panel-v1"` before writing any
+PostgreSQL row; it skips version-2 DataForSEO events without rows and without an integrity
+failure. Existing fixture API reads remain valid in a mixed store. Provider HTTP events
+have no API resource until a provider-specific Derivation exists.
+
+#### First adapter contract
+
+The only event-version-2 adapter initially recognized is:
+
+    dataforseo-serp-google-organic-live-advanced-sandbox-v1
+
+Its provider is exactly `dataforseo`. Its HTTP target is exactly one POST to
+`https://sandbox.dataforseo.com/v3/serp/google/organic/live/advanced`. The request contains
+exactly one task. Redirect following is disabled; a 3xx response is complete testimony for
+this exchange and never authorizes an implicit second request.
+
+The closed `parameters` object is:
+
+| Property | JSON type | Constraint |
+|---|---|---|
+| `contract` | string | exact adapter-contract token above |
+| `keyword` | string | 1..700 Unicode scalar values; global I-JSON rules apply |
+| `location_code` | integer | 1..9007199254740991 |
+| `language_code` | string | lowercase `[a-z]{2}` |
+| `depth` | integer | exactly `10` |
+| `device` | string | exactly `desktop` |
+| `os` | string | exactly `windows` |
+
+The provider task is `parameters` without `contract`. Request-body bytes are the UTF-8 JCS
+serialization of a singleton array containing that task, with no trailing newline. Those
+exact bytes are installed before Attempt commit and sent unchanged. JCS here is this
+adapter's deterministic construction rule, not a general rule that provider bodies are
+normalized; future adapters may freeze other exact byte forms.
+
+The closed `policy` is
+`{"mode":"sandbox_no_spend","policy_version":"dataforseo-sandbox-v1"}`. Cross-field
+validation requires scheme `https`, host `sandbox.dataforseo.com`, null port, the exact
+path above, and empty query. A production host or different policy is rejected before
+transport. This authorizes no paid call.
+
+The committed request header array is exactly, in this identity-bearing order:
+
+    [["accept","application/json"],["accept-encoding","identity"],
+     ["connection","close"],["content-type","application/json"],
+     ["user-agent","observatory-dataforseo-v1"]]
+
+It represents the complete credential-free application header set. The transport may add
+only: (a) `authorization` after verified Attempt issuance, and (b) protocol-computed
+`host` and `content-length`. No other sent header is permitted. Request header names are
+lowercase. `authorization`, `proxy-authorization`, and `cookie` are forbidden in the
+committed request; credentials are also forbidden in URL userinfo, query, parameters, and
+body. The transport client must use `trust_env=False` so credentials cannot be routed
+through an ambient proxy.
+
+Credential environment names are `OBSERVATORY_DATAFORSEO_LOGIN` and
+`OBSERVATORY_DATAFORSEO_PASSWORD`. Names are configuration; values must never enter
+Evidence, stdout/stderr, logs, exceptions, or test snapshots.
+
+#### Request fingerprint and Attempt version 2
+
+The request object uses the shared closed `request` shape. For this adapter its constants
+and body are the values above.
+
+The request-fingerprint document has exactly:
+
+| Property | Constraint |
+|---|---|
+| `schema` | `observatory.request-fingerprint` |
+| `version` | integer `2` |
+| `provider` | `dataforseo` |
+| `adapter_contract` | exact first-adapter token |
+| `request` | closed adapter request |
+
+`request_fingerprint` is SHA-256(JCS(document)).
+
+Attempt version 2 has exactly the version-1 top-level fields except
+`prior_attempt_id` is not permitted; `version` is `2` and provider, adapter, request,
+parameters, and policy follow this section. `software` remains the closed object containing
+only `observatory_version`. `attempt_id` remains SHA-256(JCS(Attempt manifest)).
+`prior_attempt_id` must not be overloaded to claim that a later request was constructed
+from earlier response testimony. Standard/asynchronous provenance is deferred and may
+require a later event version with an explicit source-Capture citation.
+
+#### Response headers and body testimony
+
+Response-body Evidence is the exact received entity bytes after HTTP transfer framing and
+before content decoding. Chunk delimiters are not body bytes; gzip or other content-coded
+bytes would be body bytes. This adapter requests `accept-encoding: identity`.
+
+Response header names are lowercased; values are ISO-8859-1 round-trip strings from raw
+header bytes. Pair order and duplicates are preserved among retained headers. Under
+`header_policy = "http-headers-v1"`, these names are secret-class and their values are
+never committed:
+
+    api-key
+    authentication-info
+    authorization
+    cookie
+    proxy-authentication-info
+    proxy-authorization
+    set-cookie
+    x-access-token
+    x-api-key
+    x-auth-token
+
+For each omitted name, `omitted_headers` contains exactly one closed
+`{"name": <lowercase-name>, "count": <positive-integer>}` object. Objects are sorted by
+name; values, value hashes, and original positions are absent. A name cannot occur in both
+`headers` and `omitted_headers`. Empty omission evidence is `[]`. The adapter contract
+pins this policy, so a policy change requires a new adapter contract or event version.
+
+The closed response object contains:
+
+| Property | JSON type | Constraint |
+|---|---|---|
+| `status` | integer | 100..599 |
+| `http_version` | string | `HTTP/1.0`, `HTTP/1.1`, or `HTTP/2` |
+| `header_policy` | string | exactly `http-headers-v1` |
+| `headers` | array | retained normalized pairs above |
+| `omitted_headers` | array | closed omission objects above |
+| `body` | object | shared closed `body_state` |
+| `completeness` | string | `complete` or `partial` |
+
+There is no final-URL or redirect-chain field. The committed request already identifies
+the target and redirects are disabled.
+
+#### Transport failure and Capture version 2
+
+`transport_failure` is either null or the closed object `{"phase":...,"code":...}`. No
+message, exception representation, URL, or provider body is permitted.
+
+Phase enum:
+
+    connect | send_request | receive_headers | receive_body
+
+Code enum:
+
+    timeout | connection_failed | write_failed | protocol_failed | read_failed
+
+Cross-field rules reject nonsensical pairs: `connect` permits `timeout` or
+`connection_failed`; `send_request` permits `timeout`, `connection_failed`, or
+`write_failed`; `receive_headers` permits `timeout`, `connection_failed`,
+`protocol_failed`, or `read_failed`; `receive_body` permits `timeout`,
+`connection_failed`, `protocol_failed`, or `read_failed`.
+
+Capture version 2 has the same top-level field names as Capture version 1, with `version=2`,
+the provider/adapter/request rules above, and this section's response/failure objects.
+There is no `url` or `final_url` field.
+
+| `transport_state` | Response/timestamps | Failure |
+|---|---|---|
+| `response_complete` | non-null headers/body timestamps; response completeness `complete` | null |
+| `response_partial` | non-null headers/body timestamps; response completeness `partial`; body present, zero or more bytes | non-null; phase `receive_body` |
+| `no_response` | response and both response timestamps null | non-null; phase other than `receive_body` |
+
+Timestamp ordering and Capture parent equality remain the version-1 rules. Status 4xx/5xx
+is still `response_complete` when the body exchange completes. Provider-level status,
+task IDs, cost, result arrays, and error messages remain raw body testimony; this event
+version does not interpret them.
+
+#### Construction and proof obligations
+
+1. Validate parameters; construct and install exact request-body bytes.
+2. Construct the credential-free request, fingerprint, and Attempt version 2.
+3. Commit through D1–D4a and complete full D5 verify-on-read.
+4. Only a capability issued after step 3 can reach HTTP transport.
+5. Inject Basic Authorization from the two environment values; never mutate the committed
+   request object or body.
+6. Send with redirects disabled and `trust_env=False`.
+7. Capture raw bounded HTTP testimony, apply the closed header-omission rule, then commit
+   and verify Capture version 2.
+
+Ordinary tests use no provider network. They must prove the structural gate, exact request
+body, the closed sent-header equation, credential absence from all persisted/error
+surfaces, complete/partial/no-response branches, and unknown-version failure. A
+deterministic loopback test additionally proves on-wire request-body equality and a genuine
+truncated-body partial response. It proves no TLS, HTTP/2, timeout realism, or provider
+behavior.
+
+PF-02 code acceptance uses deterministic tests. Steward closure additionally requires one
+operator-run sandbox smoke by [CHAZ]: committed Attempt, real sandbox response committed as
+Capture, both verify-on-read, and scrub succeeds. The smoke proves sandbox authentication,
+reachability, one real response, Evidence commit, and scrub only. Sandbox data is dummy; it
+does not prove production data, paid mode, rates, or error coverage.
+
+#### HTTP-v2 conformance vector
+
+All displayed bytes are UTF-8 with no trailing newline. Fixed inputs:
+`authorized_at=2026-08-14T20:00:00.000000Z`,
+`observatory_version=conformance-http-v2`, keyword `observatory test`,
+`location_code=2840`, `language_code=en`, depth 10, desktop/windows, and nonce
+`3333333333333333333333333333333333333333333333333333333333333333`.
+
+Request body (119 bytes; SHA-256
+`d10484d2237e4b08e37a4f3fe66bd678a3dbc2dab96f9b712af1b858b8d6d070`):
+
+    [{"depth":10,"device":"desktop","keyword":"observatory test","language_code":"en","location_code":2840,"os":"windows"}]
+
+Fingerprint preimage (612 bytes):
+
+    {"adapter_contract":"dataforseo-serp-google-organic-live-advanced-sandbox-v1","provider":"dataforseo","request":{"body":{"body":{"bytes":119,"sha256":"d10484d2237e4b08e37a4f3fe66bd678a3dbc2dab96f9b712af1b858b8d6d070"},"state":"present_nonempty"},"headers":[["accept","application/json"],["accept-encoding","identity"],["connection","close"],["content-type","application/json"],["user-agent","observatory-dataforseo-v1"]],"host":"sandbox.dataforseo.com","method":"POST","path":"/v3/serp/google/organic/live/advanced","port":null,"query":[],"scheme":"https"},"schema":"observatory.request-fingerprint","version":2}
+
+`request_fingerprint =
+6b28e6d02fee14c8d8852889336baeb46bfa9918c5d4eee7b51e889f1823a2bb`.
+
+Attempt preimage (1159 bytes):
+
+    {"adapter_contract":"dataforseo-serp-google-organic-live-advanced-sandbox-v1","attempt_nonce":"3333333333333333333333333333333333333333333333333333333333333333","authorized_at":"2026-08-14T20:00:00.000000Z","parameters":{"contract":"dataforseo-serp-google-organic-live-advanced-sandbox-v1","depth":10,"device":"desktop","keyword":"observatory test","language_code":"en","location_code":2840,"os":"windows"},"policy":{"mode":"sandbox_no_spend","policy_version":"dataforseo-sandbox-v1"},"provider":"dataforseo","request":{"body":{"body":{"bytes":119,"sha256":"d10484d2237e4b08e37a4f3fe66bd678a3dbc2dab96f9b712af1b858b8d6d070"},"state":"present_nonempty"},"headers":[["accept","application/json"],["accept-encoding","identity"],["connection","close"],["content-type","application/json"],["user-agent","observatory-dataforseo-v1"]],"host":"sandbox.dataforseo.com","method":"POST","path":"/v3/serp/google/organic/live/advanced","port":null,"query":[],"scheme":"https"},"request_fingerprint":"6b28e6d02fee14c8d8852889336baeb46bfa9918c5d4eee7b51e889f1823a2bb","schema":"observatory.attempt-event","software":{"observatory_version":"conformance-http-v2"},"version":2}
+
+`attempt_id =
+22adc4841c86b7cd98b90bba683aeac204a0cb568428b590fd399e8627eb4640`.
+
+Complete-response body (55 bytes; SHA-256
+`a38a556da546f074db94ab0ea18cf557bdac6b44d637f414cc0d431a7c19a9b3`):
+
+    {"status_code":20000,"status_message":"Ok.","tasks":[]}
+
+Capture preimage (1482 bytes):
+
+    {"adapter_contract":"dataforseo-serp-google-organic-live-advanced-sandbox-v1","attempt_id":"22adc4841c86b7cd98b90bba683aeac204a0cb568428b590fd399e8627eb4640","provider":"dataforseo","request":{"body":{"body":{"bytes":119,"sha256":"d10484d2237e4b08e37a4f3fe66bd678a3dbc2dab96f9b712af1b858b8d6d070"},"state":"present_nonempty"},"headers":[["accept","application/json"],["accept-encoding","identity"],["connection","close"],["content-type","application/json"],["user-agent","observatory-dataforseo-v1"]],"host":"sandbox.dataforseo.com","method":"POST","path":"/v3/serp/google/organic/live/advanced","port":null,"query":[],"scheme":"https"},"request_fingerprint":"6b28e6d02fee14c8d8852889336baeb46bfa9918c5d4eee7b51e889f1823a2bb","request_started_at":"2026-08-14T20:00:00.100000Z","response":{"body":{"body":{"bytes":55,"sha256":"a38a556da546f074db94ab0ea18cf557bdac6b44d637f414cc0d431a7c19a9b3"},"state":"present_nonempty"},"completeness":"complete","header_policy":"http-headers-v1","headers":[["content-type","application/json"],["x-request-id","sandbox-vector"]],"http_version":"HTTP/1.1","omitted_headers":[{"count":1,"name":"set-cookie"}],"status":200},"response_body_ended_at":"2026-08-14T20:00:00.300000Z","response_headers_at":"2026-08-14T20:00:00.200000Z","schema":"observatory.capture-event","software":{"observatory_version":"conformance-http-v2"},"transport_ended_at":"2026-08-14T20:00:00.400000Z","transport_failure":null,"transport_state":"response_complete","version":2}
+
+`capture_id =
+f347962c8dad05a762a19898898fff7ed60b7c06270b61dc3d7a158fa0d396b7`.
+
+The omission marker states that one `set-cookie` field was received; its value is
+deliberately not part of the vector or Evidence. Version-2 branch tests for partial and
+no-response use the closed rules above; this published complete vector fixes the shared
+request, omission, status, HTTP-version, body, and identity semantics.
+
 
 ---
 
