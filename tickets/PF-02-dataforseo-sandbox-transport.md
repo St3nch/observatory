@@ -1,12 +1,12 @@
 # PF-02 — DataForSEO sandbox transport and Evidence smoke
 
-**Status:** ready
+**Status:** review
 **Parent spec:** docs/specs/capture-event-v2.md, “Provider HTTP event version 2”
 **Authority:** D8, D9
 **Kind:** provider-foundation implementation
 **Blocked by:** none
 **Approved by:** Project Steward
-**Start commit:** `5bb4c3db9737431154f1001b8bcfd4c86677b537`
+**Start commit:** `cb84dd6a02c895f7ed6ff23474d9f12c6104ecf1`
 
 ## Why this ticket exists
 
@@ -209,3 +209,103 @@ implementer must report changed paths, acceptance criterion → proving test map
 command output, exact sent headers/body from loopback, failure mapping, row/scrub
 accounting, weakest area, unproven limits, and any authority disagreement. Status becomes
 `review`, not `done`; only the Project Steward closes the ticket after [CHAZ]'s smoke.
+
+## Implementation report
+
+**End commit:** recorded in the implementation commit (parent
+`cb84dd6a02c895f7ed6ff23474d9f12c6104ecf1`).
+
+**Changed paths:** `src/observatory/dataforseo_sandbox.py` (new),
+`src/observatory/settings.py` (credential names + memory-only loader),
+`tests/test_dataforseo_sandbox.py` (new), `pyproject.toml` and `uv.lock` (httpx
+promoted to runtime). No edits to `capture.py`, `capture_event.py`,
+`evidence_store.py`, `derive.py`, the fixture API, or other tickets.
+
+**Structural gate:** `_build_transport_gate()` issues a closure-held
+`_VerifiedAttempt` only after `type(store) is EvidenceStore`,
+`commit_attempt`, full `read_attempt` + request-body byte match, and
+sandbox target/policy/version checks. `_exchange` accepts only an issued
+instance, marks it used, and sends the frozen body once. Public
+`capture_dataforseo_sandbox` has no URL/header/client parameters. CLI
+never reaches `_run_gated_capture`'s injection seam.
+
+### Acceptance → proving tests (`tests/test_dataforseo_sandbox.py`)
+
+| Criterion | Test |
+|---|---|
+| Closed parameters, JCS request bytes, nonce, timestamps | `test_closed_parameters_and_independent_jcs_request_bytes`, `test_fresh_nonce_shape_and_timestamp_format`, `test_caller_cannot_override_fixed_depth_device_os` |
+| No send before commit + D5 read-back; forged/subclass/failed commit/read-back/wrong adapter/paid host/policy/unknown version cannot send | `test_forged_capability_cannot_reach_send`, `test_subclassed_store_cannot_issue`, `test_failed_commit_prevents_send`, `test_failed_readback_prevents_send`, `test_wrong_adapter_paid_host_and_unknown_version_cannot_issue` |
+| One invocation / one exchange | `test_issue_then_send_is_one_exchange` |
+| Sent-header equation + exact body | `test_mock_sent_headers_and_body_equation`, `test_loopback_on_wire_headers_body_and_single_request` |
+| Credentials absent from Evidence, stdout/stderr, repr, exceptions | `test_credentials_absent_from_evidence_stdout_repr_and_exceptions`, `test_missing_credentials_fail_before_attempt` |
+| Complete nonempty/zero-byte/3xx/4xx/5xx | `test_complete_nonempty_zero_byte_and_status_classes` |
+| Connect/send/header failures → no_response | `test_connect_send_and_header_failures_are_no_response` |
+| Partial body + 8 MiB bound | `test_partial_body_read_failure`, `test_eight_mib_boundary` |
+| Duplicate retained + full denylist | `test_duplicate_retained_and_every_denylisted_header` |
+| Loopback on-wire, one request, no redirect, truncated partial | `test_loopback_on_wire_headers_body_and_single_request`, `test_loopback_redirect_is_complete_and_not_followed`, `test_loopback_truncated_body_is_partial` |
+| One Capture, D5, scrub | `test_each_branch_commits_one_verified_capture` |
+| Event-v1 bytes unchanged | `test_event_v1_bytes_remain_unchanged` |
+| CLI prints only ids; no credential args | `test_cli_prints_only_ids`, `test_cli_rejects_credential_arguments` |
+| Public API has no URL injection | `test_public_api_has_no_url_or_header_injection` |
+
+### Loopback sent headers (HTTP/1.1, 127.0.0.1)
+
+`accept: application/json`, `accept-encoding: identity`, `connection: close`,
+`content-type: application/json`, `user-agent: observatory-dataforseo-v1`,
+`authorization: Basic <sentinel>`, `host: 127.0.0.1:<port>`,
+`content-length: 119`. Entity bytes equal the 119-byte JCS task array.
+Committed Attempt still names `sandbox.dataforseo.com`.
+
+### Failure mapping
+
+- Before headers: `no_response`; connect timeout/error; send write/timeout;
+  header protocol/read/timeout.
+- After headers: `response_partial` + `receive_body` +
+  timeout/protocol_failed/read_failed.
+- Bound `limit+1`: retain 8_388_608 bytes, `receive_body`/`read_failed`.
+- Completed 3xx/4xx/5xx: `response_complete`, failure null.
+
+### Row / scrub accounting
+
+Successful mock/loopback cases: exactly one committed Attempt and one
+Capture; parent + both body copies verify; `scrub_store(store) == []`.
+No provider Derivation or PostgreSQL rows.
+
+### Commands
+
+- `uv run pytest -q` — 595 passed, 1 warning
+- `uv run ruff check .` — All checks passed
+- `uv run mypy` — Success: no issues found in 24 source files
+
+### Review
+
+Two-axis review vs `cb84dd6…`:
+- Standards: no hard violations. Duplicated denylist/JCS helpers left because
+  PF-01 modules are frozen.
+- Spec: paid-policy + WriteTimeout proofs added; Capture read-back now checks
+  document/body parity; outer-path `response_headers_at` uses headers-received
+  time. Operator smoke remains for Steward closure.
+
+### Weakest remaining area
+
+httpx exception → D9 phase/code mapping is a best-effort classification of
+client errors. Loopback proves HTTP/1.1 framing only.
+
+### Exact unproven limits
+
+- No TLS, HTTP/2, timeout realism, DNS, or DataForSEO sandbox behavior
+- Operator smoke not run ([CHAZ])
+- No crash/fsync, multi-process writer, or off-host recovery claims
+- No paid host, production data, rates, or provider semantics
+
+### Confirmation
+
+No real sandbox or paid request was made. Ordinary tests use MockTransport or
+127.0.0.1 loopback; `socket.create_connection` to any other host fails the
+suite. Sentinel credentials only.
+
+### Disagreements / authority ambiguities
+
+Ticket Start commit was pre-filled as `5bb4c3db…` (PF-01 close). The assigned
+work prompt required start at `cb84dd6a…` (PF-02 authorize), which is this
+session's clean HEAD. Recorded start is `cb84dd6a…`.
