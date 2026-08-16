@@ -56,6 +56,11 @@ provider. Ahrefs and Semrush are expected future supplementary and comparison so
 Naming them records product direction only; neither integration is currently authorized
 or scheduled, and this does not fire the trigger above.
 
+The intended DataForSEO testimony families are inventoried in
+`docs/dataforseo-surface-roadmap.md`. That roadmap records product direction and sequencing
+interest only; it does not authorize an adapter, provider call, spend, schedule, bulk
+collection, or broaden F3 by itself.
+
 ## F4 — Dedicated hammer ticket
 
 **Deferred by:** D6 (substrate clarified by D8).
