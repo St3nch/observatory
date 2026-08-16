@@ -255,7 +255,7 @@ sequence.
 | Event-v1 and sandbox HTTP-v2 bytes/IDs unchanged | `test_event_v1_and_sandbox_ids_remain_unchanged`, `test_published_http_v2_vectors_match_independent_sha256_and_lengths`, `test_event_v1_published_bytes_and_ids_are_unchanged` |
 | Mixed fixture+sandbox+paid verify/scrub | `test_mixed_store_scrubs_clean_and_unknown_version_is_failure`, `test_one_shot_allows_fixture_and_sandbox_neighbors` |
 | Fixture derive skips both provider adapters, zero provider PG rows | `test_mixed_store_derive_writes_only_fixture_rows`, `test_provider_only_store_writes_zero_postgresql_rows` |
-| Paid parameter/keyword/policy/task-byte closures | `test_closed_paid_parameters_and_independent_jcs_request_bytes`, `test_paid_keywords_reject_boundaries`, `test_paid_keywords_accept_permitted_charset`, `test_paid_parameters_reject_fixed_field_violations` |
+| Paid parameter/keyword/policy/task-byte closures | `test_closed_paid_parameters_and_independent_jcs_request_bytes`, `test_paid_keywords_reject_boundaries`, `test_paid_keywords_accept_permitted_charset`, `test_paid_parameters_reject_fixed_field_violations`, `test_paid_keywords_accept_exactly_ten_simple_words`, `test_paid_keywords_accept_exactly_ten_words_with_repeated_internal_spaces`, `test_paid_keywords_reject_eleven_simple_words_below_eighty_characters`, `test_paid_keywords_reject_eleven_words_with_repeated_spaces` |
 | Sandbox/paid adapter, host, path, policy, parameter, body confusion | `test_sandbox_and_paid_validators_reject_confused_contracts`, `test_paid_request_rejects_sandbox_host_path_and_policy`, `test_wrong_adapter_sandbox_host_and_unknown_version_cannot_issue` |
 | Missing/wrong authorization before Attempt/handler | `test_wrong_authorization_fails_before_attempt`, `test_missing_authorization_cli_fails_before_attempt`, `test_issuer_requires_authorization_before_attempt_or_exchange`, `test_issuer_rejects_malformed_and_wrong_authorization_before_attempt`, `test_public_path_rejects_non_int_authorization_before_attempt`, `test_exact_integer_20000_still_permits_mock_and_loopback` |
 | One-shot refuses second paid Attempt, including no Capture | `test_one_shot_refuses_second_paid_attempt_without_capture` |
@@ -361,3 +361,62 @@ tests proving 10-word acceptance, 11-word rejection before Attempt/handler/netwo
 unchanged published paid/sandbox/event-v1 vectors. Start from the clean Steward authority
 HEAD named in the handoff; create one new commit; do not amend or push. Implementation and
 tests remain mock/127.0.0.1 only and must spend zero provider credit.
+
+### 10-word limit remediation (on this commit; parent `7b1fa349509a13d5c1e1f5125917423a3aac53b6`)
+
+Steward audit reconciliation required official DataForSEO 10-word-per-keyword validation.
+Status remains `review`. Child SHA is this implementation commit.
+
+**Loaded skills:**
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+**Changed paths:**
+- `src/observatory/capture_event.py` (`_PAID_KEYWORD_MAX_WORDS`, `_paid_keyword_word_count`, `_paid_keywords`)
+- `tests/test_dataforseo_paid_probe.py` (adversarial 10/11-word, public-capture accounting, bypass, vector identity)
+- this ticket Implementation report only
+
+**Word-count mechanism:** `_paid_keyword_word_count` splits on ASCII space (`str.split(" ")`) and counts nonempty parts. Repeated internal spaces are separators, not empty words. The check runs in `_paid_keywords` after charset/length/boundary match, so `closed_paid_parameters`, `validate_paid_http_parameters`, `paid_http_attempt_document`, and `validate_attempt` share one closed rule. Rejection is `DocumentError` before Attempt commit, capability issue, credential injection, or handler/network.
+
+| Criterion | Test |
+|---|---|
+| 10 simple words accepted | `test_paid_keywords_accept_exactly_ten_simple_words`, `test_document_validation_accepts_ten_word_keywords`, `test_ten_word_public_capture_is_accepted` |
+| 10 words with repeated internal spaces accepted | `test_paid_keywords_accept_exactly_ten_words_with_repeated_internal_spaces`, `test_document_validation_accepts_ten_word_keywords`, `test_ten_word_public_capture_is_accepted` |
+| 11 simple words rejected, including below 80 characters | `test_paid_keywords_reject_eleven_simple_words_below_eighty_characters`, `test_document_validation_rejects_eleven_word_keywords` |
+| 11 words with repeated spaces rejected | `test_paid_keywords_reject_eleven_words_with_repeated_spaces`, `test_document_validation_rejects_eleven_word_keywords` |
+| Rejected public capture: handler=0, Attempts=0, Captures=0 | `test_eleven_word_public_capture_creates_no_attempt_handler_or_capture` (both 11-word literals) |
+| Confused/manual parameters cannot bypass | `test_confused_and_manual_paid_parameters_cannot_bypass_ten_word_limit` |
+| Published paid/sandbox/event-v1 vector bytes and IDs unchanged | `test_published_paid_request_vector_remains_byte_identical`, existing independent-vector tests |
+
+**Rejected-case accounting:** both public 11-word captures raise `DocumentError` from closed parameter validation. Handler calls = 0. Committed Attempts = 0. Committed Captures = 0.
+
+**Unchanged published vectors:**
+- paid request body 216 / `3fc7205a55a1a5c464c0ae4ebca21a1e3088c2022565929a670fdf757ab7987b`
+- paid Attempt `89904bf8a6812fb3d0d845310e4705962bb4db928b80da3be67342dff5def185`
+- sandbox Attempt `22adc4841c86b7cd98b90bba683aeac204a0cb568428b590fd399e8627eb4640`
+- event-v1 AR Attempt `46d5fb97c109b9f64a42ff3a5e62978e2c25551d6b7274603fc88456acfd9a0f`
+
+**Commands**
+- `uv run pytest -q` — 711 passed, 1 skipped (HAM-01 opt-in matrix), 1 warning
+- `uv run ruff check .` — All checks passed
+- `uv run mypy` — Success: no issues found in 27 source files
+
+**Review** vs `7b1fa349…`:
+- **Standards:** 0 hard / 3 judgement (explicit adversarial tests duplicate existing vector/charset shapes). Kept because the Steward assignment required those named proofs.
+- **Spec:** 0 missing/partial / 0 scope / 0 wrong.
+
+**Weakest remaining area:** paid transport remains a closed copy of the PF-02 stream. One-shot remains inspect-then-act in one process. Word-count is a closed local rule and is not a live DataForSEO enforcement proof.
+
+**Exact unproven limits:**
+- No TLS, HTTP/2, DNS, timeout-realism, or `api.dataforseo.com` behavior
+- No live paid operator invocation (blocked by F6)
+- No claim that DataForSEO will invoice or reject using this same word definition
+- No F7 concurrent-writer safety
+- No off-host Evidence protection
+- No provider Outcome/Observation/Derivation/API
+- Ordinary suite does not run the HAM-01 kill matrix
+
+**Authority disagreements:** none that change this implementation. Spec, ticket, and assignment agree on maximal nonempty ASCII-space runs and a maximum of 10.
+
+**Confirmation:** this remediation, tests, and report made **zero** DataForSEO, sandbox, DNS, paid-host, or other public-network calls and spent **zero** provider credit. Tests used only `httpx.MockTransport` and the existing autouse `socket.create_connection` guard. The public CLI was never run with real credentials.

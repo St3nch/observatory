@@ -21,6 +21,7 @@ from observatory.capture import PUBLISHED_AR_INPUTS, capture_fixture
 from observatory.capture_event import (
     HTTP_ADAPTER_CONTRACT,
     PAID_ADAPTER_CONTRACT,
+    PAID_POLICY,
     DocumentError,
     body_ref,
     canonical_json,
@@ -76,6 +77,10 @@ PAID_KEYWORDS = (
     "generative engine optimization",
     "ai search optimization",
 )
+TEN_WORDS = "a b c d e f g h i j"
+TEN_WORDS_REPEATED_SPACES = "a  b  c  d  e  f  g  h  i  j"
+ELEVEN_WORDS = "a b c d e f g h i j k"
+ELEVEN_WORDS_REPEATED_SPACES = "a  b  c  d  e  f  g  h  i  j  k"
 PAID_NONCE = "4444444444444444444444444444444444444444444444444444444444444444"
 PAID_AUTHORIZED_AT = "2026-08-16T16:00:00.000000Z"
 PAID_REQUEST_STARTED_AT = "2026-08-16T16:00:00.100000Z"
@@ -474,6 +479,161 @@ def test_paid_keywords_reject_boundaries(keywords: tuple[str, ...]) -> None:
 def test_paid_keywords_accept_permitted_charset(keyword: str) -> None:
     parsed = closed_paid_parameters(keywords=(keyword,))
     assert parsed["keywords"] == [keyword]
+
+
+def test_paid_keywords_accept_exactly_ten_simple_words() -> None:
+    parsed = closed_paid_parameters(keywords=(TEN_WORDS,))
+    assert parsed["keywords"] == [TEN_WORDS]
+
+
+def test_paid_keywords_accept_exactly_ten_words_with_repeated_internal_spaces() -> None:
+    parsed = closed_paid_parameters(keywords=(TEN_WORDS_REPEATED_SPACES,))
+    assert parsed["keywords"] == [TEN_WORDS_REPEATED_SPACES]
+
+
+def test_paid_keywords_reject_eleven_simple_words_below_eighty_characters() -> None:
+    assert len(ELEVEN_WORDS) < 80
+    with pytest.raises(DocumentError):
+        closed_paid_parameters(keywords=(ELEVEN_WORDS,))
+
+
+def test_paid_keywords_reject_eleven_words_with_repeated_spaces() -> None:
+    assert len(ELEVEN_WORDS_REPEATED_SPACES) < 80
+    with pytest.raises(DocumentError):
+        closed_paid_parameters(keywords=(ELEVEN_WORDS_REPEATED_SPACES,))
+
+
+def _manual_paid_parameters(*keywords: str) -> dict[str, object]:
+    return {
+        "contract": PAID_ADAPTER_CONTRACT,
+        "include_clickstream_data": False,
+        "include_serp_info": False,
+        "keywords": list(keywords),
+        "language_code": "en",
+        "location_code": 2840,
+    }
+
+
+def _consistent_manual_paid_attempt(keyword: str) -> dict[str, object]:
+    parameters = _manual_paid_parameters(keyword)
+    task = {key: value for key, value in parameters.items() if key != "contract"}
+    request = paid_http_request(body=canonical_json([task]))
+    fingerprint = paid_http_fingerprint_document(request=request)
+    return {
+        "adapter_contract": PAID_ADAPTER_CONTRACT,
+        "attempt_nonce": PAID_NONCE,
+        "authorized_at": PAID_AUTHORIZED_AT,
+        "parameters": parameters,
+        "policy": dict(PAID_POLICY),
+        "provider": "dataforseo",
+        "request": request,
+        "request_fingerprint": content_digest(canonical_json(fingerprint)),
+        "schema": "observatory.attempt-event",
+        "software": {"observatory_version": PAID_SOFTWARE},
+        "version": 2,
+    }
+
+
+def test_document_validation_accepts_ten_word_keywords() -> None:
+    ten = validate_paid_http_parameters(_manual_paid_parameters(TEN_WORDS))
+    assert ten["keywords"] == [TEN_WORDS]
+    spaced = validate_paid_http_parameters(_manual_paid_parameters(TEN_WORDS_REPEATED_SPACES))
+    assert spaced["keywords"] == [TEN_WORDS_REPEATED_SPACES]
+    attempt = validate_attempt(_consistent_manual_paid_attempt(TEN_WORDS))
+    parameters = attempt["parameters"]
+    assert isinstance(parameters, dict)
+    assert parameters["keywords"] == [TEN_WORDS]
+
+
+def test_document_validation_rejects_eleven_word_keywords() -> None:
+    with pytest.raises(DocumentError):
+        validate_paid_http_parameters(_manual_paid_parameters(ELEVEN_WORDS))
+    with pytest.raises(DocumentError):
+        validate_paid_http_parameters(_manual_paid_parameters(ELEVEN_WORDS_REPEATED_SPACES))
+    with pytest.raises(DocumentError):
+        validate_attempt(_consistent_manual_paid_attempt(ELEVEN_WORDS))
+    with pytest.raises(DocumentError):
+        validate_attempt(_consistent_manual_paid_attempt(ELEVEN_WORDS_REPEATED_SPACES))
+
+
+@pytest.mark.parametrize("keyword", [TEN_WORDS, TEN_WORDS_REPEATED_SPACES])
+def test_ten_word_public_capture_is_accepted(tmp_path: Path, keyword: str) -> None:
+    store = create_store(tmp_path / "ten-word")
+    calls: list[object] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return _streamed_response(200, PAID_RESPONSE_BODY)
+
+    outcome = _capture_mock(store, handler, inputs=_inputs(keywords=(keyword,)))
+    assert len(calls) == 1
+    assert store.list_committed_ids("attempts") == [outcome.attempt_id]
+    assert store.list_committed_ids("captures") == [outcome.capture_id]
+
+
+@pytest.mark.parametrize("keyword", [ELEVEN_WORDS, ELEVEN_WORDS_REPEATED_SPACES])
+def test_eleven_word_public_capture_creates_no_attempt_handler_or_capture(
+    tmp_path: Path, keyword: str
+) -> None:
+    store = create_store(tmp_path / "eleven-word")
+    calls: list[object] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return _streamed_response(200, PAID_RESPONSE_BODY)
+
+    with pytest.raises(DocumentError):
+        _capture_mock(store, handler, inputs=_inputs(keywords=(keyword,)))
+    assert calls == []
+    assert store.list_committed_ids("attempts") == []
+    assert store.list_committed_ids("captures") == []
+
+
+def test_confused_and_manual_paid_parameters_cannot_bypass_ten_word_limit() -> None:
+    with pytest.raises(DocumentError):
+        paid_http_attempt_document(
+            parameters=_manual_paid_parameters(ELEVEN_WORDS),
+            attempt_nonce=PAID_NONCE,
+            authorized_at=PAID_AUTHORIZED_AT,
+            observatory_version=PAID_SOFTWARE,
+        )
+    mixed = dict(_paid_parameters())
+    mixed["keywords"] = [*PAID_KEYWORDS[:4], ELEVEN_WORDS]
+    with pytest.raises(DocumentError):
+        validate_paid_http_parameters(mixed)
+    with pytest.raises(DocumentError):
+        paid_http_attempt_document(
+            parameters=mixed,
+            attempt_nonce=PAID_NONCE,
+            authorized_at=PAID_AUTHORIZED_AT,
+            observatory_version=PAID_SOFTWARE,
+        )
+    confused = dict(_paid_parameters())
+    confused["keywords"] = [ELEVEN_WORDS_REPEATED_SPACES]
+    with pytest.raises(DocumentError):
+        validate_paid_http_parameters(confused)
+    document = json.loads(PAID_ATTEMPT_PREIMAGE)
+    document["parameters"]["keywords"] = [ELEVEN_WORDS]
+    with pytest.raises(DocumentError):
+        validate_attempt(document)
+
+
+def test_published_paid_request_vector_remains_byte_identical() -> None:
+    body = paid_request_body_bytes(_paid_parameters())
+    assert body == PAID_REQUEST_BODY
+    assert len(body) == 216
+    assert _sha256(body) == PAID_REQUEST_BODY_SHA256
+    attempt = _paid_attempt()
+    assert canonical_json(attempt) == PAID_ATTEMPT_PREIMAGE
+    assert content_digest(canonical_json(attempt)) == PAID_ATTEMPT_ID
+    assert content_digest(V1_AR_ATTEMPT) == V1_AR_ATTEMPT_ID
+    sandbox = http_attempt_document(
+        parameters=SANDBOX_PARAMETERS,
+        attempt_nonce="3333333333333333333333333333333333333333333333333333333333333333",
+        authorized_at="2026-08-14T20:00:00.000000Z",
+        observatory_version="conformance-http-v2",
+    )
+    assert content_digest(canonical_json(sandbox)) == HTTP_ATTEMPT_ID
 
 
 @pytest.mark.parametrize(

@@ -79,6 +79,7 @@ _LANGUAGE_RE: Final[re.Pattern[str]] = re.compile(r"^[a-z]{2}$")
 _PAID_KEYWORD_RE: Final[re.Pattern[str]] = re.compile(
     r"^[A-Za-z0-9](?:[A-Za-z0-9 &'()+,./:-]{0,78}[A-Za-z0-9])?$"
 )
+_PAID_KEYWORD_MAX_WORDS: Final[int] = 10
 _REQUEST_CREDENTIAL_HEADERS: Final[frozenset[str]] = frozenset(
     {"authorization", "cookie", "proxy-authorization"}
 )
@@ -1091,6 +1092,10 @@ def _exact_bool(value: object, expected: bool, name: str) -> bool:
     return value
 
 
+def _paid_keyword_word_count(keyword: str) -> int:
+    return len([part for part in keyword.split(" ") if part])
+
+
 def _paid_keywords(value: object) -> list[str]:
     if not isinstance(value, list):
         raise DocumentError("parameters.keywords must be an array")
@@ -1099,7 +1104,11 @@ def _paid_keywords(value: object) -> list[str]:
     keywords: list[str] = []
     seen: set[str] = set()
     for index, item in enumerate(value):
-        if not isinstance(item, str) or _PAID_KEYWORD_RE.fullmatch(item) is None:
+        if (
+            not isinstance(item, str)
+            or _PAID_KEYWORD_RE.fullmatch(item) is None
+            or _paid_keyword_word_count(item) > _PAID_KEYWORD_MAX_WORDS
+        ):
             raise DocumentError(f"parameters.keywords[{index}] is not a permitted keyword")
         if item in seen:
             raise DocumentError("parameters.keywords must not contain duplicates")
