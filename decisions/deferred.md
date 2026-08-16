@@ -121,6 +121,8 @@ in the snapshot inventory or receipts. The Project Steward accepts this as the D
 replaceable-Evidence rehearsal and as the separately accepted off-host protection path
 required before issuing the first paid operator command.
 
+**Rehearsal-only gate status at acceptance time:**
+
 This acceptance does **not** complete F6 generally and does not itself authorize a provider
 call. Before D10's live command, the Steward must still freshly recheck official pricing
 and [CHAZ] must explicitly authorize the one-shot operator sequence. After the first paid
