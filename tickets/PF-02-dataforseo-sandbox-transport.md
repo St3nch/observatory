@@ -309,3 +309,26 @@ suite. Sentinel credentials only.
 Ticket Start commit was pre-filled as `5bb4c3db…` (PF-01 close). The assigned
 work prompt required start at `cb84dd6a…` (PF-02 authorize), which is this
 session's clean HEAD. Recorded start is `cb84dd6a…`.
+
+### Remediation (on `9d2a1aa1301d6d2b5edb902777f74b60f3e20e2f`)
+
+Steward review required three fail-closed fixes. Status remains `review`.
+
+1. **Loopback override allowlist.** `_require_loopback_endpoint` accepts only
+   `http://127.0.0.1:<1..65535>/v3/serp/google/organic/live/advanced` (no
+   query, fragment, userinfo, other host/scheme, or implicit port). Checked in
+   `_run_gated_capture` before Attempt creation and again in `_exchange`
+   before the client handler. Public/CLI still have no `endpoint`.
+   `test_paid_and_remote_endpoint_override_rejected_before_attempt` proves
+   `https://api.dataforseo.com/...` and another remote host raise `StoreError`
+   with zero handler calls, zero Attempts, and zero Captures.
+2. **Credential-echo fail-closed.** Before Capture construction, scan the
+   would-be body and retained header values for login, password, `Basic`
+   value, and bare token. Match raises `StoreError("response contained
+   credential material")` and commits no Capture. No redaction. Proven by
+   `test_credential_echo_in_body_commits_no_capture` and
+   `test_credential_echo_in_retained_header_commits_no_capture`.
+3. **Empty credentials on the object.** `DataForSEOCredentials` rejects
+   `login == ""` or `password == ""` with `CredentialError` and fixed
+   non-secret text. Proven by
+   `test_direct_empty_credentials_fail_before_attempt`.

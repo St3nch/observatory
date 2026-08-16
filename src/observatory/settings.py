@@ -27,8 +27,34 @@ class DataForSEOCredentials:
     _password: str
 
     def __init__(self, login: str, password: str) -> None:
+        if login == "" or password == "":
+            raise CredentialError(
+                "DataForSEO sandbox credentials are required and must be non-empty"
+            )
         object.__setattr__(self, "_login", login)
         object.__setattr__(self, "_password", password)
+
+    def require_nonempty(self) -> None:
+        if self._login == "" or self._password == "":
+            raise CredentialError(
+                "DataForSEO sandbox credentials are required and must be non-empty"
+            )
+
+    def contains_secret_bytes(self, blob: bytes) -> bool:
+        self.require_nonempty()
+        return any(needle in blob for needle in self._secret_byte_needles())
+
+    def contains_secret_text(self, value: str) -> bool:
+        self.require_nonempty()
+        return any(needle in value for needle in self._secret_text_needles())
+
+    def _secret_text_needles(self) -> tuple[str, ...]:
+        header = self.basic_authorization_header()
+        token = header.removeprefix("Basic ")
+        return (self._login, self._password, header, token)
+
+    def _secret_byte_needles(self) -> tuple[bytes, ...]:
+        return tuple(item.encode() for item in self._secret_text_needles())
 
     def __setattr__(self, name: str, value: object) -> None:
         raise AttributeError("credentials are immutable")
@@ -54,11 +80,6 @@ def load_dataforseo_credentials() -> DataForSEOCredentials:
 
     login = os.environ.get(DATAFORSEO_LOGIN_ENV, "")
     password = os.environ.get(DATAFORSEO_PASSWORD_ENV, "")
-    if login == "" or password == "":
-        raise CredentialError(
-            "OBSERVATORY_DATAFORSEO_LOGIN and OBSERVATORY_DATAFORSEO_PASSWORD "
-            "are required and must be non-empty"
-        )
     return DataForSEOCredentials(login, password)
 
 

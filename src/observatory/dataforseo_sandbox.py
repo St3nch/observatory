@@ -156,6 +156,61 @@ def _open_or_create(root: Path) -> EvidenceStore:
     return create_store(root)
 
 
+_LOOPBACK_ERROR: Final[str] = "loopback endpoint is not the authorized local override"
+_CREDENTIAL_ECHO_ERROR: Final[str] = "response contained credential material"
+
+
+def _require_loopback_endpoint(endpoint: str) -> None:
+    try:
+        parsed = urlparse(endpoint)
+        port = parsed.port
+    except ValueError as exc:
+        raise StoreError(_LOOPBACK_ERROR) from exc
+    if (
+        parsed.scheme != "http"
+        or parsed.hostname != "127.0.0.1"
+        or port is None
+        or port < 1
+        or port > 65535
+        or parsed.path != HTTP_PATH
+        or parsed.params != ""
+        or parsed.query != ""
+        or parsed.fragment != ""
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.netloc != f"127.0.0.1:{port}"
+    ):
+        raise StoreError(_LOOPBACK_ERROR)
+
+
+def _resolved_exchange_url(endpoint: str | None) -> str:
+    if endpoint is None:
+        return PRODUCTION_URL
+    _require_loopback_endpoint(endpoint)
+    return endpoint
+
+
+def _reject_credential_echo(
+    credentials: DataForSEOCredentials,
+    result: _ExchangeResult,
+) -> None:
+    credentials.require_nonempty()
+    if result.body is not None and credentials.contains_secret_bytes(result.body):
+        raise StoreError(_CREDENTIAL_ECHO_ERROR)
+    response = result.response
+    if not isinstance(response, Mapping):
+        return
+    headers = response.get("headers")
+    if not isinstance(headers, list):
+        return
+    for pair in headers:
+        if not isinstance(pair, list) or len(pair) != 2:
+            continue
+        value = pair[1]
+        if isinstance(value, str) and credentials.contains_secret_text(value):
+            raise StoreError(_CREDENTIAL_ECHO_ERROR)
+
+
 def _require_sandbox_target(document: Mapping[str, object]) -> None:
     if document.get("adapter_contract") != HTTP_ADAPTER_CONTRACT:
         raise StoreError("frozen Attempt is not the sandbox adapter contract")
@@ -331,12 +386,13 @@ def _build_transport_gate() -> tuple[Any, Any, type]:
             )
         if attempt._used:
             raise StoreError("sandbox transport capability is one-exchange only")
+        credentials.require_nonempty()
+        url = _resolved_exchange_url(endpoint)
         object.__setattr__(attempt, "_used", True)
         document = attempt.document
         _require_sandbox_target(document)
         body = bytes(attempt.request_body)
         authorization = credentials.basic_authorization_header()
-        url = PRODUCTION_URL if endpoint is None else endpoint
         host = urlparse(url).netloc
         headers = _sent_headers(
             authorization=authorization,
@@ -521,7 +577,9 @@ def _commit_sandbox_capture(
     store: EvidenceStore,
     capability: Any,
     result: _ExchangeResult,
+    credentials: DataForSEOCredentials,
 ) -> str:
+    _reject_credential_echo(credentials, result)
     capture = http_capture_document(
         attempt=capability.document,
         request_started_at=result.request_started_at,
@@ -560,6 +618,9 @@ def _run_gated_capture(
             "DataForSEO sandbox transport requires the concrete EvidenceStore "
             "from create_store/open_store"
         )
+    credentials.require_nonempty()
+    if endpoint is not None:
+        _require_loopback_endpoint(endpoint)
     parameters = closed_sandbox_parameters(
         keyword=inputs.keyword,
         location_code=inputs.location_code,
@@ -574,7 +635,7 @@ def _run_gated_capture(
     )
     verified = _issue_verified_attempt(store, document, request_body)
     result = _exchange(verified, credentials, endpoint=endpoint, client=client)
-    capture_id = _commit_sandbox_capture(store, verified, result)
+    capture_id = _commit_sandbox_capture(store, verified, result, credentials)
     return SandboxCaptureOutcome(
         attempt_id=verified.attempt_id,
         capture_id=capture_id,

@@ -923,3 +923,102 @@ def test_public_api_has_no_url_or_header_injection(tmp_path: Path) -> None:
     assert "url" not in signature.parameters
     assert "headers" not in signature.parameters
     assert "client" not in signature.parameters
+
+
+def _assert_endpoint_rejected(tmp_path: Path, endpoint: str) -> None:
+    store = create_store(tmp_path / hashlib.sha256(endpoint.encode()).hexdigest()[:16])
+    calls: list[object] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return _streamed_response(200, COMPLETE_BODY)
+
+    client = _mock_client(handler)
+    try:
+        with pytest.raises(StoreError):
+            _run_gated_capture(
+                store, _inputs(), _credentials(), endpoint=endpoint, client=client
+            )
+    finally:
+        client.close()
+    assert calls == []
+    assert store.list_committed_ids("attempts") == []
+    assert store.list_committed_ids("captures") == []
+
+
+def test_paid_and_remote_endpoint_override_rejected_before_attempt(
+    tmp_path: Path,
+) -> None:
+    _assert_endpoint_rejected(
+        tmp_path, "https://api.dataforseo.com/v3/serp/google/organic/live/advanced"
+    )
+    _assert_endpoint_rejected(
+        tmp_path, "https://example.invalid/v3/serp/google/organic/live/advanced"
+    )
+
+
+def test_credential_echo_in_body_commits_no_capture(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "echo-body")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return _streamed_response(200, SENTINEL_LOGIN.encode())
+
+    with pytest.raises(StoreError) as raised:
+        _capture_mock(store, handler)
+    _assert_no_secrets(raised.value, repr(raised.value), str(raised.value))
+    assert store.list_committed_ids("captures") == []
+    assert len(store.list_committed_ids("attempts")) == 1
+    tree = _tree_bytes(store.root)
+    assert SENTINEL_LOGIN.encode() not in tree
+    assert SENTINEL_PASSWORD.encode() not in tree
+    assert SENTINEL_BASIC.encode() not in tree
+    token = SENTINEL_BASIC.removeprefix("Basic ").encode()
+    assert token not in tree
+
+
+def test_credential_echo_in_retained_header_commits_no_capture(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "echo-header")
+    token = SENTINEL_BASIC.removeprefix("Basic ")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return _streamed_response(
+            200, COMPLETE_BODY, headers=[("x-echo", token)]
+        )
+
+    with pytest.raises(StoreError) as raised:
+        _capture_mock(store, handler)
+    _assert_no_secrets(raised.value, repr(raised.value), str(raised.value))
+    assert store.list_committed_ids("captures") == []
+    assert len(store.list_committed_ids("attempts")) == 1
+    tree = _tree_bytes(store.root)
+    assert SENTINEL_LOGIN.encode() not in tree
+    assert SENTINEL_PASSWORD.encode() not in tree
+    assert SENTINEL_BASIC.encode() not in tree
+    assert token.encode() not in tree
+
+
+@pytest.mark.parametrize(
+    ("login", "password"),
+    [("", SENTINEL_PASSWORD), (SENTINEL_LOGIN, "")],
+)
+def test_direct_empty_credentials_fail_before_attempt(
+    tmp_path: Path, login: str, password: str
+) -> None:
+    store = create_store(tmp_path / ("empty-" + hashlib.sha256(login.encode()).hexdigest()[:8]))
+    calls: list[object] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return _streamed_response(200, COMPLETE_BODY)
+
+    client = _mock_client(handler)
+    try:
+        with pytest.raises(CredentialError) as raised:
+            empty = DataForSEOCredentials(login, password)
+            _run_gated_capture(store, _inputs(), empty, client=client)
+    finally:
+        client.close()
+    _assert_no_secrets(raised.value, repr(raised.value), str(raised.value))
+    assert calls == []
+    assert store.list_committed_ids("attempts") == []
+    assert store.list_committed_ids("captures") == []
