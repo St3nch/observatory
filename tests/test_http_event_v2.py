@@ -570,6 +570,30 @@ def test_response_header_and_omission_boundaries_fail(
         validate_capture(document)
 
 
+def test_retained_response_header_values_are_iso8859_1_round_trip() -> None:
+    document = json.loads(HTTP_CAPTURE_PREIMAGE)
+    response = document["response"]
+    assert isinstance(response, dict)
+    response["headers"] = [
+        ["content-type", "application/json"],
+        ["x-latin-one", "\u00ff"],
+    ]
+    loaded = validate_capture(document)
+    loaded_response = loaded["response"]
+    assert isinstance(loaded_response, dict)
+    assert loaded_response["headers"] == [
+        ["content-type", "application/json"],
+        ["x-latin-one", "\u00ff"],
+    ]
+
+    document = json.loads(HTTP_CAPTURE_PREIMAGE)
+    response = document["response"]
+    assert isinstance(response, dict)
+    response["headers"] = [["x-non-latin-one", "\u0100"]]
+    with pytest.raises(DocumentError):
+        validate_capture(document)
+
+
 def test_retained_response_headers_preserve_order_and_duplicates() -> None:
     document = json.loads(HTTP_CAPTURE_PREIMAGE)
     response = document["response"]
@@ -957,9 +981,69 @@ def test_mixed_store_scrubs_clean_and_unknown_version_is_failure(tmp_path: Path)
     assert bundle in failed
 
 
+def test_unknown_committed_capture_version_is_scrub_failure(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "mixed")
+    fixture = capture_fixture(store, PUBLISHED_AR_INPUTS.as_fixture_inputs())
+    provider_attempt, provider_capture = _commit_http_complete(store)
+    assert scrub_store(store) == []
+
+    unknown = json.loads(HTTP_CAPTURE_PREIMAGE)
+    unknown["version"] = 3
+    raw = canonical_json(unknown)
+    event_id = content_digest(raw)
+    bundle = store.capture_path(event_id)
+    bundle.mkdir(parents=True)
+    (bundle / "capture.json").write_bytes(raw)
+    (bundle / "COMMITTED").write_bytes(f"{event_id}\n".encode())
+    failed = scrub_store(store)
+    assert bundle in failed
+    fixture_capture = store.capture_path(fixture.capture_id)
+    provider_dir = store.capture_path(provider_capture)
+    assert fixture_capture not in failed
+    assert provider_dir not in failed
+    assert store.read_attempt(fixture.attempt_id) is not None
+    assert store.read_capture(provider_capture) is not None
+    assert store.read_attempt(provider_attempt) is not None
+
+
 # ===========================================================================
 # Mixed-store derive skip and API
 # ===========================================================================
+
+
+def test_provider_only_store_writes_zero_postgresql_rows(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "provider-only")
+    provider_attempt, provider_capture = _commit_http_complete(store)
+    with connect(postgres_dsn) as connection:
+        summary = derive(store, connection, DEFAULT_VERSION)
+        counts = _row_counts(connection)
+        attempts, captures = _all_ids(connection)
+        version_rows = connection.execute("SELECT count(*) FROM derivation_versions").fetchone()
+        outcome_rows = connection.execute("SELECT count(*) FROM outcomes").fetchone()
+        observation_rows = connection.execute("SELECT count(*) FROM observations").fetchone()
+        provider_outcome_rows = connection.execute(
+            "SELECT count(*) FROM outcomes WHERE attempt_id = %s OR capture_id = %s",
+            (provider_attempt, provider_capture),
+        ).fetchone()
+        provider_observation_rows = connection.execute(
+            "SELECT count(*) FROM observations WHERE attempt_id = %s OR capture_id = %s",
+            (provider_attempt, provider_capture),
+        ).fetchone()
+
+    assert summary.integrity_failures == 0
+    assert summary.attempt_outcomes == 0
+    assert summary.capture_outcomes == 0
+    assert summary.observations == 0
+    assert counts == {"derivation_versions": 0, "outcomes": 0, "observations": 0}
+    assert version_rows == (0,)
+    assert outcome_rows == (0,)
+    assert observation_rows == (0,)
+    assert attempts == set()
+    assert captures == set()
+    assert provider_outcome_rows == (0,)
+    assert provider_observation_rows == (0,)
 
 
 def test_mixed_store_derive_writes_only_fixture_rows(

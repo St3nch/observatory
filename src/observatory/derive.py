@@ -320,9 +320,17 @@ def derive(
         raise TypeError("derive requires the concrete EvidenceStore")
     version = _require_version(derivation_version_id)
     apply_schema(connection)
-    _register_version(connection, version)
+    registered = False
     integrity_failures = 0
     attempt_written = 0
+
+    def ensure_registered() -> None:
+        nonlocal registered
+        if registered:
+            return
+        _register_version(connection, version)
+        registered = True
+
     for attempt_id in store.list_committed_ids("attempts"):
         try:
             document = store.read_attempt(attempt_id)
@@ -333,6 +341,7 @@ def derive(
             continue
         if document.get("adapter_contract") != ADAPTER_CONTRACT:
             continue
+        ensure_registered()
         _write_attempt_outcome(connection, version, attempt_id)
         attempt_written += 1
     capture_written = 0
@@ -381,6 +390,7 @@ def derive(
         if classified is None:
             continue
         classification, results = classified
+        ensure_registered()
         _write_capture_unit(
             connection,
             version,

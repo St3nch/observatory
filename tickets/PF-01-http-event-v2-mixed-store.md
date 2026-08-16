@@ -152,6 +152,9 @@ Unknown schema/version raises `DocumentError` (store verify → `IntegrityError`
 | Format-2 `attempts/v1` and `captures/v1` + full D5 including parent and both body copies | `test_http_v2_commits_to_unchanged_v1_layouts_and_passes_d5` |
 | Mixed scrub clean; tampered v2 integrity failure; unknown version reported | `test_mixed_store_scrubs_clean_and_unknown_version_is_failure`, `test_tampered_committed_v2_manifest_and_body_are_integrity_failures` |
 | Mixed derive writes only fixture rows; provider Evidence creates zero PG rows; no integrity bump | `test_mixed_store_derive_writes_only_fixture_rows` |
+| Provider-only store writes zero rows to every PostgreSQL table | `test_provider_only_store_writes_zero_postgresql_rows` |
+| Response-header values are ISO-8859-1 round-trip | `test_retained_response_header_values_are_iso8859_1_round_trip` |
+| Unknown committed Capture version is a scrub failure | `test_unknown_committed_capture_version_is_scrub_failure` |
 | Fixture `GET /v1/attempts/{id}` unchanged; provider Attempt 404 | `test_fixture_api_unchanged_and_provider_attempt_is_404` |
 | No HTTP transport | no client/transport added; constructors only |
 
@@ -207,8 +210,6 @@ Derivation must not reuse this function as if it were adapter-neutral.
 
 - No HTTP client, TLS, HTTP/2, timeout realism, or sandbox reachability (PF-02).
 - No crash/fsync/power-loss, multi-process writer, or off-host recovery claims.
-- Unknown-version committed Capture is covered by the same validator path as
-  Attempt; only an unknown Attempt was planted in the scrub test.
 - Ordinary tests do not prove real DataForSEO bytes or paid-host rejection at
   transport time.
 
@@ -223,6 +224,24 @@ this commit.
 None that blocked implementation. Ticket and spec agree: event v2 on store
 format 2 / bundle layouts v1; fixture derive selects `fixture-panel-v1` and
 skips valid provider Evidence without an integrity failure.
+
+### Remediation (on `de9584b0bcdecaabb25171d3a41c4ae43aa47e6e`)
+
+Steward review required three bounded fixes. Status remains `review`.
+
+1. **Provider-only derive writes zero rows.** `_register_version` now runs only
+   after valid `fixture-panel-v1` Evidence has been selected, immediately before
+   the first fixture Attempt or Capture write. A provider-only store writes
+   `derivation_versions=0`, `outcomes=0`, `observations=0`, with
+   `integrity_failures=0` (`test_provider_only_store_writes_zero_postgresql_rows`).
+   Fixture-only and mixed-store row counts are unchanged.
+2. **ISO-8859-1 response-header values.** HTTP-v2 retained header values must
+   encode and decode as ISO-8859-1. `U+00FF` is accepted; `U+0100` is rejected.
+   No extra normalization; published HTTP-v2 vector bytes unchanged
+   (`test_retained_response_header_values_are_iso8859_1_round_trip`).
+3. **Unknown committed Capture version.** A planted Capture with `version: 3` is
+   reported by scrub; valid v1/v2 bundles in the same mixed store remain
+   readable (`test_unknown_committed_capture_version_is_scrub_failure`).
 
 ## Closure
 

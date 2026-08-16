@@ -686,6 +686,16 @@ def _nonempty_string(value: object, name: str) -> str:
     return value
 
 
+def _require_iso8859_1(value: str, name: str) -> str:
+    try:
+        encoded = value.encode("iso-8859-1")
+    except UnicodeEncodeError as exc:
+        raise DocumentError(f"{name} is not an ISO-8859-1 round-trip string") from exc
+    if encoded.decode("iso-8859-1") != value:
+        raise DocumentError(f"{name} is not an ISO-8859-1 round-trip string")
+    return value
+
+
 def _pairs(value: object, name: str, *, names_lowercase: bool = False) -> list[list[str]]:
     if not isinstance(value, list):
         raise DocumentError(f"{name} must be an array of pairs")
@@ -1221,6 +1231,7 @@ def _validate_http_response(value: object) -> dict[str, object]:
     retained: set[str] = set()
     for index, pair in enumerate(headers):
         name = pair[0]
+        _require_iso8859_1(pair[1], f"response.headers[{index}] value")
         if name in _SECRET_RESPONSE_HEADERS:
             raise DocumentError(f"response.headers[{index}] retains a secret-class header")
         retained.add(name)
