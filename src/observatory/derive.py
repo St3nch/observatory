@@ -331,6 +331,8 @@ def derive(
             continue
         if document is None:
             continue
+        if document.get("adapter_contract") != ADAPTER_CONTRACT:
+            continue
         _write_attempt_outcome(connection, version, attempt_id)
         attempt_written += 1
     capture_written = 0
@@ -355,6 +357,11 @@ def derive(
             continue
         if attempt is None:
             integrity_failures += 1
+            continue
+        if (
+            capture.get("adapter_contract") != ADAPTER_CONTRACT
+            or attempt.get("adapter_contract") != ADAPTER_CONTRACT
+        ):
             continue
         parameters = attempt["parameters"]
         if not isinstance(parameters, Mapping):

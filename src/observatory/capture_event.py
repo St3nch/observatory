@@ -46,6 +46,53 @@ _FIXTURE_POLICY: Final[dict[str, str]] = {
     "policy_version": "fixture-v1",
 }
 
+HTTP_ADAPTER_CONTRACT: Final[str] = (
+    "dataforseo-serp-google-organic-live-advanced-sandbox-v1"
+)
+HTTP_PROVIDER: Final[str] = "dataforseo"
+HTTP_HOST: Final[str] = "sandbox.dataforseo.com"
+HTTP_PATH: Final[str] = "/v3/serp/google/organic/live/advanced"
+HTTP_HEADERS: Final[list[list[str]]] = [
+    ["accept", "application/json"],
+    ["accept-encoding", "identity"],
+    ["connection", "close"],
+    ["content-type", "application/json"],
+    ["user-agent", "observatory-dataforseo-v1"],
+]
+HTTP_POLICY: Final[dict[str, str]] = {
+    "mode": "sandbox_no_spend",
+    "policy_version": "dataforseo-sandbox-v1",
+}
+_LANGUAGE_RE: Final[re.Pattern[str]] = re.compile(r"^[a-z]{2}$")
+_REQUEST_CREDENTIAL_HEADERS: Final[frozenset[str]] = frozenset(
+    {"authorization", "cookie", "proxy-authorization"}
+)
+_SECRET_RESPONSE_HEADERS: Final[frozenset[str]] = frozenset(
+    {
+        "api-key",
+        "authentication-info",
+        "authorization",
+        "cookie",
+        "proxy-authentication-info",
+        "proxy-authorization",
+        "set-cookie",
+        "x-access-token",
+        "x-api-key",
+        "x-auth-token",
+    }
+)
+_HTTP_VERSIONS: Final[frozenset[str]] = frozenset({"HTTP/1.0", "HTTP/1.1", "HTTP/2"})
+_HTTP_FAILURE_CODES: Final[dict[str, frozenset[str]]] = {
+    "connect": frozenset({"timeout", "connection_failed"}),
+    "send_request": frozenset({"timeout", "connection_failed", "write_failed"}),
+    "receive_headers": frozenset(
+        {"timeout", "connection_failed", "protocol_failed", "read_failed"}
+    ),
+    "receive_body": frozenset(
+        {"timeout", "connection_failed", "protocol_failed", "read_failed"}
+    ),
+}
+
 _STRING_ESCAPES: Final[dict[int, str]] = {
     0x08: r"\b",
     0x09: r"\t",
@@ -62,6 +109,17 @@ _REQUEST_KEYS: Final[frozenset[str]] = frozenset(
 )
 _PARAMETER_KEYS: Final[frozenset[str]] = frozenset(
     {"contract", "panel_id", "subject_key", "depth", "scenario"}
+)
+_HTTP_PARAMETER_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "contract",
+        "keyword",
+        "location_code",
+        "language_code",
+        "depth",
+        "device",
+        "os",
+    }
 )
 _SOFTWARE_KEYS: Final[frozenset[str]] = frozenset({"observatory_version"})
 _POLICY_KEYS: Final[frozenset[str]] = frozenset({"mode", "policy_version"})
@@ -85,6 +143,18 @@ _ATTEMPT_REQUIRED: Final[frozenset[str]] = frozenset(
 )
 _ATTEMPT_OPTIONAL: Final[frozenset[str]] = frozenset({"prior_attempt_id"})
 _RESPONSE_KEYS: Final[frozenset[str]] = frozenset({"headers", "body", "completeness"})
+_HTTP_RESPONSE_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "status",
+        "http_version",
+        "header_policy",
+        "headers",
+        "omitted_headers",
+        "body",
+        "completeness",
+    }
+)
+_OMITTED_HEADER_KEYS: Final[frozenset[str]] = frozenset({"name", "count"})
 _FAILURE_KEYS: Final[frozenset[str]] = frozenset({"phase", "code"})
 _CAPTURE_KEYS: Final[frozenset[str]] = frozenset(
     {
@@ -113,6 +183,7 @@ class DocumentError(ValueError):
 
 __all__ = [
     "EMPTY_BODY_SHA256",
+    "HTTP_ADAPTER_CONTRACT",
     "DocumentError",
     "attempt_document",
     "body_ref",
@@ -121,10 +192,16 @@ __all__ = [
     "content_digest",
     "fingerprint_document",
     "fixture_request",
+    "http_attempt_document",
+    "http_capture_document",
+    "http_fingerprint_document",
+    "http_request",
     "validate_attempt",
     "validate_capture",
     "validate_fingerprint",
     "validate_fixture_request",
+    "validate_http_parameters",
+    "validate_http_request",
     "validate_parameters",
 ]
 
@@ -260,6 +337,107 @@ def capture_document(
     return _validate_capture(document, attempt=parent)
 
 
+def http_request(*, body: bytes) -> dict[str, object]:
+    """Build the closed HTTP-v2 sandbox request wrapping *body*."""
+
+    if len(body) < 1:
+        raise DocumentError("HTTP request body must be present_nonempty")
+    return _validate_http_request(
+        {
+            "body": {"body": body_ref(body), "state": "present_nonempty"},
+            "headers": [list(pair) for pair in HTTP_HEADERS],
+            "host": HTTP_HOST,
+            "method": "POST",
+            "path": HTTP_PATH,
+            "port": None,
+            "query": [],
+            "scheme": "https",
+        }
+    )
+
+
+def http_fingerprint_document(*, request: Mapping[str, object]) -> dict[str, object]:
+    """Build the closed request-fingerprint preimage for an HTTP-v2 request."""
+
+    return _validate_fingerprint(
+        {
+            "adapter_contract": HTTP_ADAPTER_CONTRACT,
+            "provider": HTTP_PROVIDER,
+            "request": dict(request),
+            "schema": "observatory.request-fingerprint",
+            "version": 2,
+        }
+    )
+
+
+def http_attempt_document(
+    *,
+    parameters: Mapping[str, object],
+    attempt_nonce: str,
+    authorized_at: str,
+    observatory_version: str,
+) -> dict[str, object]:
+    """Construct a closed HTTP-v2 Attempt. ``prior_attempt_id`` is not permitted."""
+
+    params = _validate_http_parameters(dict(parameters))
+    request = http_request(body=_http_request_body_bytes(params))
+    fingerprint = http_fingerprint_document(request=request)
+    document: dict[str, object] = {
+        "adapter_contract": HTTP_ADAPTER_CONTRACT,
+        "attempt_nonce": attempt_nonce,
+        "authorized_at": authorized_at,
+        "parameters": params,
+        "policy": dict(HTTP_POLICY),
+        "provider": HTTP_PROVIDER,
+        "request": request,
+        "request_fingerprint": content_digest(canonical_json(fingerprint)),
+        "schema": "observatory.attempt-event",
+        "software": {"observatory_version": observatory_version},
+        "version": 2,
+    }
+    return _validate_attempt(document)
+
+
+def http_capture_document(
+    *,
+    attempt: Mapping[str, object],
+    request_started_at: str,
+    transport_ended_at: str,
+    transport_state: str,
+    response: Mapping[str, object] | None,
+    transport_failure: Mapping[str, object] | None,
+    response_headers_at: str | None,
+    response_body_ended_at: str | None,
+    observatory_version: str | None = None,
+) -> dict[str, object]:
+    """Construct a closed HTTP-v2 Capture citing a validated parent Attempt."""
+
+    parent = validate_attempt(attempt)
+    software = (
+        {"observatory_version": observatory_version}
+        if observatory_version is not None
+        else dict(cast(Mapping[str, object], parent["software"]))
+    )
+    document: dict[str, object] = {
+        "adapter_contract": HTTP_ADAPTER_CONTRACT,
+        "attempt_id": content_digest(canonical_json(parent)),
+        "provider": HTTP_PROVIDER,
+        "request": parent["request"],
+        "request_fingerprint": parent["request_fingerprint"],
+        "request_started_at": request_started_at,
+        "response": None if response is None else dict(response),
+        "response_body_ended_at": response_body_ended_at,
+        "response_headers_at": response_headers_at,
+        "schema": "observatory.capture-event",
+        "software": software,
+        "transport_ended_at": transport_ended_at,
+        "transport_failure": None if transport_failure is None else dict(transport_failure),
+        "transport_state": transport_state,
+        "version": 2,
+    }
+    return _validate_capture(document, attempt=parent)
+
+
 def validate_parameters(value: object) -> dict[str, object]:
     """Validate a closed fixture request / Attempt `parameters` document."""
 
@@ -274,6 +452,24 @@ def validate_fixture_request(value: object) -> dict[str, object]:
 
     parsed, original = _parse(value)
     document = _validate_fixture_request(parsed)
+    _require_re_jcs(document, original)
+    return document
+
+
+def validate_http_parameters(value: object) -> dict[str, object]:
+    """Validate a closed HTTP-v2 sandbox `parameters` document."""
+
+    parsed, original = _parse(value)
+    document = _validate_http_parameters(parsed)
+    _require_re_jcs(document, original)
+    return document
+
+
+def validate_http_request(value: object) -> dict[str, object]:
+    """Validate a closed HTTP-v2 sandbox `request` object."""
+
+    parsed, original = _parse(value)
+    document = _validate_http_request(parsed)
     _require_re_jcs(document, original)
     return document
 
@@ -540,7 +736,7 @@ def _validate_body_state(value: object, name: str) -> dict[str, object]:
     raise DocumentError(f"{name}.state is not a valid body_state")
 
 
-def _validate_fixture_request(value: object) -> dict[str, object]:
+def _validate_request_shape(value: object) -> dict[str, object]:
     obj = _object(value, "request")
     _reject_unknown(obj, _REQUEST_KEYS, "request")
     method = _nonempty_string(_require(obj, "method", "request"), "request.method")
@@ -559,17 +755,6 @@ def _validate_fixture_request(value: object) -> dict[str, object]:
     query = _pairs(_require(obj, "query", "request"), "request.query")
     headers = _pairs(_require(obj, "headers", "request"), "request.headers", names_lowercase=True)
     body = _validate_body_state(_require(obj, "body", "request"), "request.body")
-    if (
-        method != "POST"
-        or scheme != "fixture"
-        or host != "fixture-panel"
-        or port is not None
-        or path != "/v1/measure"
-        or query != []
-        or headers != _FIXTURE_HEADERS
-        or body.get("state") != "present_nonempty"
-    ):
-        raise DocumentError("request does not match fixture-panel-v1 constants")
     return {
         "body": body,
         "headers": headers,
@@ -580,6 +765,51 @@ def _validate_fixture_request(value: object) -> dict[str, object]:
         "query": query,
         "scheme": scheme,
     }
+
+
+def _validate_fixture_request(value: object) -> dict[str, object]:
+    request = _validate_request_shape(value)
+    if (
+        request["method"] != "POST"
+        or request["scheme"] != "fixture"
+        or request["host"] != "fixture-panel"
+        or request["port"] is not None
+        or request["path"] != "/v1/measure"
+        or request["query"] != []
+        or request["headers"] != _FIXTURE_HEADERS
+        or not isinstance(request["body"], Mapping)
+        or request["body"].get("state") != "present_nonempty"
+    ):
+        raise DocumentError("request does not match fixture-panel-v1 constants")
+    return request
+
+
+def _validate_http_request(value: object) -> dict[str, object]:
+    request = _validate_request_shape(value)
+    headers = request["headers"]
+    if not isinstance(headers, list):
+        raise DocumentError("request.headers must be an array of pairs")
+    for index, pair in enumerate(headers):
+        if not isinstance(pair, list) or len(pair) != 2:
+            raise DocumentError(f"request.headers[{index}] must be a pair of two strings")
+        name = pair[0]
+        if not isinstance(name, str):
+            raise DocumentError(f"request.headers[{index}] must be a pair of two strings")
+        if name in _REQUEST_CREDENTIAL_HEADERS:
+            raise DocumentError(f"request.headers[{index}] is a credential-class header")
+    if (
+        request["method"] != "POST"
+        or request["scheme"] != "https"
+        or request["host"] != HTTP_HOST
+        or request["port"] is not None
+        or request["path"] != HTTP_PATH
+        or request["query"] != []
+        or request["headers"] != HTTP_HEADERS
+        or not isinstance(request["body"], Mapping)
+        or request["body"].get("state") != "present_nonempty"
+    ):
+        raise DocumentError("request does not match the sandbox HTTP adapter contract")
+    return request
 
 
 def _validate_parameters(value: object) -> dict[str, object]:
@@ -611,6 +841,59 @@ def _validate_parameters(value: object) -> dict[str, object]:
     }
 
 
+def _http_task(parameters: Mapping[str, object]) -> dict[str, object]:
+    return {
+        "depth": parameters["depth"],
+        "device": parameters["device"],
+        "keyword": parameters["keyword"],
+        "language_code": parameters["language_code"],
+        "location_code": parameters["location_code"],
+        "os": parameters["os"],
+    }
+
+
+def _http_request_body_bytes(parameters: Mapping[str, object]) -> bytes:
+    return canonical_json([_http_task(parameters)])
+
+
+def _validate_http_parameters(value: object) -> dict[str, object]:
+    obj = _object(value, "parameters")
+    _reject_unknown(obj, _HTTP_PARAMETER_KEYS, "parameters")
+    contract = _exact_string(
+        _require(obj, "contract", "parameters"),
+        HTTP_ADAPTER_CONTRACT,
+        "parameters.contract",
+    )
+    keyword = _require(obj, "keyword", "parameters")
+    if not isinstance(keyword, str) or not (1 <= len(keyword) <= 700):
+        raise DocumentError("parameters.keyword must be 1..700 Unicode scalar values")
+    location_code = _json_int(
+        _require(obj, "location_code", "parameters"),
+        "parameters.location_code",
+    )
+    if location_code < 1:
+        raise DocumentError("parameters.location_code must be 1..9007199254740991")
+    language_code = _token(
+        _require(obj, "language_code", "parameters"),
+        _LANGUAGE_RE,
+        "parameters.language_code",
+    )
+    depth = _json_int(_require(obj, "depth", "parameters"), "parameters.depth")
+    if depth != 10:
+        raise DocumentError("parameters.depth must be exactly 10")
+    device = _exact_string(_require(obj, "device", "parameters"), "desktop", "parameters.device")
+    os_name = _exact_string(_require(obj, "os", "parameters"), "windows", "parameters.os")
+    return {
+        "contract": contract,
+        "depth": depth,
+        "device": device,
+        "keyword": keyword,
+        "language_code": language_code,
+        "location_code": location_code,
+        "os": os_name,
+    }
+
+
 def _validate_software(value: object) -> dict[str, object]:
     obj = _object(value, "software")
     _reject_unknown(obj, _SOFTWARE_KEYS, "software")
@@ -634,8 +917,39 @@ def _validate_policy(value: object) -> dict[str, object]:
     return {"mode": mode, "policy_version": policy_version}
 
 
+def _validate_http_policy(value: object) -> dict[str, object]:
+    obj = _object(value, "policy")
+    _reject_unknown(obj, _POLICY_KEYS, "policy")
+    mode = _exact_string(_require(obj, "mode", "policy"), "sandbox_no_spend", "policy.mode")
+    policy_version = _exact_string(
+        _require(obj, "policy_version", "policy"),
+        "dataforseo-sandbox-v1",
+        "policy.policy_version",
+    )
+    return {"mode": mode, "policy_version": policy_version}
+
+
+def _schema_version(obj: Mapping[str, object]) -> tuple[object, object]:
+    """Read only schema and version to choose a validator branch."""
+
+    return obj.get("schema"), obj.get("version")
+
+
+def _is_version(value: object, expected: int) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value == expected
+
+
 def _validate_fingerprint(value: object) -> dict[str, object]:
     obj = _object(value, "fingerprint")
+    schema, version = _schema_version(obj)
+    if schema == "observatory.request-fingerprint" and _is_version(version, 1):
+        return _validate_fingerprint_v1(obj)
+    if schema == "observatory.request-fingerprint" and _is_version(version, 2):
+        return _validate_fingerprint_v2(obj)
+    raise DocumentError("unknown fingerprint schema or version")
+
+
+def _validate_fingerprint_v1(obj: Mapping[str, object]) -> dict[str, object]:
     _reject_unknown(obj, _FINGERPRINT_KEYS, "fingerprint")
     schema = _exact_string(
         _require(obj, "schema", "fingerprint"),
@@ -665,15 +979,51 @@ def _validate_fingerprint(value: object) -> dict[str, object]:
     }
 
 
-def _expected_fingerprint(request: Mapping[str, object]) -> str:
+def _validate_fingerprint_v2(obj: Mapping[str, object]) -> dict[str, object]:
+    _reject_unknown(obj, _FINGERPRINT_KEYS, "fingerprint")
+    schema = _exact_string(
+        _require(obj, "schema", "fingerprint"),
+        "observatory.request-fingerprint",
+        "fingerprint.schema",
+    )
+    version = _json_int(_require(obj, "version", "fingerprint"), "fingerprint.version")
+    if version != 2:
+        raise DocumentError("fingerprint.version must be 2")
+    provider = _exact_string(
+        _require(obj, "provider", "fingerprint"),
+        HTTP_PROVIDER,
+        "fingerprint.provider",
+    )
+    adapter = _exact_string(
+        _require(obj, "adapter_contract", "fingerprint"),
+        HTTP_ADAPTER_CONTRACT,
+        "fingerprint.adapter_contract",
+    )
+    request = _validate_http_request(_require(obj, "request", "fingerprint"))
+    return {
+        "adapter_contract": adapter,
+        "provider": provider,
+        "request": request,
+        "schema": schema,
+        "version": version,
+    }
+
+
+def _expected_fingerprint(
+    request: Mapping[str, object],
+    *,
+    version: int,
+    provider: str,
+    adapter_contract: str,
+) -> str:
     return content_digest(
         canonical_json(
             {
-                "adapter_contract": "fixture-panel-v1",
-                "provider": "fixture",
+                "adapter_contract": adapter_contract,
+                "provider": provider,
                 "request": request,
                 "schema": "observatory.request-fingerprint",
-                "version": 1,
+                "version": version,
             }
         )
     )
@@ -682,8 +1032,9 @@ def _expected_fingerprint(request: Mapping[str, object]) -> str:
 def _parameters_match_request_body(
     parameters: Mapping[str, object],
     request: Mapping[str, object],
+    *,
+    encoded: bytes,
 ) -> None:
-    encoded = canonical_json(parameters)
     body = request["body"]
     if not isinstance(body, Mapping):
         raise DocumentError("request.body is not an object")
@@ -696,6 +1047,15 @@ def _parameters_match_request_body(
 
 def _validate_attempt(value: object) -> dict[str, object]:
     obj = _object(value, "attempt")
+    schema, version = _schema_version(obj)
+    if schema == "observatory.attempt-event" and _is_version(version, 1):
+        return _validate_attempt_v1(obj)
+    if schema == "observatory.attempt-event" and _is_version(version, 2):
+        return _validate_attempt_v2(obj)
+    raise DocumentError("unknown attempt schema or version")
+
+
+def _validate_attempt_v1(obj: Mapping[str, object]) -> dict[str, object]:
     _reject_unknown(obj, _ATTEMPT_REQUIRED | _ATTEMPT_OPTIONAL, "attempt")
     missing = sorted(key for key in _ATTEMPT_REQUIRED if key not in obj)
     if missing:
@@ -724,9 +1084,11 @@ def _validate_attempt(value: object) -> dict[str, object]:
     parameters = _validate_parameters(_require(obj, "parameters", "attempt"))
     policy = _validate_policy(_require(obj, "policy", "attempt"))
     software = _validate_software(_require(obj, "software", "attempt"))
-    if request_fingerprint != _expected_fingerprint(request):
+    if request_fingerprint != _expected_fingerprint(
+        request, version=1, provider=provider, adapter_contract=adapter
+    ):
         raise DocumentError("request_fingerprint does not match recompute")
-    _parameters_match_request_body(parameters, request)
+    _parameters_match_request_body(parameters, request, encoded=canonical_json(parameters))
     document: dict[str, object] = {
         "adapter_contract": adapter,
         "attempt_nonce": nonce,
@@ -747,6 +1109,61 @@ def _validate_attempt(value: object) -> dict[str, object]:
     return document
 
 
+def _validate_attempt_v2(obj: Mapping[str, object]) -> dict[str, object]:
+    _reject_unknown(obj, _ATTEMPT_REQUIRED, "attempt")
+    missing = sorted(key for key in _ATTEMPT_REQUIRED if key not in obj)
+    if missing:
+        raise DocumentError(f"attempt missing {', '.join(missing)}")
+    schema = _exact_string(
+        _require(obj, "schema", "attempt"),
+        "observatory.attempt-event",
+        "attempt.schema",
+    )
+    version = _json_int(_require(obj, "version", "attempt"), "attempt.version")
+    if version != 2:
+        raise DocumentError("attempt.version must be 2")
+    nonce = _hex64(_require(obj, "attempt_nonce", "attempt"), "attempt.attempt_nonce")
+    provider = _exact_string(
+        _require(obj, "provider", "attempt"),
+        HTTP_PROVIDER,
+        "attempt.provider",
+    )
+    adapter = _exact_string(
+        _require(obj, "adapter_contract", "attempt"),
+        HTTP_ADAPTER_CONTRACT,
+        "attempt.adapter_contract",
+    )
+    authorized_at = _timestamp(_require(obj, "authorized_at", "attempt"), "attempt.authorized_at")
+    request_fingerprint = _hex64(
+        _require(obj, "request_fingerprint", "attempt"),
+        "attempt.request_fingerprint",
+    )
+    request = _validate_http_request(_require(obj, "request", "attempt"))
+    parameters = _validate_http_parameters(_require(obj, "parameters", "attempt"))
+    policy = _validate_http_policy(_require(obj, "policy", "attempt"))
+    software = _validate_software(_require(obj, "software", "attempt"))
+    if request_fingerprint != _expected_fingerprint(
+        request, version=2, provider=provider, adapter_contract=adapter
+    ):
+        raise DocumentError("request_fingerprint does not match recompute")
+    _parameters_match_request_body(
+        parameters, request, encoded=_http_request_body_bytes(parameters)
+    )
+    return {
+        "adapter_contract": adapter,
+        "attempt_nonce": nonce,
+        "authorized_at": authorized_at,
+        "parameters": parameters,
+        "policy": policy,
+        "provider": provider,
+        "request": request,
+        "request_fingerprint": request_fingerprint,
+        "schema": schema,
+        "software": software,
+        "version": version,
+    }
+
+
 def _validate_response(value: object) -> dict[str, object]:
     obj = _object(value, "response")
     _reject_unknown(obj, _RESPONSE_KEYS, "response")
@@ -756,6 +1173,74 @@ def _validate_response(value: object) -> dict[str, object]:
     if completeness not in {"complete", "partial"}:
         raise DocumentError("response.completeness must be complete or partial")
     return {"body": body, "completeness": completeness, "headers": headers}
+
+
+def _validate_omitted_headers(value: object) -> list[dict[str, int | str]]:
+    if not isinstance(value, list):
+        raise DocumentError("response.omitted_headers must be an array")
+    omitted: list[dict[str, int | str]] = []
+    names: list[str] = []
+    for index, item in enumerate(value):
+        obj = _object(item, f"response.omitted_headers[{index}]")
+        _reject_unknown(obj, _OMITTED_HEADER_KEYS, f"response.omitted_headers[{index}]")
+        name = _require(obj, "name", f"response.omitted_headers[{index}]")
+        if not isinstance(name, str) or name != name.lower():
+            raise DocumentError(f"response.omitted_headers[{index}].name must be lowercase")
+        if name not in _SECRET_RESPONSE_HEADERS:
+            raise DocumentError(f"response.omitted_headers[{index}].name is not secret-class")
+        count = _json_int(
+            _require(obj, "count", f"response.omitted_headers[{index}]"),
+            f"response.omitted_headers[{index}].count",
+        )
+        if count < 1:
+            raise DocumentError(f"response.omitted_headers[{index}].count must be >= 1")
+        if name in names:
+            raise DocumentError("response.omitted_headers names must be unique")
+        names.append(name)
+        omitted.append({"count": count, "name": name})
+    if names != sorted(names):
+        raise DocumentError("response.omitted_headers must be sorted by name")
+    return omitted
+
+
+def _validate_http_response(value: object) -> dict[str, object]:
+    obj = _object(value, "response")
+    _reject_unknown(obj, _HTTP_RESPONSE_KEYS, "response")
+    status = _json_int(_require(obj, "status", "response"), "response.status")
+    if status < 100 or status > 599:
+        raise DocumentError("response.status must be 100..599")
+    http_version = _require(obj, "http_version", "response")
+    if not isinstance(http_version, str) or http_version not in _HTTP_VERSIONS:
+        raise DocumentError("response.http_version is not a permitted HTTP version")
+    header_policy = _exact_string(
+        _require(obj, "header_policy", "response"),
+        "http-headers-v1",
+        "response.header_policy",
+    )
+    headers = _pairs(_require(obj, "headers", "response"), "response.headers", names_lowercase=True)
+    retained: set[str] = set()
+    for index, pair in enumerate(headers):
+        name = pair[0]
+        if name in _SECRET_RESPONSE_HEADERS:
+            raise DocumentError(f"response.headers[{index}] retains a secret-class header")
+        retained.add(name)
+    omitted = _validate_omitted_headers(_require(obj, "omitted_headers", "response"))
+    omitted_names = {item["name"] for item in omitted}
+    if retained & omitted_names:
+        raise DocumentError("response headers and omitted_headers must not overlap")
+    body = _validate_body_state(_require(obj, "body", "response"), "response.body")
+    completeness = _require(obj, "completeness", "response")
+    if completeness not in {"complete", "partial"}:
+        raise DocumentError("response.completeness must be complete or partial")
+    return {
+        "body": body,
+        "completeness": completeness,
+        "header_policy": header_policy,
+        "headers": headers,
+        "http_version": http_version,
+        "omitted_headers": omitted,
+        "status": status,
+    }
 
 
 def _validate_transport_failure(value: object) -> dict[str, object]:
@@ -771,6 +1256,19 @@ def _validate_transport_failure(value: object) -> dict[str, object]:
         "fixture_no_response",
         "transport_failure.code",
     )
+    return {"code": code, "phase": phase}
+
+
+def _validate_http_transport_failure(value: object) -> dict[str, object]:
+    obj = _object(value, "transport_failure")
+    _reject_unknown(obj, _FAILURE_KEYS, "transport_failure")
+    phase = _require(obj, "phase", "transport_failure")
+    if not isinstance(phase, str) or phase not in _HTTP_FAILURE_CODES:
+        raise DocumentError("transport_failure.phase is not a permitted HTTP phase")
+    code = _require(obj, "code", "transport_failure")
+    allowed = _HTTP_FAILURE_CODES[phase]
+    if not isinstance(code, str) or code not in allowed:
+        raise DocumentError("transport_failure.code is not permitted for this phase")
     return {"code": code, "phase": phase}
 
 
@@ -822,6 +1320,55 @@ def _enforce_capture_branch(
     raise DocumentError("transport_state is not a valid Capture transport_state")
 
 
+def _enforce_http_capture_branch(
+    *,
+    transport_state: str,
+    response_headers_at: str | None,
+    response_body_ended_at: str | None,
+    response: Mapping[str, object] | None,
+    transport_failure: Mapping[str, object] | None,
+) -> None:
+    if transport_state == "response_complete":
+        if response_headers_at is None or response_body_ended_at is None:
+            raise DocumentError("response_complete requires response timestamps")
+        if response is None:
+            raise DocumentError("response_complete requires a response object")
+        if transport_failure is not None:
+            raise DocumentError("response_complete requires transport_failure null")
+        if response.get("completeness") != "complete":
+            raise DocumentError("response_complete requires completeness=complete")
+        return
+    if transport_state == "response_partial":
+        if response_headers_at is None or response_body_ended_at is None:
+            raise DocumentError("response_partial requires response timestamps")
+        if response is None:
+            raise DocumentError("response_partial requires a response object")
+        if transport_failure is None:
+            raise DocumentError("response_partial requires a transport_failure object")
+        if transport_failure.get("phase") != "receive_body":
+            raise DocumentError("response_partial requires phase receive_body")
+        if response.get("completeness") != "partial":
+            raise DocumentError("response_partial requires completeness=partial")
+        body = response.get("body")
+        if not isinstance(body, Mapping) or body.get("state") not in {
+            "present_nonempty",
+            "present_zero_bytes",
+        }:
+            raise DocumentError("response_partial body must be present")
+        return
+    if transport_state == "no_response":
+        if response_headers_at is not None or response_body_ended_at is not None:
+            raise DocumentError("no_response requires null response timestamps")
+        if response is not None:
+            raise DocumentError("no_response requires response null")
+        if transport_failure is None:
+            raise DocumentError("no_response requires a transport_failure object")
+        if transport_failure.get("phase") == "receive_body":
+            raise DocumentError("no_response forbids phase receive_body")
+        return
+    raise DocumentError("transport_state is not a valid Capture transport_state")
+
+
 def _enforce_timestamp_order(
     request_started_at: str,
     response_headers_at: str | None,
@@ -861,6 +1408,19 @@ def _validate_capture(
     attempt: Mapping[str, object] | None,
 ) -> dict[str, object]:
     obj = _object(value, "capture")
+    schema, version = _schema_version(obj)
+    if schema == "observatory.capture-event" and _is_version(version, 1):
+        return _validate_capture_v1(obj, attempt=attempt)
+    if schema == "observatory.capture-event" and _is_version(version, 2):
+        return _validate_capture_v2(obj, attempt=attempt)
+    raise DocumentError("unknown capture schema or version")
+
+
+def _validate_capture_v1(
+    obj: Mapping[str, object],
+    *,
+    attempt: Mapping[str, object] | None,
+) -> dict[str, object]:
     _reject_unknown(obj, _CAPTURE_KEYS, "capture")
     missing = sorted(key for key in _CAPTURE_KEYS if key not in obj)
     if missing:
@@ -888,7 +1448,9 @@ def _validate_capture(
         _require(obj, "request_fingerprint", "capture"),
         "capture.request_fingerprint",
     )
-    if request_fingerprint != _expected_fingerprint(request):
+    if request_fingerprint != _expected_fingerprint(
+        request, version=1, provider=provider, adapter_contract=adapter
+    ):
         raise DocumentError("request_fingerprint does not match recompute")
     software = _validate_software(_require(obj, "software", "capture"))
     request_started_at = _timestamp(
@@ -914,6 +1476,104 @@ def _validate_capture(
         None if raw_failure is None else _validate_transport_failure(raw_failure)
     )
     _enforce_capture_branch(
+        transport_state=str(transport_state),
+        response_headers_at=response_headers_at,
+        response_body_ended_at=response_body_ended_at,
+        response=response,
+        transport_failure=transport_failure,
+    )
+    _enforce_timestamp_order(
+        request_started_at,
+        response_headers_at,
+        response_body_ended_at,
+        transport_ended_at,
+    )
+    document: dict[str, object] = {
+        "adapter_contract": adapter,
+        "attempt_id": attempt_id,
+        "provider": provider,
+        "request": request,
+        "request_fingerprint": request_fingerprint,
+        "request_started_at": request_started_at,
+        "response": response,
+        "response_body_ended_at": response_body_ended_at,
+        "response_headers_at": response_headers_at,
+        "schema": schema,
+        "software": software,
+        "transport_ended_at": transport_ended_at,
+        "transport_failure": transport_failure,
+        "transport_state": transport_state,
+        "version": version,
+    }
+    if attempt is not None:
+        _enforce_parent_attempt(document, attempt)
+    return document
+
+
+def _validate_capture_v2(
+    obj: Mapping[str, object],
+    *,
+    attempt: Mapping[str, object] | None,
+) -> dict[str, object]:
+    _reject_unknown(obj, _CAPTURE_KEYS, "capture")
+    missing = sorted(key for key in _CAPTURE_KEYS if key not in obj)
+    if missing:
+        raise DocumentError(f"capture missing {', '.join(missing)}")
+    schema = _exact_string(
+        _require(obj, "schema", "capture"),
+        "observatory.capture-event",
+        "capture.schema",
+    )
+    version = _json_int(_require(obj, "version", "capture"), "capture.version")
+    if version != 2:
+        raise DocumentError("capture.version must be 2")
+    attempt_id = _hex64(_require(obj, "attempt_id", "capture"), "capture.attempt_id")
+    provider = _exact_string(
+        _require(obj, "provider", "capture"),
+        HTTP_PROVIDER,
+        "capture.provider",
+    )
+    adapter = _exact_string(
+        _require(obj, "adapter_contract", "capture"),
+        HTTP_ADAPTER_CONTRACT,
+        "capture.adapter_contract",
+    )
+    transport_state = _require(obj, "transport_state", "capture")
+    if transport_state not in {"response_complete", "response_partial", "no_response"}:
+        raise DocumentError("capture.transport_state is invalid")
+    request = _validate_http_request(_require(obj, "request", "capture"))
+    request_fingerprint = _hex64(
+        _require(obj, "request_fingerprint", "capture"),
+        "capture.request_fingerprint",
+    )
+    if request_fingerprint != _expected_fingerprint(
+        request, version=2, provider=provider, adapter_contract=adapter
+    ):
+        raise DocumentError("request_fingerprint does not match recompute")
+    software = _validate_software(_require(obj, "software", "capture"))
+    request_started_at = _timestamp(
+        _require(obj, "request_started_at", "capture"),
+        "capture.request_started_at",
+    )
+    response_headers_at = _optional_timestamp(
+        _require(obj, "response_headers_at", "capture"),
+        "capture.response_headers_at",
+    )
+    response_body_ended_at = _optional_timestamp(
+        _require(obj, "response_body_ended_at", "capture"),
+        "capture.response_body_ended_at",
+    )
+    transport_ended_at = _timestamp(
+        _require(obj, "transport_ended_at", "capture"),
+        "capture.transport_ended_at",
+    )
+    raw_response = _require(obj, "response", "capture")
+    response = None if raw_response is None else _validate_http_response(raw_response)
+    raw_failure = _require(obj, "transport_failure", "capture")
+    transport_failure = (
+        None if raw_failure is None else _validate_http_transport_failure(raw_failure)
+    )
+    _enforce_http_capture_branch(
         transport_state=str(transport_state),
         response_headers_at=response_headers_at,
         response_body_ended_at=response_body_ended_at,

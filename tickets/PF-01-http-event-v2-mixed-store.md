@@ -1,12 +1,12 @@
 # PF-01 — HTTP event v2 and mixed-store verification
 
-**Status:** ready
+**Status:** review
 **Parent spec:** docs/specs/capture-event-v2.md, “Provider HTTP event version 2”
 **Authority:** D8, D9
 **Kind:** provider-foundation implementation
 **Blocked by:** none
 **Approved by:** Project Steward
-**Start commit:** implementer records the exact assigned clean HEAD
+**Start commit:** `982cc7791a8839544494e0c9f707494ff86e46a5`
 
 ## Why this ticket exists
 
@@ -124,7 +124,105 @@ alone.
 
 ## Implementation report
 
-<!-- Implementer fills; may set Status: review; never Status: done. -->
+**End commit:** recorded by implementer in the implementation commit (parent
+`982cc7791a8839544494e0c9f707494ff86e46a5`).
+
+**Changed paths:** `src/observatory/capture_event.py`, `src/observatory/derive.py`,
+`tests/test_http_event_v2.py`, this ticket (Status + report). `evidence_store.py`
+was not edited; version dispatch lives in the document validators.
+
+**Version dispatch:** `_schema_version` reads only `schema` and `version`.
+`validate_fingerprint` / `validate_attempt` / `validate_capture` choose v1 or v2
+and then re-validate the selected closed schema, cross-field rules, and re-JCS.
+Unknown schema/version raises `DocumentError` (store verify → `IntegrityError`).
+
+### Acceptance → proving tests (`tests/test_http_event_v2.py`)
+
+| Criterion | Test |
+|---|---|
+| Published HTTP-v2 byte lengths and IDs | `test_published_http_v2_vectors_match_independent_sha256_and_lengths`, `test_http_v2_constructors_reproduce_published_bytes_and_ids`, `test_published_http_v2_preimages_revalidate` |
+| Event-v1 bytes and published IDs unchanged | `test_event_v1_published_bytes_and_ids_are_unchanged` plus existing `tests/test_capture_event.py` vector suite |
+| Dispatch on `schema`/`version`; unknown/confused fail closed | `test_unknown_*_version_fails_closed`, `test_unknown_schema_fails_closed`, `test_version_confused_*`, `test_fixture_document_with_version_2_fails_closed`, `test_unknown_adapter_contract_fails_closed` |
+| Attempt v2 forbids `prior_attempt_id` and unknown keys | `test_version_confused_v1_keys_on_v2_attempt_fail`, `test_http_attempt_rejects_wrong_policy_or_prior_attempt_id`, `test_http_events_reject_forbidden_fields` |
+| Sandbox host/HTTPS/one task/depth 10 | `test_sandbox_policy_requires_https_sandbox_host_one_task_depth_10`, `test_http_request_rejects_non_sandbox_target`, `test_http_parameters_*` |
+| Request-header exact set/order; credential-class rejected | `test_http_request_rejects_credential_class_and_reordered_headers` |
+| Response headers: policy, denylist, lowercase, order/duplicates, unique sorted omissions, positive counts, no overlap | `test_response_headers_enforce_policy_denylist_order_and_omissions`, `test_response_header_and_omission_boundaries_fail`, `test_omitted_headers_must_be_uniquely_sorted_by_name`, `test_retained_response_headers_preserve_order_and_duplicates` |
+| Complete / partial / no-response branches and failure table | `test_complete_partial_and_no_response_branches`, `test_complete_rejects_*`, `test_partial_requires_*`, `test_no_response_rejects_*`, `test_http_failure_phase_code_table` |
+| Forbidden url/final_url/redirect/free-text/provider envelope/secrets/Outcome/Observation fields | `test_http_events_reject_forbidden_fields`, `test_http_failure_rejects_free_text_message` |
+| Format-2 `attempts/v1` and `captures/v1` + full D5 including parent and both body copies | `test_http_v2_commits_to_unchanged_v1_layouts_and_passes_d5` |
+| Mixed scrub clean; tampered v2 integrity failure; unknown version reported | `test_mixed_store_scrubs_clean_and_unknown_version_is_failure`, `test_tampered_committed_v2_manifest_and_body_are_integrity_failures` |
+| Mixed derive writes only fixture rows; provider Evidence creates zero PG rows; no integrity bump | `test_mixed_store_derive_writes_only_fixture_rows` |
+| Fixture `GET /v1/attempts/{id}` unchanged; provider Attempt 404 | `test_fixture_api_unchanged_and_provider_attempt_is_404` |
+| No HTTP transport | no client/transport added; constructors only |
+
+### Independent HTTP-v2 recomputation (test-side `hashlib`, not production builders)
+
+| Vector | bytes | SHA-256 |
+|---|---|---|
+| request body | 119 | `d10484d2237e4b08e37a4f3fe66bd678a3dbc2dab96f9b712af1b858b8d6d070` |
+| fingerprint preimage | 612 | `6b28e6d02fee14c8d8852889336baeb46bfa9918c5d4eee7b51e889f1823a2bb` |
+| Attempt preimage | 1159 | `22adc4841c86b7cd98b90bba683aeac204a0cb568428b590fd399e8627eb4640` |
+| complete-response body | 55 | `a38a556da546f074db94ab0ea18cf557bdac6b44d637f414cc0d431a7c19a9b3` |
+| Capture preimage | 1482 | `f347962c8dad05a762a19898898fff7ed60b7c06270b61dc3d7a158fa0d396b7` |
+
+Event-v1 AR published bytes still hash to
+`46d5fb97c109b9f64a42ff3a5e62978e2c25551d6b7274603fc88456acfd9a0f` and
+`604663f0e7842f1e076189652667357083d4c4a5e56a44d67ea4596ef624ad44`.
+
+### Mixed-store PostgreSQL row accounting
+
+On real PostgreSQL 18, a mixed store with the published fixture AR chain plus the
+published HTTP-v2 complete chain derived to exactly the fixture-only baseline:
+
+- `derivation_versions`: 1 row, `adapter_contract=fixture-panel-v1`
+- `outcomes`: 2 rows (attempt-stage + capture-stage of the fixture Attempt)
+- `observations`: 2 rows
+- provider `attempt_id` / `capture_id`: 0 rows in `outcomes` and `observations`
+- provider adapter on `derivation_versions`: 0 rows
+- `integrity_failures`: 0
+
+### Commands
+
+- `uv run pytest -q` — 564 passed before residual-test additions; HTTP-v2 file
+  94 passed after them. Full suite re-run at commit time.
+- `uv run ruff check .` — All checks passed
+- `uv run mypy` — Success: no issues found in 22 source files
+
+### Review
+
+Two-axis review vs `982cc7791a8839544494e0c9f707494ff86e46a5`:
+- Standards: no hard violations. Residual smells: duplicated v1/v2 validator
+  shapes (left unmerged to keep event-v1 exact).
+- Spec: pass. Residual thoroughness items (duplicate retained headers, explicit
+  pool+bundle body copies, full fixture API JSON equality) were added.
+
+### Weakest / most fragile part
+
+Version dispatch is a two-line `schema`/`version` peek plus large parallel v1/v2
+validators. A future event version will copy that shape again. Derive skip is a
+single `adapter_contract == "fixture-panel-v1"` filter; a later provider
+Derivation must not reuse this function as if it were adapter-neutral.
+
+### Exact unproven limits
+
+- No HTTP client, TLS, HTTP/2, timeout realism, or sandbox reachability (PF-02).
+- No crash/fsync/power-loss, multi-process writer, or off-host recovery claims.
+- Unknown-version committed Capture is covered by the same validator path as
+  Attempt; only an unknown Attempt was planted in the scrub test.
+- Ordinary tests do not prove real DataForSEO bytes or paid-host rejection at
+  transport time.
+
+### Confirmation
+
+No HTTP transport, PF-02, provider Derivation/Outcome/Observation/API envelope,
+credentials/settings, dependency, strategy, or Steward-authority edits entered
+this commit.
+
+### Disagreements / authority ambiguities
+
+None that blocked implementation. Ticket and spec agree: event v2 on store
+format 2 / bundle layouts v1; fixture derive selects `fixture-panel-v1` and
+skips valid provider Evidence without an integrity failure.
 
 ## Closure
 
