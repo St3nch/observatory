@@ -1,12 +1,12 @@
 # PF-03 — DataForSEO Keyword Overview bounded paid probe
 
-**Status:** ready
+**Status:** review
 **Parent spec:** docs/specs/capture-event-v2.md, “Paid Keyword Overview probe adapter”
 **Authority:** D8, D9, D10; HAM-01 closure
 **Kind:** bounded paid-provider implementation
 **Blocked by:** none for implementation/review; live operator call blocked by F6
 **Approved by:** Project Steward
-**Start commit:** the clean authority commit named in the Steward handoff
+**Start commit:** `56ba6953cdbfeb35c8583e75e7cea23836cfdd9d`
 
 ## Why this ticket exists
 
@@ -224,4 +224,118 @@ sequence.
 
 ## Implementation report
 
-<!-- Implementer fills. Status may become review; never done. -->
+**Parent:** `56ba6953cdbfeb35c8583e75e7cea23836cfdd9d`  
+**Child:** recorded in this implementation commit.
+
+**Loaded skills:**
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+**Changed paths:**
+- `src/observatory/capture_event.py` (paid constructors/validators + v2 adapter dispatch)
+- `src/observatory/dataforseo_paid_probe.py` (new; closed gate, one-shot, CLI capture/inspect)
+- `tests/test_dataforseo_paid_probe.py` (new)
+- `tests/test_http_event_v2.py` (paid vector + mixed fixture/sandbox/paid scrub/derive)
+- this ticket (Status + Start commit + Implementation report)
+
+`src/observatory/dataforseo_sandbox.py` was not changed. Shared-helper extraction was attempted and reverted so the paid send primitive would not import sandbox-private names and would not introduce a generic transport API. The paid module duplicates the PF-02 stream/header/echo machinery behind its own gate (D10).
+
+**Structural gate:** `_build_transport_gate()` issues a closure-held `_VerifiedAttempt` only after `type(store) is EvidenceStore`, `inspect_store` one-shot refusal, paid target/policy/parameter recheck, `commit_attempt`, full `read_attempt` + request-body byte match, and paid-target recheck. `_exchange` accepts only an issued instance, marks it used, and sends the frozen body once. Public `capture_dataforseo_paid_probe` has no URL/header/client parameters. CLI never reaches `_run_gated_capture`'s injection seam.
+
+**One-shot store:** before Attempt creation, `inspect_store(root)` lists committed Attempts and `read_attempt`s them. A committed `dataforseo-labs-google-keyword-overview-live-paid-probe-v1` Attempt fails closed, including when it has no Capture. Fixture and sandbox neighbors are allowed. The issuer repeats the same inspect. This is single-process sequential refusal, not F7.
+
+### Acceptance → proving tests
+
+| Criterion | Test |
+|---|---|
+| Independent paid vector lengths/digests/IDs | `test_independent_paid_vector_bytes_and_ids`, `test_published_paid_vector_bytes_and_constructors` |
+| Event-v1 and sandbox HTTP-v2 bytes/IDs unchanged | `test_event_v1_and_sandbox_ids_remain_unchanged`, `test_published_http_v2_vectors_match_independent_sha256_and_lengths`, `test_event_v1_published_bytes_and_ids_are_unchanged` |
+| Mixed fixture+sandbox+paid verify/scrub | `test_mixed_store_scrubs_clean_and_unknown_version_is_failure`, `test_one_shot_allows_fixture_and_sandbox_neighbors` |
+| Fixture derive skips both provider adapters, zero provider PG rows | `test_mixed_store_derive_writes_only_fixture_rows`, `test_provider_only_store_writes_zero_postgresql_rows` |
+| Paid parameter/keyword/policy/task-byte closures | `test_closed_paid_parameters_and_independent_jcs_request_bytes`, `test_paid_keywords_reject_boundaries`, `test_paid_keywords_accept_permitted_charset`, `test_paid_parameters_reject_fixed_field_violations` |
+| Sandbox/paid adapter, host, path, policy, parameter, body confusion | `test_sandbox_and_paid_validators_reject_confused_contracts`, `test_paid_request_rejects_sandbox_host_path_and_policy`, `test_wrong_adapter_sandbox_host_and_unknown_version_cannot_issue` |
+| Missing/wrong authorization before Attempt/handler | `test_wrong_authorization_fails_before_attempt`, `test_missing_authorization_cli_fails_before_attempt` |
+| One-shot refuses second paid Attempt, including no Capture | `test_one_shot_refuses_second_paid_attempt_without_capture` |
+| Forged/subclass/failed-commit/failed-readback/tampered capability cannot send | `test_forged_capability_cannot_reach_send`, `test_subclassed_store_cannot_issue`, `test_failed_commit_prevents_send`, `test_failed_readback_prevents_send` |
+| Loopback one request, exact body/headers, no redirect/retry, verified Attempt | `test_loopback_on_wire_headers_body_and_single_request`, `test_loopback_redirect_is_complete_and_not_followed`, `test_mock_sent_headers_and_body_equation` |
+| Complete/partial/no-response, status classes, 8 MiB, denylist, echo | `test_complete_nonempty_zero_byte_and_status_classes`, `test_partial_body_read_failure`, `test_connect_send_and_header_failures_are_no_response`, `test_eight_mib_boundary`, `test_duplicate_retained_and_every_denylisted_header`, `test_credential_echo_in_body_commits_no_capture`, `test_credential_echo_in_retained_header_commits_no_capture` |
+| At most one verified Capture; scrub clean | `test_each_branch_commits_one_verified_capture` |
+| Inspect exact bytes, zero write/network | `test_inspect_emits_exact_bytes_without_write_or_network` |
+| Inspect rejects wrong adapter/partial/no-response/zero/unknown version/invalid ID/tamper | `test_inspect_rejects_wrong_adapter_partial_zero_and_tamper`, `test_inspect_rejects_zero_body_and_tampered_evidence` |
+| Credentials absent from Evidence and surfaces | `test_credentials_absent_from_evidence_stdout_repr_and_exceptions` |
+| Public CLI has no endpoint/client/header/credential/enrichment/location/language/retry args | `test_cli_rejects_forbidden_arguments`, `test_public_api_has_no_url_or_header_injection`, `test_cli_prints_only_ids` |
+
+### Independently recomputed bytes and IDs
+
+Paid (literals hashed with `hashlib.sha256`, not production constructors):
+
+| Vector | Bytes | SHA-256 |
+|---|---:|---|
+| request body | 216 | `3fc7205a55a1a5c464c0ae4ebca21a1e3088c2022565929a670fdf757ab7987b` |
+| fingerprint preimage | 622 | `6cc5765911abe752a974d2fba268d927fdc055147c1286fffdfe0ee585cdc610` |
+| Attempt preimage | 1367 | `89904bf8a6812fb3d0d845310e4705962bb4db928b80da3be67342dff5def185` |
+| sample response `{"cost":0.0126,"tasks":[]}` | 26 | `5b69c7675c3f03d95bb5071bf0da855e3a476521939dccd757d3295746cd33d1` |
+| complete Capture preimage | 1433 | `dbaaf68a38e54e39d4fc03807d72eda37f8efd9a212220c0a99d270ddcec6917` |
+
+Unchanged sandbox HTTP-v2 / event-v1:
+
+- sandbox request 119 / `d10484d2237e4b08e37a4f3fe66bd678a3dbc2dab96f9b712af1b858b8d6d070`
+- sandbox Attempt `22adc4841c86b7cd98b90bba683aeac204a0cb568428b590fd399e8627eb4640`
+- sandbox Capture `f347962c8dad05a762a19898898fff7ed60b7c06270b61dc3d7a158fa0d396b7`
+- event-v1 AR Attempt `46d5fb97c109b9f64a42ff3a5e62978e2c25551d6b7274603fc88456acfd9a0f`
+
+### Mock / loopback accounting
+
+- Mock complete path: **exactly 1** request; entity bytes = 216-byte JCS task array; sent headers are the five committed application headers + `authorization` + `host=api.dataforseo.com` + `content-length=216`.
+- Loopback HTTP/1.1: **exactly 1** request; same body; `host=127.0.0.1:<port>`; `content-length=216`; no extra headers; committed Attempt still names `api.dataforseo.com` and the paid path. Redirect 302 is complete testimony and is not followed. Remote/sandbox/paid-host endpoint overrides: **0** handler calls, **0** Attempts, **0** Captures.
+
+### Mixed-store scrub and PostgreSQL
+
+- Mixed fixture + sandbox HTTP-v2 + paid HTTP-v2: `scrub_store(store) == []`.
+- Provider-only (sandbox + paid): `derivation_versions=0`, `outcomes=0`, `observations=0`.
+- Mixed with fixture: same fixture counts as a fixture-only baseline — `derivation_versions=1` (`fixture-panel-v1`), `outcomes=2`, `observations=2`. Zero rows cite the sandbox or paid Attempt/Capture IDs. No integrity failure.
+
+### Inspect proof
+
+`inspect_store` + `inspect_paid_probe_body` emit the exact stored response-body bytes. CLI writes those bytes to stdout with no added newline. A full-tree inode/size/bytes snapshot is unchanged. No handler/client/endpoint is involved. Wrong adapter, partial, no-response, zero-byte, unknown version, invalid ID, and tampered Evidence fail closed and emit no body.
+
+### Credential evidence
+
+Sentinel login, password, full Basic value, and bare token are absent from Evidence files, stdout/stderr, `repr`/`str` of credentials and exceptions, and denylisted response-header values. Echo in body or retained header commits the Attempt and **no** Capture.
+
+### Commands
+
+- `uv run pytest -q` — 680 passed, 1 skipped (HAM-01 opt-in matrix), 1 warning
+- `uv run ruff check .` — All checks passed
+- `uv run mypy` — Success: no issues found in 27 source files
+
+### Review
+
+Two-axis review vs `56ba695…`:
+
+- **Standards:** hard finding was production import of sandbox `_` helpers. Resolved by reverting `dataforseo_sandbox.py` and keeping a paid-local stream/gate. Remaining judgement: intentional D10 duplication of the sandbox transport.
+- **Spec:** issuer now repeats the one-shot inspect; inspect tests cover no-response and unknown version. Residual: authorization acknowledgement is enforced on the public/`_run_gated_capture` path, not inside the issuer (the issuer receives an already-constructed closed Attempt). Ticket Status/report completed in this commit.
+
+### Weakest / most fragile area
+
+Paid transport is a closed copy of the PF-02 stream, header equation, 8 MiB bound, and exception-to-phase mapping. Drift between the two copies is possible. httpx exception classification remains best-effort. One-shot is inspect-then-act in one process.
+
+### Exact unproven limits
+
+- No TLS, HTTP/2, DNS, timeout-realism, or `api.dataforseo.com` behavior
+- No live paid operator invocation (blocked by F6)
+- No claim that 20,000 micro-USD is a provider-enforced invoice cap
+- No F7 concurrent-writer safety
+- No off-host Evidence protection
+- No provider Outcome/Observation/Derivation/API
+- Ordinary suite does not run the HAM-01 kill matrix
+
+### Confirmation
+
+Implementation, tests, and this report made **zero** DataForSEO, sandbox, DNS, paid-host, or other public-network calls and spent **zero** provider credit. Tests used only `httpx.MockTransport` and `127.0.0.1` loopback. Autouse `socket.create_connection` guard fails any other host. Sentinel credentials only. The public CLI was never run with real credentials. F6 live operator probe was not performed.
+
+### Authority
+
+Assigned start `56ba6953…` is the clean HEAD named in the Steward handoff. No authority documents were edited. No disagreement that changes the implementation. Live paid remains Steward-issued after F6.

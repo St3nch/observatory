@@ -21,11 +21,16 @@ from observatory.capture_event import (
     http_capture_document,
     http_fingerprint_document,
     http_request,
+    paid_http_attempt_document,
+    paid_http_capture_document,
+    paid_http_fingerprint_document,
+    paid_http_request,
     validate_attempt,
     validate_capture,
     validate_fingerprint,
     validate_http_parameters,
     validate_http_request,
+    validate_paid_http_parameters,
 )
 from observatory.derive import DEFAULT_VERSION, derive
 from observatory.evidence import scrub_store
@@ -174,6 +179,33 @@ HTTP_HEADERS = [
     ["user-agent", "observatory-dataforseo-v1"],
 ]
 
+PAID_ADAPTER = "dataforseo-labs-google-keyword-overview-live-paid-probe-v1"
+PAID_REQUEST_BODY = (
+    b'[{"include_clickstream_data":false,"include_serp_info":false,"keywords":'
+    b'["seo api","keyword research","local seo","generative engine optimization",'
+    b'"ai search optimization"],"language_code":"en","location_code":2840}]'
+)
+PAID_REQUEST_BODY_SHA256 = "3fc7205a55a1a5c464c0ae4ebca21a1e3088c2022565929a670fdf757ab7987b"
+PAID_FINGERPRINT = "6cc5765911abe752a974d2fba268d927fdc055147c1286fffdfe0ee585cdc610"
+PAID_ATTEMPT_ID = "89904bf8a6812fb3d0d845310e4705962bb4db928b80da3be67342dff5def185"
+PAID_RESPONSE_BODY = b'{"cost":0.0126,"tasks":[]}'
+PAID_RESPONSE_BODY_SHA256 = "5b69c7675c3f03d95bb5071bf0da855e3a476521939dccd757d3295746cd33d1"
+PAID_CAPTURE_ID = "dbaaf68a38e54e39d4fc03807d72eda37f8efd9a212220c0a99d270ddcec6917"
+PAID_PARAMETERS: dict[str, Any] = {
+    "contract": PAID_ADAPTER,
+    "include_clickstream_data": False,
+    "include_serp_info": False,
+    "keywords": [
+        "seo api",
+        "keyword research",
+        "local seo",
+        "generative engine optimization",
+        "ai search optimization",
+    ],
+    "language_code": "en",
+    "location_code": 2840,
+}
+
 
 def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
@@ -219,6 +251,40 @@ def _commit_http_complete(store: EvidenceStore) -> tuple[str, str]:
     capture_id = store.commit_capture(
         _http_complete_capture(attempt), response_body=HTTP_RESPONSE_BODY
     )
+    return attempt_id, capture_id
+
+
+def _paid_attempt() -> dict[str, Any]:
+    return paid_http_attempt_document(
+        parameters=PAID_PARAMETERS,
+        attempt_nonce="4444444444444444444444444444444444444444444444444444444444444444",
+        authorized_at="2026-08-16T16:00:00.000000Z",
+        observatory_version="conformance-paid-probe-v1",
+    )
+
+
+def _commit_paid_complete(store: EvidenceStore) -> tuple[str, str]:
+    attempt = _paid_attempt()
+    attempt_id = store.commit_attempt(attempt, request_body=PAID_REQUEST_BODY)
+    capture = paid_http_capture_document(
+        attempt=attempt,
+        request_started_at="2026-08-16T16:00:00.100000Z",
+        transport_ended_at="2026-08-16T16:00:00.400000Z",
+        transport_state="response_complete",
+        response={
+            "status": 200,
+            "http_version": "HTTP/1.1",
+            "header_policy": "http-headers-v1",
+            "headers": [["content-type", "application/json"]],
+            "omitted_headers": [],
+            "body": {"state": "present_nonempty", "body": body_ref(PAID_RESPONSE_BODY)},
+            "completeness": "complete",
+        },
+        transport_failure=None,
+        response_headers_at="2026-08-16T16:00:00.200000Z",
+        response_body_ended_at="2026-08-16T16:00:00.300000Z",
+    )
+    capture_id = store.commit_capture(capture, response_body=PAID_RESPONSE_BODY)
     return attempt_id, capture_id
 
 
@@ -301,6 +367,40 @@ def test_published_http_v2_preimages_revalidate() -> None:
     assert validate_capture(HTTP_CAPTURE_PREIMAGE)["version"] == 2
     assert canonical_json(validate_attempt(HTTP_ATTEMPT_PREIMAGE)) == HTTP_ATTEMPT_PREIMAGE
     assert canonical_json(validate_capture(HTTP_CAPTURE_PREIMAGE)) == HTTP_CAPTURE_PREIMAGE
+
+
+def test_published_paid_vector_bytes_and_constructors() -> None:
+    assert len(PAID_REQUEST_BODY) == 216
+    assert _sha256(PAID_REQUEST_BODY) == PAID_REQUEST_BODY_SHA256
+    assert _sha256(PAID_RESPONSE_BODY) == PAID_RESPONSE_BODY_SHA256
+    request = paid_http_request(body=PAID_REQUEST_BODY)
+    fingerprint = paid_http_fingerprint_document(request=request)
+    attempt = _paid_attempt()
+    assert content_digest(canonical_json(fingerprint)) == PAID_FINGERPRINT
+    assert content_digest(canonical_json(attempt)) == PAID_ATTEMPT_ID
+    parsed = validate_paid_http_parameters(dict(PAID_PARAMETERS))
+    assert parsed["location_code"] == 2840
+    capture = paid_http_capture_document(
+        attempt=attempt,
+        request_started_at="2026-08-16T16:00:00.100000Z",
+        transport_ended_at="2026-08-16T16:00:00.400000Z",
+        transport_state="response_complete",
+        response={
+            "status": 200,
+            "http_version": "HTTP/1.1",
+            "header_policy": "http-headers-v1",
+            "headers": [["content-type", "application/json"]],
+            "omitted_headers": [],
+            "body": {"state": "present_nonempty", "body": body_ref(PAID_RESPONSE_BODY)},
+            "completeness": "complete",
+        },
+        transport_failure=None,
+        response_headers_at="2026-08-16T16:00:00.200000Z",
+        response_body_ended_at="2026-08-16T16:00:00.300000Z",
+    )
+    assert content_digest(canonical_json(capture)) == PAID_CAPTURE_ID
+    assert validate_attempt(canonical_json(attempt))["adapter_contract"] == PAID_ADAPTER
+    assert validate_capture(canonical_json(capture))["adapter_contract"] == PAID_ADAPTER
 
 
 def test_event_v1_published_bytes_and_ids_are_unchanged() -> None:
@@ -967,6 +1067,7 @@ def test_mixed_store_scrubs_clean_and_unknown_version_is_failure(tmp_path: Path)
     store = create_store(tmp_path / "mixed")
     capture_fixture(store, PUBLISHED_AR_INPUTS.as_fixture_inputs())
     _commit_http_complete(store)
+    _commit_paid_complete(store)
     assert scrub_store(store) == []
 
     unknown = json.loads(HTTP_ATTEMPT_PREIMAGE)
@@ -1016,6 +1117,7 @@ def test_provider_only_store_writes_zero_postgresql_rows(
 ) -> None:
     store = create_store(tmp_path / "provider-only")
     provider_attempt, provider_capture = _commit_http_complete(store)
+    paid_attempt, paid_capture = _commit_paid_complete(store)
     with connect(postgres_dsn) as connection:
         summary = derive(store, connection, DEFAULT_VERSION)
         counts = _row_counts(connection)
@@ -1031,6 +1133,14 @@ def test_provider_only_store_writes_zero_postgresql_rows(
             "SELECT count(*) FROM observations WHERE attempt_id = %s OR capture_id = %s",
             (provider_attempt, provider_capture),
         ).fetchone()
+        paid_outcome_rows = connection.execute(
+            "SELECT count(*) FROM outcomes WHERE attempt_id = %s OR capture_id = %s",
+            (paid_attempt, paid_capture),
+        ).fetchone()
+        paid_observation_rows = connection.execute(
+            "SELECT count(*) FROM observations WHERE attempt_id = %s OR capture_id = %s",
+            (paid_attempt, paid_capture),
+        ).fetchone()
 
     assert summary.integrity_failures == 0
     assert summary.attempt_outcomes == 0
@@ -1044,6 +1154,8 @@ def test_provider_only_store_writes_zero_postgresql_rows(
     assert captures == set()
     assert provider_outcome_rows == (0,)
     assert provider_observation_rows == (0,)
+    assert paid_outcome_rows == (0,)
+    assert paid_observation_rows == (0,)
 
 
 def test_mixed_store_derive_writes_only_fixture_rows(
@@ -1077,6 +1189,7 @@ def test_mixed_store_derive_writes_only_fixture_rows(
     mixed = create_store(tmp_path / "mixed")
     mixed_fixture = capture_fixture(mixed, PUBLISHED_AR_INPUTS.as_fixture_inputs())
     provider_attempt, provider_capture = _commit_http_complete(mixed)
+    paid_attempt, paid_capture = _commit_paid_complete(mixed)
     assert mixed_fixture.attempt_id == fixture_outcome.attempt_id
     with connect(postgres_dsn) as connection:
         summary = derive(mixed, connection, DEFAULT_VERSION)
@@ -1108,9 +1221,21 @@ def test_mixed_store_derive_writes_only_fixture_rows(
             "SELECT count(*) FROM observations WHERE attempt_id = %s OR capture_id = %s",
             (provider_attempt, provider_capture),
         ).fetchone()
+        paid_outcome_rows = connection.execute(
+            "SELECT count(*) FROM outcomes WHERE attempt_id = %s OR capture_id = %s",
+            (paid_attempt, paid_capture),
+        ).fetchone()
+        paid_observation_rows = connection.execute(
+            "SELECT count(*) FROM observations WHERE attempt_id = %s OR capture_id = %s",
+            (paid_attempt, paid_capture),
+        ).fetchone()
         provider_version_rows = connection.execute(
             "SELECT count(*) FROM derivation_versions WHERE adapter_contract = %s",
             (HTTP_ADAPTER,),
+        ).fetchone()
+        paid_version_rows = connection.execute(
+            "SELECT count(*) FROM derivation_versions WHERE adapter_contract = %s",
+            (PAID_ADAPTER,),
         ).fetchone()
 
     assert summary.integrity_failures == 0
@@ -1126,9 +1251,14 @@ def test_mixed_store_derive_writes_only_fixture_rows(
     assert observations == baseline_observations
     assert provider_outcome_rows == (0,)
     assert provider_observation_rows == (0,)
+    assert paid_outcome_rows == (0,)
+    assert paid_observation_rows == (0,)
     assert provider_version_rows == (0,)
+    assert paid_version_rows == (0,)
     assert provider_attempt not in attempts
     assert provider_capture not in captures
+    assert paid_attempt not in attempts
+    assert paid_capture not in captures
 
 
 def test_fixture_api_unchanged_and_provider_attempt_is_404(
