@@ -10,6 +10,7 @@ import re
 import socket
 import threading
 from collections.abc import Iterator, Mapping
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -553,6 +554,96 @@ def test_wrong_authorization_fails_before_attempt(tmp_path: Path, value: int) ->
     assert store.list_committed_ids("captures") == []
 
 
+def test_issuer_requires_authorization_before_attempt_or_exchange(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "issuer-auth")
+    calls: list[object] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return _streamed_response(200, PAID_RESPONSE_BODY)
+
+    client = _mock_client(handler)
+    try:
+        with pytest.raises(TypeError):
+            _issue_verified_attempt(store, _paid_attempt(), PAID_REQUEST_BODY)
+        with pytest.raises(TypeError, match="verified committed Attempt"):
+            _exchange(object(), _credentials(), client=client)
+    finally:
+        client.close()
+    assert calls == []
+    assert store.list_committed_ids("attempts") == []
+    assert store.list_committed_ids("captures") == []
+
+
+@pytest.mark.parametrize(
+    "value",
+    [20000.0, "20000", Decimal("20000"), True, False, None, 0, 1, 19999, 20001, -1],
+)
+def test_issuer_rejects_malformed_and_wrong_authorization_before_attempt(
+    tmp_path: Path, value: object
+) -> None:
+    store = create_store(tmp_path / f"issuer-{type(value).__name__}-{id(value)}")
+    calls: list[object] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return _streamed_response(200, PAID_RESPONSE_BODY)
+
+    client = _mock_client(handler)
+    try:
+        with pytest.raises(StoreError, match="authorize-max-micro-usd 20000"):
+            _issue_verified_attempt(
+                store,
+                _paid_attempt(),
+                PAID_REQUEST_BODY,
+                authorize_max_micro_usd=value,
+            )
+        with pytest.raises(TypeError, match="verified committed Attempt"):
+            _exchange(object(), _credentials(), client=client)
+    finally:
+        client.close()
+    assert calls == []
+    assert store.list_committed_ids("attempts") == []
+    assert store.list_committed_ids("captures") == []
+
+
+@pytest.mark.parametrize(
+    "value",
+    [20000.0, "20000", Decimal("20000"), True, False, None],
+)
+def test_public_path_rejects_non_int_authorization_before_attempt(
+    tmp_path: Path, value: object
+) -> None:
+    store = create_store(tmp_path / f"public-{type(value).__name__}")
+    calls: list[object] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request)
+        return _streamed_response(200, PAID_RESPONSE_BODY)
+
+    with pytest.raises(StoreError, match="authorize-max-micro-usd 20000"):
+        _capture_mock(store, handler, authorize=value)  # type: ignore[arg-type]
+    assert calls == []
+    assert store.list_committed_ids("attempts") == []
+    assert store.list_committed_ids("captures") == []
+
+
+def test_exact_integer_20000_still_permits_mock_and_loopback(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "exact-int")
+    calls = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        return _streamed_response(200, PAID_RESPONSE_BODY)
+
+    outcome = _capture_mock(store, handler, authorize=20000)
+    assert calls["n"] == 1
+    assert store.list_committed_ids("attempts") == [outcome.attempt_id]
+    assert store.list_committed_ids("captures") == [outcome.capture_id]
+    assert store.read_attempt(outcome.attempt_id) is not None
+    assert store.read_capture(outcome.capture_id) is not None
+
+
 def test_missing_authorization_cli_fails_before_attempt(tmp_path: Path) -> None:
     store = create_store(tmp_path / "cli-auth")
     with pytest.raises(SystemExit):
@@ -634,7 +725,12 @@ def test_subclassed_store_cannot_issue(tmp_path: Path) -> None:
             raise AssertionError("lying store must not commit")
 
     with pytest.raises(TypeError, match="concrete EvidenceStore"):
-        _issue_verified_attempt(LyingStore(tmp_path / "lie"), _paid_attempt(), PAID_REQUEST_BODY)
+        _issue_verified_attempt(
+            LyingStore(tmp_path / "lie"),
+            _paid_attempt(),
+            PAID_REQUEST_BODY,
+            authorize_max_micro_usd=AUTHORIZE,
+        )
 
 
 def test_failed_commit_prevents_send(
@@ -694,14 +790,23 @@ def test_wrong_adapter_sandbox_host_and_unknown_version_cannot_issue(
         observatory_version="conformance-http-v2",
     )
     with pytest.raises((DocumentError, StoreError)):
-        _issue_verified_attempt(store, sandbox, SANDBOX_REQUEST_BODY)
+        _issue_verified_attempt(
+            store,
+            sandbox,
+            SANDBOX_REQUEST_BODY,
+            authorize_max_micro_usd=AUTHORIZE,
+        )
     paid = dict(_paid_attempt())
     paid["version"] = 3
     with pytest.raises((DocumentError, StoreError)):
-        _issue_verified_attempt(store, paid, PAID_REQUEST_BODY)
+        _issue_verified_attempt(
+            store, paid, PAID_REQUEST_BODY, authorize_max_micro_usd=AUTHORIZE
+        )
     fixture = validate_attempt(V1_AR_ATTEMPT)
     with pytest.raises((DocumentError, StoreError, TypeError)):
-        _issue_verified_attempt(store, fixture, PAID_REQUEST_BODY)
+        _issue_verified_attempt(
+            store, fixture, PAID_REQUEST_BODY, authorize_max_micro_usd=AUTHORIZE
+        )
     assert store.list_committed_ids("attempts") == []
 
 
@@ -728,6 +833,7 @@ def test_issue_then_send_is_one_exchange(tmp_path: Path) -> None:
             observatory_version=PAID_SOFTWARE,
         ),
         PAID_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
     )
     client = _mock_client(handler)
     try:

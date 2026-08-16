@@ -242,7 +242,7 @@ sequence.
 
 `src/observatory/dataforseo_sandbox.py` was not changed. Shared-helper extraction was attempted and reverted so the paid send primitive would not import sandbox-private names and would not introduce a generic transport API. The paid module duplicates the PF-02 stream/header/echo machinery behind its own gate (D10).
 
-**Structural gate:** `_build_transport_gate()` issues a closure-held `_VerifiedAttempt` only after `type(store) is EvidenceStore`, `inspect_store` one-shot refusal, paid target/policy/parameter recheck, `commit_attempt`, full `read_attempt` + request-body byte match, and paid-target recheck. `_exchange` accepts only an issued instance, marks it used, and sends the frozen body once. Public `capture_dataforseo_paid_probe` has no URL/header/client parameters. CLI never reaches `_run_gated_capture`'s injection seam.
+**Structural gate:** `_build_transport_gate()` issues a closure-held `_VerifiedAttempt` only after `type(authorize_max_micro_usd) is int` and the value is exactly `20000`, `type(store) is EvidenceStore`, `inspect_store` one-shot refusal, paid target/policy/parameter recheck, `commit_attempt`, full `read_attempt` + request-body byte match, and paid-target recheck. `_exchange` accepts only an issued instance, marks it used, and sends the frozen body once. Public `capture_dataforseo_paid_probe` has no URL/header/client parameters. CLI never reaches `_run_gated_capture`'s injection seam.
 
 **One-shot store:** before Attempt creation, `inspect_store(root)` lists committed Attempts and `read_attempt`s them. A committed `dataforseo-labs-google-keyword-overview-live-paid-probe-v1` Attempt fails closed, including when it has no Capture. Fixture and sandbox neighbors are allowed. The issuer repeats the same inspect. This is single-process sequential refusal, not F7.
 
@@ -256,7 +256,7 @@ sequence.
 | Fixture derive skips both provider adapters, zero provider PG rows | `test_mixed_store_derive_writes_only_fixture_rows`, `test_provider_only_store_writes_zero_postgresql_rows` |
 | Paid parameter/keyword/policy/task-byte closures | `test_closed_paid_parameters_and_independent_jcs_request_bytes`, `test_paid_keywords_reject_boundaries`, `test_paid_keywords_accept_permitted_charset`, `test_paid_parameters_reject_fixed_field_violations` |
 | Sandbox/paid adapter, host, path, policy, parameter, body confusion | `test_sandbox_and_paid_validators_reject_confused_contracts`, `test_paid_request_rejects_sandbox_host_path_and_policy`, `test_wrong_adapter_sandbox_host_and_unknown_version_cannot_issue` |
-| Missing/wrong authorization before Attempt/handler | `test_wrong_authorization_fails_before_attempt`, `test_missing_authorization_cli_fails_before_attempt` |
+| Missing/wrong authorization before Attempt/handler | `test_wrong_authorization_fails_before_attempt`, `test_missing_authorization_cli_fails_before_attempt`, `test_issuer_requires_authorization_before_attempt_or_exchange`, `test_issuer_rejects_malformed_and_wrong_authorization_before_attempt`, `test_public_path_rejects_non_int_authorization_before_attempt`, `test_exact_integer_20000_still_permits_mock_and_loopback` |
 | One-shot refuses second paid Attempt, including no Capture | `test_one_shot_refuses_second_paid_attempt_without_capture` |
 | Forged/subclass/failed-commit/failed-readback/tampered capability cannot send | `test_forged_capability_cannot_reach_send`, `test_subclassed_store_cannot_issue`, `test_failed_commit_prevents_send`, `test_failed_readback_prevents_send` |
 | Loopback one request, exact body/headers, no redirect/retry, verified Attempt | `test_loopback_on_wire_headers_body_and_single_request`, `test_loopback_redirect_is_complete_and_not_followed`, `test_mock_sent_headers_and_body_equation` |
@@ -316,7 +316,7 @@ Sentinel login, password, full Basic value, and bare token are absent from Evide
 Two-axis review vs `56ba695…`:
 
 - **Standards:** hard finding was production import of sandbox `_` helpers. Resolved by reverting `dataforseo_sandbox.py` and keeping a paid-local stream/gate. Remaining judgement: intentional D10 duplication of the sandbox transport.
-- **Spec:** issuer now repeats the one-shot inspect; inspect tests cover no-response and unknown version. Residual: authorization acknowledgement is enforced on the public/`_run_gated_capture` path, not inside the issuer (the issuer receives an already-constructed closed Attempt). Ticket Status/report completed in this commit.
+- **Spec:** issuer now repeats the one-shot inspect; inspect tests cover no-response and unknown version. The issuer-authorization residual is closed in the remediation below.
 
 ### Weakest / most fragile area
 
@@ -339,3 +339,11 @@ Implementation, tests, and this report made **zero** DataForSEO, sandbox, DNS, p
 ### Authority
 
 Assigned start `56ba6953…` is the clean HEAD named in the Steward handoff. No authority documents were edited. No disagreement that changes the implementation. Live paid remains Steward-issued after F6.
+
+### Remediation (on this commit; parent `a3121c63b624b758bdfe7600d1f2b9f0b1a50ae9`)
+
+Steward formal review required the authorization acknowledgement to be bound into the capability issuer, not only `_run_gated_capture`. Status remains `review`.
+
+1. **`_issue_verified_attempt` requires acknowledgement.** `issue()` takes required keyword `authorize_max_micro_usd` and calls `_require_authorization` before store-type check, one-shot inspect, Attempt commit, capability issuance, or `_exchange`. Missing keyword is `TypeError`; no capability is issued, so `_exchange` remains unreachable.
+2. **Exact runtime type and value.** `_require_authorization` accepts only `type(value) is int` and `value == 20000`. `20000.0`, strings, `Decimal`, booleans, `None`, and other integers fail with `StoreError` before Attempt or handler.
+3. **Adversarial proof.** `test_issuer_requires_authorization_before_attempt_or_exchange`, `test_issuer_rejects_malformed_and_wrong_authorization_before_attempt`, `test_public_path_rejects_non_int_authorization_before_attempt`, `test_exact_integer_20000_still_permits_mock_and_loopback`, plus unchanged one-shot tests. Rejected cases leave 0 Attempts, 0 Captures, and 0 handler calls.

@@ -149,8 +149,11 @@ def closed_paid_parameters(*, keywords: Sequence[str]) -> dict[str, object]:
     )
 
 
-def _require_authorization(authorize_max_micro_usd: int) -> None:
-    if authorize_max_micro_usd != PAID_AUTHORIZED_COST_MICRO_USD:
+def _require_authorization(authorize_max_micro_usd: object) -> None:
+    if (
+        type(authorize_max_micro_usd) is not int
+        or authorize_max_micro_usd != PAID_AUTHORIZED_COST_MICRO_USD
+    ):
         raise StoreError(_AUTHORIZE_ERROR)
 
 
@@ -548,7 +551,10 @@ def _build_transport_gate() -> tuple[Any, Any, type]:
         store: EvidenceStore,
         document: Mapping[str, object],
         request_body: bytes,
+        *,
+        authorize_max_micro_usd: object,
     ) -> _VerifiedAttempt:
+        _require_authorization(authorize_max_micro_usd)
         if type(store) is not EvidenceStore:
             raise TypeError(
                 "DataForSEO paid probe transport requires the concrete EvidenceStore "
@@ -678,7 +684,12 @@ def _run_gated_capture(
         authorized_at=inputs.authorized_at,
         observatory_version=inputs.observatory_version,
     )
-    verified = _issue_verified_attempt(store, document, request_body)
+    verified = _issue_verified_attempt(
+        store,
+        document,
+        request_body,
+        authorize_max_micro_usd=authorize_max_micro_usd,
+    )
     result = _exchange(verified, credentials, endpoint=endpoint, client=client)
     capture_id = _commit_paid_capture(store, verified, result, credentials)
     return PaidProbeOutcome(
