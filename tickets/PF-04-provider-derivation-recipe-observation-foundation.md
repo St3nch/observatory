@@ -51,6 +51,12 @@ different bytes or adapter metadata fails before derived writes.
 Fixture versions remain grandfathered under the existing semantic-label rule and do not
 require a recipe row.
 
+PF-04 defines and tests the closed provider recipe-document schema and registration
+mechanism only. Its published registration vector is a **test recipe instance**, not the
+production Keyword Overview recipe. PF-05 authors the first Keyword Overview recipe
+instance after the strict parser/conformance contract is proven. PF-04 must not freeze a
+stub production recipe whose semantic fields would have to change in PF-05 or later.
+
 ### Canonical Observation envelope
 
 The new additive envelope carries at least:
@@ -70,6 +76,10 @@ columns. Do not migrate fixture rows into the new envelope in this ticket.
 The within-Capture provider Observation identity must be capable of a full lowercase
 64-hex digest derived from recipe-defined semantic identity bytes; it is not constrained to
 `result:N`.
+
+For PF-04, the within-Capture provider Observation identity is standardized as a full
+lowercase 64-hex SHA-256 of a closed recipe-defined canonical semantic-identity document;
+raw subject text and fixture-style `result:N` identifiers are not used for provider rows.
 
 ### Derivation diagnostics
 

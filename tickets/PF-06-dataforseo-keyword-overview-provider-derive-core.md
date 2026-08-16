@@ -105,6 +105,12 @@ document or an equivalently collision-resistant recipe-defined canonical digest.
 - Do not use conflict-ignore as semantic equality.
 - Empty PostgreSQL rebuild from the same verified Evidence/recipe is logically equivalent.
 
+For the PF-06 core recipe, `outcomes.observation_count` is the **total number of normal
+provider Observation envelopes emitted by that recipe for the Capture** (coverage plus
+core metrics). PF-07 must not append new kinds under this same recipe id and then rewrite
+this Outcome. PF-07 introduces an extended recipe with a new digest and derives a separate
+Outcome/Observation set under that new `derivation_version_id`.
+
 ## Acceptance criteria
 
 - [ ] Provider recipe registration is used; provider rows cannot be written under the fixture

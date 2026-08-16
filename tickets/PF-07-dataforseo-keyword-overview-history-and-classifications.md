@@ -14,6 +14,13 @@ historical monthly search volume, provider-computed search-volume trends, keywor
 average backlink summary, and search intent. Preserve each structure's independent provider
 time semantics and the exact provider quirks already present in Evidence.
 
+PF-07 is a **new extended Keyword Overview recipe**, not an in-place mutation of PF-06's
+core recipe. Its canonical recipe document references the same PF-05 parser/reconciliation
+contract, includes the PF-06 coverage/core-metrics kinds plus the additional PF-07 kinds,
+and therefore has a new `derivation_version_id` digest. PF-07 re-derives the complete
+extended Observation set under that new version. PF-06 rows and Outcome counts remain
+immutable historical derivation results under the core recipe.
+
 ## Authority
 
 - D11
@@ -61,6 +68,10 @@ Typed main/foreign intent testimony with its own Provider Update Time. Provider 
 Observation value, never an Observatory Outcome. Nullable/array forms follow the recipe's
 field-state rules rather than being coerced to one shape.
 
+For the PF-07 extended recipe, `outcomes.observation_count` is the total number of normal
+provider Observation envelopes emitted by the complete extended recipe for that Capture;
+it does not update the PF-06 core-recipe Outcome row.
+
 ## Acceptance criteria
 
 - [ ] PF-03 monthly history produces deterministic point identities based on exact requested
@@ -80,6 +91,10 @@ field-state rules rather than being coerced to one shape.
 - [ ] Same-recipe exact-content idempotency, damage refusal, and two-database logical rebuild
       equivalence extend across all new kinds.
 - [ ] PF-06 coverage/core metrics and all fixture regressions remain true.
+
+- [ ] The extended recipe digest differs from PF-06's core recipe digest, re-emits the
+      coverage/core kinds plus all PF-07 kinds under the new version, and leaves every
+      PF-06 row unchanged.
 
 ## Required tests
 

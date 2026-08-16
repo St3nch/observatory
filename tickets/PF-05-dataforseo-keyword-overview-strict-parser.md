@@ -16,6 +16,13 @@ interpretation plus fail-closed adversarial cases.
 
 This ticket writes no provider-derived PostgreSQL rows and exposes no provider API.
 
+PF-05 parses and validates the **full first-surface typed intermediate representation**,
+including the field families later persisted by PF-07. PF-07 must reuse this parser/typed
+IR rather than adding a second provider parser. PF-05 also authors the first production
+Keyword Overview **core recipe** for PF-06, whose emitted kinds are coverage and core
+metrics only. Adding the PF-07 Observation kinds is a semantic expansion and therefore
+uses a new extended recipe digest in PF-07; the PF-06 recipe is never mutated in place.
+
 ## Authority
 
 - D11
@@ -110,6 +117,17 @@ synthetic collision vectors without claiming those collisions occurred in PF-03.
 - disabled SERP/clickstream field state from Attempt parameters
 - unknown additive field on extension-permitted object
 - unknown field on a closed object
+
+- `tasks` length other than exactly one and `result` length other than exactly one
+- `items` missing, JSON null, and an empty list in the all-omitted/no-data case
+- top-level success with task-level failure, and the inverse inconsistent status shape
+- integer-looking `1300` versus decimal-looking `1300.0` on a decimal-capable field
+- a decimal with enough precision to prove there is no binary-float round trip
+- invalid UTF-8, UTF-8 BOM, and trailing non-whitespace data after the JSON document
+- Provider Update Time missing versus explicitly JSON null where the recipe permits either
+- duplicate historical `(year, month)` points inside one returned keyword item
+- negative monthly search volume
+- invalid month `0` / `13` and recipe-invalid year bounds
 
 ## Out of scope
 
