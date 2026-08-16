@@ -1,6 +1,6 @@
 # PF-01 — HTTP event v2 and mixed-store verification
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md, “Provider HTTP event version 2”
 **Authority:** D8, D9
 **Kind:** provider-foundation implementation
@@ -245,5 +245,25 @@ Steward review required three bounded fixes. Status remains `review`.
 
 ## Closure
 
-<!-- Project Steward fills only after independent review. -->
+**Accepted by:** Project Steward
+
+**Accepted commits:**
+
+- implementation: `de9584b0bcdecaabb25171d3a41c4ae43aa47e6e`
+- remediation: `7740ef6f1cd2a0daa4169440b4aca9f36cbf0d31`
+
+Independent review read every changed source/test path, compared both exact commit
+boundaries, walked each acceptance criterion, and recomputed the published v1/v2
+vectors from the normative literals. The MCP formal review runner reproduced the
+provider-only and non-Latin-1 defects before remediation, then passed both added
+adversarial cases after remediation.
+
+Accepted verification at the remediation commit: `568 passed` with the existing
+Starlette/httpx deprecation warning, Ruff clean, and mypy clean. An isolated formal
+review workspace passed `570` tests including the two extra Steward cases.
+
+PF-01 proves HTTP event-v2 construction/validation and mixed-store correctness only.
+Its recorded PF-02 transport, provider, durability, concurrency, and recovery limits
+remain unproven.
+
 

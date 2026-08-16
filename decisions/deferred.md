@@ -49,6 +49,11 @@ one DataForSEO Google Organic Live Advanced tracer against the free sandbox. Thi
 fire broad provider coverage, paid transport, Standard/asynchronous operation, provider
 derivation, or a capability catalog. Those remain deferred to their recorded triggers.
 
+**Provider direction:** DataForSEO is the first provider, not Observatory's exclusive
+provider. Ahrefs and Semrush are expected future supplementary and comparison sources.
+Naming them records product direction only; neither integration is currently authorized
+or scheduled, and this does not fire the trigger above.
+
 ## F4 — Dedicated hammer ticket
 
 **Deferred by:** D6 (substrate clarified by D8).
