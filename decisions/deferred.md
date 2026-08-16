@@ -131,6 +131,24 @@ encrypted snapshot → fresh restore → scrub → exact set-equality sequence b
 Evidence is treated as safely protected. Routine paid capture still requires the separately
 accepted automated snapshot, retention, and restore-drill policy below.
 
+**D10 first paid Capture accepted — 2026-08-16:** After a fresh official-pricing recheck
+and explicit [CHAZ] authorization, PF-03 committed Attempt
+`c0da493c3a44f1f60bc21d7afaab290e852dadafa8157386b79bd58ebec07462` and Capture
+`b4fc36a7799b497d0d183a88449bf0a770ce741ec1f0d8eaade2d75c930154d5` in the fresh Evidence
+root `/home/chaz/.local/share/vedaops/observatory/pf03-paid-20260816T213724Z`. No retry or
+second paid invocation was performed. The source was quiescent, opened as format 2, and
+scrubbed clean with exit 0; an independent inventory recorded exactly one committed
+Attempt and one committed Capture. Restic 0.19.1 created encrypted off-host snapshot
+`e549c887dfdb8d7006f3f7e9fd99eea2aa7097e3c6bb6fd0320cd99baa09eb82`. A fresh restore
+opened and scrubbed clean with exit 0; restored Attempt and Capture ID sets exactly matched
+the recorded source sets. Original and restored inventory SHA-256 both equal
+`58ac410ae1625c1088aceb32769d05e25b0474eecca083e075102512e1686d21`. Corresponding
+`.ok.json` backup and restore-proof files are present in the approved off-host folders.
+The Project Steward accepts completion of D10's first-paid-Capture protection requirement.
+
+This completes F6 only for D10's first bounded probe. Routine paid or production capture
+still requires the separately accepted automated snapshot, retention, and restore-drill policy.
+
 **Minimum acceptance for D10 only:** Before the paid command is authorized, the exact
 procedure and destination must be rehearsed with replaceable Evidence. The destination is
 not a filesystem on the capture host: it is encrypted remote/cloud storage, a separate

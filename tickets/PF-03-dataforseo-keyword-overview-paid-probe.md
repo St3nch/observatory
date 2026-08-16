@@ -1,12 +1,11 @@
 # PF-03 — DataForSEO Keyword Overview bounded paid probe
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md, “Paid Keyword Overview probe adapter”
 **Authority:** D8, D9, D10; HAM-01 closure
 **Kind:** bounded paid-provider implementation
-**Blocked by:** none for implementation/review; live operator call requires fresh official
-pricing recheck, a Steward-issued one-shot command, and explicit [CHAZ] authorization after
-the accepted F6 rehearsal
+**Blocked by:** none; closed after the accepted one-shot operator sequence and D10
+paid-Capture F6 protection proof
 **Approved by:** Project Steward
 **Start commit:** `56ba6953cdbfeb35c8583e75e7cea23836cfdd9d`
 
@@ -239,6 +238,27 @@ it does not authorize a live provider exchange. Before any paid command, the Ste
 freshly recheck official pricing and issue the exact one-shot command, and [CHAZ] must
 explicitly authorize that operator sequence. The resulting first paid Capture must then be
 protected and restored under the same F6 six-step sequence before PF-03 can close.
+
+## Steward closure — 2026-08-16
+
+PF-03 is accepted and closed. After the required fresh official-pricing recheck, [CHAZ]
+explicitly authorized and performed exactly one live paid operator invocation. It committed
+Attempt `c0da493c3a44f1f60bc21d7afaab290e852dadafa8157386b79bd58ebec07462` and Capture
+`b4fc36a7799b497d0d183a88449bf0a770ce741ec1f0d8eaade2d75c930154d5` in a fresh Evidence
+Store. No retry or second paid invocation was performed.
+
+The paid Evidence then completed the accepted F6 sequence: source quiescence, format-2
+open, clean scrub, independent exact inventory, encrypted off-host restic snapshot
+`e549c887dfdb8d7006f3f7e9fd99eea2aa7097e3c6bb6fd0320cd99baa09eb82`, fresh restore,
+clean restored scrub, exact Attempt/Capture ID-set equality, and byte-identical source and
+restored inventories with SHA-256
+`58ac410ae1625c1088aceb32769d05e25b0474eecca083e075102512e1686d21`. The corresponding
+backup receipt and restore proof are present off-host. The detailed acceptance is recorded
+under F6 in `decisions/deferred.md`.
+
+The provider response remains raw Evidence. Provider-specific Outcome/Observation mapping,
+Derivation identity/drift handling, PostgreSQL rows, and API exposure remain outside PF-03
+and require the F11 decision before implementation.
 
 ## Implementation report
 
