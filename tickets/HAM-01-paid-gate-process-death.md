@@ -1,11 +1,11 @@
 # HAM-01 — Paid-gate process-death Evidence hammer
 
-**Status:** ready
+**Status:** review
 **Authority:** D6, D8, D9; deferred trigger F4
 **Kind:** bounded Evidence Store hammer
 **Blocked by:** none (PF-02 is done)
 **Approved by:** Project Steward
-**Start commit:** `672ad53af75aac01bdb9c199ee1165d44f609cb9`
+**Start commit:** `c67efc6271db6e9a986e188d56e2b3cffb2896dd`
 
 ## Why this ticket exists
 
@@ -188,4 +188,114 @@ Implementation report must include:
 
 Set Status to `review`, not `done`. Only the Project Steward closes HAM-01 after the
 operator acceptance run.
+
+## Implementation report
+
+**Parent:** `c67efc6271db6e9a986e188d56e2b3cffb2896dd`  
+**Child:** recorded in the implementation commit.
+
+**Changed paths:** `tests/test_paid_gate_process_death_hammer.py` (new), this
+ticket (Status + report). No production modules were edited.
+
+**Fault-injection mechanism:** child subprocesses wrap
+`EvidenceStore.commit_attempt` / `commit_capture` to mark phase, then wrap
+`_create_terminal_directory`, `_install_file`, and `_fsync_dir`. After the
+real operation returns, the child calls `os._exit(97)`. No production kill
+switch or environment-triggered death exists.
+
+### Milestone inventory
+
+Discovered from a live in-process loopback capture of the concrete store:
+
+- Attempt-phase fault points: **22**
+- Capture-phase fault points: **16**
+- Required families present: terminal-dir, manifest, bundle-body, COMMITTED,
+  fsync-dir for both phases.
+
+### Child exit / timeout
+
+Fault children exit **97**. The no-fault control exits **0**. Child timeout
+is 20s; none timed out on the implementer proving run.
+
+### Pre-send / post-send request accounting
+
+- All 22 Attempt-phase deaths: **0** loopback requests.
+- All 16 Capture-phase deaths: **exactly 1** request. At request time the
+  parent used `inspect_store` and independently verified the sole Attempt
+  before the server replied.
+- No-fault control: **exactly 1** request.
+
+### Per-fault Evidence / postmortem
+
+After each death, inspect (no mutation) → enumerate commitment-claiming
+dirs → verify each → report-only scrub → credential scan → then
+`open_store` (`.tmp/` only).
+
+- Attempt-phase: 0 or 1 verified committed Attempt; 0 Captures; scrub
+  reports no corrupt committed Evidence; uncommitted terminal residue is
+  not counted as Evidence.
+- Capture-phase: 1 verified Attempt; 0 or 1 verified Capture; if 0 Capture,
+  the Attempt is authorized/unresolved and the matrix does not retry.
+- No malformed COMMITTED candidate failed verify.
+
+### No-fault control
+
+1 request, 1 verified Attempt, 1 verified Capture, both read back, scrub
+clean, child exit 0.
+
+### Cleanup-only-`.tmp`
+
+`open_store` after inspect removed only paths under `.tmp/`. Committed
+bundles, objects, and `FORMAT.json` were unchanged (inode + bytes).
+
+### Credential scan
+
+Sentinel login, password, `Basic` value, and bare token were absent from
+Evidence files and child stdout/stderr. Plaintext login/password were
+absent from loopback request bytes (the wire carries Authorization as
+required by PF-02).
+
+### Commands
+
+- Ordinary `uv run pytest -q`: 602 passed, 1 skipped (matrix), 1 warning
+- `uv run ruff check .`: All checks passed
+- `uv run mypy`: Success: no issues found in 25 source files
+- Implementer proving run (not [CHAZ] closure):
+  `OBSERVATORY_RUN_PAID_GATE_HAMMER=1 uv run pytest -q
+  tests/test_paid_gate_process_death_hammer.py --basetemp
+  /home/chaz/.local/share/vedaops/observatory/ham01-implementer-20260816T150643Z`
+  → 2 passed, 1 skipped (opt-in guard), 54.40s; printed
+  `HAM-01 fault points: attempt=22 capture=16`
+
+### Production defect
+
+None. The hostile matrix passed against the existing store/transport
+protocol. Test-only implementation.
+
+### Weakest / most fragile part
+
+Class-level method wrapping for discovery and children is process-local
+and must stay aligned with private store method names. Shared-directory
+fsyncs inflate the Attempt-phase count beyond the terminal bundle itself.
+
+### Exact unproven limits
+
+- Not sudden power-loss, device-cache, or VM crash proof
+- Not multi-process writer / F7
+- Not off-host recovery / F6
+- Not TLS, DNS, DataForSEO, or paid-host proof
+- Uncommitted terminal residue after pre-COMMITTED death is not recovered
+  automatically; it is not treated as Evidence
+- Ordinary suite does not run the kill matrix
+
+### Authority
+
+Assigned start `c67efc62…` (HAM-01 authorize) supersedes the ticket’s
+pre-filled `672ad53…` (PF-02 close). No other disagreement. PF-03 / paid
+transport not implemented.
+
+### Confirmation
+
+No DataForSEO, DNS, paid-host, sandbox, or other public-network call.
+Sentinel credentials and `127.0.0.1` loopback only. Zero provider credit.
 
