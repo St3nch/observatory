@@ -4,7 +4,9 @@
 **Parent spec:** docs/specs/capture-event-v2.md, “Paid Keyword Overview probe adapter”
 **Authority:** D8, D9, D10; HAM-01 closure
 **Kind:** bounded paid-provider implementation
-**Blocked by:** none for implementation/review; live operator call blocked by F6
+**Blocked by:** none for implementation/review; live operator call requires fresh official
+pricing recheck, a Steward-issued one-shot command, and explicit [CHAZ] authorization after
+the accepted F6 rehearsal
 **Approved by:** Project Steward
 **Start commit:** `56ba6953cdbfeb35c8583e75e7cea23836cfdd9d`
 
@@ -222,6 +224,21 @@ Set Status to `review`, never `done`. Report:
 
 Only the Project Steward may close PF-03 after review and the later authorized operator
 sequence.
+
+## Steward F6 rehearsal acceptance — 2026-08-16
+
+The Project Steward accepts the D10 replaceable-Evidence F6 rehearsal recorded in
+`decisions/deferred.md`. The accepted encrypted off-host restic snapshot is
+`f368f806325106f7a24f7da7d997e583ac10b1147ab6f542fce56bbe7b9d3d85`; source and fresh
+restore each opened and scrubbed clean, and the exact committed Attempt and Capture ID sets
+matched their independently recorded source inventory. Backup and restore-proof receipts
+are present under the approved Google Drive backup set.
+
+PF-03 remains `review`, not `done`. This acceptance removes the F6 rehearsal blocker only;
+it does not authorize a live provider exchange. Before any paid command, the Steward must
+freshly recheck official pricing and issue the exact one-shot command, and [CHAZ] must
+explicitly authorize that operator sequence. The resulting first paid Capture must then be
+protected and restored under the same F6 six-step sequence before PF-03 can close.
 
 ## Implementation report
 

@@ -104,6 +104,31 @@ irreplaceable capture history.
 zero-network review may proceed, but the operator paid invocation remains blocked until a
 separately accepted off-host protection path exists.
 
+**D10 rehearsal accepted — 2026-08-16:** [CHAZ] completed the minimum replaceable-Evidence
+rehearsal against the clean PF-02 sandbox smoke store
+`/home/chaz/.local/share/vedaops/observatory/pf02-smoke-20260816T144311Z` using Google Drive
+as the off-host destination, rclone transport, and an encrypted restic repository at
+`VedaOps Backups/Observatory/evidence-store/repository`. The source store was quiescent,
+opened as format 2, and scrubbed clean with exit 0. An independently recorded inventory
+contained exactly one committed Attempt and one committed Capture. Restic 0.19.1 created
+snapshot
+`f368f806325106f7a24f7da7d997e583ac10b1147ab6f542fce56bbe7b9d3d85` containing the full
+Evidence root and that inventory. A restore into a fresh local directory opened and
+scrubbed clean with exit 0; restored Attempt and Capture ID sets each matched the recorded
+source sets exactly. Human-readable backup and restore-proof receipts were copied to the
+corresponding `receipts/` and `restore-proofs/` Drive folders. No credentials were included
+in the snapshot inventory or receipts. The Project Steward accepts this as the D10
+replaceable-Evidence rehearsal and as the separately accepted off-host protection path
+required before issuing the first paid operator command.
+
+This acceptance does **not** complete F6 generally and does not itself authorize a provider
+call. Before D10's live command, the Steward must still freshly recheck official pricing
+and [CHAZ] must explicitly authorize the one-shot operator sequence. After the first paid
+Capture, that store must undergo the same quiesce → inspect/scrub → exact inventory →
+encrypted snapshot → fresh restore → scrub → exact set-equality sequence before the paid
+Evidence is treated as safely protected. Routine paid capture still requires the separately
+accepted automated snapshot, retention, and restore-drill policy below.
+
 **Minimum acceptance for D10 only:** Before the paid command is authorized, the exact
 procedure and destination must be rehearsed with replaceable Evidence. The destination is
 not a filesystem on the capture host: it is encrypted remote/cloud storage, a separate
