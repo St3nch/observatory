@@ -358,6 +358,6 @@ separated by ASCII space.
 
 PF-03 remains `review`. Before any live provider command, add production validation and
 tests proving 10-word acceptance, 11-word rejection before Attempt/handler/network, and
-unchanged published paid/sandbox/event-v1 vectors. This is a new remediation commit on top
-of `11bcebec5be8c446381b67002ddfb8d7ee13712b`; do not amend or push. Implementation and
+unchanged published paid/sandbox/event-v1 vectors. Start from the clean Steward authority
+HEAD named in the handoff; create one new commit; do not amend or push. Implementation and
 tests remain mock/127.0.0.1 only and must spend zero provider credit.
