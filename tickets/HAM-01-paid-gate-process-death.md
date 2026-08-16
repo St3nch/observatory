@@ -1,6 +1,6 @@
 # HAM-01 — Paid-gate process-death Evidence hammer
 
-**Status:** review
+**Status:** done
 **Authority:** D6, D8, D9; deferred trigger F4
 **Kind:** bounded Evidence Store hammer
 **Blocked by:** none (PF-02 is done)
@@ -38,8 +38,10 @@ server:
    and is never retried automatically.
 5. A no-fault control performs exactly one exchange and leaves exactly one verified
    Attempt, one verified Capture, and a clean scrub.
-6. Sentinel credentials do not appear in Evidence bytes, child stdout/stderr, exception
-   text, or the loopback testimony.
+6. Sentinel login, password, Basic value, and bare token do not appear in Evidence bytes,
+   child stdout/stderr, or exception text. PF-02 requires Authorization Basic on the
+   loopback wire, so wire testimony instead proves that plaintext login/password are
+   absent; captured request bytes remain test memory and are not Evidence.
 
 This is process-death and ordering proof. It is not sudden-power-loss, storage-device
 cache, off-host recovery, concurrent-writer, or production-provider proof.
@@ -297,9 +299,9 @@ points still inflate the matrix beyond the terminal bundle.
 
 Assigned start `c67efc62…` (HAM-01 authorize) supersedes the ticket’s
 pre-filled `672ad53…` (PF-02 close). Steward clarified that the
-Authorization Basic token is required on the loopback wire; that ticket
-sentence will be reconciled at closure. PF-03 / paid transport not
-implemented.
+Authorization Basic token is required on the loopback wire; the closure
+wording above reconciles that claim. PF-03 / paid transport was not
+implemented by HAM-01.
 
 ### Remediation (on `dc3ac19b36b0fad724652e3ca8adeddd09781fa6`)
 
@@ -311,10 +313,56 @@ Fix: keep commit_* wrappers for phase only; wrap `_record` after the real
 record; inventory actual op names; identify link families from destination
 paths; require one COMMITTED link per phase plus a later `fsync_dir`; die
 at every discovered `_record` including immediately after COMMITTED link
-and after the following directory fsync. Status remains `review`.
+and after the following directory fsync. At remediation time, status
+remained `review`.
 
 ### Confirmation
 
 No DataForSEO, DNS, paid-host, sandbox, or other public-network call.
 Sentinel credentials and `127.0.0.1` loopback only. Zero provider credit.
+
+## Steward closure
+
+**Closed:** 2026-08-16 by the Project Steward after deterministic review,
+formal adversarial review, remediation, and [CHAZ]'s operator hammer.
+
+**Accepted commits:** implementation
+`dc3ac19b36b0fad724652e3ca8adeddd09781fa6`; remediation
+`d6842c422046b9cd4eebf9d4affdea226e25906f`. Both are test-only; no
+production module changed.
+
+**Independent review:**
+
+- Baseline at the accepted remediation: 602 passed, 1 intentional skip;
+  Ruff and mypy clean.
+- The first formal review exposed missing atomic `write_fsync`, `link`, and
+  `unlink_tmp` death windows. Remediation moved the hook to the store's real
+  post-operation `_record` boundary.
+- Final formal review added targeted deaths immediately after the Attempt and
+  Capture `COMMITTED` links and after their following directory fsyncs:
+  603 passed, 1 intentional skip.
+
+**Operator Evidence filesystem:**
+
+- Hammer root:
+  `/home/chaz/.local/share/vedaops/observatory/ham01-20260816T152636Z`
+- Filesystem: `ext4`; source `/dev/nvme1n1p2`; mount target `/`.
+- Real DataForSEO credential environment variables: clear before execution.
+- Result: 2 passed, 1 intentional opt-in-guard skip in 102.86 seconds.
+- Fault points: Attempt 42; Capture 30.
+- Every Attempt-phase death exited 97 with zero requests and no corrupt
+  committed Evidence.
+- Every Capture-phase death exited 97 after exactly one request; the parent
+  independently verified the Attempt at request time; committed Capture was
+  either absent or fully verified.
+- Control: one request, one verified Attempt, one verified Capture, clean
+  scrub.
+- Postmortem verification and scrub were clean; `open_store` changed only
+  `.tmp/`; Evidence and terminal credential scans were clean.
+
+HAM-01 satisfies F4's dedicated-hammer prerequisite for designing the next
+separately authorized, tightly budgeted paid-provider ticket. It does not
+itself authorize a paid call, production-provider behavior, automatic retry,
+multi-process writing, off-host recovery, or power-loss/device-cache claims.
+Zero DataForSEO credit was used.
 
