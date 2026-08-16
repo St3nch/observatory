@@ -1052,6 +1052,182 @@ immutable registration metadata agrees exactly. A conflicting `adapter_contract`
 closed before any Outcome or Observation write and never mutates the existing registration.
 A content-addressed derivation-recipe document is not part of fixture v1.
 
+### Provider Derivation after F11
+
+D11 authorizes provider-specific Derivation only on a provider-capable rebuildable
+substrate. It does not change event version 2, store format 2, Attempt/Capture identities,
+body Evidence, or D10's statement that the paid probe itself performed no automatic
+normalization. The already-committed PF-03 Capture may later be interpreted by a separately
+invoked, versioned Derivation.
+
+#### Provider recipe identity
+
+For a provider Derivation, the exact `derivation_version_id` is lowercase
+`sha256(JCS(recipe))`, represented as 64 lowercase hex characters. The recipe is a closed
+I-JSON document whose semantic content fixes at least:
+
+- the exact `provider` and `adapter_contract`;
+- provider-envelope/parser contract version;
+- request/result reconciliation and Observation identity rules;
+- admission and Capture-stage Outcome rules;
+- numeric normalization rules;
+- Provider Update Time and Data Period rules;
+- field-state rules for nullable/optional/request-disabled facts;
+- the emitted Observation kinds and their kind versions;
+- object-level extension policy and fail-closed drift rules.
+
+A human-readable recipe name may be registered as metadata but does not participate in
+identity. Repository software/build version is execution provenance and does not, by
+itself, change recipe identity. If any semantic rule above changes, the canonical recipe
+bytes and digest must change.
+
+Registration of a provider recipe stores or otherwise makes its exact canonical bytes
+available to rebuildable PostgreSQL and verifies that an existing digest has identical
+bytes and adapter metadata. A hash/byte or adapter conflict fails before derived writes.
+Fixture-v1 registration remains governed by the preceding section.
+
+#### Provider JSON parsing and drift
+
+Provider body parsing is independent from the fixture admission parser. It starts only
+after the referenced Attempt/Capture/body pass Evidence verify-on-read.
+
+The parser MUST:
+
+- decode UTF-8 strictly;
+- reject duplicate JSON object member names;
+- reject non-finite numeric constants;
+- avoid binary-float normalization of decimal-capable provider values; structural JSON
+  integers may remain integers, while known decimal-capable fields accept integer or
+  decimal lexical forms and normalize exactly to a decimal representation;
+- validate required known paths, types, counts, timestamps, periods, and closed enum
+  values according to the recipe;
+- distinguish provider execution-duration strings from provider data/update timestamps.
+
+Each known object in the recipe is either closed or extension-permitted. An unknown field
+on a closed object is drift. An unknown additive field on an extension-permitted object is
+tolerated for the known mapping but produces a rebuildable Derivation diagnostic identified
+by stable code plus JSON Pointer path. Tolerated extensions are not Observations and do not
+alter raw Evidence.
+
+Malformed JSON/UTF-8, duplicate members, missing or wrong-typed required known fields,
+malformed provider timestamps/periods, impossible declared counts, unknown values of a
+closed enum, and other recipe-declared semantic drift produce no normal provider
+Observations from that Capture. A well-formed provider-level failure inside an HTTP-complete
+Capture is a provider Outcome, not schema drift.
+
+#### Request/result reconciliation and provider identity
+
+The verified Attempt, not a provider request echo, is request authority. For the first
+Keyword Overview recipe, the exact requested keyword string is the Observatory subject.
+The exact returned keyword string is preserved as provider testimony. Result/task/item
+array position is never a subject identity.
+
+A recipe may define a provider-specific normalization function solely for reconciliation.
+For admitted data, reconciliation from exact requested subjects to returned items must be
+unambiguous. If two requested subjects normalize to one provider key and the response does
+not supply an unambiguous mapping, the affected Capture fails reconciliation. Duplicate or
+unrequested returned items likewise fail reconciliation for the first recipe rather than
+being silently assigned. A requested keyword omitted under a provider contract that
+documents omission as “no provider data for that keyword” may yield a typed provider-
+coverage Observation keyed by the exact requested keyword.
+
+Filesystem traversal order, request-array order, provider result order, and provider task
+echo order are never Observation identities.
+
+#### Provider Observation envelope and typed details
+
+The provider-capable rebuildable substrate has one generic Observation envelope and typed
+Observation-kind detail relations. The envelope carries at least:
+
+- verified `attempt_id` and `capture_id` provenance;
+- provider `derivation_version_id` (recipe digest);
+- `provider` and `adapter_contract`;
+- recipe-declared `observation_kind`;
+- a deterministic within-Capture Observation identity derived from semantic identity axes,
+  never provider array position.
+
+The current physical `observations` table remains the accepted fixture-v1 representation
+during the first additive provider tickets and MUST NOT be widened with provider-specific
+nullable columns. The new envelope is the canonical direction for provider-capable
+Observations. Migrating fixture values into that envelope, if later useful, is a separate
+bounded rebuildable migration and must preserve fixture-v1 semantic identities/API behavior.
+
+Provider-specific values live in typed detail relations. Decimal-capable values are stored
+exactly (for PostgreSQL, a decimal/`NUMERIC` representation), and values never participate
+in content identity. Where a field can carry materially different testimony, its state is
+modeled at that field/fact, not once for the whole provider item. The first provider state
+vocabulary distinguishes at least:
+
+- stated value (including legitimate numeric zero and stated empty arrays);
+- provider JSON null;
+- permitted provider-unstated/absent field;
+- not requested, proven from the verified Attempt parameters;
+- recipe-defined inapplicable.
+
+Malformed or wrong-typed fields are Derivation/admission failures, not value states.
+
+#### Provider time and period
+
+Three axes are independent:
+
+1. **Capture/acquisition time** — Observatory transport provenance from the verified
+   Capture. It may be exposed with an Observation without being treated as provider data
+   time.
+2. **Provider Update Time** — parsed only from the exact provider structure whose recipe
+   states that the timestamp governs. A sibling structure's timestamp is never inherited.
+3. **Data Period** — an independent period such as historical `(year, month)`.
+
+An Observation may have both Provider Update Time and Data Period. If either is not stated
+for the fact, it remains explicitly unstated. Capture time never fills either gap.
+
+#### Provider Outcome and write behavior
+
+Provider Attempt-stage Outcome remains `authorized_unresolved` while the verified Attempt
+has no derived Capture-stage meaning. The first provider recipe may use the existing generic
+transport classifications `no_response`, `response_partial`, and
+`transport_complete_non_admissible`, plus provider-specific closed classifications for a
+well-formed provider-level error, envelope/schema rejection, request/result reconciliation
+failure, and successful admission. Provider classifications such as search intent or
+competition level are Observation values, never Observatory Outcomes.
+
+All derived rows/diagnostics for one admitted provider Capture are written atomically as a
+Capture unit. Re-running the same recipe against the same verified Evidence is idempotent
+only when every existing row under the same natural identity equals the newly intended
+content. A mismatch fails closed; provider code MUST NOT use conflict-ignore behavior to
+mask divergent intended rows.
+
+#### PF-03 conformance fixture and ordinary tests
+
+Before the first provider parser is accepted, the exact verified PF-03 response body is
+read through the existing read-only inspector, its byte length and SHA-256 are recorded,
+and those exact bytes are copied into the deterministic test corpus. Ordinary tests never
+read the operator Evidence root and never perform provider network activity.
+
+The frozen response is a conformance input, not new Evidence authority. Tests pair it with
+expected typed interpretation and bounded mutations covering at least item reordering,
+duplicate JSON keys, non-finite numbers, integer/decimal lexical variation, missing/extra/
+duplicate result items, count mismatch, malformed timestamps/periods, provider task error,
+field null/absence/request-disabled cases, and additive fields on extension-permitted
+objects.
+
+Later separately authorized real API calls may create new Evidence that is run through the
+same parser as a contract probe. Live provider access is never a dependency of ordinary
+tests.
+
+#### Provider API sequencing
+
+`GET /v1/attempts/{attempt_id}` remains an Evidence-backed audit/provenance resource. Before
+provider-derived values are exposed, the API must support adapter-appropriate recipe
+selection rather than applying one process-global `derivation_version_id` to every adapter,
+and prior provider recipe versions must remain addressable.
+
+The first consumer-facing Keyword Overview history resource stays provider/surface explicit
+and exposes provenance, recipe identity, exact request/returned subject context, independent
+time/period semantics, and field states. A generic cross-provider metric or generic
+strategy-facing Observation query is not authorized by this section; F10 projections and
+the downstream Strategy layer remain the places to generalize after real consumers prove a
+common shape.
+
 ---
 
 ## Conformance vectors

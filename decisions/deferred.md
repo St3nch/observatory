@@ -234,22 +234,22 @@ tables absorb reshape pressure that belongs in a versioned projection.
 
 ## F11 — Provider Derivation identity, drift, and data time
 
-**Deferred by:** D9/D10's raw-provider-testimony boundary. Provider responses are preserved
-as Evidence but are not yet interpreted into provider Outcomes or Observations.
+**Resolved by:** D11 on 2026-08-16. This entry remains as trigger history.
 
-**Why not now:** No provider-specific Derivation exists. Fixture v1 remains governed by its
-closed conformance contract and existing semantic label; changing its identity mechanism
-now would add schema churn without solving a live provider problem.
+**Original deferral:** D9/D10's raw-provider-testimony boundary preserved provider responses
+as Evidence without interpreting them into provider Outcomes or Observations. Fixture v1
+remained governed by its closed conformance contract and semantic label.
 
 **Trigger:** Before the first provider-specific Derivation, provider Outcome/Observation
 mapping, or API exposure of provider-derived values is accepted.
 
-**Required decision at trigger:** Define an immutable derivation-recipe identity, or
-equivalent registration metadata, that makes behavior changes require a new
-`derivation_version_id`; define versioned provider-envelope parsing and fail-closed drift
-handling without rewriting raw Evidence; and keep Observatory capture timestamps distinct
-from provider-stated update times and data periods. Provider-unstated time/period remains
-explicitly unstated rather than inheriting capture time.
+**Trigger result:** PF-03 returned the first real paid provider response and exposed
+non-positional item order, multiple independently updated provider structures, historical
+monthly testimony, decimal values, and distinct null/disabled states. The trigger fired.
+D11 now defines content-addressed provider recipe identity, strict/versioned parsing and
+drift handling, semantic request/result reconciliation, typed Observation kinds, exact
+numeric normalization, field-level value states where needed, and independent
+capture/provider-update/data-period time axes. Fixture v1 identity remains unchanged.
 
 **Cost of forgetting:** Different derivation behavior can reuse one label, provider schema
 changes can silently alter or break ingestion, and monthly or provider-updated metrics can

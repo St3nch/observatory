@@ -68,6 +68,29 @@ directly.
 Capture events (and their bodies) and Attempts, produces Outcomes and—when admission
 allows—Observations, without changing Evidence.
 
+**Derivation Recipe** — For provider Derivations, the closed canonical document that fixes
+the semantic interpretation of one adapter contract: parser, reconciliation, admission and
+Outcome rules, numeric semantics, time/period semantics, field-state semantics, emitted
+Observation kinds, and extension/drift policy. Its JCS bytes are content-addressed; the
+lowercase 64-hex SHA-256 is the provider `derivation_version_id`. Changing semantic meaning
+requires a new recipe identity. Fixture v1 keeps its pre-existing semantic-label rule.
+
+**Observation Kind** — A recipe-versioned typed family of source-attributed provider facts
+that share one semantic shape and identity rule, such as keyword metrics, one historical
+monthly search-volume point, search intent, or a provider-coverage statement. Observation
+kinds share a common provenance envelope but do not imply that unlike provider metrics have
+one universal value model.
+
+**Provider Update Time** — A timestamp the Provider explicitly states for the particular
+provider structure from which an Observation is derived. It is independent of Observatory
+Capture/acquisition time and from any Data Period. If the provider does not state an update
+time for that fact, the Provider Update Time is explicitly unstated rather than inherited.
+
+**Data Period** — The provider-stated or provider-encoded period to which a fact applies,
+such as a specific year/month in a historical series. A Data Period is not a Capture time
+and is not a Provider Update Time. An Observation may have a Data Period, a Provider Update
+Time, both, or neither according to its recipe.
+
 **request_fingerprint** — The full lowercase 64-hex SHA-256 of a versioned canonical
 credential-free request-identity document (RFC 8785/JCS). It groups equivalent serialized
 requests for path routing, investigation, and duplicate-authorization policy. It is not
@@ -78,9 +101,9 @@ preimage and for Attempt/Capture manifests is normative in
 `docs/specs/capture-event-v2.md` (store format 2, layout v1).
 
 **Provider** — An external source or instrument that returns SEO/GEO-related data. Provider
-output is attributed to that provider and is not treated as universal truth. The first
-implementation remains fixture-only (`fixture-panel-v1`) and must not perform real
-provider network activity.
+output is attributed to that provider and is not treated as universal truth. Provider
+transport Evidence may exist before a provider-specific Derivation; raw provider bytes do
+not become Observations merely because a Capture succeeded.
 
 **Provenance** — The information connecting an Observation to its Provider, Attempt
 (`attempt_id`), Capture (`capture_id`), Evidence bodies, capture context, derived Outcome

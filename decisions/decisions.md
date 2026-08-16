@@ -329,3 +329,111 @@ safety.
 
 **Normative detail:** `docs/specs/capture-event-v2.md`, section “Paid Keyword Overview
 probe adapter.”
+
+## D11 — Provider Derivation is recipe-addressed, typed, and time-explicit
+
+**Decision:** The first provider-specific Derivation is authorized only on a new
+provider-capable rebuildable substrate. Attempt/Capture/Evidence Store semantics from D8–D10
+remain unchanged. Raw provider bytes stay immutable Evidence; every provider Outcome and
+Observation remains rebuildable from verified Evidence plus an immutable Derivation recipe.
+
+For provider Derivations, `derivation_version_id` is the lowercase 64-hex SHA-256 of a
+closed RFC 8785/JCS **Derivation Recipe** document. A human-readable name may accompany the
+recipe but is not identity. The recipe fixes the adapter contract, provider-envelope parser
+contract, request/result reconciliation rule, admission and Outcome rules, numeric parsing
+semantics, provider-time/data-period semantics, field-state semantics, emitted Observation
+kinds, and the extension/drift policy. Any semantic change to those rules requires different
+recipe bytes and therefore a new `derivation_version_id`. Fixture v1 keeps its already
+accepted operator-supplied semantic labels and is not retrofitted merely to satisfy this
+provider rule.
+
+Provider response parsing is strict on known semantics: UTF-8 decoding is strict; duplicate
+JSON object member names and non-finite JSON numbers are rejected; decimal-capable provider
+values are normalized without a binary-float round trip; required known fields and known
+enums/types are versioned by the recipe. A recipe may explicitly mark an object as
+extension-permitted. Unknown additive fields in such an object do not invalidate Evidence or
+known Observations; they produce rebuildable Derivation diagnostics. Missing/wrong-typed
+known fields, malformed provider timestamps/periods, unknown values of a closed enum, or
+other recipe-declared semantic drift fail closed for that Capture's provider Observation
+set. Drift never rewrites or repairs Evidence.
+
+Request/result reconciliation is semantic, never positional. The exact requested keyword
+from the verified Attempt is the Observatory subject for the first Keyword Overview recipe;
+the exact provider-returned keyword is preserved separately as provider testimony. A
+recipe-defined provider normalization may be used only to reconcile the two. Reconciliation
+must be unambiguous: response array order, filesystem walk order, provider task echoes, and
+array indexes are not identities. A documented provider omission of a requested keyword may
+be admitted as a bounded provider-coverage Observation. Duplicate/unrequested returned
+items, or two requested subjects that collapse to one returned provider key without an
+unambiguous mapping, fail reconciliation rather than being guessed.
+
+Provider time is explicitly multi-axis. Capture/acquisition time is Observatory provenance;
+provider-stated update time belongs only to the provider structure that states it; a data
+period such as `(year, month)` is independent of both. Provider-unstated time or period stays
+unstated and never inherits Capture time. Provider duration fields are not timestamps.
+
+The provider-capable Observation model uses a generic Observation envelope plus typed
+Observation-kind detail relations. The current physical `observations` relation is a
+fixture-v1 implementation detail and must not be widened into a universal provider row.
+The first provider tickets may add the canonical envelope alongside the existing fixture
+relation to keep fixture acceptance stable; that additive sequencing does not make the
+fixture relation the long-term definition of Observation. Provider field state is modeled
+at the field/fact level where necessary so stated values (including numeric zero), provider
+JSON null, permitted absence, request-disabled data, and recipe-defined inapplicability are
+not collapsed. Malformed/wrong-typed data is a Derivation failure, not a value state.
+
+Same-recipe re-derivation is content-consistent, not merely duplicate-suppressing. When a
+provider Outcome, Observation, or diagnostic natural identity already exists, the intended
+derived content must agree exactly; disagreement is a Derivation failure. Provider
+idempotency must not rely on `ON CONFLICT DO NOTHING` to conceal changed meaning.
+
+The existing `GET /v1/attempts/{attempt_id}` remains an audit/provenance resource. Before
+provider-derived API exposure, recipe selection must no longer be one process-global version
+for all adapters. The first consumer-facing provider history API should remain explicit to
+its provider/surface semantics rather than prematurely defining a universal SEO metric or
+generic cross-provider Observation query contract. Prior recipe versions remain addressable;
+strategy, opportunity scoring, and cross-provider interpretation remain downstream.
+
+Ordinary tests never call the paid provider. The verified PF-03 response is promoted, after
+exact-byte/hash verification, to a frozen zero-network conformance fixture. Parser and
+Derivation tests use that fixture plus bounded adversarial mutations (ordering, duplicate
+keys/items, omitted/extra items, count mismatches, decimal lexical forms, invalid numbers,
+timestamps/periods, task errors, nullable fields, and permitted unknown extensions). Later
+real provider calls, when separately authorized, are contract probes captured as Evidence;
+they are not dependencies of the normal test suite.
+
+**Why:** PF-03 exposed real provider structure that the fixture model cannot represent
+honestly: nested provider envelopes, non-positional result order, decimal metrics, multiple
+independent provider update clocks, revisable historical monthly testimony, and distinct
+null/absence/request-disabled states. The Evidence boundary already preserves all of this;
+the rebuildable layer must now interpret it without universalizing provider semantics or
+inventing false time/identity.
+
+**Cost:** Provider Derivation adds recipe registration, strict parsing, typed detail
+relations, diagnostics, reconciliation rules, and adapter-aware API selection. Fixture and
+provider rows temporarily use different physical rebuildable relations during the additive
+migration. Provider schema changes may require new recipes and re-derivation. This is
+deliberate complexity on the disposable side in exchange for preserving Evidence truth and
+historical reproducibility.
+
+**Rejected:**
+
+- widening the fixture `observations` row with provider-specific nullable columns;
+- a JSONB/EAV provider dump presented as normalized Observation semantics;
+- returned-array index or provider result order as Observation identity;
+- provider-returned keyword text alone as the subject identity;
+- silently mapping ambiguous provider-normalized keywords to request subjects;
+- binary floating-point normalization for decimal provider testimony;
+- one Observation-level null/value flag for multi-field provider structures;
+- inheriting Capture time when the provider does not state update time or data period;
+- failing all derivation merely because an explicitly extension-permitted object gained an
+  unknown additive field;
+- tolerating known-field type/enum/time drift as if it were a harmless extension;
+- reusing the fixture parser/classifier as the provider parser;
+- live paid-provider access from ordinary tests;
+- replacing the Attempt audit endpoint with the first consumer history endpoint;
+- designing Google search demand, YouTube interest, YouTube rankings, or future third-party
+  metrics as one universal metric before real consumers prove a common projection.
+
+**Normative detail:** `docs/specs/capture-event-v2.md`, section “Provider Derivation after
+F11.”
