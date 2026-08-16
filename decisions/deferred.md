@@ -44,10 +44,12 @@ paid-provider sequencing.
 **Cost of forgetting:** Observatory may prove a sound data path but remain too narrow for
 the next consumer.
 
-**Bounded activation:** D9 authorizes only the provider-neutral HTTP event foundation and
-one DataForSEO Google Organic Live Advanced tracer against the free sandbox. This does not
-fire broad provider coverage, paid transport, Standard/asynchronous operation, provider
-derivation, or a capability catalog. Those remain deferred to their recorded triggers.
+**Bounded activation:** D9 authorizes the provider-neutral HTTP event foundation and one
+DataForSEO Google Organic Live Advanced tracer against the free sandbox. D10 additionally
+authorizes implementation of one tightly budgeted DataForSEO Labs Google Keyword Overview
+Live adapter, with a maximum of five keywords and one exchange. Neither decision fires
+broad provider coverage, Standard/asynchronous operation, provider derivation, or a
+capability catalog. Those remain deferred to their recorded triggers.
 
 **Provider direction:** DataForSEO is the first provider, not Observatory's exclusive
 provider. Ahrefs and Semrush are expected future supplementary and comparison sources.
@@ -66,6 +68,11 @@ authorized.
 
 **Cost of forgetting:** High-consequence Evidence Store durability, Attempt authorization
 concurrency, recovery, or rebuild claims may reach production without adversarial proof.
+
+**Satisfied for bounded paid-probe sequencing:** HAM-01 closed on 2026-08-16 after 42
+Attempt-phase and 30 Capture-phase process-death fault points plus the operator run on the
+supported ext4 Evidence filesystem. This satisfies F4 for D10 only; it does not prove
+power-loss, device-cache, off-host recovery, or concurrent writers.
 
 ## F5 — Strategy-layer design
 
@@ -92,6 +99,10 @@ authority.
 
 **Cost of forgetting:** Host loss, disk failure, or operator deletion permanently destroys
 irreplaceable capture history.
+
+**Current state:** Triggered for D10's first real paid response. PF-03 implementation and
+zero-network review may proceed, but the operator paid invocation remains blocked until a
+separately accepted off-host protection path exists.
 
 ## F7 — Multi-process capture authorization locking
 

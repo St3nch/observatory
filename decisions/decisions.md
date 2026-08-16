@@ -264,3 +264,68 @@ HTTP write APIs by F9, and projections by F10.
 
 **Normative detail:** `docs/specs/capture-event-v2.md`, section “Provider HTTP event
 version 2.”
+
+## D10 — The first paid probe is one bounded Keyword Overview exchange
+
+**Decision:** Observatory may implement one paid DataForSEO adapter contract for learning:
+`dataforseo-labs-google-keyword-overview-live-paid-probe-v1`. One explicit operator
+invocation authorizes exactly one POST, containing one task and one to five keywords, to
+DataForSEO Labs Google Keyword Overview Live. Location is fixed to United States
+(`location_code=2840`), language to English (`language_code=en`), and both SERP
+enrichment and clickstream data are fixed off. Redirects, retries, polling, asynchronous
+task workflows, endpoint overrides, and automatic follow-up probes are forbidden.
+
+The Attempt records an integer authorization ceiling of 20,000 micro-USD ($0.02) and the
+dated published-pricing basis used to judge the closed request shape. The command must
+carry the exact ceiling as a deliberate operator acknowledgement; it is not inferred from
+credential presence. This is an authorization limit, not a claim that Observatory can
+force an external provider's invoice. The request shape and current published price are
+verified before the operator run, and the provider-reported cost remains raw Capture body
+testimony.
+
+The paid adapter reuses HTTP event version 2, store format 2, bundle layouts v1, the D9
+Attempt-before-send capability gate, credential boundary, response-header omission policy,
+8 MiB response bound, and complete/partial/no-response semantics. The adapter contract,
+target, parameters, policy, and exact request bytes are independently closed. Sandbox
+bytes and identities remain unchanged.
+
+The first paid probe remains Evidence-only. It emits no provider Outcome, Observation,
+PostgreSQL row, or HTTP API resource. A separately invoked service-owned read-only
+operator command may emit the exact verified response body for this adapter so [CHAZ] can
+inspect what the endpoint actually returned; that command does not capture, retry, mutate,
+normalize, or create a second authority.
+
+**Why:** The sandbox proved authentication, transport, Evidence commit, and scrub, but its
+dummy response cannot show which real keyword fields, values, nulls, or costs DataForSEO
+returns. A five-keyword Overview request gives high learning value for a few cents while
+preserving the one-Attempt/one-exchange boundary and all raw bytes needed for later
+provider-specific Derivation.
+
+**Cost:** Event-version-2 validation must dispatch by adapter contract after schema/version
+dispatch. The paid transport is intentionally single-purpose and partly duplicates the
+sandbox gate. Provider pricing is external and mutable. The first real response cannot be
+accepted as sole-copy authority until F6 off-host protection is satisfied.
+
+**Rejected:**
+
+- a generic endpoint runner or caller-supplied URL, headers, task object, location,
+  language, enrichment flags, or spend ceiling;
+- loading the provider catalog, account User Data, balance, or price endpoints as hidden
+  preflight exchanges;
+- using one paid invocation for more than five keywords, or automatically issuing the
+  next endpoint after success;
+- enabling `include_serp_info` or `include_clickstream_data`;
+- claiming the $0.02 policy value is a provider-enforced billing guarantee;
+- parsing the probe into Outcomes/Observations, PostgreSQL, or an HTTP API;
+- authorizing Ahrefs, Semrush, Standard/asynchronous DataForSEO tasks, or another paid
+  endpoint.
+
+**Sequencing authorization:** HAM-01 satisfies F4 for this bounded adapter. Implementation
+and zero-network deterministic review may proceed. A real paid operator invocation remains
+blocked until F6 has an accepted off-host protection path and the Steward issues the exact
+one-shot command after rechecking current official pricing. F7 remains deferred because
+the accepted runner is one operator and one process; it must not claim concurrent-writer
+safety.
+
+**Normative detail:** `docs/specs/capture-event-v2.md`, section “Paid Keyword Overview
+probe adapter.”

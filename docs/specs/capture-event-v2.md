@@ -1,7 +1,7 @@
 # Capture Event v2 — Normative Contract
 
 **Status:** accepted normative specification (CE-01 authority package; Q37 schemas)
-**Authority parents:** VISION.md, VOCABULARY.md, D8, ADR 0001
+**Authority parents:** VISION.md, VOCABULARY.md, D8, D9, D10, ADR 0001
 **Store format:** 2
 **Attempt bundle layout:** v1
 **Capture bundle layout:** v1
@@ -58,7 +58,7 @@ PostgreSQL as the sole surviving record.
 11. No secrets in Evidence.
 12. Local commit ≠ off-host protection.
 13. The accepted first proof is fixture-only (`fixture-panel-v1`); provider network is
-    permitted only under D9 and never from ordinary automated tests.
+    permitted only under D9/D10 and never from ordinary automated tests.
 14. Recursive unknown-key rejection on all identity-bearing objects.
 15. fixture-panel-v1 transport is in-process, not HTTP; Capture v1 response has no HTTP
     status, `http_version`, or `url`.
@@ -465,10 +465,69 @@ Credential environment names are `OBSERVATORY_DATAFORSEO_LOGIN` and
 `OBSERVATORY_DATAFORSEO_PASSWORD`. Names are configuration; values must never enter
 Evidence, stdout/stderr, logs, exceptions, or test snapshots.
 
+#### Paid Keyword Overview probe adapter
+
+D10 adds exactly one second event-version-2 adapter:
+
+    dataforseo-labs-google-keyword-overview-live-paid-probe-v1
+
+Its provider is exactly `dataforseo`. Its target is exactly one POST to
+`https://api.dataforseo.com/v3/dataforseo_labs/google/keyword_overview/live`. The
+request contains exactly one task. Redirects, retries, polling, task-post/task-get,
+account/catalog/User-Data preflights, and any second exchange are forbidden.
+
+The closed `parameters` object is:
+
+| Property | JSON type | Constraint |
+|---|---|---|
+| `contract` | string | exact paid adapter-contract token above |
+| `keywords` | array of strings | length 1..5; order identity-bearing; no duplicates |
+| each keyword | string | 1..80 printable ASCII characters; begins and ends with ASCII alphanumeric; internal characters limited to `A-Z a-z 0-9 space & ' ( ) + , . / : -` |
+| `location_code` | integer | exactly `2840` |
+| `language_code` | string | exactly `en` |
+| `include_serp_info` | boolean | exactly `false` |
+| `include_clickstream_data` | boolean | exactly `false` |
+
+The provider task is `parameters` without `contract`. Request-body bytes are UTF-8
+JCS of a singleton array containing that task, with no trailing newline. The exact
+credential-free request is POST, HTTPS, host `api.dataforseo.com`, null port, path
+`/v3/dataforseo_labs/google/keyword_overview/live`, empty query, the same five committed
+application headers in the same order as the sandbox adapter, and the exact body reference.
+Transport may add only the D9 Authorization, Host, and Content-Length headers.
+
+The closed `policy` is:
+
+    {"max_authorized_cost_micro_usd":20000,"mode":"paid_probe","policy_version":"dataforseo-paid-probe-v1","pricing_basis":"dataforseo-labs-google-live-2026-08-16"}
+
+`max_authorized_cost_micro_usd` is an I-JSON integer and exactly 20,000. It records
+[CHAZ]'s maximum authorization for the one exchange. It is not a provider-side billing
+guarantee. `pricing_basis` records the dated official price schedule used when this
+contract was authorized. A live run requires a fresh Steward price check and exact
+`--authorize-max-micro-usd 20000` operator acknowledgement before Attempt creation.
+
+The public paid CLI accepts no endpoint, task JSON, location, language, enrichment,
+timeout, header, credential, retry, or alternate-ceiling argument. It rejects a store that
+already contains a committed Attempt for this paid adapter before creating a new Attempt.
+This is a single-process one-shot guard, not F7 concurrency proof.
+
+After committed Capture read-back, no automatic envelope parsing or follow-up occurs.
+Capture mode prints only `attempt_id` and `capture_id`. A separately invoked read-only
+inspection mode may accept only an Evidence root and Capture ID, require a verified
+complete Capture from this exact adapter, then emit its exact response-body bytes to
+stdout. Inspection performs no network, mutation, normalization, summary, or persistence.
+Provider cost, status, task IDs, messages, results, and nulls therefore remain raw
+testimony rather than Outcomes or Observations.
+
+Implementation and ordinary review use sentinel credentials plus mock/127.0.0.1 only.
+The internal loopback seam accepts only
+`http://127.0.0.1:<port>/v3/dataforseo_labs/google/keyword_overview/live` and is
+unreachable from the public CLI. No real paid invocation is authorized until F6 is
+satisfied and the Steward provides the exact operator command.
+
 #### Request fingerprint and Attempt version 2
 
-The request object uses the shared closed `request` shape. For this adapter its constants
-and body are the values above.
+The request object uses the shared closed `request` shape. Its constants and body are
+selected by the exact adapter contract above; adapter contracts are never mixed.
 
 The request-fingerprint document has exactly:
 
@@ -477,15 +536,16 @@ The request-fingerprint document has exactly:
 | `schema` | `observatory.request-fingerprint` |
 | `version` | integer `2` |
 | `provider` | `dataforseo` |
-| `adapter_contract` | exact first-adapter token |
-| `request` | closed adapter request |
+| `adapter_contract` | exact recognized event-v2 adapter token |
+| `request` | closed request for that same adapter |
 
 `request_fingerprint` is SHA-256(JCS(document)).
 
 Attempt version 2 has exactly the version-1 top-level fields except
 `prior_attempt_id` is not permitted; `version` is `2` and provider, adapter, request,
-parameters, and policy follow this section. `software` remains the closed object containing
-only `observatory_version`. `attempt_id` remains SHA-256(JCS(Attempt manifest)).
+parameters, and policy follow the selected adapter section. `software` remains the closed
+object containing only `observatory_version`. `attempt_id` remains
+SHA-256(JCS(Attempt manifest)).
 `prior_attempt_id` must not be overloaded to claim that a later request was constructed
 from earlier response testimony. Standard/asynchronous provenance is deferred and may
 require a later event version with an explicit source-Capture citation.
@@ -635,6 +695,32 @@ The omission marker states that one `set-cookie` field was received; its value i
 deliberately not part of the vector or Evidence. Version-2 branch tests for partial and
 no-response use the closed rules above; this published complete vector fixes the shared
 request, omission, status, HTTP-version, body, and identity semantics.
+
+#### Paid-probe conformance vector
+
+This vector fixes the second adapter without changing any published sandbox byte or ID.
+Inputs: authorized time `2026-08-16T16:00:00.000000Z`, nonce = 64 `4` characters,
+software `conformance-paid-probe-v1`, and keywords in this exact order:
+`seo api`, `keyword research`, `local seo`,
+`generative engine optimization`, `ai search optimization`.
+
+Request body (216 bytes):
+
+    [{"include_clickstream_data":false,"include_serp_info":false,"keywords":["seo api","keyword research","local seo","generative engine optimization","ai search optimization"],"language_code":"en","location_code":2840}]
+
+| Vector | Bytes | SHA-256 |
+|---|---:|---|
+| request body | 216 | `3fc7205a55a1a5c464c0ae4ebca21a1e3088c2022565929a670fdf757ab7987b` |
+| request-fingerprint preimage | 622 | `6cc5765911abe752a974d2fba268d927fdc055147c1286fffdfe0ee585cdc610` |
+| Attempt preimage | 1367 | `89904bf8a6812fb3d0d845310e4705962bb4db928b80da3be67342dff5def185` |
+| sample response body `{"cost":0.0126,"tasks":[]}` | 26 | `5b69c7675c3f03d95bb5071bf0da855e3a476521939dccd757d3295746cd33d1` |
+| complete Capture preimage | 1433 | `dbaaf68a38e54e39d4fc03807d72eda37f8efd9a212220c0a99d270ddcec6917` |
+
+The sample Capture uses HTTP 200/1.1, retained
+`[["content-type","application/json"]]`, no omitted headers, timestamps at
+`.100000Z`, `.200000Z`, `.300000Z`, and `.400000Z` in request/header/body/end
+order, and the Attempt/software values above. Tests must recompute these bytes and IDs
+independently of production constructors.
 
 
 ---
