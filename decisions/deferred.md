@@ -100,9 +100,9 @@ authority.
 **Cost of forgetting:** Host loss, disk failure, or operator deletion permanently destroys
 irreplaceable capture history.
 
-**Current state:** Triggered for D10's first real paid response. PF-03 implementation and
-zero-network review may proceed, but the operator paid invocation remains blocked until a
-separately accepted off-host protection path exists.
+**Current state:** D10's first paid Capture completed the accepted manual off-host protection
+sequence. F6 remains deferred for routine paid or production Evidence until a separately
+accepted automated snapshot, retention, and restore-drill policy exists.
 
 **D10 rehearsal accepted — 2026-08-16:** [CHAZ] completed the minimum replaceable-Evidence
 rehearsal against the clean PF-02 sandbox smoke store
