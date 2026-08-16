@@ -153,6 +153,14 @@ independent inventory/set comparison supplies the completeness witness for this 
 This manual proof is proportionate only to D10's first bounded probe. Routine paid capture
 requires a separately accepted automated snapshot, retention, and restore-drill policy.
 
+**Routine automation status — deferred 2026-08-16:** The accepted manual D10 protection
+path remains available, but unattended backup automation is not yet accepted. The intended
+long-term destination is Cloudflare R2 with a dedicated project backup bucket and scoped
+machine credentials. R2 account subscription/payment verification could not be completed
+while [CHAZ]'s phone was unavailable, so bucket creation, credentials, migration rehearsal,
+systemd automation, retention, and restore-drill policy remain deferred until that access
+dependency is restored. The existing Google Drive rehearsal copy is preserved meanwhile.
+
 ## F7 — Multi-process capture authorization locking
 
 **Deferred by:** D8 and the fixture vertical-slice single-process proof boundary.
