@@ -86,8 +86,9 @@ Use adapter-specific paid constructors/validators with names that do not silentl
 the sandbox functions' meaning.
 
 Keyword rules are exactly normative: array length 1..5, order preserved, no duplicates,
-and each keyword matches the spec's printable-ASCII/length/boundary rule. Request-body
-bytes equal JCS of one task formed by removing only `contract` from parameters.
+and each keyword matches the spec's printable-ASCII/length/boundary rule plus its maximum
+of 10 maximal nonempty word runs separated by ASCII space. Request-body bytes equal JCS of
+one task formed by removing only `contract` from parameters.
 
 ## Structural send gate
 
@@ -142,8 +143,8 @@ At minimum:
   scrub clean;
 - fixture derive writes exactly its prior rows and skips both valid provider adapters with
   zero provider rows and no integrity failure;
-- paid parameter boundaries, duplicates, keyword character/length rules, fixed booleans,
-  fixed location/language, exact policy, and exact task bytes are closed;
+- paid parameter boundaries, duplicates, keyword character/length/10-word rules, fixed
+  booleans, fixed location/language, exact policy, and exact task bytes are closed;
 - sandbox/paid adapter, host, path, policy, parameter, and body-confusion cases fail;
 - missing/wrong authorization acknowledgement fails before Attempt, handler, or credential
   injection;
@@ -347,3 +348,16 @@ Steward formal review required the authorization acknowledgement to be bound int
 1. **`_issue_verified_attempt` requires acknowledgement.** `issue()` takes required keyword `authorize_max_micro_usd` and calls `_require_authorization` before store-type check, one-shot inspect, Attempt commit, capability issuance, or `_exchange`. Missing keyword is `TypeError`; no capability is issued, so `_exchange` remains unreachable.
 2. **Exact runtime type and value.** `_require_authorization` accepts only `type(value) is int` and `value == 20000`. `20000.0`, strings, `Decimal`, booleans, `None`, and other integers fail with `StoreError` before Attempt or handler.
 3. **Adversarial proof.** `test_issuer_requires_authorization_before_attempt_or_exchange`, `test_issuer_rejects_malformed_and_wrong_authorization_before_attempt`, `test_public_path_rejects_non_int_authorization_before_attempt`, `test_exact_integer_20000_still_permits_mock_and_loopback`, plus unchanged one-shot tests. Rejected cases leave 0 Attempts, 0 Captures, and 0 handler calls.
+
+## Steward audit reconciliation — 2026-08-16
+
+Official DataForSEO Keyword Overview documentation states a maximum of 10 words per
+keyword phrase in addition to the existing 80-character limit. The accepted event-v2
+authority and this ticket now close that boundary as at most 10 maximal nonempty runs
+separated by ASCII space.
+
+PF-03 remains `review`. Before any live provider command, add production validation and
+tests proving 10-word acceptance, 11-word rejection before Attempt/handler/network, and
+unchanged published paid/sandbox/event-v1 vectors. This is a new remediation commit on top
+of `11bcebec5be8c446381b67002ddfb8d7ee13712b`; do not amend or push. Implementation and
+tests remain mock/127.0.0.1 only and must spend zero provider credit.
