@@ -1,6 +1,6 @@
 # PF-02 — DataForSEO sandbox transport and Evidence smoke
 
-**Status:** review
+**Status:** done
 **Parent spec:** docs/specs/capture-event-v2.md, “Provider HTTP event version 2”
 **Authority:** D8, D9
 **Kind:** provider-foundation implementation
@@ -284,7 +284,7 @@ Two-axis review vs `cb84dd6…`:
   PF-01 modules are frozen.
 - Spec: paid-policy + WriteTimeout proofs added; Capture read-back now checks
   document/body parity; outer-path `response_headers_at` uses headers-received
-  time. Operator smoke remains for Steward closure.
+  time. At that review point, operator smoke remained for Steward closure.
 
 ### Weakest remaining area
 
@@ -293,16 +293,16 @@ client errors. Loopback proves HTTP/1.1 framing only.
 
 ### Exact unproven limits
 
-- No TLS, HTTP/2, timeout realism, DNS, or DataForSEO sandbox behavior
-- Operator smoke not run ([CHAZ])
+- No HTTP/2 or timeout-realism claims beyond the successful sandbox smoke
 - No crash/fsync, multi-process writer, or off-host recovery claims
 - No paid host, production data, rates, or provider semantics
 
 ### Confirmation
 
-No real sandbox or paid request was made. Ordinary tests use MockTransport or
-127.0.0.1 loopback; `socket.create_connection` to any other host fails the
-suite. Sentinel credentials only.
+Ordinary tests use MockTransport or 127.0.0.1 loopback;
+`socket.create_connection` to any other host fails the suite. Sentinel
+credentials only. The closure smoke made one real sandbox request and no paid
+request.
 
 ### Disagreements / authority ambiguities
 
@@ -312,7 +312,8 @@ session's clean HEAD. Recorded start is `cb84dd6a…`.
 
 ### Remediation (on `9d2a1aa1301d6d2b5edb902777f74b60f3e20e2f`)
 
-Steward review required three fail-closed fixes. Status remains `review`.
+Steward review required three fail-closed fixes. At remediation time, status
+remained `review`.
 
 1. **Loopback override allowlist.** `_require_loopback_endpoint` accepts only
    `http://127.0.0.1:<1..65535>/v3/serp/google/organic/live/advanced` (no
@@ -332,3 +333,41 @@ Steward review required three fail-closed fixes. Status remains `review`.
    `login == ""` or `password == ""` with `CredentialError` and fixed
    non-secret text. Proven by
    `test_direct_empty_credentials_fail_before_attempt`.
+
+## Steward closure
+
+**Closed:** 2026-08-16 by the Project Steward after [CHAZ]'s one authorized
+DataForSEO sandbox smoke.
+
+**Accepted commits:** implementation
+`9d2a1aa1301d6d2b5edb902777f74b60f3e20e2f`; remediation
+`c4f97a39cef25367053a98abe26f3451a17de960`.
+
+**Deterministic review:** the baseline suite passed with 600 tests, Ruff and
+mypy clean. The final formal Steward review added 17 adversarial cases for
+endpoint rejection, genuine streaming credential echoes, and direct empty
+credentials; all 617 tests passed.
+
+**Operator smoke Evidence root:**
+`/home/chaz/.local/share/vedaops/observatory/pf02-smoke-20260816T144311Z`
+
+- Attempt:
+  `ad118d034193dfaa248dae77b9ad2d4d6e5a995530a6781d56fa1daa26f37916`
+- Capture:
+  `d72438ceb977737f35dbb7790b3634c3abd6706e61f6ffddcc6993c36a0cfc39`
+- Full verified read-back reproduced both IDs.
+- The verified Attempt retained the fixed HTTPS sandbox target,
+  `sandbox_no_spend / dataforseo-sandbox-v1` policy, exactly one task,
+  and fixed depth 10.
+- A real sandbox response was committed as 39,334 raw body bytes.
+- Format inspection reported `format-2 ok`; store status and scrub both
+  exited 0.
+- Credential scan reported `clean`; the captured terminal output disclosed
+  neither credential value.
+- Capture, verification, store, and scrub statuses were all 0.
+
+This closes only the sandbox transport claim: authentication, TLS/DNS
+reachability at the smoke time, one real sandbox response, durable Evidence,
+verified read-back, credential non-disclosure, and clean scrub. It does not
+claim paid-host behavior, production data or semantics, rates/costs, retries,
+historical data, HTTP/2, timeout realism, or broader provider support.
