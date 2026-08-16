@@ -104,6 +104,30 @@ irreplaceable capture history.
 zero-network review may proceed, but the operator paid invocation remains blocked until a
 separately accepted off-host protection path exists.
 
+**Minimum acceptance for D10 only:** Before the paid command is authorized, the exact
+procedure and destination must be rehearsed with replaceable Evidence. The destination is
+not a filesystem on the capture host: it is encrypted remote/cloud storage, a separate
+host, or a disconnected removable medium stored separately. Another directory, another
+internal disk, Git, and the source repository do not qualify. A destructive mirror without
+retained snapshots does not qualify.
+
+The rehearsal and the first paid-Capture protection sequence must each:
+
+1. quiesce the source store, inspect it, and scrub every discovered commitment clean;
+2. record sorted exact committed Attempt and Capture ID sets outside the source store;
+3. create a timestamped, non-destructive off-host snapshot containing the full Evidence
+   root and the recorded inventory, without credentials or unrelated configuration;
+4. restore that snapshot into a fresh local directory;
+5. open and scrub the restored store clean; and
+6. require exact equality between the restored committed-ID sets and the recorded source
+   sets.
+
+Scrub proves integrity only for commitment-claiming directories it discovers; the
+independent inventory/set comparison supplies the completeness witness for this snapshot.
+[CHAZ] performs the operator sequence and the Project Steward records acceptance evidence.
+This manual proof is proportionate only to D10's first bounded probe. Routine paid capture
+requires a separately accepted automated snapshot, retention, and restore-drill policy.
+
 ## F7 — Multi-process capture authorization locking
 
 **Deferred by:** D8 and the fixture vertical-slice single-process proof boundary.
@@ -154,3 +178,27 @@ Observation rows and API mapping.
 
 **Cost of forgetting:** Consumers invent incompatible derived stores, or Observation
 tables absorb reshape pressure that belongs in a versioned projection.
+
+## F11 — Provider Derivation identity, drift, and data time
+
+**Deferred by:** D9/D10's raw-provider-testimony boundary. Provider responses are preserved
+as Evidence but are not yet interpreted into provider Outcomes or Observations.
+
+**Why not now:** No provider-specific Derivation exists. Fixture v1 remains governed by its
+closed conformance contract and existing semantic label; changing its identity mechanism
+now would add schema churn without solving a live provider problem.
+
+**Trigger:** Before the first provider-specific Derivation, provider Outcome/Observation
+mapping, or API exposure of provider-derived values is accepted.
+
+**Required decision at trigger:** Define an immutable derivation-recipe identity, or
+equivalent registration metadata, that makes behavior changes require a new
+`derivation_version_id`; define versioned provider-envelope parsing and fail-closed drift
+handling without rewriting raw Evidence; and keep Observatory capture timestamps distinct
+from provider-stated update times and data periods. Provider-unstated time/period remains
+explicitly unstated rather than inheriting capture time.
+
+**Cost of forgetting:** Different derivation behavior can reuse one label, provider schema
+changes can silently alter or break ingestion, and monthly or provider-updated metrics can
+be presented as if they described the capture instant, producing false comparisons across
+time or providers.

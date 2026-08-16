@@ -26,7 +26,7 @@ Implement only
 - one POST to
   `https://api.dataforseo.com/v3/dataforseo_labs/google/keyword_overview/live`;
 - exactly one task and one exchange;
-- one to five ordered, unique keywords;
+- one to five ordered, unique keywords, each with at most 10 words;
 - fixed `location_code=2840`, `language_code=en`;
 - fixed `include_serp_info=false` and `include_clickstream_data=false`;
 - exact JCS singleton task-array body;

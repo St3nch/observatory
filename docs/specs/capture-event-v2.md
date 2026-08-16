@@ -482,7 +482,7 @@ The closed `parameters` object is:
 |---|---|---|
 | `contract` | string | exact paid adapter-contract token above |
 | `keywords` | array of strings | length 1..5; order identity-bearing; no duplicates |
-| each keyword | string | 1..80 printable ASCII characters; begins and ends with ASCII alphanumeric; internal characters limited to `A-Z a-z 0-9 space & ' ( ) + , . / : -` |
+| each keyword | string | 1..80 printable ASCII characters; at most 10 words, where a word is a maximal nonempty run separated by ASCII space; begins and ends with ASCII alphanumeric; internal characters limited to `A-Z a-z 0-9 space & ' ( ) + , . / : -` |
 | `location_code` | integer | exactly `2840` |
 | `language_code` | string | exactly `en` |
 | `include_serp_info` | boolean | exactly `false` |
@@ -998,6 +998,13 @@ A commit that cannot be verified is a failure, not a success with a warning.
 A bundle directory without `COMMITTED` is **ignored** — not Evidence, and not an error. It
 is the expected residue of an interrupted commit. A bundle with `COMMITTED` that fails D5
 verification is an integrity failure and must be reported as one, never silently skipped.
+
+Discovery-based verification and scrub prove the integrity of commitment-claiming
+directories they find. They do **not** prove historical completeness: deleting an entire
+bundle directory together with its `COMMITTED` marker removes the discovery claim and is
+therefore invisible to scrub. A clean scrub must never be represented as proof that no
+committed event is missing. Off-host restore acceptance uses an independently recorded
+sorted Attempt/Capture ID inventory and exact set comparison under F6.
 
 #### D7 — `FORMAT.json`
 
