@@ -49,17 +49,26 @@ SOFTWARE: Final[str] = "hammer-ham01"
 AUTHORIZED_AT: Final[str] = "2026-08-16T12:00:00.000000Z"
 RESPONSE_BODY: Final[bytes] = b'{"status_code":20000,"status_message":"Ok.","tasks":[]}'
 
+REQUIRED_OPS: Final[frozenset[str]] = frozenset(
+    {"write_fsync", "link", "unlink_tmp", "fsync_dir", "mkdir_terminal"}
+)
 REQUIRED_FAMILIES: Final[frozenset[str]] = frozenset(
     {
         "attempt:terminal-dir",
-        "attempt:manifest",
-        "attempt:bundle-body",
-        "attempt:COMMITTED",
+        "attempt:manifest-link",
+        "attempt:bundle-body-link",
+        "attempt:COMMITTED-link",
+        "attempt:write_fsync",
+        "attempt:link",
+        "attempt:unlink_tmp",
         "attempt:fsync-dir",
         "capture:terminal-dir",
-        "capture:manifest",
-        "capture:bundle-body",
-        "capture:COMMITTED",
+        "capture:manifest-link",
+        "capture:bundle-body-link",
+        "capture:COMMITTED-link",
+        "capture:write_fsync",
+        "capture:link",
+        "capture:unlink_tmp",
         "capture:fsync-dir",
     }
 )
@@ -100,24 +109,30 @@ def _inputs(nonce: str) -> SandboxCaptureInputs:
     )
 
 
-def _family(phase: str, op: str, path: str) -> str | None:
+def _family(phase: str, op: str, path: str) -> str:
     name = Path(path).name
     if op == "mkdir_terminal":
         return f"{phase}:terminal-dir"
-    if op == "install_file":
-        if name == "attempt.json":
-            return "attempt:manifest"
-        if name == "capture.json":
-            return "capture:manifest"
-        if name == "request.body":
-            return "attempt:bundle-body"
-        if name == "response.body":
-            return "capture:bundle-body"
-        if name == "COMMITTED":
-            return f"{phase}:COMMITTED"
-        return f"{phase}:install:{name}"
+    if op == "mkdir":
+        return f"{phase}:mkdir"
+    if op == "write_fsync":
+        return f"{phase}:write_fsync"
+    if op == "unlink_tmp":
+        return f"{phase}:unlink_tmp"
     if op == "fsync_dir":
         return f"{phase}:fsync-dir"
+    if op == "link":
+        if name == "attempt.json":
+            return "attempt:manifest-link"
+        if name == "capture.json":
+            return "capture:manifest-link"
+        if name == "request.body":
+            return "attempt:bundle-body-link"
+        if name == "response.body":
+            return "capture:bundle-body-link"
+        if name == "COMMITTED":
+            return f"{phase}:COMMITTED-link"
+        return f"{phase}:link"
     return f"{phase}:{op}"
 
 
@@ -127,26 +142,12 @@ def _install_wrappers(
     die_after: int | None,
     log: list[Milestone],
 ) -> Callable[[], None]:
-    """Wrap concrete store methods. Death happens after the real operation returns."""
+    """Phase wrappers stay on commit_*; death is after the real ``_record``."""
 
     orig_attempt = EvidenceStore.commit_attempt
     orig_capture = EvidenceStore.commit_capture
-    orig_terminal = EvidenceStore._create_terminal_directory
-    orig_install = EvidenceStore._install_file
-    orig_fsync = EvidenceStore._fsync_dir
+    orig_record = EvidenceStore._record
     state: dict[str, str | None] = {"phase": None}
-
-    def _after(op: str, path: Path) -> None:
-        current = state["phase"]
-        if current is None:
-            return
-        log.append((current, op, str(path)))
-        if (
-            die_after is not None
-            and current == phase_filter
-            and sum(1 for item in log if item[0] == current) == die_after
-        ):
-            os._exit(CHILD_DEATH_CODE)
 
     def commit_attempt(
         self: EvidenceStore,
@@ -172,30 +173,27 @@ def _install_wrappers(
         finally:
             state["phase"] = None
 
-    def create_terminal(self: EvidenceStore, directory: Path) -> None:
-        orig_terminal(self, directory)
-        _after("mkdir_terminal", directory)
-
-    def install_file(self: EvidenceStore, final: Path, data: bytes) -> None:
-        orig_install(self, final, data)
-        _after("install_file", final)
-
-    def fsync_dir(self: EvidenceStore, directory: Path) -> None:
-        orig_fsync(self, directory)
-        _after("fsync_dir", directory)
+    def record(self: EvidenceStore, op: str, path: Path) -> None:
+        orig_record(self, op, path)
+        current = state["phase"]
+        if current is None:
+            return
+        log.append((current, op, str(path)))
+        if (
+            die_after is not None
+            and current == phase_filter
+            and sum(1 for item in log if item[0] == current) == die_after
+        ):
+            os._exit(CHILD_DEATH_CODE)
 
     EvidenceStore.commit_attempt = commit_attempt  # type: ignore[method-assign]
     EvidenceStore.commit_capture = commit_capture  # type: ignore[method-assign]
-    EvidenceStore._create_terminal_directory = create_terminal  # type: ignore[method-assign]
-    EvidenceStore._install_file = install_file  # type: ignore[method-assign]
-    EvidenceStore._fsync_dir = fsync_dir  # type: ignore[method-assign]
+    EvidenceStore._record = record  # type: ignore[method-assign]
 
     def restore() -> None:
         EvidenceStore.commit_attempt = orig_attempt  # type: ignore[method-assign]
         EvidenceStore.commit_capture = orig_capture  # type: ignore[method-assign]
-        EvidenceStore._create_terminal_directory = orig_terminal  # type: ignore[method-assign]
-        EvidenceStore._install_file = orig_install  # type: ignore[method-assign]
-        EvidenceStore._fsync_dir = orig_fsync  # type: ignore[method-assign]
+        EvidenceStore._record = orig_record  # type: ignore[method-assign]
 
     return restore
 
@@ -432,12 +430,25 @@ def _phase_points(log: list[Milestone], phase: str) -> list[tuple[int, Milestone
 
 
 def _families(log: list[Milestone]) -> set[str]:
-    found: set[str] = set()
-    for phase, op, path in log:
-        family = _family(phase, op, path)
-        if family is not None:
-            found.add(family)
-    return found
+    return {_family(phase, op, path) for phase, op, path in log}
+
+
+def _phase_ops(log: list[Milestone], phase: str) -> set[str]:
+    return {op for item_phase, op, _path in log if item_phase == phase}
+
+
+def _committed_link_then_fsync(log: list[Milestone], phase: str) -> None:
+    items = [(op, path) for item_phase, op, path in log if item_phase == phase]
+    committed = [
+        index
+        for index, (op, path) in enumerate(items)
+        if op == "link" and Path(path).name == "COMMITTED"
+    ]
+    assert len(committed) == 1, f"{phase} COMMITTED link count={len(committed)}"
+    later = items[committed[0] + 1 :]
+    assert any(op == "fsync_dir" for op, _path in later), (
+        f"{phase} has no fsync_dir after COMMITTED link"
+    )
 
 
 def test_opt_in_guard_skips_destructive_matrix() -> None:
@@ -457,8 +468,14 @@ def test_milestone_inventory_covers_attempt_and_capture_families(
     capture_n = sum(1 for phase, _op, _path in log if phase == "capture")
     assert attempt_n > 0
     assert capture_n > 0
+    for phase in ("attempt", "capture"):
+        ops = _phase_ops(log, phase)
+        assert ops >= REQUIRED_OPS, f"{phase} missing ops: {sorted(REQUIRED_OPS - ops)}"
+        assert "mkdir" in ops or "mkdir_terminal" in ops
     missing = REQUIRED_FAMILIES - families
     assert missing == set(), f"missing milestone families: {sorted(missing)}"
+    _committed_link_then_fsync(log, "attempt")
+    _committed_link_then_fsync(log, "capture")
 
 
 @pytest.mark.skipif(
@@ -473,6 +490,10 @@ def test_paid_gate_process_death_matrix(tmp_path: Path) -> None:
     assert capture_points, "Capture-phase inventory is empty"
     missing = REQUIRED_FAMILIES - _families(log)
     assert missing == set(), f"missing milestone families: {sorted(missing)}"
+    for phase in ("attempt", "capture"):
+        assert _phase_ops(log, phase) >= REQUIRED_OPS
+    _committed_link_then_fsync(log, "attempt")
+    _committed_link_then_fsync(log, "capture")
 
     cases: list[tuple[str, int | None]] = [
         ("attempt", index) for index, _item in attempt_points

@@ -198,19 +198,23 @@ operator acceptance run.
 ticket (Status + report). No production modules were edited.
 
 **Fault-injection mechanism:** child subprocesses wrap
-`EvidenceStore.commit_attempt` / `commit_capture` to mark phase, then wrap
-`_create_terminal_directory`, `_install_file`, and `_fsync_dir`. After the
-real operation returns, the child calls `os._exit(97)`. No production kill
-switch or environment-triggered death exists.
+`EvidenceStore.commit_attempt` / `commit_capture` only to mark phase. The
+death hook wraps `EvidenceStore._record`: the real `_record` runs first, then
+the test appends the milestone, then `os._exit(97)` at the selected point.
+No production kill switch exists.
 
 ### Milestone inventory
 
-Discovered from a live in-process loopback capture of the concrete store:
+Discovered from live `_record` names and paths (not compound wrappers):
 
-- Attempt-phase fault points: **22**
-- Capture-phase fault points: **16**
-- Required families present: terminal-dir, manifest, bundle-body, COMMITTED,
-  fsync-dir for both phases.
+- Attempt-phase fault points: **42**
+- Capture-phase fault points: **30**
+- Operations present in both phases: `mkdir`, `mkdir_terminal`, `write_fsync`,
+  `link`, `unlink_tmp`, `fsync_dir`
+- Link families from destination path: manifest (`attempt.json` /
+  `capture.json`), bundle-body (`request.body` / `response.body`), and
+  exactly one `COMMITTED` link per phase, each followed by a later
+  `fsync_dir` (after `unlink_tmp`).
 
 ### Child exit / timeout
 
@@ -219,8 +223,8 @@ is 20s; none timed out on the implementer proving run.
 
 ### Pre-send / post-send request accounting
 
-- All 22 Attempt-phase deaths: **0** loopback requests.
-- All 16 Capture-phase deaths: **exactly 1** request. At request time the
+- All 42 Attempt-phase deaths: **0** loopback requests.
+- All 30 Capture-phase deaths: **exactly 1** request. At request time the
   parent used `inspect_store` and independently verified the sole Attempt
   before the server replied.
 - No-fault control: **exactly 1** request.
@@ -252,8 +256,8 @@ bundles, objects, and `FORMAT.json` were unchanged (inode + bytes).
 
 Sentinel login, password, `Basic` value, and bare token were absent from
 Evidence files and child stdout/stderr. Plaintext login/password were
-absent from loopback request bytes (the wire carries Authorization as
-required by PF-02).
+absent from loopback request bytes. The Authorization Basic token is
+required on the wire by PF-02 and is not treated as a wire-test failure.
 
 ### Commands
 
@@ -263,20 +267,21 @@ required by PF-02).
 - Implementer proving run (not [CHAZ] closure):
   `OBSERVATORY_RUN_PAID_GATE_HAMMER=1 uv run pytest -q
   tests/test_paid_gate_process_death_hammer.py --basetemp
-  /home/chaz/.local/share/vedaops/observatory/ham01-implementer-20260816T150643Z`
-  → 2 passed, 1 skipped (opt-in guard), 54.40s; printed
-  `HAM-01 fault points: attempt=22 capture=16`
+  /home/chaz/.local/share/vedaops/observatory/ham01-implementer-20260816T151839Z`
+  → first `_record` remediation run: `attempt=42 capture=30`, 102.87s,
+  2 passed, 1 skipped (opt-in guard).
 
 ### Production defect
 
-None. The hostile matrix passed against the existing store/transport
-protocol. Test-only implementation.
+None. Test-only. The first implementation wrapped compound methods and
+missed the post-`COMMITTED`-link / pre-fsync window; this remediation
+hooks `_record` instead.
 
 ### Weakest / most fragile part
 
-Class-level method wrapping for discovery and children is process-local
-and must stay aligned with private store method names. Shared-directory
-fsyncs inflate the Attempt-phase count beyond the terminal bundle itself.
+Class-level `_record` wrapping is process-local and must stay aligned
+with the store’s recorded op names. Shared-directory `mkdir`/`fsync_dir`
+points still inflate the matrix beyond the terminal bundle.
 
 ### Exact unproven limits
 
@@ -291,8 +296,22 @@ fsyncs inflate the Attempt-phase count beyond the terminal bundle itself.
 ### Authority
 
 Assigned start `c67efc62…` (HAM-01 authorize) supersedes the ticket’s
-pre-filled `672ad53…` (PF-02 close). No other disagreement. PF-03 / paid
-transport not implemented.
+pre-filled `672ad53…` (PF-02 close). Steward clarified that the
+Authorization Basic token is required on the loopback wire; that ticket
+sentence will be reconciled at closure. PF-03 / paid transport not
+implemented.
+
+### Remediation (on `dc3ac19b36b0fad724652e3ca8adeddd09781fa6`)
+
+Steward finding: wrapping `_install_file` / `_create_terminal_directory`
+collapsed `write_fsync`, `link`, `unlink_tmp`, and the post-COMMITTED
+directory fsync into one `install_file` milestone.
+
+Fix: keep commit_* wrappers for phase only; wrap `_record` after the real
+record; inventory actual op names; identify link families from destination
+paths; require one COMMITTED link per phase plus a later `fsync_dir`; die
+at every discovered `_record` including immediately after COMMITTED link
+and after the following directory fsync. Status remains `review`.
 
 ### Confirmation
 
