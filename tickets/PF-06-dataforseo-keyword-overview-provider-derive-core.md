@@ -1,9 +1,9 @@
 # PF-06 — Keyword Overview provider Derivation: Outcomes, coverage, and core metrics
 
-**Status:** planned
+**Status:** ready
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** provider derivation tracer
-**Blocked by:** PF-05
+**Blocked by:** none; PF-05 closed
 **Approved by:** Project Steward
 **Start commit:** <!-- implementer fills -->
 
