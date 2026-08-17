@@ -1,6 +1,6 @@
 # PF-04 — Provider Derivation recipe and Observation foundation
 
-**Status:** review
+**Status:** done
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** foundation
 **Blocked by:** PF-03 closed; D11/F11 resolution
@@ -217,4 +217,29 @@ The published test recipe remains one coverage kind. The multi-kind recipe is a 
 
 ## Closure
 
-<!-- Project Steward only -->
+**Accepted by:** Project Steward  
+**Accepted implementation:** `bc9e44fb39409e041da46acaf1a5bf9b9daddd50`  
+**Accepted on:** 2026-08-17
+
+Independent Steward review confirmed the implementation remains one bounded PF-04 commit
+with parent `9e4dd055038675402c6ef16dd103ac3b60687505`, preserves fixture derivation/API behavior,
+adds only the provider recipe/Observation-envelope/diagnostic foundation, and does not begin
+PF-05.
+
+The initial implementation was remediated before acceptance so Observation identity is a
+closed recipe section separate from request/result reconciliation and is declared per
+Observation kind. Each declared kind has exactly one typed identity-axis definition;
+undeclared kinds, missing/extra axes, and wrong axis types fail closed. This proves both the
+single-axis coverage case and the planned multi-axis historical case without mutating recipe
+meaning later.
+
+Steward verification at the accepted implementation commit:
+
+- `uv run pytest -q` — 724 passed, 1 skipped, 1 upstream deprecation warning;
+- `uv run ruff check .` — clean;
+- `uv run mypy` — clean.
+
+Accepted limits remain explicit: F7 locking and PostgreSQL crash/fsync behavior are not
+claimed; the PF-04 test recipe is not a production Keyword Overview recipe; provider body
+parsing, provider Outcomes/details, API selection, and live/provider network activity remain
+outside this ticket.
