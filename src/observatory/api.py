@@ -6,11 +6,24 @@ import re
 from typing import Any, Final, Literal
 
 import psycopg
-from fastapi import APIRouter, FastAPI, HTTPException, Request
+from fastapi import APIRouter, FastAPI, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from observatory import __version__
 from observatory.evidence_store import EvidenceStore, IntegrityError, open_store
+from observatory.keyword_overview_read import (
+    HISTORY_ADAPTER,
+    HISTORY_LIMIT_DEFAULT,
+    HISTORY_LIMIT_MAX,
+    ProviderAttemptNotFound,
+    load_keyword_overview_history,
+    load_provider_attempt,
+)
+from observatory.provider_recipe_selection import (
+    NOT_SELECTED_SIGNAL,
+    ProviderRecipeNotSelected,
+    ProviderRecipeSelectionError,
+)
 from observatory.settings import Settings, get_settings
 
 _HEX64: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
@@ -103,6 +116,12 @@ def _require_dsn(settings: Settings) -> str:
     return settings.database_url
 
 
+def _recipe_http_error(exc: ProviderRecipeSelectionError) -> HTTPException:
+    if isinstance(exc, ProviderRecipeNotSelected):
+        return HTTPException(status_code=503, detail=NOT_SELECTED_SIGNAL)
+    return HTTPException(status_code=404, detail="not found")
+
+
 def _verify_backing(
     store: EvidenceStore, attempt_id: str, capture_ids: set[str]
 ) -> None:
@@ -155,73 +174,158 @@ def create_app(settings: Settings | None = None, *, store: EvidenceStore | None 
         return {"status": "ok"}
 
     @v1.get("/attempts/{attempt_id}")
-    async def get_attempt_resource(attempt_id: str, request: Request) -> AttemptResource:
+    async def get_attempt_resource(
+        attempt_id: str,
+        request: Request,
+        derivation_version_id: str | None = Query(default=None),
+    ) -> AttemptResource | dict[str, object]:
         if _HEX64.fullmatch(attempt_id) is None:
             raise HTTPException(status_code=404, detail="not found")
         settings = request.app.state.settings
         if not isinstance(settings, Settings):
             raise HTTPException(status_code=503, detail="settings are not configured")
-        version = settings.derivation_version_id
+        evidence = _require_store(request)
+        try:
+            attempt = evidence.read_attempt(attempt_id)
+        except IntegrityError as exc:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
+        if attempt is None:
+            dsn = _require_dsn(settings)
+            with _read_connect(dsn) as connection:
+                derived = connection.execute(
+                    "SELECT 1 FROM outcomes WHERE attempt_id = %s LIMIT 1",
+                    (attempt_id,),
+                ).fetchone()
+            if derived is not None:
+                raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL)
+        elif attempt.get("adapter_contract") == HISTORY_ADAPTER:
+            return _provider_attempt_resource(
+                settings,
+                evidence,
+                attempt,
+                attempt_id,
+                derivation_version_id,
+            )
+        return _fixture_attempt_resource(
+            settings, evidence, attempt_id, settings.derivation_version_id
+        )
+
+    @v1.get("/providers/dataforseo/google/keyword-overview/history")
+    async def get_keyword_overview_history(
+        request: Request,
+        requested_keyword: str = Query(),
+        derivation_version_id: str | None = Query(default=None),
+        limit: int = Query(default=HISTORY_LIMIT_DEFAULT, ge=1, le=HISTORY_LIMIT_MAX),
+        order: Literal["asc", "desc"] = Query(default="asc"),
+    ) -> dict[str, object]:
+        settings = request.app.state.settings
+        if not isinstance(settings, Settings):
+            raise HTTPException(status_code=503, detail="settings are not configured")
         evidence = _require_store(request)
         dsn = _require_dsn(settings)
-        with _read_connect(dsn) as connection:
-            outcome_rows = connection.execute(
-                """
-                SELECT attempt_id, capture_id, derivation_version_id,
-                       classification, observation_count
-                FROM outcomes
-                WHERE attempt_id = %s AND derivation_version_id = %s
-                ORDER BY capture_id NULLS FIRST
-                """,
-                (attempt_id, version),
-            ).fetchall()
-            if not outcome_rows:
-                raise HTTPException(status_code=404, detail="not found")
-            observation_rows = connection.execute(
-                """
-                SELECT
-                    capture_id,
-                    derivation_version_id,
-                    within_capture_result_id,
-                    attempt_id,
-                    provider,
-                    panel_id,
-                    subject_key,
-                    result_index,
-                    label,
-                    score
-                FROM observations
-                WHERE attempt_id = %s AND derivation_version_id = %s
-                ORDER BY result_index, within_capture_result_id
-                """,
-                (attempt_id, version),
-            ).fetchall()
-        attempt_stage: OutcomeEnvelope | None = None
-        capture_stage: OutcomeEnvelope | None = None
-        capture_ids: set[str] = set()
-        for row in outcome_rows:
-            envelope = _outcome_envelope(row)
-            if envelope.capture_id is None:
-                attempt_stage = envelope
-            else:
-                capture_stage = envelope
-                capture_ids.add(envelope.capture_id)
-        if attempt_stage is None:
-            raise HTTPException(status_code=404, detail="not found")
-        observations = [_observation_envelope(row) for row in observation_rows]
-        for item in observations:
-            capture_ids.add(item.capture_id)
-        _verify_backing(evidence, attempt_id, capture_ids)
-        return AttemptResource(
-            attempt_id=attempt_id,
-            derivation_version_id=version,
-            attempt_outcome=attempt_stage,
-            capture_outcome=capture_stage,
-            observations=observations,
-        )
+        try:
+            with _read_connect(dsn) as connection:
+                return load_keyword_overview_history(
+                    evidence,
+                    connection,
+                    requested_keyword=requested_keyword,
+                    pinned_version=derivation_version_id,
+                    limit=limit,
+                    order=order,
+                )
+        except IntegrityError as exc:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
+        except ProviderRecipeSelectionError as exc:
+            raise _recipe_http_error(exc) from exc
 
     application.include_router(v1, prefix="/v1")
     return application
+
+
+def _provider_attempt_resource(
+    settings: Settings,
+    evidence: EvidenceStore,
+    attempt: dict[str, object],
+    attempt_id: str,
+    pinned_version: str | None,
+) -> dict[str, object]:
+    dsn = _require_dsn(settings)
+    try:
+        with _read_connect(dsn) as connection:
+            view = load_provider_attempt(
+                evidence, connection, attempt, attempt_id, pinned_version
+            )
+    except IntegrityError as exc:
+        raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
+    except ProviderRecipeSelectionError as exc:
+        raise _recipe_http_error(exc) from exc
+    except ProviderAttemptNotFound as exc:
+        raise HTTPException(status_code=404, detail="not found") from exc
+    return view.as_json()
+
+
+def _fixture_attempt_resource(
+    settings: Settings,
+    evidence: EvidenceStore,
+    attempt_id: str,
+    version: str,
+) -> AttemptResource:
+    dsn = _require_dsn(settings)
+    with _read_connect(dsn) as connection:
+        outcome_rows = connection.execute(
+            """
+            SELECT attempt_id, capture_id, derivation_version_id,
+                   classification, observation_count
+            FROM outcomes
+            WHERE attempt_id = %s AND derivation_version_id = %s
+            ORDER BY capture_id NULLS FIRST
+            """,
+            (attempt_id, version),
+        ).fetchall()
+        if not outcome_rows:
+            raise HTTPException(status_code=404, detail="not found")
+        observation_rows = connection.execute(
+            """
+            SELECT
+                capture_id,
+                derivation_version_id,
+                within_capture_result_id,
+                attempt_id,
+                provider,
+                panel_id,
+                subject_key,
+                result_index,
+                label,
+                score
+            FROM observations
+            WHERE attempt_id = %s AND derivation_version_id = %s
+            ORDER BY result_index, within_capture_result_id
+            """,
+            (attempt_id, version),
+        ).fetchall()
+    attempt_stage: OutcomeEnvelope | None = None
+    capture_stage: OutcomeEnvelope | None = None
+    capture_ids: set[str] = set()
+    for row in outcome_rows:
+        envelope = _outcome_envelope(row)
+        if envelope.capture_id is None:
+            attempt_stage = envelope
+        else:
+            capture_stage = envelope
+            capture_ids.add(envelope.capture_id)
+    if attempt_stage is None:
+        raise HTTPException(status_code=404, detail="not found")
+    observations = [_observation_envelope(row) for row in observation_rows]
+    for item in observations:
+        capture_ids.add(item.capture_id)
+    _verify_backing(evidence, attempt_id, capture_ids)
+    return AttemptResource(
+        attempt_id=attempt_id,
+        derivation_version_id=version,
+        attempt_outcome=attempt_stage,
+        capture_outcome=capture_stage,
+        observations=observations,
+    )
 
 
 app = create_app()

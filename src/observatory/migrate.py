@@ -72,6 +72,33 @@ CREATE TABLE IF NOT EXISTS provider_recipes (
 )
 """
 
+PROVIDER_RECIPES_ADAPTER_VERSION_SQL: Final[str] = """
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'provider_recipes_adapter_version'
+    ) THEN
+        ALTER TABLE provider_recipes
+            ADD CONSTRAINT provider_recipes_adapter_version
+            UNIQUE (adapter_contract, derivation_version_id);
+    END IF;
+END $$
+"""
+
+PROVIDER_RECIPE_SELECTIONS_SQL: Final[str] = """
+CREATE TABLE IF NOT EXISTS provider_recipe_selections (
+    adapter_contract TEXT PRIMARY KEY
+        CHECK (adapter_contract ~ '^[A-Za-z0-9._+:-]{1,128}$'),
+    derivation_version_id TEXT NOT NULL
+        CHECK (derivation_version_id ~ '^[0-9a-f]{64}$'),
+    CONSTRAINT provider_recipe_selections_recipe
+        FOREIGN KEY (adapter_contract, derivation_version_id)
+        REFERENCES provider_recipes (adapter_contract, derivation_version_id)
+)
+"""
+
 OBSERVATION_ENVELOPES_SQL: Final[str] = """
 CREATE TABLE IF NOT EXISTS observation_envelopes (
     capture_id TEXT NOT NULL
@@ -509,6 +536,8 @@ SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     OUTCOMES_SQL,
     OBSERVATIONS_SQL,
     PROVIDER_RECIPES_SQL,
+    PROVIDER_RECIPES_ADAPTER_VERSION_SQL,
+    PROVIDER_RECIPE_SELECTIONS_SQL,
     OBSERVATION_ENVELOPES_SQL,
     OBSERVATION_ENVELOPES_KIND_IDENTITY_SQL,
     DERIVATION_DIAGNOSTICS_SQL,
@@ -571,9 +600,9 @@ def main(argv: list[str] | None = None) -> int:
     apply_migrations(dsn)
     sys.stdout.write(
         "migrated derivation_versions outcomes observations "
-        "provider_recipes observation_envelopes derivation_diagnostics "
-        "keyword_overview_coverage keyword_overview_metrics "
-        "keyword_overview_monthly_search_volume "
+        "provider_recipes provider_recipe_selections observation_envelopes "
+        "derivation_diagnostics keyword_overview_coverage "
+        "keyword_overview_metrics keyword_overview_monthly_search_volume "
         "keyword_overview_search_volume_trend keyword_overview_properties "
         "keyword_overview_avg_backlinks keyword_overview_search_intent\n"
     )
