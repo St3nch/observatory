@@ -1,9 +1,9 @@
 # PF-08 — Keyword Overview provider read API and recipe selection
 
-**Status:** planned
+**Status:** ready
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** read API
-**Blocked by:** PF-07
+**Blocked by:** none; PF-07 closed
 **Approved by:** Project Steward
 **Start commit:** <!-- implementer fills -->
 
