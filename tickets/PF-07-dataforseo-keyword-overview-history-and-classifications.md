@@ -1,9 +1,9 @@
 # PF-07 — Keyword Overview history, properties, backlinks, and intent
 
-**Status:** planned
+**Status:** ready
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** provider derivation expansion
-**Blocked by:** PF-06
+**Blocked by:** none; PF-06 closed
 **Approved by:** Project Steward
 **Start commit:** <!-- implementer fills -->
 
