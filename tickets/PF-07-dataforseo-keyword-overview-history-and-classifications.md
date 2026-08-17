@@ -1,6 +1,6 @@
 # PF-07 — Keyword Overview history, properties, backlinks, and intent
 
-**Status:** review
+**Status:** done
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** provider derivation expansion
 **Blocked by:** none; PF-06 closed
@@ -203,4 +203,59 @@ Weakest remaining assumption: monthly history and search-volume trend have no re
 
 ## Closure
 
-<!-- Project Steward only -->
+**Accepted by:** Project Steward  
+**Accepted implementation:** `6ea571ed7675bae0e86d232fbe4e02fe422747d2`  
+**Accepted on:** 2026-08-17
+
+Independent Steward review confirmed PF-07 remains one bounded implementation commit with
+parent `ff55577fc039f8bc852f6ad06dba3d8d4fce504c`, reuses the accepted PF-05 parser and PF-06
+provider Derivation spine, leaves the CORE recipe byte-for-byte unchanged, and introduces a
+separate EXTENDED Keyword Overview recipe with 2,554 canonical JCS bytes and derivation
+identity `cade41cb916bc5595f62ac8ea4ef73d6c688974a1ee5caad0c9d8f95f51664c7`.
+
+The extended recipe re-emits CORE coverage/metrics plus monthly search volume, provider
+search-volume trend, keyword properties, average backlinks, and search intent. The accepted
+PF-03 Capture derives five coverage, five metrics, 441 monthly period Observations, five
+trend, five properties, five backlink, and five intent Observations for total
+`observation_count=471`. Monthly identity is semantic (`requested_keyword`, `year`, `month`),
+not positional; the real PF-03 series remain nonuniform at 85/78/93/93/92 points and the
+2019-06 `ai search optimization` point preserves stated numeric zero.
+
+The historical-revision proof derives a second synthetic Capture under the same extended
+recipe with that one 2019-06 point revised from 0 to 7. Both testimonies retain the same
+within-Capture semantic identity but different Capture identities, and the earlier row is
+not rewritten. This is accepted as the first provider-history proof that Observatory keeps
+revisable past testimony Capture-anchored rather than materializing one mutable current
+value.
+
+Typed PF-07 relations retain the PF-06 hardened provider envelope boundary: exact kind
+CHECKs, four-column envelope foreign keys, and state/value consistency constraints. Backlink
+decimal testimony uses exact PostgreSQL `NUMERIC`; backlink and intent kinds use only their
+own structures' Provider Update Times. Metrics retains `keyword_info.last_updated_time`.
+Monthly history, provider trend, and properties do not inherit sibling or Capture clocks and
+therefore carry no manufactured Provider Update Time. Provider language/classification
+quirks and JSON-null/array states remain source-attributed testimony rather than strategy.
+
+CORE and EXTENDED provider recipes and rows coexist. Independent review confirmed deriving
+EXTENDED after CORE leaves the CORE recipe registration, Outcomes (`observation_count=10`),
+envelopes, coverage, and metrics unchanged. Same-recipe reruns compare exact intended
+content; planted new-detail conflicts fail closed; wrong-kind and contradictory state/value
+rows are rejected; damaged Evidence produces no extended Capture-stage rows while a verified
+Attempt-stage `authorized_unresolved` Outcome may survive. Two fresh real PostgreSQL
+databases rebuilt from the same Evidence/extended recipe compare logically equivalent.
+
+Steward verification at the accepted implementation commit:
+
+- `uv run pytest -q` — 771 passed, 1 skipped, 1 upstream deprecation warning;
+- `uv run ruff check .` — clean;
+- `uv run mypy` — clean.
+
+Accepted limits remain explicit: F7 locking and PostgreSQL crash/fsync are not claimed;
+the operator PF-03 Evidence proof remains conditional on the accepted local root; monthly,
+trend, and properties have no recipe-authorized governing Provider Update Time and therefore
+do not store one; parent-structure JSON-null/absence currently cascades to child field states
+for the non-monthly typed structures, while monthly points exist only when the series is
+stated. That propagation rule is the weakest remaining PF-07 semantic assumption and must
+not be silently changed under the accepted Observation-kind/recipe versions. No PF-08 API,
+recipe selector, provider call, credentials, Evidence mutation, SERP/clickstream persistence,
+or provider spend occurred.
