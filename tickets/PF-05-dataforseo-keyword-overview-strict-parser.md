@@ -1,6 +1,6 @@
 # PF-05 — DataForSEO Keyword Overview strict parser and PF-03 conformance fixture
 
-**Status:** review
+**Status:** done
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** parser/conformance
 **Blocked by:** none; PF-04 closed
@@ -242,4 +242,38 @@ Weakest area: year/enum closures and keyword normalization are claimed-contract 
 
 ## Closure
 
-<!-- Project Steward only -->
+**Accepted by:** Project Steward  
+**Accepted implementation:** `e4aa26513a879cab89e1703d9a6db11594ec38dd`  
+**Accepted on:** 2026-08-17
+
+Independent Steward review confirmed PF-05 remains one bounded implementation commit with
+parent `fc654cdf20102ade832c48b6be61415ac811baa6`, freezes the exact verified PF-03 response
+body as a deterministic Conformance fixture, implements a strict provider-specific Keyword
+Overview parser and full first-surface typed IR, and authors only the PF-06 core production
+recipe. PF-06 persistence and provider API work were not started.
+
+The accepted PF-03 body is 26,270 bytes with SHA-256
+`d91fdc7ab8acf429f0ff9c00bd7cdb725be1ba9585481af35d14f7c4e79a6d1c`. Ordinary tests use
+the frozen fixture and do not depend on the operator Evidence root. The accepted core recipe
+is 1,662 canonical JCS bytes with derivation identity
+`319af798f3e0b3e5fe4579539442c4ca5d384b683e1f4bce0f7a1b3e26cd5908`; it emits only the
+Keyword Overview coverage and core metrics Observation kinds and includes
+`observation_admitted_empty` in its closed capture Outcome taxonomy.
+
+Steward remediation before acceptance tightened real calendar/time validation for provider
+timestamps, made admission-critical v3 envelope status/count fields fail closed when
+missing/null, restored ticket edits to the implementer-owned lane, and aligned the core
+recipe Outcome taxonomy with PF-06. The parser preserves independent provider clocks,
+request-disabled enrichment states, exact Decimal semantics, non-positional reconciliation,
+provider quirks, and the PF-07 field families without adding PF-07 Observation kinds.
+
+Steward verification at the accepted implementation commit:
+
+- `uv run pytest -q` — 740 passed, 1 skipped, 1 upstream deprecation warning;
+- `uv run ruff check .` — clean;
+- `uv run mypy` — clean.
+
+Accepted limits remain explicit: populated SERP/clickstream contracts are unobserved;
+year/enum closures and casefold-plus-whitespace keyword normalization remain recipe/claimed-
+contract choices rather than invariants proven by PF-03; no PostgreSQL provider writes,
+provider API route, second parser, provider call, credentials, or provider spend occurred.
