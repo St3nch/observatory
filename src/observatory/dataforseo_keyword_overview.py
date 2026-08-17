@@ -28,6 +28,11 @@ PARSER_CONTRACT: Final[str] = (
 PROVIDER: Final[str] = "dataforseo"
 COVERAGE_KIND: Final[str] = "dataforseo.google.keyword_overview.coverage.v1"
 METRICS_KIND: Final[str] = "dataforseo.google.keyword_overview.metrics.v1"
+MONTHLY_KIND: Final[str] = "dataforseo.google.keyword_overview.monthly_search_volume.v1"
+TREND_KIND: Final[str] = "dataforseo.google.keyword_overview.search_volume_trend.v1"
+PROPERTIES_KIND: Final[str] = "dataforseo.google.keyword_overview.properties.v1"
+BACKLINKS_KIND: Final[str] = "dataforseo.google.keyword_overview.avg_backlinks.v1"
+INTENT_KIND: Final[str] = "dataforseo.google.keyword_overview.search_intent.v1"
 SUCCESS_STATUS: Final[int] = 20000
 YEAR_MIN: Final[int] = 2000
 YEAR_MAX: Final[int] = 2100
@@ -424,9 +429,9 @@ def parse_keyword_overview(
     )
 
 
-def keyword_overview_core_recipe() -> dict[str, object]:
-    """Return the production Keyword Overview core recipe document."""
-
+def _keyword_overview_recipe(
+    kinds: list[dict[str, object]], observation_kinds: list[str]
+) -> dict[str, object]:
     return validate_recipe(
         {
             "adapter_contract": PAID_ADAPTER_CONTRACT,
@@ -475,18 +480,9 @@ def keyword_overview_core_recipe() -> dict[str, object]:
             "observation_identity": {
                 "document_schema": IDENTITY_SCHEMA,
                 "document_version": IDENTITY_VERSION,
-                "kinds": [
-                    {
-                        "axes": {"requested_keyword": "string"},
-                        "observation_kind": COVERAGE_KIND,
-                    },
-                    {
-                        "axes": {"requested_keyword": "string"},
-                        "observation_kind": METRICS_KIND,
-                    },
-                ],
+                "kinds": kinds,
             },
-            "observation_kinds": [COVERAGE_KIND, METRICS_KIND],
+            "observation_kinds": observation_kinds,
             "parser_contract": PARSER_CONTRACT,
             "provider": PROVIDER,
             "provider_update_time": {
@@ -500,9 +496,80 @@ def keyword_overview_core_recipe() -> dict[str, object]:
     )
 
 
+def keyword_overview_core_recipe() -> dict[str, object]:
+    """Return the production Keyword Overview core recipe document."""
+
+    return _keyword_overview_recipe(
+        [
+            {
+                "axes": {"requested_keyword": "string"},
+                "observation_kind": COVERAGE_KIND,
+            },
+            {
+                "axes": {"requested_keyword": "string"},
+                "observation_kind": METRICS_KIND,
+            },
+        ],
+        [COVERAGE_KIND, METRICS_KIND],
+    )
+
+
+def keyword_overview_extended_recipe() -> dict[str, object]:
+    """Return the PF-07 extended Keyword Overview recipe document."""
+
+    return _keyword_overview_recipe(
+        [
+            {
+                "axes": {"requested_keyword": "string"},
+                "observation_kind": COVERAGE_KIND,
+            },
+            {
+                "axes": {"requested_keyword": "string"},
+                "observation_kind": METRICS_KIND,
+            },
+            {
+                "axes": {
+                    "month": "integer",
+                    "requested_keyword": "string",
+                    "year": "integer",
+                },
+                "observation_kind": MONTHLY_KIND,
+            },
+            {
+                "axes": {"requested_keyword": "string"},
+                "observation_kind": TREND_KIND,
+            },
+            {
+                "axes": {"requested_keyword": "string"},
+                "observation_kind": PROPERTIES_KIND,
+            },
+            {
+                "axes": {"requested_keyword": "string"},
+                "observation_kind": BACKLINKS_KIND,
+            },
+            {
+                "axes": {"requested_keyword": "string"},
+                "observation_kind": INTENT_KIND,
+            },
+        ],
+        [
+            COVERAGE_KIND,
+            METRICS_KIND,
+            MONTHLY_KIND,
+            TREND_KIND,
+            PROPERTIES_KIND,
+            BACKLINKS_KIND,
+            INTENT_KIND,
+        ],
+    )
+
+
 CORE_RECIPE: Final[dict[str, object]] = keyword_overview_core_recipe()
 CORE_RECIPE_BYTES: Final[bytes] = recipe_bytes(CORE_RECIPE)
 CORE_RECIPE_ID: Final[str] = recipe_derivation_version_id(CORE_RECIPE)
+EXTENDED_RECIPE: Final[dict[str, object]] = keyword_overview_extended_recipe()
+EXTENDED_RECIPE_BYTES: Final[bytes] = recipe_bytes(EXTENDED_RECIPE)
+EXTENDED_RECIPE_ID: Final[str] = recipe_derivation_version_id(EXTENDED_RECIPE)
 
 
 def _decode_json(raw: bytes) -> object:

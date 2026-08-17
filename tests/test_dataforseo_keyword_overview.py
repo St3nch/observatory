@@ -14,14 +14,22 @@ import pytest
 
 from observatory.capture_event import PAID_ADAPTER_CONTRACT
 from observatory.dataforseo_keyword_overview import (
+    BACKLINKS_KIND,
     CORE_RECIPE,
     CORE_RECIPE_ID,
     COVERAGE_KIND,
+    EXTENDED_RECIPE,
+    EXTENDED_RECIPE_ID,
+    INTENT_KIND,
     METRICS_KIND,
+    MONTHLY_KIND,
+    PROPERTIES_KIND,
+    TREND_KIND,
     FieldState,
     KeywordOverviewParseError,
     ParseClassification,
     keyword_overview_core_recipe,
+    keyword_overview_extended_recipe,
     parse_keyword_overview,
 )
 from observatory.provider_recipe import (
@@ -36,10 +44,17 @@ FIXTURE_PATH = (
 RECIPE_PATH = (
     Path(__file__).resolve().parent / "fixtures" / "dataforseo_keyword_overview_core_recipe.jcs"
 )
+EXTENDED_RECIPE_PATH = (
+    Path(__file__).resolve().parent
+    / "fixtures"
+    / "dataforseo_keyword_overview_extended_recipe.jcs"
+)
 PF03_BODY_SHA256 = "d91fdc7ab8acf429f0ff9c00bd7cdb725be1ba9585481af35d14f7c4e79a6d1c"
 PF03_BODY_BYTES = 26270
 CORE_RECIPE_SHA256 = "319af798f3e0b3e5fe4579539442c4ca5d384b683e1f4bce0f7a1b3e26cd5908"
 CORE_RECIPE_BYTE_LENGTH = 1662
+EXTENDED_RECIPE_SHA256 = "cade41cb916bc5595f62ac8ea4ef73d6c688974a1ee5caad0c9d8f95f51664c7"
+EXTENDED_RECIPE_BYTE_LENGTH = 2554
 
 REQUESTED = (
     "seo api",
@@ -482,3 +497,49 @@ def test_core_recipe_published_digest_and_kinds() -> None:
     assert "dataforseo.google.keyword_overview.monthly_search_volume.v1" not in kinds
     assert CORE_RECIPE["provider"] == "dataforseo"
     assert CORE_RECIPE["adapter_contract"] == PAID_ADAPTER_CONTRACT
+
+
+def test_extended_recipe_published_digest_and_kinds() -> None:
+    published = EXTENDED_RECIPE_PATH.read_bytes()
+    assert not published.endswith(b"\n")
+    assert len(published) == EXTENDED_RECIPE_BYTE_LENGTH
+    independent = hashlib.sha256(published).hexdigest()
+    assert independent == EXTENDED_RECIPE_SHA256
+    assert EXTENDED_RECIPE_ID == EXTENDED_RECIPE_SHA256
+    assert recipe_bytes(keyword_overview_extended_recipe()) == published
+    assert recipe_derivation_version_id(EXTENDED_RECIPE) == EXTENDED_RECIPE_SHA256
+    assert EXTENDED_RECIPE_ID != CORE_RECIPE_SHA256
+    assert recipe_bytes(keyword_overview_core_recipe()) == RECIPE_PATH.read_bytes()
+    kinds = validate_recipe(EXTENDED_RECIPE)["observation_kinds"]
+    assert kinds == [
+        COVERAGE_KIND,
+        METRICS_KIND,
+        MONTHLY_KIND,
+        TREND_KIND,
+        PROPERTIES_KIND,
+        BACKLINKS_KIND,
+        INTENT_KIND,
+    ]
+    identity = validate_recipe(EXTENDED_RECIPE)["observation_identity"]
+    assert isinstance(identity, dict)
+    kind_rows = identity["kinds"]
+    assert isinstance(kind_rows, list)
+    by_kind = {
+        item["observation_kind"]: item["axes"]
+        for item in kind_rows
+        if isinstance(item, dict)
+    }
+    assert by_kind[COVERAGE_KIND] == {"requested_keyword": "string"}
+    assert by_kind[METRICS_KIND] == {"requested_keyword": "string"}
+    assert by_kind[MONTHLY_KIND] == {
+        "month": "integer",
+        "requested_keyword": "string",
+        "year": "integer",
+    }
+    assert by_kind[TREND_KIND] == {"requested_keyword": "string"}
+    assert by_kind[PROPERTIES_KIND] == {"requested_keyword": "string"}
+    assert by_kind[BACKLINKS_KIND] == {"requested_keyword": "string"}
+    assert by_kind[INTENT_KIND] == {"requested_keyword": "string"}
+    assert EXTENDED_RECIPE["provider"] == "dataforseo"
+    assert EXTENDED_RECIPE["adapter_contract"] == PAID_ADAPTER_CONTRACT
+    assert EXTENDED_RECIPE["parser_contract"] == CORE_RECIPE["parser_contract"]

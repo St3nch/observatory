@@ -146,6 +146,21 @@ KEYWORD_OVERVIEW_COVERAGE_KIND: Final[str] = (
 KEYWORD_OVERVIEW_METRICS_KIND: Final[str] = (
     "dataforseo.google.keyword_overview.metrics.v1"
 )
+KEYWORD_OVERVIEW_MONTHLY_KIND: Final[str] = (
+    "dataforseo.google.keyword_overview.monthly_search_volume.v1"
+)
+KEYWORD_OVERVIEW_TREND_KIND: Final[str] = (
+    "dataforseo.google.keyword_overview.search_volume_trend.v1"
+)
+KEYWORD_OVERVIEW_PROPERTIES_KIND: Final[str] = (
+    "dataforseo.google.keyword_overview.properties.v1"
+)
+KEYWORD_OVERVIEW_BACKLINKS_KIND: Final[str] = (
+    "dataforseo.google.keyword_overview.avg_backlinks.v1"
+)
+KEYWORD_OVERVIEW_INTENT_KIND: Final[str] = (
+    "dataforseo.google.keyword_overview.search_intent.v1"
+)
 _METRICS_STATE_VALUE_COLUMNS: Final[tuple[str, ...]] = (
     "location_code",
     "language_code",
@@ -270,6 +285,225 @@ CREATE TABLE IF NOT EXISTS keyword_overview_metrics (
 )
 """
 
+_MONTHLY_CONSISTENCY_SQL: Final[str] = _state_value_consistency(
+    "keyword_overview_monthly_search_volume", "search_volume"
+)
+_TREND_CONSISTENCY_SQL: Final[str] = ",\n    ".join(
+    _state_value_consistency("keyword_overview_search_volume_trend", column)
+    for column in ("monthly", "quarterly", "yearly")
+)
+_PROPERTIES_CONSISTENCY_SQL: Final[str] = ",\n    ".join(
+    _state_value_consistency("keyword_overview_properties", column)
+    for column in (
+        "core_keyword",
+        "synonym_clustering_algorithm",
+        "keyword_difficulty",
+        "detected_language",
+        "is_another_language",
+    )
+)
+_BACKLINKS_CONSISTENCY_SQL: Final[str] = ",\n    ".join(
+    _state_value_consistency("keyword_overview_avg_backlinks", column)
+    for column in (
+        "backlinks",
+        "dofollow",
+        "referring_pages",
+        "referring_domains",
+        "referring_main_domains",
+        "rank",
+        "main_domain_rank",
+        "provider_update_time",
+    )
+)
+_INTENT_CONSISTENCY_SQL: Final[str] = ",\n    ".join(
+    _state_value_consistency("keyword_overview_search_intent", column)
+    for column in ("main_intent", "foreign_intent", "provider_update_time")
+)
+
+KEYWORD_OVERVIEW_MONTHLY_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS keyword_overview_monthly_search_volume (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '^[0-9a-f]{{64}}$'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '^[0-9a-f]{{64}}$'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL,
+    year BIGINT NOT NULL
+        CHECK (year >= 2000 AND year <= 2100),
+    month BIGINT NOT NULL
+        CHECK (month >= 1 AND month <= 12),
+    search_volume BIGINT,
+    search_volume_state TEXT NOT NULL
+        CHECK (search_volume_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT keyword_overview_monthly_search_volume_kind
+        CHECK (observation_kind = '{KEYWORD_OVERVIEW_MONTHLY_KIND}'),
+    FOREIGN KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, observation_kind
+    )
+        REFERENCES observation_envelopes (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_MONTHLY_CONSISTENCY_SQL}
+)
+"""
+
+KEYWORD_OVERVIEW_TREND_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS keyword_overview_search_volume_trend (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '^[0-9a-f]{{64}}$'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '^[0-9a-f]{{64}}$'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL,
+    monthly BIGINT,
+    monthly_state TEXT NOT NULL
+        CHECK (monthly_state {_FIELD_STATE_CHECK}),
+    quarterly BIGINT,
+    quarterly_state TEXT NOT NULL
+        CHECK (quarterly_state {_FIELD_STATE_CHECK}),
+    yearly BIGINT,
+    yearly_state TEXT NOT NULL
+        CHECK (yearly_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT keyword_overview_search_volume_trend_kind
+        CHECK (observation_kind = '{KEYWORD_OVERVIEW_TREND_KIND}'),
+    FOREIGN KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, observation_kind
+    )
+        REFERENCES observation_envelopes (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_TREND_CONSISTENCY_SQL}
+)
+"""
+
+KEYWORD_OVERVIEW_PROPERTIES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS keyword_overview_properties (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '^[0-9a-f]{{64}}$'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '^[0-9a-f]{{64}}$'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL,
+    core_keyword TEXT,
+    core_keyword_state TEXT NOT NULL
+        CHECK (core_keyword_state {_FIELD_STATE_CHECK}),
+    synonym_clustering_algorithm TEXT,
+    synonym_clustering_algorithm_state TEXT NOT NULL
+        CHECK (synonym_clustering_algorithm_state {_FIELD_STATE_CHECK}),
+    keyword_difficulty BIGINT,
+    keyword_difficulty_state TEXT NOT NULL
+        CHECK (keyword_difficulty_state {_FIELD_STATE_CHECK}),
+    detected_language TEXT,
+    detected_language_state TEXT NOT NULL
+        CHECK (detected_language_state {_FIELD_STATE_CHECK}),
+    is_another_language BOOLEAN,
+    is_another_language_state TEXT NOT NULL
+        CHECK (is_another_language_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT keyword_overview_properties_kind
+        CHECK (observation_kind = '{KEYWORD_OVERVIEW_PROPERTIES_KIND}'),
+    FOREIGN KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, observation_kind
+    )
+        REFERENCES observation_envelopes (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_PROPERTIES_CONSISTENCY_SQL}
+)
+"""
+
+KEYWORD_OVERVIEW_BACKLINKS_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS keyword_overview_avg_backlinks (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '^[0-9a-f]{{64}}$'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '^[0-9a-f]{{64}}$'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL,
+    backlinks NUMERIC,
+    backlinks_state TEXT NOT NULL
+        CHECK (backlinks_state {_FIELD_STATE_CHECK}),
+    dofollow NUMERIC,
+    dofollow_state TEXT NOT NULL
+        CHECK (dofollow_state {_FIELD_STATE_CHECK}),
+    referring_pages NUMERIC,
+    referring_pages_state TEXT NOT NULL
+        CHECK (referring_pages_state {_FIELD_STATE_CHECK}),
+    referring_domains NUMERIC,
+    referring_domains_state TEXT NOT NULL
+        CHECK (referring_domains_state {_FIELD_STATE_CHECK}),
+    referring_main_domains NUMERIC,
+    referring_main_domains_state TEXT NOT NULL
+        CHECK (referring_main_domains_state {_FIELD_STATE_CHECK}),
+    rank NUMERIC,
+    rank_state TEXT NOT NULL
+        CHECK (rank_state {_FIELD_STATE_CHECK}),
+    main_domain_rank NUMERIC,
+    main_domain_rank_state TEXT NOT NULL
+        CHECK (main_domain_rank_state {_FIELD_STATE_CHECK}),
+    provider_update_time TEXT,
+    provider_update_time_state TEXT NOT NULL
+        CHECK (provider_update_time_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT keyword_overview_avg_backlinks_kind
+        CHECK (observation_kind = '{KEYWORD_OVERVIEW_BACKLINKS_KIND}'),
+    FOREIGN KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, observation_kind
+    )
+        REFERENCES observation_envelopes (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_BACKLINKS_CONSISTENCY_SQL}
+)
+"""
+
+KEYWORD_OVERVIEW_INTENT_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS keyword_overview_search_intent (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '^[0-9a-f]{{64}}$'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '^[0-9a-f]{{64}}$'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL,
+    main_intent TEXT,
+    main_intent_state TEXT NOT NULL
+        CHECK (main_intent_state {_FIELD_STATE_CHECK}),
+    foreign_intent TEXT[],
+    foreign_intent_state TEXT NOT NULL
+        CHECK (foreign_intent_state {_FIELD_STATE_CHECK}),
+    provider_update_time TEXT,
+    provider_update_time_state TEXT NOT NULL
+        CHECK (provider_update_time_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT keyword_overview_search_intent_kind
+        CHECK (observation_kind = '{KEYWORD_OVERVIEW_INTENT_KIND}'),
+    FOREIGN KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, observation_kind
+    )
+        REFERENCES observation_envelopes (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_INTENT_CONSISTENCY_SQL}
+)
+"""
+
 SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     DERIVATION_VERSIONS_SQL,
     OUTCOMES_SQL,
@@ -280,6 +514,11 @@ SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     DERIVATION_DIAGNOSTICS_SQL,
     KEYWORD_OVERVIEW_COVERAGE_SQL,
     KEYWORD_OVERVIEW_METRICS_SQL,
+    KEYWORD_OVERVIEW_MONTHLY_SQL,
+    KEYWORD_OVERVIEW_TREND_SQL,
+    KEYWORD_OVERVIEW_PROPERTIES_SQL,
+    KEYWORD_OVERVIEW_BACKLINKS_SQL,
+    KEYWORD_OVERVIEW_INTENT_SQL,
 )
 
 WIDEN_IJSON_COLUMNS_SQL: Final[tuple[str, ...]] = (
@@ -333,7 +572,10 @@ def main(argv: list[str] | None = None) -> int:
     sys.stdout.write(
         "migrated derivation_versions outcomes observations "
         "provider_recipes observation_envelopes derivation_diagnostics "
-        "keyword_overview_coverage keyword_overview_metrics\n"
+        "keyword_overview_coverage keyword_overview_metrics "
+        "keyword_overview_monthly_search_volume "
+        "keyword_overview_search_volume_trend keyword_overview_properties "
+        "keyword_overview_avg_backlinks keyword_overview_search_intent\n"
     )
     return 0
 

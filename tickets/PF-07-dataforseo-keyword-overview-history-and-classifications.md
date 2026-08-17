@@ -1,11 +1,11 @@
 # PF-07 — Keyword Overview history, properties, backlinks, and intent
 
-**Status:** ready
+**Status:** review
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** provider derivation expansion
 **Blocked by:** none; PF-06 closed
 **Approved by:** Project Steward
-**Start commit:** <!-- implementer fills -->
+**Start commit:** `ff55577fc039f8bc852f6ad06dba3d8d4fce504c`
 
 ## What to build
 
@@ -124,7 +124,82 @@ provider classifications.
 
 ## Implementation report
 
-<!-- implementer fills; may set Status: review; never Status: done -->
+**Parent:** `ff55577fc039f8bc852f6ad06dba3d8d4fce504c`  
+**Child:** recorded in this implementation commit.
+
+**Loaded skills:**
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+**Changed paths:**
+- `src/observatory/dataforseo_keyword_overview.py` (EXTENDED recipe; CORE builder extracted without byte change)
+- `src/observatory/keyword_overview_derive.py` (recipe-aware spine; `derive_keyword_overview_extended`)
+- `src/observatory/migrate.py` (five additive typed detail relations)
+- `tests/test_dataforseo_keyword_overview.py` (extended recipe publication)
+- `tests/test_keyword_overview_extended_derive.py` (new)
+- `tests/fixtures/dataforseo_keyword_overview_extended_recipe.jcs` (frozen 2554-byte JCS)
+- this ticket (Status + Start commit + Implementation report)
+
+### Extended recipe
+
+- Digest: `cade41cb916bc5595f62ac8ea4ef73d6c688974a1ee5caad0c9d8f95f51664c7`
+- Bytes: 2554
+- Frozen: `tests/fixtures/dataforseo_keyword_overview_extended_recipe.jcs`
+- CORE digest/bytes unchanged: `319af798…` / 1662
+- Seven kinds; monthly identity axes are `requested_keyword` + `year` + `month`
+
+Provider Update Time:
+- monthly history: omitted from the typed relation. Monthly points are closed `{year,month,search_volume}` with no provider timestamp. `keyword_info.last_updated_time` is a sibling-structure clock and is not inherited.
+- search-volume trend: omitted. Closed `{monthly,quarterly,yearly}` has no timestamp.
+- properties: omitted. Ticket forbids manufacturing a clock.
+- avg_backlinks: only `avg_backlinks_info.last_updated_time`
+- search_intent: only `search_intent_info.last_updated_time`
+
+### PF-03 extended counts
+
+coverage 5, metrics 5, monthly 441, trend 5, properties 5, avg_backlinks 5, search_intent 5, total `observation_count` 471.
+
+Monthly per keyword: ai search optimization 85, generative engine optimization 78, keyword research 93, local seo 93, seo api 92.
+
+### Acceptance → proving tests
+
+| Criterion | Test |
+|---|---|
+| Monthly keyword+year/month identity, not index | `test_monthly_identity_is_semantic_not_positional` |
+| Actual fixture point counts, not 12-month | `test_extended_derive_pf03_counts_and_zero_point` |
+| Stated monthly zero | `test_extended_derive_pf03_counts_and_zero_point` |
+| Later Capture revises one month without overwrite | `test_historical_revision_creates_second_capture_row` |
+| Trend remains provider testimony | `test_trend_properties_backlinks_intent_and_independent_clocks` |
+| Properties quirks / core_keyword JSON null | `test_trend_properties_backlinks_intent_and_independent_clocks` |
+| Backlink NUMERIC + own PUT | `test_trend_properties_backlinks_intent_and_independent_clocks`, `test_backlink_integer_and_decimal_lexical_forms` |
+| Intent array/null + own PUT | `test_trend_properties_backlinks_intent_and_independent_clocks` |
+| No sibling clock inheritance | `test_trend_properties_backlinks_intent_and_independent_clocks` |
+| Idempotency / damage / two-DB rebuild | `test_exact_content_idempotent_and_monthly_conflict`, `test_extended_failure_and_damage_paths`, `test_two_databases_are_logically_equivalent` |
+| PF-06 + fixture regression | `test_core_rows_remain_unchanged_after_extended_derive`, `test_fixture_derive_still_skips_provider_rows`, existing PF-06 file |
+| Extended digest / seven kinds / CORE unchanged | `test_extended_recipe_published_digest_and_kinds`, `test_extended_recipe_is_not_the_core_recipe` |
+| Wrong-kind + state/value contradictions | `test_wrong_kind_and_state_value_contradictions` |
+
+### Checks
+
+- `uv run pytest -q` — 771 passed, 1 skipped
+- `uv run ruff check .` — clean
+- `uv run mypy` — clean
+
+### Review
+
+Code-review against start commit. Residual judgement: closed-row writer remains a fork of PF-04 `write_derived_row`; PF-07 reuses that one writer for all seven detail families.
+
+### Unproven limits
+
+- F7 locking and PostgreSQL crash/fsync are not claimed.
+- Operator Evidence proof is conditional on the local PF-03 root.
+- Monthly/trend/properties omit PUT columns rather than storing explicit unstated tokens.
+
+### Implementer judgement
+
+Weakest remaining assumption: monthly history and search-volume trend have no recipe-authorized governing Provider Update Time, so those relations omit PUT columns entirely. Parent-structure JSON null/absence is cascaded onto child field states rather than suppressing the Observation row (except monthly points, which exist only when the series is stated).
 
 ## Closure
 
