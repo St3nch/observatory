@@ -1,11 +1,11 @@
 # PF-06 — Keyword Overview provider Derivation: Outcomes, coverage, and core metrics
 
-**Status:** ready
+**Status:** review
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** provider derivation tracer
 **Blocked by:** none; PF-05 closed
 **Approved by:** Project Steward
-**Start commit:** <!-- implementer fills -->
+**Start commit:** `c4252b9a79499e7e640daf986b09cb8dc1480e9e`
 
 ## What to build
 
@@ -158,7 +158,68 @@ Outcomes, coverage, and core metrics with exact-content idempotency and no fixtu
 
 ## Implementation report
 
-<!-- implementer fills; may set Status: review; never Status: done -->
+**Parent:** `c4252b9a79499e7e640daf986b09cb8dc1480e9e`  
+**Child:** recorded in this implementation commit.
+
+**Loaded skills:**
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+**Changed paths:**
+- `src/observatory/migrate.py` (additive coverage/metrics tables; kind-bound FKs; D11 state/value CHECKs)
+- `src/observatory/keyword_overview_derive.py` (new provider derive seam)
+- `tests/test_keyword_overview_derive.py` (new)
+- this ticket (Status + Start commit + Implementation report)
+
+Fixture `derive.py` is unchanged. CORE recipe bytes/digest unchanged.
+
+Steward review remediation (same implementation commit): typed detail rows now carry `observation_kind`, CHECK it to the one allowed kind, and FK that 4-tuple to `observation_envelopes_kind_identity`. Every PF-06 metrics value/state pair has `stated <=> value IS NOT NULL`. Coverage `covered=false` now requires `returned_keyword_state='absent'`.
+
+### Acceptance → proving tests
+
+| Criterion | Test |
+|---|---|
+| Recipe registration; no fixture-label provider rows | `test_accepted_core_recipe_id_is_unchanged`, `test_provider_rows_cannot_use_fixture_label` |
+| PF-03 Attempt/Capture classification and count 10 | `test_provider_derive_pf03_fixture_into_real_postgres`, `test_pf03_operator_evidence_readonly_when_present` |
+| Reorder independence | `test_item_reorder_does_not_change_identities_or_values` |
+| Coverage per requested keyword; omission | `test_omitted_keyword_is_coverage_without_metrics`, `test_all_omitted_emits_coverage_not_empty_outcome` |
+| Typed metrics + NUMERIC + adapter request context | `test_provider_derive_pf03_fixture_into_real_postgres`, `test_high_precision_decimal_round_trip` |
+| PUT independent / unstated | `test_unstated_provider_update_time_does_not_inherit_capture_time` |
+| provider_error / envelope_rejected / reconciliation_failed | `test_provider_error_envelope_and_reconciliation_write_zero_observations` |
+| Transport + damaged Capture/body | `test_transport_states_and_damaged_capture` |
+| Exact-content idempotency and planted conflicts | `test_exact_content_idempotent_and_conflict_refusal` |
+| Two-database logical equality | `test_two_databases_are_logically_equivalent` |
+| Fixture derive/API unchanged | `test_fixture_derive_still_skips_provider_rows` |
+| Detail rows bound to the matching Observation kind | `test_detail_rows_are_structurally_bound_to_observation_kind` |
+| Metrics field-state/value D11 consistency | `test_metrics_field_state_value_consistency_is_enforced` |
+| Coverage returned-keyword cannot contradict covered | `test_coverage_returned_keyword_cannot_contradict_covered` |
+
+### Checks
+
+- `uv run pytest -q` — 757 passed, 1 skipped
+- `uv run ruff check .` — clean
+- `uv run mypy` — clean
+
+### Review
+
+Code-review against start commit. Valid spec finding fixed: metrics location/language now come from verified Attempt parameters, not a dead item-field fallback. Added all-omitted, unstated PUT, damaged body, and `transport_complete_non_admissible` proofs.
+
+Steward review required PostgreSQL to reject wrong-kind detail rows and contradictory field-state/value pairs. Those constraints are now in the typed tables, not only in the Python planner.
+
+Residual judgement: closed-row writer is a fork of PF-04 `write_derived_row` rather than opening that allowlist.
+
+### Unproven limits
+
+- F7 locking and PostgreSQL crash/fsync are not claimed.
+- PF-07 families are parsed by PF-05 and not persisted.
+- Operator Evidence proof is conditional on the local PF-03 root.
+- `CREATE TABLE IF NOT EXISTS` does not reshape an already-created coverage/metrics table; PostgreSQL remains rebuildable under D8.
+
+### Implementer judgement
+
+Weakest remaining assumption: apply_schema will not ALTER already-created PF-06 detail tables; a database that applied the pre-remediation CREATE TABLE must be rebuilt empty to pick up the kind FK and state/value CHECKs. `transport_complete_non_admissible` is still represented by a zero-byte complete HTTP body.
 
 ## Closure
 
