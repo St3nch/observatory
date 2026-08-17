@@ -41,6 +41,32 @@ actually changes decisions.
 - Provider catalogs, account data, pricing, and status endpoints are operational metadata;
   they do not automatically become SEO/GEO Observations.
 
+## Surface activation review
+
+Before authorizing a new DataForSEO surface, the Steward reviews the **current complete
+provider capability family**, not only the first endpoint name that appears useful. The
+review records enough information to choose deliberately among overlapping endpoints and
+request options:
+
+- what questions the surface can answer for SEO, GEO, SERP visibility, competitor analysis,
+  opportunity/gap discovery, and downstream LLM reasoning;
+- every materially useful returned field/relationship and which request options enable it;
+- historical availability, provider update cadence, data periods, and active-vs-indexed
+  measurement semantics;
+- location, language, device, model/platform, search-surface, domain/page/entity, and other
+  context that changes meaning;
+- overlap with already collected DataForSEO testimony and whether the independent source or
+  methodology adds useful evidence rather than redundant cost;
+- task/live/standard/asynchronous alternatives, pagination/bulk limits, expected cost, and
+  operational complexity;
+- which useful testimony should become typed Observations now, which can remain preserved in
+  raw Evidence for later recipes, and which fields are operational noise rather than
+  strategy-relevant provider testimony.
+
+The purpose is not to maximize field count. It is to avoid discovering later that a cheap,
+historically valuable, or strategically important provider dimension was available but was
+never captured or was discarded because the first consumer did not yet ask for it.
+
 ## Priority A — expected core provider testimony
 
 These families are expected to be broadly useful to the downstream strategy system and are

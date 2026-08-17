@@ -77,6 +77,23 @@ commit leaves honest unresolved history.
   identities, and body sizes before use.
 - API structures favor explicit fields and predictable semantics so ordinary software and
   LLMs can read them reliably.
+- Observatory is deliberately **data-sufficient for downstream reasoning**. When selecting
+  provider surfaces and fields, prefer preserving useful source-attributed testimony that
+  would be expensive, impossible, or misleading to reconstruct later: rankings and SERP
+  composition, citations/sources, competitor/domain/page relationships, query/topic
+  discovery, demand/history, provider classifications, measurement context, and independent
+  provider times/periods. A field does not need an immediate UI or strategy rule to be worth
+  preserving when it can materially support later historical or comparative analysis.
+- Data sufficiency does not mean indiscriminate collection. Provider catalogs are reviewed
+  surface by surface for strategic information value, historical uniqueness, overlap,
+  acquisition cost, and consumer need. Observatory keeps the useful testimony and its
+  provenance; the downstream strategy layer—not Observatory—uses that corpus with LLMs and
+  other analysis to discover opportunities, gaps, competitor advantages, visibility change,
+  and possible SEO/GEO actions.
+- Do not prematurely collapse rich provider testimony into a score or thin convenience row
+  when doing so would discard relationships or dimensions a later consumer may need. Raw
+  Evidence remains available for re-derivation, while normalized Observations expose the
+  useful typed facts needed for reliable machine and LLM analysis.
 
 ## Survival requirement
 
