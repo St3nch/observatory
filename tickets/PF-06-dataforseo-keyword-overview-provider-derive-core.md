@@ -1,6 +1,6 @@
 # PF-06 — Keyword Overview provider Derivation: Outcomes, coverage, and core metrics
 
-**Status:** review
+**Status:** done
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** provider derivation tracer
 **Blocked by:** none; PF-05 closed
@@ -223,4 +223,45 @@ Weakest remaining assumption: apply_schema will not ALTER already-created PF-06 
 
 ## Closure
 
-<!-- Project Steward only -->
+**Accepted by:** Project Steward  
+**Accepted implementation:** `0291e21d8fefbfe112ff2785c6076d02cf513d0a`  
+**Accepted on:** 2026-08-17
+
+Independent Steward review confirmed PF-06 remains one bounded implementation commit with
+parent `c4252b9a79499e7e640daf986b09cb8dc1480e9e`, leaves fixture derivation unchanged, and
+adds the first recipe-bound DataForSEO Keyword Overview provider Derivation into real
+PostgreSQL. The accepted PF-03 Capture derives `observation_admitted` with five coverage and
+five metrics Observation envelopes (`observation_count=10`) under the unchanged CORE recipe
+`319af798f3e0b3e5fe4579539442c4ca5d384b683e1f4bce0f7a1b3e26cd5908`.
+
+Steward remediation before acceptance strengthened the typed relational boundary. Coverage
+and metrics detail rows now carry their exact Observation kind and reference an
+Observation-envelope candidate key including that kind, so a detail row cannot attach to
+an envelope of the wrong kind. Every PF-06 metrics value/state pair is constrained so
+`stated` requires a non-NULL value and every non-stated state requires SQL NULL; legitimate
+zero, `FALSE`, and empty arrays remain stated values. Coverage omission likewise requires
+`covered=false`, no returned keyword, and the accepted `absent` state.
+
+The provider Capture unit writes its Outcome, diagnostics, Observation envelopes, and typed
+details atomically. Same-recipe reruns compare intended content rather than using conflict-
+ignore semantics; planted conflicts fail closed. Attempt-stage `authorized_unresolved`
+survives damaged Capture/body Evidence, while provider errors, parser/envelope rejection,
+reconciliation failure, partial/no-response, and complete non-admissible transport produce
+their closed zero-Observation Outcomes. Exact Decimal testimony persists through PostgreSQL
+`NUMERIC`, Provider Update Time remains independent from Capture time, and two fresh real
+PostgreSQL databases rebuilt from the same Evidence/recipe compare logically equivalent.
+
+Steward verification at the accepted implementation commit:
+
+- `uv run pytest -q` — 757 passed, 1 skipped, 1 upstream deprecation warning;
+- `uv run ruff check .` — clean;
+- `uv run mypy` — clean.
+
+Accepted limits remain explicit: F7 locking and PostgreSQL crash/fsync are not claimed;
+PF-07 monthly/trend/property/backlink/intent families are parsed but not persisted; the
+operator PF-03 Evidence proof is conditional on the accepted local root; and the current
+`CREATE TABLE IF NOT EXISTS` path does not reshape a database that locally applied the
+unaccepted pre-remediation PF-06 detail schema. That last case is acceptable at this stage
+because the pre-remediation schema was never accepted and PostgreSQL is rebuildable under
+D8. No provider call, credentials, Evidence mutation, API route, PF-07 work, or provider
+spend occurred.
