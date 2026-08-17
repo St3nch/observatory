@@ -1,11 +1,11 @@
 # PF-05 — DataForSEO Keyword Overview strict parser and PF-03 conformance fixture
 
-**Status:** ready
+**Status:** review
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** parser/conformance
 **Blocked by:** none; PF-04 closed
 **Approved by:** Project Steward
-**Start commit:** <!-- implementer fills -->
+**Start commit:** `fc654cdf20102ade832c48b6be61415ac811baa6`
 
 ## What to build
 
@@ -152,7 +152,93 @@ Keyword Overview interpretation without provider network or PostgreSQL side effe
 
 ## Implementation report
 
-<!-- implementer fills; may set Status: review; never Status: done -->
+**Parent:** `fc654cdf20102ade832c48b6be61415ac811baa6`  
+**Child:** recorded in this implementation commit.
+
+**Loaded skills:**
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+**Changed paths:**
+- `src/observatory/dataforseo_keyword_overview.py` (new; parser, typed IR, core recipe)
+- `tests/test_dataforseo_keyword_overview.py` (new)
+- `tests/fixtures/dataforseo_keyword_overview_pf03.json` (exact PF-03 body)
+- `tests/fixtures/dataforseo_keyword_overview_core_recipe.jcs` (published core recipe JCS)
+- this ticket (Status + Start commit + Implementation report)
+
+No `derive.py`, `migrate.py`, API, or Evidence/Capture changes. No PF-06 persistence.
+
+### Fixture establishment
+
+Inspected `/home/chaz/.local/share/vedaops/observatory/pf03-paid-20260816T213724Z` through `inspect_paid_probe_body`. Attempt `c0da493c3a44f1f60bc21d7afaab290e852dadafa8157386b79bd58ebec07462`, Capture `b4fc36a7799b497d0d183a88449bf0a770ce741ec1f0d8eaade2d75c930154d5`. Copied exact body bytes (26270, `d91fdc7ab8acf429f0ff9c00bd7cdb725be1ba9585481af35d14f7c4e79a6d1c`). Ordinary tests hash the frozen file only.
+
+### Acceptance → proving tests
+
+| Criterion | Test |
+|---|---|
+| Frozen PF-03 length/SHA-256 | `test_frozen_fixture_independent_sha256_and_length` |
+| Walk items independent of order; all requested reconciled | `test_pf03_parses_all_requested_keywords_independent_of_item_order` |
+| Quirks, decimals, clocks, monthly counts, request-disabled | `test_pf03_preserves_quirks_decimals_times_and_monthly_counts` |
+| Duplicate / unrequested / omitted | `test_duplicate_unrequested_and_omitted_reconciliation` |
+| Normalization collision | `test_synthetic_normalization_collision_fails` |
+| Count/shape, tasks/result length | `test_count_and_shape_failures` |
+| Items missing/null/empty | `test_items_missing_null_and_empty_no_data` |
+| Task error / inconsistent status | `test_status_combinations` |
+| Impossible calendar/time timestamps fail closed | `test_timestamp_and_period_failures` |
+| Missing/null required envelope status/counts | `test_required_envelope_status_and_counts_fail_when_missing_or_null` |
+| Duplicate member, NaN/Inf, UTF-8, BOM, trailing | `test_duplicate_member_nonfinite_utf8_bom_and_trailing` |
+| Integer/decimal lexical + high precision | `test_decimal_lexical_forms_and_high_precision` |
+| Timestamp/period/zero-month/duplicate/negative | `test_timestamp_and_period_failures` |
+| Null/absent timestamp; extension vs closed unknown | `test_null_absent_timestamp_and_unknown_fields` |
+| Known-field type drift | `test_known_field_type_drift_fails` |
+| Unknown enum; populated disabled enrichment | `test_unknown_enum_and_populated_disabled_enrichment` |
+| Core recipe digest/kinds | `test_core_recipe_published_digest_and_kinds` |
+
+### Required vs optional envelope fields
+
+Required by the claimed v3 live-envelope / one-task contract (missing or JSON null fails closed):
+
+- root `status_code`, `tasks`, `tasks_count`, `tasks_error`
+- task `status_code`
+- on success: `result`, `result_count`, `items`, `items_count`
+
+Intentionally optional (not admission-critical; absence is not treated as success):
+
+- `version`, `status_message`, `time`, `cost`, task `id`/`path`/`data`/`time`/`cost`
+
+`authorized_unresolved` is attempt-stage and is not representable in the PF-04 `admission.capture_outcomes` list. That schema was not expanded.
+
+### Production core recipe
+
+1662-byte JCS, SHA-256 `319af798f3e0b3e5fe4579539442c4ca5d384b683e1f4bce0f7a1b3e26cd5908`. Capture outcomes now include `observation_admitted_empty`. Emits only `coverage.v1` and `metrics.v1`. PF-07 kinds are absent.
+
+### Checks
+
+- `uv run pytest -q` — 740 passed, 1 skipped
+- `uv run ruff check .` — clean
+- `uv run mypy` — clean
+- Ordinary tests remain zero-network; autouse socket guard in PF-05 tests
+
+### Review
+
+Code-review against `fc654cdf20102ade832c48b6be61415ac811baa6`.
+
+**Spec:** reviewer claimed `YEAR_MIN=2000` rejects PF-03 year 2018; that is incorrect (2018 ≥ 2000). Valid findings fixed: omitted `returned_keyword` is absence not JSON null; omitted request-disabled states follow Attempt flags; type-drift test added; PF-07 family values asserted; year bounds named in recipe `data_period.rule`; ordinary tests no longer open the operator Evidence root; `foreign_intent` string is wrong-type; parser classification renamed off Outcome.
+
+**Standards:** 0 remaining hard after those fixes. Residual judgement: one module owns parser+IR+recipe (ticket cut).
+
+### Unproven limits
+
+- Claimed-contract enums/year window are recipe semantics, not proven by PF-03 completeness.
+- SERP/clickstream populated contracts are not observed; represented as request-disabled.
+- Normalization is casefold+whitespace only; PF-03 did not exhibit a real collision.
+- No PostgreSQL provider writes.
+
+### Implementer judgement
+
+Weakest area: year/enum closures and keyword normalization are claimed-contract choices informed by one Capture. PF-03 is existence proof, not invariance (D12). The parser is ready for PF-06 persistence of coverage/metrics only.
 
 ## Closure
 
