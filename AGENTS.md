@@ -111,7 +111,7 @@ add the smallest rule that addresses that failure — nothing more.
 - Never collapse missing, unstated, inapplicable, refused, failed, partial, or malformed
   states.
 - Never make real provider network calls from ordinary automated tests. The accepted
-  first proof remains fixture-only (`fixture-panel-v1`); provider work is limited by D9
+  first proof remains fixture-only (`fixture-panel-v1`); provider work is limited by D9–D12
   and the deferred register.
 - Never claim fixture or mock success proves real PostgreSQL behavior, Evidence Store
   crash/fsync/commit behavior, concurrency of Attempt authorization, or recovery.

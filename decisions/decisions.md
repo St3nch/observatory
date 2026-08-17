@@ -437,3 +437,78 @@ historical reproducibility.
 
 **Normative detail:** `docs/specs/capture-event-v2.md`, section “Provider Derivation after
 F11.”
+
+## D12 — Provider interpretation is designed from claimed contract plus bounded real Evidence
+
+**Decision:** Provider onboarding is Evidence-first and bounded by one named analytical
+purpose and one materially distinct adapter contract at a time. Before a provider-specific
+Derivation Recipe is accepted, the Steward reviews the relevant current provider capability
+family far enough to identify useful testimony, request options, historical dimensions,
+overlap, cost, and materially different response contracts. That inventory is research, not
+authorization. Real **Provider contract probes** are separately authorized only when they
+exercise a material contract branch that can change envelope/cardinality, reconciliation or
+identity, field state, numeric/time/period semantics, pagination/continuation, or failure
+taxonomy.
+
+Official provider documentation is the provider's **claimed contract**. A committed Capture
+and its bodies are empirical **Evidence** of what the provider actually returned for one
+exact exchange. Neither is Observatory's interpretation contract. The content-addressed
+**Derivation Recipe** is normative for what Observatory accepts and how it interprets that
+Evidence: required semantics, tolerated additive extensions, preserved provider quirks,
+request-disabled states, and fail-closed drift. One observed payload establishes existence,
+not invariance; absence from one payload does not prove absence from the provider contract.
+
+Verified probe bytes may be copied into the deterministic test corpus as **Conformance
+fixtures**. The fixture proves the recipe/parser against known testimony; it never replaces
+Evidence authority, silently tracks the provider's latest behavior, or permits live provider
+access from ordinary tests. Resolving provider drift changes recipe semantics only through a
+new recipe identity when required; historical Evidence and prior recipes remain unchanged.
+
+Acquisition and interpretation have different reversibility. Interpretation is rebuildable:
+returned testimony can remain raw Evidence and be typed later under a new recipe. Acquisition
+is not: a time-indexed SERP, citation, ranking, provider snapshot, location/language slice, or
+request-enabled enrichment that was never captured may be impossible to reconstruct later.
+Therefore raw retention protects against **under-modeling**, not **under-acquisition**. When a
+materially useful, historically irrecoverable provider dimension is deliberately not acquired,
+the activation review records that choice and the trigger for revisiting it. This requirement
+does not justify speculative catalog-wide capture.
+
+A probe set is sufficient when each material mode of the authorized adapter is either
+exercised by Evidence, proven request-disabled by the verified Attempt, or explicitly
+deferred with a reason. A different path, live/standard/asynchronous workflow, pagination
+model, or option set that materially changes response semantics is a different adapter
+contract, not merely another sample. Additional calls require separate authorization under
+the existing spend, Evidence-protection, and deferred-work gates.
+
+Providers share Observatory's Evidence/Derivation/Observation spine and may later share
+lossless subject identity where genuinely common, but provider measurements remain
+source-attributed and provider-native. DataForSEO, future Ahrefs, and future Semrush metrics
+must not be collapsed into a universal metric merely because field names appear comparable;
+semantic comparison and strategy remain downstream under D3.
+
+**Why:** PF-03 demonstrated that real provider testimony can invalidate documentation-only
+assumptions about ordering, independent clocks, historical series, decimal forms, and
+null/request-disabled states. At the same time, a finite probe corpus cannot establish every
+invariant of an external API. Treating documentation, Evidence, and the recipe as distinct
+artifacts preserves both empirical truth and a stable fail-closed interpretation boundary.
+
+**Cost:** Each newly activated adapter may require a small number of deliberately chosen
+provider probes and explicit decisions about testimony not acquired. The project must resist
+both catalog-wide reconnaissance and fixture-as-contract thinking.
+
+**Rejected:**
+
+- designing provider recipes from documentation alone;
+- treating one or several observed payloads as the complete provider contract;
+- probing an entire provider catalog before a bounded adapter and analytical purpose exist;
+- issuing extra paid calls merely to increase sample count after material branches are
+  exercised, request-disabled, or explicitly deferred;
+- silently re-freezing fixtures to accept provider drift under an unchanged recipe;
+- assuming raw Evidence can recover testimony that was never requested or captured;
+- requiring a universal cross-provider metric layer before provider-native history APIs.
+
+**Does not fire F3:** Capability-family inventory remains product research. Each new adapter,
+paid probe, recurring schedule, or provider still requires its own recorded authorization.
+
+**Normative detail:** `docs/specs/capture-event-v2.md`, section “Provider contract discovery
+and conformance.”

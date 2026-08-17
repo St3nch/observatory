@@ -156,9 +156,10 @@ Those concerns belong to downstream projects or a separate strategy layer.
 
 V1 is a narrow, working vertical slice—not broad provider coverage.
 
-The first implementation remains **fixture-only** (`fixture-panel-v1`). It must exercise
-the capture-event contract without real provider network activity. Paid-provider sequence
-remains unsettled and deferred.
+The first implementation began **fixture-only** (`fixture-panel-v1`) to exercise the
+capture-event contract without real provider network activity. That proof remains the
+baseline; bounded provider work now proceeds under D9–D12 while broad provider coverage
+remains deferred under F3.
 
 The fixture vertical slice proves:
 

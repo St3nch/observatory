@@ -1,9 +1,9 @@
 # PF-05 — DataForSEO Keyword Overview strict parser and PF-03 conformance fixture
 
-**Status:** planned
+**Status:** ready
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** parser/conformance
-**Blocked by:** PF-04
+**Blocked by:** none; PF-04 closed
 **Approved by:** Project Steward
 **Start commit:** <!-- implementer fills -->
 
@@ -26,9 +26,16 @@ uses a new extended recipe digest in PF-07; the PF-06 recipe is never mutated in
 ## Authority
 
 - D11
+- D12
 - `docs/specs/capture-event-v2.md` — §Provider Derivation after F11
 - PF-03 exact paid Evidence and read-only inspector
 - PF-04 provider recipe/Observation foundation
+
+PF-03 is the accepted Provider contract probe for this exact live adapter. PF-05 continues
+from its verified Evidence plus the claimed provider contract and bounded synthetic
+adversarial cases. It does not restart Keyword Overview reconnaissance and does not claim
+contracts for request-disabled SERP/clickstream enrichment, Standard/asynchronous workflows,
+or other DataForSEO endpoints.
 
 ## PF-03 fixture acquisition
 

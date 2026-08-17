@@ -75,6 +75,17 @@ Observation kinds, and extension/drift policy. Its JCS bytes are content-address
 lowercase 64-hex SHA-256 is the provider `derivation_version_id`. Changing semantic meaning
 requires a new recipe identity. Fixture v1 keeps its pre-existing semantic-label rule.
 
+**Provider contract probe** — A separately authorized real provider exchange used to learn
+or re-check one materially distinct adapter contract. A probe follows the ordinary Attempt
+→ Capture → Evidence boundary and is preserved as Evidence; it is not a live-test dependency,
+an authorization to crawl a provider family, or proof that one observed payload is the full
+provider contract.
+
+**Conformance fixture** — Exact bytes copied from verified Evidence into the deterministic
+test corpus, with their identity recorded, so a Derivation Recipe and parser can be exercised
+without provider network access. A conformance fixture is a test input for Observatory's
+interpretation contract; it is not Evidence authority and is not itself the provider contract.
+
 **Observation Kind** — A recipe-versioned typed family of source-attributed provider facts
 that share one semantic shape and identity rule, such as keyword metrics, one historical
 monthly search-volume point, search intent, or a provider-coverage statement. Observation

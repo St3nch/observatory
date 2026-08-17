@@ -67,6 +67,36 @@ The purpose is not to maximize field count. It is to avoid discovering later tha
 historically valuable, or strategically important provider dimension was available but was
 never captured or was discarded because the first consumer did not yet ask for it.
 
+### Evidence-first activation method
+
+Surface inventory and provider probing are different activities. Inventory reviews the
+relevant capability family broadly enough to understand what testimony exists, what request
+options can change it, and what historical dimensions could be permanently missed. It does
+not authorize a call. A real Provider contract probe is authorized only for one named adapter
+contract when an unexercised branch can materially change response shape/cardinality,
+identity/reconciliation, field state, numeric/time/data-period semantics, pagination, or
+failure behavior.
+
+For an activated contract, design proceeds in this order:
+
+1. state the analytical purpose the testimony could serve downstream;
+2. review the current claimed provider contract and materially different modes;
+3. authorize the smallest useful real probe set under the normal Evidence/spend gates;
+4. preserve exact responses as Evidence and inspect what was actually returned;
+5. author the closed Derivation Recipe, typed IR, Observation kinds, identities, times,
+   field states, and diagnostics from the claimed contract plus verified testimony;
+6. copy exact verified bytes into deterministic Conformance fixtures and test zero-network;
+7. type only testimony whose semantics can be stated honestly; leave other returned facts
+   available in raw Evidence for later recipes;
+8. record a deliberate non-acquisition when a known historically irrecoverable dimension is
+   not captured, together with the trigger for revisiting it.
+
+The rule is **inventory broadly enough not to miss irreversible choices; probe narrowly
+enough that each paid exchange teaches a material contract branch**. Raw Evidence protects
+against under-modeling of returned data, not against data that was never requested. PF-03
+already satisfies the live Keyword Overview reconnaissance step for its exact closed adapter;
+PF-05 continues from that Evidence and does not restart exploration.
+
 ## Priority A — expected core provider testimony
 
 These families are expected to be broadly useful to the downstream strategy system and are

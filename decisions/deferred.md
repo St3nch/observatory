@@ -47,9 +47,11 @@ the next consumer.
 **Bounded activation:** D9 authorizes the provider-neutral HTTP event foundation and one
 DataForSEO Google Organic Live Advanced tracer against the free sandbox. D10 additionally
 authorizes implementation of one tightly budgeted DataForSEO Labs Google Keyword Overview
-Live adapter, with a maximum of five keywords and one exchange. Neither decision fires
-broad provider coverage, Standard/asynchronous operation, provider derivation, or a
-capability catalog. Those remain deferred to their recorded triggers.
+Live adapter, with a maximum of five keywords and one exchange. D11 subsequently authorizes
+provider Derivation for the captured Keyword Overview contract, and D12 defines the bounded
+provider-discovery method. None of these decisions fires broad provider coverage,
+Standard/asynchronous adapters, another provider call, or recurring acquisition. Those
+remain deferred to their recorded triggers or separate authorization.
 
 **Provider direction:** DataForSEO is the first provider, not Observatory's exclusive
 provider. Ahrefs and Semrush are expected future supplementary and comparison sources.

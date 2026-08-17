@@ -1214,6 +1214,52 @@ Later separately authorized real API calls may create new Evidence that is run t
 same parser as a contract probe. Live provider access is never a dependency of ordinary
 tests.
 
+#### Provider contract discovery and conformance
+
+D12 separates three artifacts that must not be conflated. Current official provider
+documentation is the provider's claimed contract. A verified Attempt/Capture/body is
+empirical Evidence of one exact exchange. The content-addressed Derivation Recipe is
+Observatory's normative interpretation contract for an adapter: it states what known
+semantics are accepted, which additive extensions are tolerated and diagnosed, which
+observed provider quirks are deliberately preserved, which states are proven request-disabled,
+and which divergences fail closed as drift.
+
+Before a new adapter contract is accepted, the Steward reviews the relevant capability
+family only far enough to identify the named analytical purpose, request options, historical
+dimensions, overlap/cost, and materially different response contracts. Inventory does not
+authorize transport. A Provider contract probe is a separately authorized ordinary
+Attempt → Capture exchange. Probe selection is branch-oriented rather than statistical: a
+new probe is warranted only when an unexercised mode can materially change envelope or
+cardinality, reconciliation/identity, field-state, numeric/time/data-period semantics,
+pagination/continuation, or failure taxonomy. A materially different path, live/standard/
+asynchronous workflow, pagination model, or option set is a different adapter contract.
+
+The probe set is sufficient when every material mode for the authorized adapter is either
+represented by verified Evidence, proven request-disabled by the verified Attempt, or
+explicitly deferred with a reason. One observed value never proves non-nullability,
+ordering, omission, update cadence, or other invariance. Synthetic adversarial fixtures
+remain required for closed rules that a bounded real corpus cannot economically exhibit.
+
+Exact verified probe bytes may be copied to the deterministic test corpus as Conformance
+fixtures with byte length and SHA-256 recorded. Those bytes test a recipe/parser; they do
+not become a second Evidence authority or silently define the external provider contract.
+Provider drift is resolved through the recipe/version rules in D11, never by silently
+re-freezing a fixture under unchanged semantics.
+
+Raw Evidence makes under-modeling reversible but cannot repair under-acquisition. When a
+known option or surface contains materially useful time-indexed testimony that may be
+irrecoverable later and the project deliberately does not acquire it, the activation review
+records the non-acquisition and a trigger for reconsideration. This is a bounded decision,
+not authorization for speculative catalog-wide collection.
+
+PF-03 is the accepted reconnaissance Capture for
+`dataforseo-labs-google-keyword-overview-live-paid-probe-v1`: one live task, United States,
+English, SERP enrichment off, and clickstream off. PF-05 may design the first Keyword
+Overview parser/typed IR from that verified Evidence plus the claimed provider contract and
+bounded synthetic adversarial cases. PF-03 does not establish contracts for SERP enrichment,
+clickstream, Standard/asynchronous workflows, or other DataForSEO endpoints, and PF-05 must
+not issue additional provider calls to fill those gaps.
+
 #### Provider API sequencing
 
 `GET /v1/attempts/{attempt_id}` remains an Evidence-backed audit/provenance resource. Before
