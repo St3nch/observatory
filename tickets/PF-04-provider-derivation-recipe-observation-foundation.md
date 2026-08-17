@@ -1,11 +1,11 @@
 # PF-04 — Provider Derivation recipe and Observation foundation
 
-**Status:** ready
+**Status:** review
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** foundation
 **Blocked by:** PF-03 closed; D11/F11 resolution
 **Approved by:** Project Steward
-**Start commit:** <!-- implementer fills -->
+**Start commit:** `9e4dd055038675402c6ef16dd103ac3b60687505`
 
 ## What to build
 
@@ -90,19 +90,19 @@ use is tolerated unknown fields on extension-permitted provider objects.
 
 ## Acceptance criteria
 
-- [ ] Empty PostgreSQL migration creates the provider recipe, canonical Observation envelope,
+- [x] Empty PostgreSQL migration creates the provider recipe, canonical Observation envelope,
       and Derivation diagnostic substrate without changing existing fixture table meaning.
-- [ ] A fixed published provider recipe document has a test-computed JCS SHA-256 that equals
+- [x] A fixed published provider recipe document has a test-computed JCS SHA-256 that equals
       its `derivation_version_id`; registration stores/recovers the exact canonical bytes.
-- [ ] Re-registering identical recipe bytes/adapter metadata is idempotent.
-- [ ] Same digest with conflicting canonical bytes or adapter metadata fails closed before
+- [x] Re-registering identical recipe bytes/adapter metadata is idempotent.
+- [x] Same digest with conflicting canonical bytes or adapter metadata fails closed before
       any provider-derived write.
-- [ ] Fixture `derivation_version_id` labels continue to register and derive exactly as before.
-- [ ] Existing fixture Outcomes/Observations, logical rebuild equivalence, and API Attempt
+- [x] Fixture `derivation_version_id` labels continue to register and derive exactly as before.
+- [x] Existing fixture Outcomes/Observations, logical rebuild equivalence, and API Attempt
       envelopes are unchanged.
-- [ ] Foundation code has a tested exact-content comparison path suitable for later provider
+- [x] Foundation code has a tested exact-content comparison path suitable for later provider
       same-recipe writes; it does not authorize changing fixture-v1 conflict behavior here.
-- [ ] Real PostgreSQL is used for migration/registration tests.
+- [x] Real PostgreSQL is used for migration/registration tests.
 
 ## Required tests
 
@@ -133,7 +133,87 @@ real PostgreSQL while fixture-v1 derivation and API behavior remain logically un
 
 ## Implementation report
 
-<!-- implementer fills; may set Status: review; never Status: done -->
+**Parent:** `9e4dd055038675402c6ef16dd103ac3b60687505`  
+**Child:** recorded in this implementation commit.
+
+**Loaded skills:**
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+**Changed paths:**
+- `src/observatory/migrate.py` (additive `provider_recipes`, `observation_envelopes`, `derivation_diagnostics`)
+- `src/observatory/provider_recipe.py` (new; closed test recipe, registration, identity, writes)
+- `tests/test_provider_recipe.py` (new)
+- this ticket (Status + Start commit + Implementation report)
+
+`src/observatory/derive.py` was not changed. Fixture `ON CONFLICT DO NOTHING` and fixture `observations` columns remain as accepted.
+
+### Acceptance → proving tests
+
+| Criterion | Test |
+|---|---|
+| Empty-schema migration + idempotent re-migration; fixture columns unchanged | `test_empty_schema_creates_provider_substrate_without_fixture_meaning` |
+| Prior integer schema upgrade still preserves fixture rows and adds new tables | `test_prior_integer_schema_upgrade_still_preserves_fixture_rows` plus existing `test_apply_schema_upgrades_integer_columns_and_preserves_rows` |
+| Published test recipe JCS/SHA-256 equals `derivation_version_id` | `test_published_test_recipe_jcs_sha256_equals_derivation_version_id` |
+| Closed recipe schema rejects extra/missing/float/wrong schema | `test_recipe_schema_rejects_unknown_and_missing_members`, `test_recipe_schema_rejects_float_and_non_v1_identity` |
+| Register stores/recovers exact bytes; identical reuse is idempotent | `test_register_test_recipe_stores_and_recovers_exact_canonical_bytes` |
+| Conflicting bytes, adapter metadata, or fixture-occupied digest fail closed | `test_conflicting_recipe_bytes_or_adapter_metadata_fail_before_write` |
+| Fixture versions still register without recipe bytes | `test_fixture_version_registers_without_recipe_bytes` |
+| Envelope/diagnostic PK and `result:N` refusal | `test_envelope_and_diagnostic_identity_constraints` |
+| Recipe-defined identity digest; extra axes fail | `test_observation_identity_is_sha256_of_canonical_semantic_document` |
+| Identity kinds must match declared kinds exactly; axis types closed | `test_recipe_identity_kinds_must_match_declared_kinds` |
+| Per-kind coverage vs monthly axes, types, undeclared kind | `test_multi_kind_recipe_identity_is_kind_specific` |
+| Exact-content reuse and conflict; kind/adapter bound to registered recipe | `test_exact_content_comparison_reuses_identical_and_refuses_conflict` |
+| Fixture derive/API regression | existing CE-05/CE-06/CE-07 suites remain green |
+
+### Independently recomputed published test recipe
+
+Literal hashed with `hashlib.sha256`, not the production constructor:
+
+| Vector | Bytes | SHA-256 |
+|---|---:|---|
+| test recipe JCS | 1204 | `b234ea5315eaf7499a20dc0c612332576fd9af4a748b0ca380b2bae60897eb13` |
+| sample identity document JCS | 141 | `884fef9385834e5923658eb07ba986e85b3d61cb27c88e068b3cd406f2218100` |
+
+The published registration vector is `test-provider` / `test-provider-recipe-foundation-v1` with kind `test.provider.coverage.v1`. It is not the production Keyword Overview recipe.
+
+### Checks
+
+- `uv run pytest -q` — 724 passed, 1 skipped
+- `uv run ruff check .` — clean
+- `uv run mypy` — clean
+- Ordinary tests remain zero-network
+
+### Review
+
+Code-review against `9e4dd055038675402c6ef16dd103ac3b60687505`.
+
+**Standards:** 0 hard / 5 judgement. Worst: cloned document validators and a generic allowlisted row writer in one module. Left in place: importing `capture_event` private helpers would couple Evidence documents to rebuildable recipe documents; the ticket asked for a reusable exact-content path.
+
+**Spec:** 2 partial findings, then addressed before the first PF-04 commit:
+- Observation identity rules live in recipe bytes and participate in `derivation_version_id`.
+- Envelope writes require a registered recipe and matching provider/adapter/`observation_kind`.
+
+Steward review then required per-kind identity. Remediation:
+- Closed `observation_identity` section, separate from `reconciliation`.
+- Every declared `observation_kind` has exactly one identity-axis definition; undeclared kinds cannot have identity rules.
+- `observation_identity()` selects the kind's axes, requires exactly those names, validates `string` / JSON `integer`, and hashes only the closed identity document.
+
+Residual: no dedicated PF-04 API assertion beyond the existing CE-07 suite remaining green. Axis types other than string/integer are not in this schema. Per-kind identity axes are Steward-required recipe semantics; they are not yet a named VOCABULARY term.
+
+### Unproven limits
+
+- F7 multi-process registration/write locking is not claimed.
+- PostgreSQL crash/fsync/commit behavior is not claimed.
+- No provider body is parsed; no provider Outcomes/Observations are derived from DataForSEO.
+- `write_derived_row` allowlists only the two foundation relations; later detail tables must be added explicitly.
+- The test recipe must not be mutated into the PF-05/PF-06 production recipe.
+
+### Implementer judgement
+
+The published test recipe remains one coverage kind. The multi-kind recipe is a synthetic proof only and is not a production Keyword Overview recipe. PF-05/PF-07 must declare each kind's axes in `observation_identity` rather than a global list. The weakest later seam remains `write_derived_row`'s string-table allowlist.
 
 ## Closure
 

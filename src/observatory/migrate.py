@@ -58,10 +58,69 @@ CREATE TABLE IF NOT EXISTS observations (
 )
 """
 
+PROVIDER_RECIPES_SQL: Final[str] = """
+CREATE TABLE IF NOT EXISTS provider_recipes (
+    derivation_version_id TEXT PRIMARY KEY
+        CHECK (derivation_version_id ~ '^[0-9a-f]{64}$')
+        REFERENCES derivation_versions (derivation_version_id),
+    provider TEXT NOT NULL
+        CHECK (provider ~ '^[A-Za-z0-9._+:-]{1,128}$'),
+    adapter_contract TEXT NOT NULL
+        CHECK (adapter_contract ~ '^[A-Za-z0-9._+:-]{1,128}$'),
+    recipe_canonical_bytes BYTEA NOT NULL
+        CHECK (octet_length(recipe_canonical_bytes) >= 1)
+)
+"""
+
+OBSERVATION_ENVELOPES_SQL: Final[str] = """
+CREATE TABLE IF NOT EXISTS observation_envelopes (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '^[0-9a-f]{64}$'),
+    attempt_id TEXT NOT NULL
+        CHECK (attempt_id ~ '^[0-9a-f]{64}$'),
+    derivation_version_id TEXT NOT NULL
+        REFERENCES provider_recipes (derivation_version_id),
+    provider TEXT NOT NULL
+        CHECK (provider ~ '^[A-Za-z0-9._+:-]{1,128}$'),
+    adapter_contract TEXT NOT NULL
+        CHECK (adapter_contract ~ '^[A-Za-z0-9._+:-]{1,128}$'),
+    observation_kind TEXT NOT NULL
+        CHECK (observation_kind ~ '^[A-Za-z0-9._+:-]{1,128}$'),
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '^[0-9a-f]{64}$'),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity)
+)
+"""
+
+DERIVATION_DIAGNOSTICS_SQL: Final[str] = """
+CREATE TABLE IF NOT EXISTS derivation_diagnostics (
+    derivation_version_id TEXT NOT NULL
+        REFERENCES provider_recipes (derivation_version_id),
+    attempt_id TEXT
+        CHECK (attempt_id IS NULL OR attempt_id ~ '^[0-9a-f]{64}$'),
+    capture_id TEXT
+        CHECK (capture_id IS NULL OR capture_id ~ '^[0-9a-f]{64}$'),
+    diagnostic_code TEXT NOT NULL
+        CHECK (diagnostic_code ~ '^[A-Za-z0-9._+:-]{1,128}$'),
+    provider_body_path TEXT NOT NULL
+        CHECK (provider_body_path ~ '^(|(/([^/~]|~[01])*)+)$'),
+    CONSTRAINT derivation_diagnostics_identity
+        UNIQUE NULLS NOT DISTINCT (
+            derivation_version_id, attempt_id, capture_id,
+            diagnostic_code, provider_body_path
+        ),
+    CONSTRAINT derivation_diagnostics_event
+        CHECK (attempt_id IS NOT NULL OR capture_id IS NOT NULL)
+)
+"""
+
 SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     DERIVATION_VERSIONS_SQL,
     OUTCOMES_SQL,
     OBSERVATIONS_SQL,
+    PROVIDER_RECIPES_SQL,
+    OBSERVATION_ENVELOPES_SQL,
+    DERIVATION_DIAGNOSTICS_SQL,
 )
 
 WIDEN_IJSON_COLUMNS_SQL: Final[tuple[str, ...]] = (
@@ -112,7 +171,10 @@ def main(argv: list[str] | None = None) -> int:
         sys.stderr.write(f"{exc}\n")
         return 2
     apply_migrations(dsn)
-    sys.stdout.write("migrated derivation_versions outcomes observations\n")
+    sys.stdout.write(
+        "migrated derivation_versions outcomes observations "
+        "provider_recipes observation_envelopes derivation_diagnostics\n"
+    )
     return 0
 
 
