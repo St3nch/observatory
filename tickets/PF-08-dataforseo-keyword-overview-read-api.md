@@ -1,6 +1,6 @@
 # PF-08 — Keyword Overview provider read API and recipe selection
 
-**Status:** review
+**Status:** done
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** read API
 **Blocked by:** none; PF-07 closed
@@ -399,4 +399,63 @@ seven accepted Observation kinds rather than a generic table walker.
 
 ## Closure
 
-<!-- Project Steward only -->
+**Accepted by:** Project Steward  
+**Accepted implementation:** `371cb40e89f395c0ce7df4eb8eae76c73f790c98`  
+**Accepted on:** 2026-08-17
+
+Independent Steward review confirmed PF-08 remains one bounded implementation commit with
+parent `df280e644e51ae1dd71aa1856ceab14814fa3d72`. The implementation preserves fixture
+`GET /v1/attempts/{attempt_id}` logical compatibility while adding adapter-aware current
+provider recipe selection, explicit provider recipe pinning, a provider-specific Attempt
+representation, and the surface-explicit
+`GET /v1/providers/dataforseo/google/keyword-overview/history` read resource.
+
+The accepted selection schema is structurally adapter-bound in PostgreSQL via the additive
+`provider_recipes_adapter_version` candidate key and the composite
+`provider_recipe_selections_recipe` foreign key. CORE and EXTENDED recipes coexist for the
+DataForSEO Keyword Overview adapter, selection changes only the mutable operational pointer,
+and explicit pins resolve independently of current selection. Derivation does not silently
+change current selection, and no HTTP recipe-selection write route was introduced.
+
+Provider history remains Evidence-backed. API reads dispatch from verified Attempt Evidence,
+and returned Capture testimony is verified through `EvidenceStore.read_capture()`, including
+the parent Attempt and cited response-body integrity. Damaged or missing backing Attempt,
+Capture, or response body yields HTTP 409 with `evidence_integrity_failure` rather than a
+normal or partial history payload. Provider API PostgreSQL connections remain read-only.
+
+The provider history resource preserves exact requested keyword, Attempt/Capture provenance,
+adapter and recipe identity, acquisition times, request location/language context, typed
+PF-06/PF-07 Observation families, field-state distinctions, independent Provider Update
+Times, and monthly Data Period. PostgreSQL `NUMERIC` testimony is serialized without a
+binary-float round trip. CORE history exposes only CORE kinds; EXTENDED history exposes the
+accepted extended kinds without collapsing them into a universal score or metric.
+
+The historical-revision API proof exposes two Capture-anchored testimonies for the same
+`ai search optimization` 2019-06 monthly period, preserving values 0 and 7 under the same
+semantic within-Capture identity but different Capture identities. Ordering follows verified
+acquisition time with Capture ID as a deterministic tie-break, and Capture-group limits do
+not truncate one Capture's typed testimony.
+
+Steward review found one blocking provenance defect in the original PF-08 implementation:
+the history candidate query joined Capture Outcomes by Capture and recipe but not Attempt
+identity, allowing a foreign-Attempt Outcome with the same Capture/recipe to duplicate a
+Capture or supply the wrong classification/count. GROK amended the same PF-08 implementation
+commit. The accepted query includes `o.attempt_id = e.attempt_id`, binding Outcome testimony
+to the Observation envelope's Attempt provenance. The adversarial
+`test_history_ignores_foreign_attempt_outcome_for_same_capture` plants a same-Capture,
+same-recipe foreign-Attempt `provider_error` / 0 Outcome and proves the API returns the
+Capture exactly once with the correct `observation_admitted` / 471 Outcome.
+
+Steward verification at the accepted amended implementation commit:
+
+- `uv run pytest -q` — 788 passed, 1 skipped, 1 upstream Starlette deprecation warning;
+- `uv run ruff check .` — clean;
+- `uv run mypy` — clean, 38 source files.
+
+Accepted limits remain explicit: provider recipe selection is mutable operational state and
+does not retain prior-pointer history; history fails closed if any matching coverage Capture
+is damaged even when a result limit would omit that Capture; accepted PF-06/PF-07 emitted
+kinds do not persist a `not_requested` state that PF-08 could expose; F8 production
+auth/non-loopback, F9 HTTP writes, and F10 cross-provider projections remain deferred. No
+generic observations API, strategy layer, new provider surface, provider call, credentials,
+spend, Evidence mutation, recipe/parser/reconciliation change, or post-PF-08 work occurred.
