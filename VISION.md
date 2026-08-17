@@ -2,9 +2,24 @@
 
 ## North star
 
-Observatory is a standalone, long-lived data service for SEO and GEO observations.
-It acquires, validates, preserves, and serves clean historical data that many projects
-can use through an API.
+Observatory is a standalone, long-lived **historical measurement system for search and AI
+visibility**. It acquires, validates, preserves, derives, and serves source-attributed SEO,
+GEO, search, and AI observations that many projects can use through an API.
+
+Here, **historical measurement system** means preserving what a named source actually
+reported or returned for a specific subject, query, surface, and measurement context at a
+particular acquisition time, together with the exact Evidence and any independent provider
+update times or data periods. Past testimony remains attributable and re-interpretable so
+later consumers can compare states across time without rewriting what was originally
+observed.
+
+**Search and AI visibility** includes the attributable testimony needed to understand how
+subjects, pages, domains, brands, and competitors appear or are referenced across search and
+AI surfaces: rankings and SERP composition; AI mentions, citations, and source relationships;
+query/topic demand and discovery; domain/page/entity relationships; backlinks and other
+provider-attributed visibility signals; and the historical changes in those measurements.
+Observatory preserves this testimony and its limits; downstream systems decide what it
+means for strategy or action.
 
 Observatory succeeds when a consumer can ask what was observed, when, where, by which
 source and capture process, receive an explicit answer with its limits, and continue to
