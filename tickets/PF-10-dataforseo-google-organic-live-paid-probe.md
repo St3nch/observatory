@@ -1,6 +1,6 @@
 # PF-10 — DataForSEO Google Organic Live Advanced bounded paid probe
 
-**Status:** review
+**Status:** done
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** provider adapter / bounded paid contract probe
 **Blocked by:** PF-09 closed; Steward transition to `ready`; live operator run additionally
@@ -538,3 +538,42 @@ uv run python -m observatory.dataforseo_google_organic_paid_probe capture \
 This authorization does not authorize any second exchange. Any unresolved Attempt, transport
 failure, credential-echo refusal, partial Capture, or other unsuccessful outcome remains a
 stop condition requiring a new Steward/[CHAZ] decision before another provider call.
+
+## Steward live closure
+
+The one authorized PF-10 provider exchange completed on 2026-08-18 for exact keyword
+`conspiracy theories` and exact Evidence root
+`$HOME/.local/share/observatory/pf10-google-organic-conspiracy-theories-2026-08-18`.
+
+Live Evidence IDs:
+
+- Attempt: `acfdb7a06a5c2d1af4c00fc8518a08891d1a083bc13d59149916b707c5d7ed34`
+- Capture: `ff17d3d56e29281984c2171cf9dc065d47105a36116a4723dbe75e4c8a9c3c27`
+
+Post-capture source verification:
+
+- `observatory.evidence status`: `format-2 ok`;
+- `observatory.evidence scrub`: clean / no reported failures;
+- exact inspected complete response body size: `135722` bytes;
+- inspected source response-body SHA-256:
+  `7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f`.
+
+Independent source inventory outside the Evidence root recorded exactly:
+
+- Attempt `acfdb7a06a5c2d1af4c00fc8518a08891d1a083bc13d59149916b707c5d7ed34`;
+- Capture `ff17d3d56e29281984c2171cf9dc065d47105a36116a4723dbe75e4c8a9c3c27`.
+
+The accepted manual F6 protection procedure then created encrypted off-host restic snapshot
+`96f2614b` in the previously accepted Google Drive-backed repository. That exact snapshot was
+restored into a fresh local root. The restored store opened as `format-2`, scrubbed clean,
+and independently recomputed the exact same committed Attempt/Capture ID sets as the source
+inventory.
+
+The exact restored response body was inspected from the restored Evidence and had SHA-256
+`7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f`, byte-identical to
+the source inspection.
+
+PF-10 is therefore closed. This closure proves one bounded Google Organic Live Advanced
+Evidence capture and its accepted off-host protection/restore proof. It does not authorize
+another provider exchange, recurring acquisition, Derivation, routine backup automation,
+multi-process writers, or another provider surface.
