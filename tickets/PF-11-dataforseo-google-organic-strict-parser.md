@@ -194,12 +194,18 @@ is a Conformance copy, not Evidence authority.
 
 ### Production recipe
 
-2551-byte JCS, SHA-256
-`9b8fa9cfad5acb1539684acfa27bdf88510a5355a61f7e82e14426d8db6d58d1`.
+2487-byte JCS, SHA-256
+`338fc2080d31a35b1f7cc5d7a71c971d25d72517ca3b846959ccb501b666acde`.
 Kinds: `serp_feature_presence.v1`, `ranked_result.v1`, `ai_overview_presence.v1`,
 `ai_overview_source.v1`, `related_question.v1`, `related_query.v1`.
 `closed_objects` is empty; unknown additive fields on extension-permitted objects
 are diagnostics. Organic placement identity does not include URL.
+`ai_overview_source.v1` identity is `(requested_keyword, locus, url)`.
+`related_question.v1` identity is `(requested_keyword, title)`.
+The first implementation commit used 2551-byte SHA-256
+`9b8fa9cfad5acb1539684acfa27bdf88510a5355a61f7e82e14426d8db6d58d1` with
+array-index AIO/PAA axes; that digest is superseded by the identity correction
+below.
 
 ### Acceptance → proving tests
 
@@ -222,6 +228,11 @@ are diagnostics. Organic placement identity does not include URL.
 | Returned location/language not substituted for Attempt | `test_context_reconciliation_does_not_substitute_attempt_subject` |
 | Recipe digest/kinds; semantic byte change changes identity | `test_google_organic_recipe_published_digest_and_kinds` |
 | Keyword Overview core identity unchanged | `test_keyword_overview_identities_remain_unchanged` |
+| 18 AIO occurrences → 15 semantic identities; no index axes | `test_pf10_aio_sources_map_to_fifteen_semantic_identities` |
+| Locus distinguishes same URL; same-locus repeats collapse | `test_aio_source_identities_distinguish_locus_and_collapse_same_locus_url` |
+| AIO reference reorder leaves identity set unchanged | `test_reordered_aio_reference_arrays_keep_semantic_identity_set` |
+| Four PF-10 PAA titles; `question_index` absent from recipe identity | `test_pf10_paa_titles_have_four_semantic_identities` |
+| PAA reorder and second block with repeated titles share identity | `test_paa_identity_survives_reorder_and_second_block_with_repeated_titles` |
 
 ### Checks
 
@@ -251,9 +262,8 @@ not Observation kinds. That matches PF-05 envelope testimony and the ticket's
 - Right-positioned `rank_absolute` as a separately counted sequence is implemented
   (`(position, rank_absolute)` uniqueness) but unobserved in PF-10 (all 111 items
   are `left`; `rank_absolute` happens to equal array index + 1).
-- Multiple PAA blocks would restart `question_index` per block; PF-10 has one.
-- `ai_overview_source.v1` declares integer `element_index`; top-level IR sources
-  use `None`. Persistence will need a sentinel or split kinds.
+- IR `question_index` still restarts per PAA block; it is no longer an Observation
+  identity axis. Persistence must aggregate occurrence locations under title.
 - Related-search chips in this fixture are plain strings, not objects.
 - PAA `expanded_element` shells are left raw and unvalidated.
 - No PostgreSQL provider writes, derive CLI, or Observation emission.
@@ -288,13 +298,15 @@ feature-type hierarchy or a citation graph. `SerpFeaturePlacement` for organic
 items overlaps `OrganicPlacement` ranks; that is uniform item testimony, not a
 reason to abstract a placement base class yet.
 
-**Fragile edges.** (1) AIO source identity includes integer `element_index` while
-top-level sources have `None`. (2) PAA identity is `question_index`, not title,
-and is block-local. (3) Rank uniqueness assumes provider ranks are unique per
-`(position, rank_absolute)` and `(type, position, rank_group)`; a future
-right-rail sequence is the untested half. (4) URL is correctly excluded from
-organic identity; two different URLs with identical ranks would fail closed as
-duplicate ranks, which is right, but we have not seen that.
+**Fragile edges.** (1) AIO source identity no longer includes `element_index`;
+top-level IR rows still have `None` as occurrence testimony. Later persistence
+must aggregate those locations under `(locus, url)`. (2) PAA identity is title,
+not `question_index`; IR indexes remain block-local. (3) Rank uniqueness assumes
+provider ranks are unique per `(position, rank_absolute)` and
+`(type, position, rank_group)`; a future right-rail sequence is the untested
+half. (4) URL is correctly excluded from organic identity; two different URLs
+with identical ranks would fail closed as duplicate ranks, which is right, but
+we have not seen that.
 
 **Under-proved adversarial cases.** Right-position ranks; two PAA blocks;
 related-search object items; AIO with only one of the two reference loci
@@ -305,10 +317,10 @@ unreachable from input.
 
 **111-item pressure.** Parse is one linear walk of 135 KB; not a runtime
 concern. The pressure is Observation cardinality at derive time: 111 feature
-placements + 97 organic + 1 AIO presence + 18 source relationships + 4
-questions + 9 queries ≈ 240 rows per Capture, before sitelinks, AIO prose, or
-a second locale. That is the number that should inform later write/API batching,
-not this parser.
+placements + 97 organic + 1 AIO presence + 15 semantic AIO source identities
+(from 18 IR occurrences) + 4 questions + 9 queries ≈ 237 rows per Capture,
+before sitelinks, AIO prose, or a second locale. That is the number that should
+inform later write/API batching, not this parser.
 
 **Do not refactor yet.** Do not extract a shared provider-JSON kernel. Do not
 introduce a placement base type. Do not split AIO source kinds. Do not type PAA
@@ -316,9 +328,8 @@ expansions or AIO markdown. Do not change KO.
 
 **Refactor triggers.** A third provider parser that would otherwise copy `Field`
 and decode helpers. A right-rail Capture that falsifies the rank uniqueness
-rule. Observation persistence hitting the `element_index: int | None` vs integer
-axis. A second PAA block in a real Capture. Related-search items arriving as
-objects.
+rule. Persistence needing a deterministic occurrence-location aggregate under
+AIO `(locus, url)` or PAA title. Related-search items arriving as objects.
 
 **Fixture surprise that changes opinion.** PAA `expanded_element` is not an
 empty/null shell. Each of the four questions carries a list of structured
@@ -332,3 +343,64 @@ Third: `rank_absolute == index+1` in this Capture is an observation, not a
 contract — do not bake it into the recipe. Fourth: 10 exact URL duplicates
 across later pages are real provider testimony, not scrape errors; URL-as-
 identity would have been silently wrong.
+
+### Identity correction
+
+**Baseline:** `b64c6ac4c4090bcca8f21f7b666990b9b08e5666`  
+**Status:** `review`
+
+Steward findings independently confirmed before editing:
+
+- D11 rejects returned-array index / provider result order as Observation
+  identity.
+- `observation_identity()` requires every declared axis; `_axis_value(...,
+  "integer", ...)` rejects `None`.
+- Recipe `ai_overview_source.v1` declared integer `element_index` and
+  `reference_index`. The seven admitted top-level PF-10 sources have
+  `element_index=None`, so those rows cannot receive valid identities.
+- The fixture has 18 AIO source occurrences (7 top-level, 11 element-level),
+  15 unique semantic `(locus, exact URL)` pairs, and repeated element-level
+  Wikipedia, Britannica, and YouTube URLs.
+- Recipe `related_question.v1` used `question_index`. Reordering questions
+  would change identity. A second PAA block restarts indexes at zero and can
+  collide. The parser already accepts multiple PAA blocks.
+
+Correction semantics:
+
+- `ai_overview_source.v1` axes are `requested_keyword`, `locus`, `url`.
+- `related_question.v1` axes are `requested_keyword`, `title`.
+- IR still retains `element_index` (`None` for top-level), `reference_index`,
+  and `question_index` as non-identity occurrence/ordering testimony.
+- No integer sentinel. Kind not split. No persistence.
+
+New recipe: 2487 bytes, SHA-256
+`338fc2080d31a35b1f7cc5d7a71c971d25d72517ca3b846959ccb501b666acde`.
+
+Frozen PF-10 response fixture unchanged: length `135722`, SHA-256
+`7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f`.
+KO CORE identity unchanged:
+`319af798f3e0b3e5fe4579539442c4ca5d384b683e1f4bce0f7a1b3e26cd5908`.
+
+Changed paths: `src/observatory/dataforseo_google_organic.py`,
+`tests/fixtures/dataforseo_google_organic_recipe.jcs`,
+`tests/test_dataforseo_google_organic.py`, this ticket.
+
+Validation at this working tree, HEAD still `b64c6ac4…` before the correction
+commit, tree dirty only on the four allowed paths. No
+`OBSERVATORY_RUN_PAID_GATE_HAMMER` and no provider/network calls. No leftover
+`observatory-ce05-*` container after the run.
+
+| Command | UTC start | UTC end | Elapsed | Exit |
+|---|---|---|---|---|
+| `uv run pytest -q` | 2026-08-18T19:51:33.729Z | 2026-08-18T19:53:39.603Z | 125.874 s (pytest 125.48 s) | 0 |
+| `uv run ruff check .` | 2026-08-18T19:53:39.603Z | 2026-08-18T19:53:39.631Z | 0.028 s | 0 |
+| `uv run mypy` | 2026-08-18T19:53:39.631Z | 2026-08-18T19:53:39.769Z | 0.137 s | 0 |
+
+`867 passed, 1 skipped, 1 warning` (Starlette/`httpx` TestClient deprecation).
+Prior accepted count at `b64c6ac4` was 862 passed, 1 skipped, 1 warning.
+Tool versions: pytest 8.4.2, ruff 0.16.2, mypy 1.20.2, uv 0.12.1.
+mypy elapsed is a warm cache; a prior cold run at `b64c6ac4` was 15.330 s.
+
+Code-review against `b64c6ac4`. Standards: 0 hard. Spec: Steward identity
+blockers closed; residual is later persistence aggregating occurrence
+locations under the new semantic identities.

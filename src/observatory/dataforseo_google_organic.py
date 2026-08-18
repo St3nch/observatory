@@ -458,9 +458,7 @@ def google_organic_recipe() -> dict[str, object]:
         },
         {
             "axes": {
-                "element_index": "integer",
                 "locus": "string",
-                "reference_index": "integer",
                 "requested_keyword": "string",
                 "url": "string",
             },
@@ -468,8 +466,8 @@ def google_organic_recipe() -> dict[str, object]:
         },
         {
             "axes": {
-                "question_index": "integer",
                 "requested_keyword": "string",
+                "title": "string",
             },
             "observation_kind": RELATED_QUESTION_KIND,
         },

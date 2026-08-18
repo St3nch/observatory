@@ -33,6 +33,9 @@ from observatory.dataforseo_keyword_overview import (
     ParseClassification,
 )
 from observatory.provider_recipe import (
+    IDENTITY_SCHEMA,
+    IDENTITY_VERSION,
+    observation_identity,
     recipe_bytes,
     recipe_derivation_version_id,
     validate_recipe,
@@ -46,8 +49,8 @@ RECIPE_PATH = (
 )
 PF10_BODY_SHA256 = "7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f"
 PF10_BODY_BYTES = 135722
-ORGANIC_RECIPE_SHA256 = "9b8fa9cfad5acb1539684acfa27bdf88510a5355a61f7e82e14426d8db6d58d1"
-ORGANIC_RECIPE_BYTE_LENGTH = 2551
+ORGANIC_RECIPE_SHA256 = "338fc2080d31a35b1f7cc5d7a71c971d25d72517ca3b846959ccb501b666acde"
+ORGANIC_RECIPE_BYTE_LENGTH = 2487
 ACCEPTED_KO_CORE_ID = "319af798f3e0b3e5fe4579539442c4ca5d384b683e1f4bce0f7a1b3e26cd5908"
 
 PARAMETERS: dict[str, object] = {
@@ -143,6 +146,52 @@ def _items(document: dict[str, Any]) -> list[Any]:
 def _set_items(document: dict[str, Any], items: list[Any]) -> None:
     document["tasks"][0]["result"][0]["items"] = items
     document["tasks"][0]["result"][0]["items_count"] = len(items)
+
+
+def _identity(kind: str, axes: dict[str, object]) -> str:
+    return observation_identity(
+        {
+            "axes": axes,
+            "observation_kind": kind,
+            "schema": IDENTITY_SCHEMA,
+            "version": IDENTITY_VERSION,
+        },
+        GOOGLE_ORGANIC_RECIPE,
+    )
+
+
+def _aio_source_identity(parsed: Any, source: Any) -> str:
+    return _identity(
+        AIO_SOURCE_KIND,
+        {
+            "locus": source.locus,
+            "requested_keyword": parsed.requested_keyword,
+            "url": source.url,
+        },
+    )
+
+
+def _paa_identity(parsed: Any, question: Any) -> str:
+    return _identity(
+        RELATED_QUESTION_KIND,
+        {
+            "requested_keyword": parsed.requested_keyword,
+            "title": question.title,
+        },
+    )
+
+
+def _recipe_identity_axes() -> dict[str, object]:
+    document = validate_recipe(GOOGLE_ORGANIC_RECIPE)
+    identity = document["observation_identity"]
+    assert isinstance(identity, dict)
+    kind_rows = identity["kinds"]
+    assert isinstance(kind_rows, list)
+    return {
+        item["observation_kind"]: item["axes"]
+        for item in kind_rows
+        if isinstance(item, dict)
+    }
 
 
 def test_frozen_fixture_independent_sha256_and_length() -> None:
@@ -259,6 +308,77 @@ def test_aio_top_level_and_element_loci_remain_distinct() -> None:
     assert not any(hasattr(row, "text") for row in parsed.ai_overview_sources)
 
 
+def test_pf10_aio_sources_map_to_fifteen_semantic_identities() -> None:
+    parsed = _parse()
+    assert len(parsed.ai_overview_sources) == 18
+    identities = [_aio_source_identity(parsed, source) for source in parsed.ai_overview_sources]
+    assert all(len(item) == 64 for item in identities)
+    assert len(set(identities)) == 15
+    axes = _recipe_identity_axes()[AIO_SOURCE_KIND]
+    assert axes == {
+        "locus": "string",
+        "requested_keyword": "string",
+        "url": "string",
+    }
+    assert "element_index" not in axes
+    assert "reference_index" not in axes
+
+
+def test_aio_source_identities_distinguish_locus_and_collapse_same_locus_url() -> None:
+    parsed = _parse()
+    wiki = [row for row in parsed.ai_overview_sources if row.url == WIKI_URL]
+    assert {row.locus for row in wiki} == {"top_level", "element"}
+    top_wiki = next(row for row in wiki if row.locus == "top_level")
+    element_wiki = [row for row in wiki if row.locus == "element"]
+    assert len(element_wiki) == 2
+    top_id = _aio_source_identity(parsed, top_wiki)
+    element_ids = {_aio_source_identity(parsed, row) for row in element_wiki}
+    assert len(element_ids) == 1
+    assert top_id not in element_ids
+    britannica = [
+        row
+        for row in parsed.ai_overview_sources
+        if row.url == "https://www.britannica.com/topic/conspiracy-theory"
+        and row.locus == "element"
+    ]
+    youtube = [
+        row
+        for row in parsed.ai_overview_sources
+        if row.url == "https://www.youtube.com/watch?v=cv_TKD9UHOo&vl=en&t=625"
+        and row.locus == "element"
+    ]
+    assert len(britannica) == 2
+    assert len(youtube) == 2
+    assert len({_aio_source_identity(parsed, row) for row in britannica}) == 1
+    assert len({_aio_source_identity(parsed, row) for row in youtube}) == 1
+    top_level = [row for row in parsed.ai_overview_sources if row.locus == "top_level"]
+    element_level = [row for row in parsed.ai_overview_sources if row.locus == "element"]
+    assert all(row.element_index is None for row in top_level)
+    assert all(row.element_index is not None for row in element_level)
+    assert all(isinstance(row.reference_index, int) for row in parsed.ai_overview_sources)
+
+
+def test_reordered_aio_reference_arrays_keep_semantic_identity_set() -> None:
+    parsed = _parse()
+    original = {_aio_source_identity(parsed, source) for source in parsed.ai_overview_sources}
+    document = _decoded()
+    aio = next(item for item in _items(document) if item["type"] == "ai_overview")
+    aio["references"] = list(reversed(aio["references"]))
+    for element in aio["items"]:
+        refs = element.get("references")
+        if isinstance(refs, list):
+            element["references"] = list(reversed(refs))
+    reordered = _parse(_encode(document))
+    assert len(reordered.ai_overview_sources) == 18
+    reordered_ids = {
+        _aio_source_identity(reordered, source) for source in reordered.ai_overview_sources
+    }
+    assert reordered_ids == original
+    original_order = [(source.locus, source.url) for source in parsed.ai_overview_sources]
+    reordered_order = [(source.locus, source.url) for source in reordered.ai_overview_sources]
+    assert reordered_order != original_order
+
+
 def test_paa_types_visible_questions_and_ignores_expansion_shells() -> None:
     parsed = _parse()
     assert [row.title for row in parsed.related_questions] == list(PAA_TITLES)
@@ -290,6 +410,58 @@ def test_paa_types_visible_questions_and_ignores_expansion_shells() -> None:
     omitted = _parse(_encode(document))
     assert [row.title for row in omitted.related_questions] == list(PAA_TITLES)
     assert omitted.diagnostics == ()
+
+
+def test_pf10_paa_titles_have_four_semantic_identities() -> None:
+    parsed = _parse()
+    assert [row.title for row in parsed.related_questions] == list(PAA_TITLES)
+    assert [row.question_index for row in parsed.related_questions] == [0, 1, 2, 3]
+    identities = [_paa_identity(parsed, question) for question in parsed.related_questions]
+    assert all(len(item) == 64 for item in identities)
+    assert len(set(identities)) == 4
+    axes = _recipe_identity_axes()[RELATED_QUESTION_KIND]
+    assert axes == {
+        "requested_keyword": "string",
+        "title": "string",
+    }
+    assert "question_index" not in axes
+
+
+def test_paa_identity_survives_reorder_and_second_block_with_repeated_titles() -> None:
+    parsed = _parse()
+    original = {_paa_identity(parsed, question) for question in parsed.related_questions}
+    assert len(original) == 4
+    document = _decoded()
+    paa = next(item for item in _items(document) if item["type"] == "people_also_ask")
+    paa["items"] = list(reversed(paa["items"]))
+    reordered = _parse(_encode(document))
+    assert [row.title for row in reordered.related_questions] == list(reversed(PAA_TITLES))
+    assert [row.question_index for row in reordered.related_questions] == [0, 1, 2, 3]
+    reordered_ids = {
+        _paa_identity(reordered, question) for question in reordered.related_questions
+    }
+    assert reordered_ids == original
+
+    document = _decoded()
+    items = _items(document)
+    paa = next(item for item in items if item["type"] == "people_also_ask")
+    second = copy.deepcopy(paa)
+    second["rank_group"] = 2
+    second["rank_absolute"] = 112
+    items.append(second)
+    _set_items(document, items)
+    doubled = _parse(_encode(document))
+    assert len(doubled.related_questions) == 8
+    assert [row.question_index for row in doubled.related_questions] == [0, 1, 2, 3, 0, 1, 2, 3]
+    assert [row.title for row in doubled.related_questions] == list(PAA_TITLES) + list(PAA_TITLES)
+    identities = [_paa_identity(doubled, question) for question in doubled.related_questions]
+    assert set(identities) == original
+    assert len(identities) == 8
+    paa_features = [
+        row for row in doubled.feature_placements if row.item_type == "people_also_ask"
+    ]
+    assert len(paa_features) == 2
+    assert {(row.rank_group, row.rank_absolute) for row in paa_features} == {(1, 3), (2, 112)}
 
 
 def test_related_search_strings_dedupe_by_exact_text_first_seen() -> None:
@@ -588,7 +760,18 @@ def test_google_organic_recipe_published_digest_and_kinds() -> None:
         "requested_keyword": "string",
     }
     assert "url" not in by_kind[ORGANIC_PLACEMENT_KIND]
-    assert by_kind[AIO_SOURCE_KIND]["locus"] == "string"
+    assert by_kind[AIO_SOURCE_KIND] == {
+        "locus": "string",
+        "requested_keyword": "string",
+        "url": "string",
+    }
+    assert "element_index" not in by_kind[AIO_SOURCE_KIND]
+    assert "reference_index" not in by_kind[AIO_SOURCE_KIND]
+    assert by_kind[RELATED_QUESTION_KIND] == {
+        "requested_keyword": "string",
+        "title": "string",
+    }
+    assert "question_index" not in by_kind[RELATED_QUESTION_KIND]
     mutated = dict(GOOGLE_ORGANIC_RECIPE)
     mutated["parser_contract"] = "dataforseo-serp-google-organic-changed-parser-v1"
     assert recipe_derivation_version_id(mutated) != ORGANIC_RECIPE_SHA256
