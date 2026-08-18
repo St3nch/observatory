@@ -1,6 +1,6 @@
 # PF-13 — DataForSEO Google Organic read/history API and recipe selection integration
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; PF-12 closed  
 **Approved by:** Project Steward  
@@ -593,3 +593,74 @@ One completed-remediation full-suite run. First mypy pass failed on `expected["r
 | `uv run mypy` (after return-type fix) | 2026-08-18T22:45:09.195Z | 2026-08-18T22:45:09.485Z | 0.290 s | 0 |
 
 `896 passed, 1 skipped, 1 warning`. 48 source files. No leftover `observatory-ce05-*` container. No product-code change. No push.
+
+## Steward closure — 2026-08-18
+
+**Accepted by:** Project Steward  
+**Accepted implementation:** `e7d4b48c4bcd89cb2ec369b1ee4d4a4498cdfc2f`  
+**Accepted parent:** `7f1218de71ebb726af6cb632147427db80f5c20f`
+
+PF-13 is accepted and closed after independent Steward review of the original implementation
+and the amended, test-only remediation. The implementation remains one bounded commit from
+the accepted parent. It changes only the API dispatch/read layer, one new Organic read
+module, the shared provider Attempt loader, dedicated API tests, and this ticket.
+
+The existing adapter-aware provider recipe selector is reused without schema or HTTP-write
+changes. Current selection and explicit pinning resolve only recipes registered for the
+exact paid Organic adapter. Missing selection remains 503; malformed, unknown, and
+wrong-adapter pins remain 404. Keyword Overview selection and responses remain isolated.
+
+`GET /v1/attempts/{attempt_id}` now dispatches the shared provider representation only for
+the accepted paid Keyword Overview and paid Organic adapters. The Organic sandbox adapter
+is not widened into provider selection. Outcome lookup and Evidence verification are shared;
+Organic family SQL remains separate from `keyword_overview_read.py`.
+
+`GET /v1/providers/dataforseo/google/organic/history` is accepted as the first
+surface-explicit Organic history resource. Candidate membership is anchored by
+`google_organic_result_context` joined to `outcomes` on the full
+`(derivation_version_id, attempt_id, capture_id)` tuple, without an envelope membership
+join, and admits only `observation_admitted` and `observation_admitted_empty`. This keeps
+zero-envelope admitted-empty Captures visible and excludes planted non-admitted context.
+
+Every matching candidate's Attempt, Capture, and cited body are verified before deterministic
+`(request_started_at, capture_id)` sorting and whole-Capture limiting. The seven request
+fields come from verified Attempt parameters; location/language disagreement with persisted
+result context fails closed as 409. Read paths retain read-only PostgreSQL behavior and do
+not select, derive, repair, mutate Evidence, or invoke provider/DNS access.
+
+The accepted response preserves one complete 237-Observation frozen Capture: 111 feature
+placements, 97 ranked placements with 87 unique exact URLs, one AIO presence, 15 semantic
+AIO sources, four semantic PAA questions, and nine related queries. All 18 AIO occurrences
+remain nested under their semantic source, including seven top-level nullable-index and
+eleven element occurrences. A synthetic repeated PAA block proves four title identities
+with eight correctly attached placement/index occurrences. Provider result time, Capture
+time, placement axes, field states, semantic identity, and occurrence testimony remain
+distinct.
+
+The Steward-required remediation replaced count-dominant proof with an independent
+PF-12-row-to-API projection. Tests now prove exact response keys, field mappings, provider
+item order, family kinds and identities, AIO source field states and occurrence attachment,
+PAA title/occurrence attachment, and exact related-query strings. No product defect was
+exposed by the stronger proof.
+
+Independent operator verification at the accepted implementation commit:
+
+- `uv run pytest -q`: 896 passed, 1 skipped, 1 upstream Starlette/httpx deprecation
+  warning, exit 0, 133.25 seconds wall time;
+- exact HEAD `e7d4b48c4bcd89cb2ec369b1ee4d4a4498cdfc2f`;
+- clean working tree before and after;
+- no leftover `observatory-ce05-*` Docker container;
+- independent Steward `uv run ruff check .`: clean;
+- independent Steward `uv run mypy`: clean, 48 source files.
+
+Accepted limits remain explicit: only one production Organic recipe exists, so selected and
+pinned behavior use the same digest; verify-all-before-limit will not scale cheaply to large
+keyword histories; recipe selection is a mutable pointer without pointer history; malformed
+verified Attempt-parameter defenses require a test double because normal commit validation
+rejects those manifests; and the independent API projection compares accepted persisted
+identities rather than re-deriving their hashes from recipe bytes. Generic Observations,
+cross-provider projections, production auth, HTTP writes, cursors/index work, and another
+acquisition surface remain deferred.
+
+No provider call, Evidence mutation, new acquisition surface, or push occurred during
+closure.
