@@ -1,10 +1,10 @@
 # PF-12 — DataForSEO Google Organic provider Derivation and persistence
 
-**Status:** ready  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; PF-11 closed  
 **Approved by:** Project Steward  
-**Start commit:** to be recorded by the implementer
+**Start commit:** `bea97ae4a8b06cc8fa8ae7a2437404981ca45382`
 
 ## Purpose
 
@@ -338,3 +338,168 @@ changed paths, acceptance-to-test map, commands/results, and state explicitly:
 
 Do not broaden the implementation to fix adjacent findings. Report them for Steward
 reconciliation.
+
+## Implementation report
+
+**Parent:** `bea97ae4a8b06cc8fa8ae7a2437404981ca45382`  
+**Child:** supplied in the implementer handoff (a commit cannot embed its own final hash).  
+**Status:** `review`
+
+### Loaded skills
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### Changed paths
+
+- `src/observatory/dataforseo_google_organic.py` (`RelatedQuestion` parent placement)
+- `src/observatory/google_organic_derive.py` (new derive module/entrypoint)
+- `src/observatory/migrate.py` (nine additive Organic tables)
+- `tests/test_dataforseo_google_organic.py` (PAA parent-placement IR)
+- `tests/test_dataforseo_google_organic_derive.py` (new)
+- this ticket (Start commit, Status, Implementation report)
+
+No recipe/fixture bytes, no KO recipes, no selection/API, no other surface.
+
+### Frozen identities
+
+- Organic recipe: 2487 bytes,
+  `338fc2080d31a35b1f7cc5d7a71c971d25d72517ca3b846959ccb501b666acde`
+- PF-10 fixture: 135722 bytes,
+  `7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f`
+- KO CORE: `319af798f3e0b3e5fe4579539442c4ca5d384b683e1f4bce0f7a1b3e26cd5908`
+- KO EXTENDED unchanged:
+  `cade41cb916bc5595f62ac8ea4ef73d6c688974a1ee5caad0c9d8f95f51664c7`
+
+`RelatedQuestion` now carries parent `page`, `position`, `rank_group`, and
+`rank_absolute` as occurrence testimony. Recipe identity axes are still
+`(requested_keyword, title)`.
+
+### Acceptance → proving tests
+
+| Criterion | Test |
+|---|---|
+| Adapter/recipe dispatch; fixture skip | `test_fixture_derive_skips_organic_and_organic_skips_fixture`, `test_provider_rows_cannot_use_fixture_label` |
+| 237 envelopes and per-kind counts | `test_plan_frozen_fixture_has_exact_semantic_counts`, `test_derive_pf10_fixture_into_real_postgres` |
+| Kind-bound details / wrong kind / wrong locus / shape | `test_wrong_kind_and_occurrence_shape_are_rejected` |
+| 97 placements / 87 URLs | `test_derive_pf10_fixture_into_real_postgres`, `test_duplicate_urls_keep_distinct_placement_identities` |
+| AIO 15/18/7/11 | `test_plan_frozen_fixture_has_exact_semantic_counts`, `test_derive_pf10_fixture_into_real_postgres` |
+| NULL-safe top-level uniqueness | `test_top_level_aio_occurrence_uniqueness_is_null_safe` |
+| Whole-unit AIO disagreement → `provider_envelope_rejected` | `test_plan_aio_disagreement_rejects_whole_unit`, `test_aio_disagreement_writes_rejected_outcome_and_zero_rows` |
+| PAA parent IR + second block 4/8 | PF-11 PAA tests; `test_paa_second_block_keeps_four_questions_and_eight_occurrences` |
+| Result context, no cost/check_url, independent result time | plan/derive happy-path tests |
+| Result-context field-state CHECKs | `test_result_context_field_state_constraints` |
+| Result-context FK to Capture Outcome | `test_result_context_requires_matching_outcome` |
+| Transport / parse / recon / damage / non-admissible | `test_transport_parse_reconciliation_and_damage_paths` |
+| Empty SERP → `observation_admitted_empty` | `test_plan_zero_item_serp_is_admitted_empty`, `test_zero_item_serp_writes_admitted_empty_outcome` |
+| Exact-content, extra rows, missing restore | `test_exact_content_extra_rows_and_missing_restore` |
+| Extra foreign-Attempt Outcome refused | `test_foreign_attempt_outcome_is_complete_set_mismatch` |
+| Additive PF-08 populated migration | `test_populated_pf08_schema_then_organic_derive` |
+| Two-database equivalence | `test_two_databases_are_logically_equivalent` |
+| Recipe/fixture/KO freeze | `test_accepted_recipe_and_ko_identities_remain_unchanged` |
+
+### Checks
+
+Targeted loop
+`uv run pytest -q tests/test_dataforseo_google_organic.py tests/test_dataforseo_google_organic_derive.py`
+— 42 passed in 17.53 s after remediations.
+
+Final local validation after Steward remediations, parent still `bea97ae4…`:
+
+| Command | UTC start | UTC end | Elapsed | Exit |
+|---|---|---|---|---|
+| `uv run pytest -q` | 2026-08-18T21:12:06.989Z | 2026-08-18T21:14:34.215Z | 147.227 s (pytest 146.81 s) | 0 |
+| `uv run ruff check .` | 2026-08-18T21:14:34.215Z | 2026-08-18T21:14:34.247Z | 0.032 s | 0 |
+| `uv run mypy` | 2026-08-18T21:14:34.247Z | 2026-08-18T21:14:34.756Z | 0.509 s | 0 |
+
+`887 passed, 1 skipped, 1 warning`. Prior accepted count at the first PF-12 commit was 884.
+Versions: pytest 8.4.2, ruff 0.16.2, mypy 1.20.2.
+No leftover `observatory-ce05-*` container.
+Ordinary tests remain zero-network; autouse socket guard in PF-12 tests.
+No paid-gate env, no provider call, no push.
+
+### Review
+
+Code-review against `bea97ae4a8b06cc8fa8ae7a2437404981ca45382`.
+
+**Standards:** 0 hard. Residual: derive walk/writer is copied from KO rather
+than extracted; kind strings are duplicated in `migrate.py` as KO already does.
+
+**Spec:** remediations are present. Residual test limits: extra typed-detail and
+extra context rows are not planted (context extras are blocked by the
+`(capture_id, derivation_version_id)` primary key; extra details require a
+matching envelope first). PAA reorder is proved at parse, not re-derived
+into PostgreSQL.
+
+### Unproven limits
+
+- AIO field-state disagreement is synthetic only; the frozen fixture agrees.
+- A second real PAA block is synthetic.
+- Right-rail rank sequences remain unobserved.
+- Complete-set compare does not include `locus` in the AIO occurrence tuple
+  because uniqueness is `(identity, element_index, reference_index)` as specified.
+- Empty SERP still writes one result-context row with `items_count=0`.
+- Two-database snapshot remains a selected-column compare, not every column.
+
+### Steward remediations
+
+Steward review of `e542b0237f4a7ac3bcc98353427cacf7e3c4dfbc` required four
+bounded fixes; the design, identities, 237-count, and AIO rejection class
+were accepted.
+
+1. `_assert_complete_set` now loads every Capture/recipe Outcome including
+   `attempt_id` and requires the stored set to be exactly the one planned
+   `(attempt_id, classification, observation_count)` row. A planted
+   foreign-Attempt Outcome is refused and does not mutate accepted rows.
+   Test: `test_foreign_attempt_outcome_is_complete_set_mismatch`.
+2. `google_organic_result_context` now FKs
+   `(derivation_version_id, attempt_id, capture_id)` to `outcomes`. Additive
+   `CREATE TABLE` plus `ALTER TABLE` for existing databases. An additive
+   `outcomes_identity` unique is applied first so older `outcomes` tables
+   (the PF-04 integer-schema upgrade path) can host the FK. Test:
+   `test_result_context_requires_matching_outcome`.
+3. `test_populated_pf08_schema_then_organic_derive` now applies
+   `PRE_PF12_SCHEMA_STATEMENTS` only (asserted to contain PF-08/KO tables
+   and no `google_organic_` names), plants representative KO selection /
+   Outcome / envelope / coverage rows, then `apply_schema()`. Existing rows
+   stay; nine Organic tables become present and writable.
+4. Result-context `stated`/NULL and non-stated/value CHECKs are proved on
+   `result_datetime`. `transport_complete_non_admissible` is planted with a
+   response-complete empty body.
+
+### Engineering assessment
+
+**Ticket awkwardness.** Complete-set comparison had to be bolted onto the KO
+per-row writer instead of replacing it. That is two equality stories in one
+transaction. Extra context cannot exist at the required grain because of the
+PK, so the ticket's "extra context row" plant is structurally empty.
+
+**What generalized.** Adapter-filtered Evidence walk, classify-then-plan,
+envelope + kind-bound detail FKs, state/value CHECKs, attempt-stage survival
+on Capture damage, and additive `CREATE TABLE IF NOT EXISTS`.
+
+**What did not.** Keyword Overview has no occurrence layer and no Capture-level
+context table. Monthly points are first-class identities; AIO indexes are not.
+The KO writer cannot see extra rows. Organic identity is placement-shaped, not
+one-row-per-keyword.
+
+**Weakest assumption.** Complete-set compare trusts that all Organic rows for
+one Capture/recipe are only the ones this writer created. A second Organic
+recipe digest in the same Capture would be a later ticket; this compare is
+keyed by the PF-11 digest.
+
+**Fragile edges.** (1) `connection.rollback()` in constraint tests can wipe
+uncommitted derive work if the caller forgets `commit()`. (2) AIO disagreement
+is detected only after a successful parse, so a title mutation that also
+breaks parse never reaches the disagreement class. (3) Occurrence uniqueness
+omits `locus` as specified; locus is enforced by parent FK instead.
+
+**Do not refactor yet.** Do not extract a shared provider-derive kernel. Do
+not split AIO kinds. Do not persist cost/check_url.
+
+**PF-13 trigger.** History/API will need the occurrence tables and the
+Capture-level context row. Selection must not be this module. If history wants
+cost, that is a new context column, not a silent add here.
+

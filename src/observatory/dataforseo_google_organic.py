@@ -232,6 +232,10 @@ class AiOverviewSource:
 class RelatedQuestion:
     question_index: int
     title: str
+    page: int
+    position: str
+    rank_group: int
+    rank_absolute: int
 
 
 @dataclass(frozen=True)
@@ -716,7 +720,15 @@ def _parse_top_item(
         )
         sources = _parse_ai_overview_sources(item, path, diagnostics)
     elif item_type == "people_also_ask":
-        questions = _parse_paa_questions(item.get("items"), f"{path}/items", diagnostics)
+        questions = _parse_paa_questions(
+            item.get("items"),
+            f"{path}/items",
+            diagnostics,
+            page=page,
+            position=position,
+            rank_group=rank_group,
+            rank_absolute=rank_absolute,
+        )
     elif item_type == "related_searches":
         queries = _parse_related_search_strings(item.get("items"), f"{path}/items")
     return _ParsedTopItem(
@@ -840,6 +852,11 @@ def _parse_paa_questions(
     value: object,
     path: str,
     diagnostics: list[ParseDiagnostic],
+    *,
+    page: int,
+    position: str,
+    rank_group: int,
+    rank_absolute: int,
 ) -> tuple[RelatedQuestion, ...]:
     if value is None:
         raise GoogleOrganicParseError("wrong_type", path, "PAA items must be an array")
@@ -856,7 +873,16 @@ def _parse_paa_questions(
                 "PAA child must be people_also_ask_element",
             )
         title = _require_str(obj.get("title"), f"{path}/{index}/title")
-        questions.append(RelatedQuestion(question_index=index, title=title))
+        questions.append(
+            RelatedQuestion(
+                question_index=index,
+                title=title,
+                page=page,
+                position=position,
+                rank_group=rank_group,
+                rank_absolute=rank_absolute,
+            )
+        )
     return tuple(questions)
 
 

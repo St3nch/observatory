@@ -383,6 +383,11 @@ def test_paa_types_visible_questions_and_ignores_expansion_shells() -> None:
     parsed = _parse()
     assert [row.title for row in parsed.related_questions] == list(PAA_TITLES)
     assert [row.question_index for row in parsed.related_questions] == [0, 1, 2, 3]
+    parent = (1, "left", 1, 3)
+    assert [
+        (row.page, row.position, row.rank_group, row.rank_absolute)
+        for row in parsed.related_questions
+    ] == [parent] * 4
     assert all(not hasattr(row, "expanded_element") for row in parsed.related_questions)
     document = _decoded()
     paa = next(item for item in _items(document) if item["type"] == "people_also_ask")
@@ -437,6 +442,7 @@ def test_paa_identity_survives_reorder_and_second_block_with_repeated_titles() -
     reordered = _parse(_encode(document))
     assert [row.title for row in reordered.related_questions] == list(reversed(PAA_TITLES))
     assert [row.question_index for row in reordered.related_questions] == [0, 1, 2, 3]
+    assert all(row.rank_absolute == 3 for row in reordered.related_questions)
     reordered_ids = {
         _paa_identity(reordered, question) for question in reordered.related_questions
     }
@@ -454,6 +460,17 @@ def test_paa_identity_survives_reorder_and_second_block_with_repeated_titles() -
     assert len(doubled.related_questions) == 8
     assert [row.question_index for row in doubled.related_questions] == [0, 1, 2, 3, 0, 1, 2, 3]
     assert [row.title for row in doubled.related_questions] == list(PAA_TITLES) + list(PAA_TITLES)
+    assert [row.rank_absolute for row in doubled.related_questions] == [
+        3,
+        3,
+        3,
+        3,
+        112,
+        112,
+        112,
+        112,
+    ]
+    assert [row.rank_group for row in doubled.related_questions] == [1, 1, 1, 1, 2, 2, 2, 2]
     identities = [_paa_identity(doubled, question) for question in doubled.related_questions]
     assert set(identities) == original
     assert len(identities) == 8
