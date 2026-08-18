@@ -1,10 +1,10 @@
 # PF-09 — Shared bounded HTTP single-exchange transport substrate
 
-**Status:** planned
+**Status:** ready
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** provider foundation / zero-network refactor
-**Blocked by:** Steward transition to `ready` after the current authority baseline is confirmed pushed
-**Approved by:** Project Steward for planning only
+**Blocked by:** none; reviewed authority baseline is confirmed pushed at `91eb8ba26b3e8cb9975b6400c1dc61bbd50b3c65`
+**Approved by:** Project Steward
 **Start commit:** implementer fills when assigned
 
 ## What to build
