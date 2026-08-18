@@ -1329,3 +1329,153 @@ def test_two_databases_return_equal_organic_history(
     assert left_body.json() == right_body.json()
     assert left_body.json()["captures"]
     assert left_body.json()["captures"][0]["capture_outcome"]["observation_count"] == 237
+
+
+def test_history_missing_typed_row_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, attempt_id, capture_id = _prepare_frozen(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        deleted = connection.execute(
+            """
+            DELETE FROM google_organic_ranked_results
+            WHERE ctid IN (
+                SELECT ctid FROM google_organic_ranked_results
+                WHERE capture_id = %s AND derivation_version_id = %s
+                LIMIT 1
+            )
+            RETURNING within_capture_identity
+            """,
+            (capture_id, GOOGLE_ORGANIC_RECIPE_ID),
+        ).fetchone()
+        assert deleted is not None
+    before_ops = list(store.recorded_ops)
+    before_pg = _xmin_snapshot(postgres_dsn)
+    with _app(store, postgres_dsn) as client:
+        missing = _history(client)
+        attempt = client.get(f"/v1/attempts/{attempt_id}")
+    assert missing.status_code == 409
+    assert missing.json()["detail"] == "evidence_integrity_failure"
+    assert "captures" not in missing.json()
+    assert attempt.status_code == 200
+    assert attempt.json()["capture_outcome"]["observation_count"] == 237
+    assert store.recorded_ops == before_ops
+    assert _xmin_snapshot(postgres_dsn) == before_pg
+
+
+def test_history_wrong_organic_outcome_count_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, attempt_id, capture_id = _prepare_frozen(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET observation_count = observation_count + 1
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (capture_id, GOOGLE_ORGANIC_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        wrong_count = _history(client)
+        attempt = client.get(f"/v1/attempts/{attempt_id}")
+    assert wrong_count.status_code == 409
+    assert wrong_count.json()["detail"] == "evidence_integrity_failure"
+    assert attempt.status_code == 200
+    assert attempt.json()["capture_outcome"]["observation_count"] == 238
+
+
+def test_history_zero_aio_occurrences_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, _attempt_id, capture_id = _prepare_frozen(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        source = connection.execute(
+            """
+            SELECT within_capture_identity
+            FROM google_organic_aio_sources
+            WHERE capture_id = %s
+            ORDER BY locus, url
+            LIMIT 1
+            """,
+            (capture_id,),
+        ).fetchone()
+        assert source is not None
+        connection.execute(
+            """
+            DELETE FROM google_organic_aio_source_occurrences
+            WHERE capture_id = %s AND within_capture_identity = %s
+            """,
+            (capture_id, source[0]),
+        )
+    with _app(store, postgres_dsn) as client:
+        aio = _history(client)
+    assert aio.status_code == 409
+    assert aio.json()["detail"] == "evidence_integrity_failure"
+
+
+def test_history_zero_paa_occurrences_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, _attempt_id, capture_id = _prepare_frozen(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        question = connection.execute(
+            """
+            SELECT within_capture_identity
+            FROM google_organic_related_questions
+            WHERE capture_id = %s
+            ORDER BY title
+            LIMIT 1
+            """,
+            (capture_id,),
+        ).fetchone()
+        assert question is not None
+        connection.execute(
+            """
+            DELETE FROM google_organic_related_question_occurrences
+            WHERE capture_id = %s AND within_capture_identity = %s
+            """,
+            (capture_id, question[0]),
+        )
+    with _app(store, postgres_dsn) as client:
+        paa = _history(client)
+    assert paa.status_code == 409
+    assert paa.json()["detail"] == "evidence_integrity_failure"
+
+
+def test_history_consistency_damage_outside_limit_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    _commit_organic(store, _body(), "81" * 32, started="2026-08-18T17:37:01.100000Z")
+    later_attempt, later_capture = _commit_organic(
+        store,
+        _body(),
+        "82" * 32,
+        started="2026-08-18T17:38:01.100000Z",
+        authorized_at="2026-08-18T17:38:00.000000Z",
+    )
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic(store, connection)
+        select_provider_recipe(
+            connection, ORGANIC_ADAPTER_CONTRACT, GOOGLE_ORGANIC_RECIPE_ID
+        )
+        connection.execute(
+            """
+            DELETE FROM google_organic_ranked_results
+            WHERE ctid IN (
+                SELECT ctid FROM google_organic_ranked_results
+                WHERE capture_id = %s AND derivation_version_id = %s
+                LIMIT 1
+            )
+            """,
+            (later_capture, GOOGLE_ORGANIC_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        limited = _history(client, limit=1, order="asc")
+        later = client.get(f"/v1/attempts/{later_attempt}")
+    assert limited.status_code == 409
+    assert limited.json()["detail"] == "evidence_integrity_failure"
+    assert "captures" not in limited.json()
+    assert later.status_code == 200

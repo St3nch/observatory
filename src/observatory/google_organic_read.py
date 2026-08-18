@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from typing import Any, Final, Literal
 
-from psycopg import Connection
+from psycopg import Connection, sql
 
 from observatory.capture_event import ORGANIC_ADAPTER_CONTRACT
 from observatory.dataforseo_google_organic import (
@@ -27,6 +27,14 @@ from observatory.provider_recipe_selection import (
 
 HISTORY_PROVIDER: Final[str] = "dataforseo"
 HISTORY_ADAPTER: Final[str] = ORGANIC_ADAPTER_CONTRACT
+_KIND_TABLES: Final[dict[str, str]] = {
+    FEATURE_PRESENCE_KIND: "google_organic_serp_features",
+    ORGANIC_PLACEMENT_KIND: "google_organic_ranked_results",
+    AIO_PRESENCE_KIND: "google_organic_aio_presence",
+    AIO_SOURCE_KIND: "google_organic_aio_sources",
+    RELATED_QUESTION_KIND: "google_organic_related_questions",
+    RELATED_QUERY_KIND: "google_organic_related_queries",
+}
 
 
 def _json_field(state: object, value: object) -> dict[str, object]:
@@ -128,6 +136,94 @@ def _request_context(
         "group_organic_results": group,
         "load_async_ai_overview": load_async,
     }
+
+
+def _assert_history_candidates_consistent(
+    connection: Connection[Any],
+    candidates: Sequence[tuple[str, int]],
+    derivation_version_id: str,
+    kinds: Sequence[str],
+) -> None:
+    if not candidates:
+        return
+    capture_ids = [capture_id for capture_id, _count in candidates]
+    expected_counts = {capture_id: count for capture_id, count in candidates}
+    envelope_rows = connection.execute(
+        """
+        SELECT capture_id, within_capture_identity, observation_kind
+        FROM observation_envelopes
+        WHERE derivation_version_id = %s AND capture_id = ANY(%s)
+        """,
+        (derivation_version_id, capture_ids),
+    ).fetchall()
+    envelopes: dict[str, set[tuple[str, str]]] = {
+        capture_id: set() for capture_id in capture_ids
+    }
+    for row in envelope_rows:
+        envelopes[str(row[0])].add((str(row[1]), str(row[2])))
+    typed: dict[str, set[tuple[str, str]]] = {
+        capture_id: set() for capture_id in capture_ids
+    }
+    for kind in kinds:
+        table = _KIND_TABLES.get(kind)
+        if table is None:
+            raise IntegrityError("resolved recipe names an unknown Observation kind")
+        rows = connection.execute(
+            sql.SQL(
+                """
+                SELECT capture_id, within_capture_identity, observation_kind
+                FROM {}
+                WHERE derivation_version_id = %s AND capture_id = ANY(%s)
+                """
+            ).format(sql.Identifier(table)),
+            (derivation_version_id, capture_ids),
+        ).fetchall()
+        for row in rows:
+            typed[str(row[0])].add((str(row[1]), str(row[2])))
+    for capture_id, expected_count in expected_counts.items():
+        keys = envelopes[capture_id]
+        if len(keys) != expected_count:
+            raise IntegrityError("envelope set disagrees with Outcome observation_count")
+        if typed[capture_id] != keys:
+            raise IntegrityError("typed Observation keys disagree with envelopes")
+    orphan_sources = connection.execute(
+        """
+        SELECT 1
+        FROM google_organic_aio_sources AS s
+        WHERE s.derivation_version_id = %s
+          AND s.capture_id = ANY(%s)
+          AND NOT EXISTS (
+                SELECT 1
+                FROM google_organic_aio_source_occurrences AS o
+                WHERE o.capture_id = s.capture_id
+                  AND o.derivation_version_id = s.derivation_version_id
+                  AND o.within_capture_identity = s.within_capture_identity
+          )
+        LIMIT 1
+        """,
+        (derivation_version_id, capture_ids),
+    ).fetchone()
+    if orphan_sources is not None:
+        raise IntegrityError("AIO source has no subordinate occurrences")
+    orphan_questions = connection.execute(
+        """
+        SELECT 1
+        FROM google_organic_related_questions AS q
+        WHERE q.derivation_version_id = %s
+          AND q.capture_id = ANY(%s)
+          AND NOT EXISTS (
+                SELECT 1
+                FROM google_organic_related_question_occurrences AS o
+                WHERE o.capture_id = q.capture_id
+                  AND o.derivation_version_id = q.derivation_version_id
+                  AND o.within_capture_identity = q.within_capture_identity
+          )
+        LIMIT 1
+        """,
+        (derivation_version_id, capture_ids),
+    ).fetchone()
+    if orphan_questions is not None:
+        raise IntegrityError("related-question parent has no subordinate occurrences")
 
 
 def load_google_organic_history(
@@ -237,6 +333,25 @@ def load_google_organic_history(
                 result_context,
             )
         )
+    _assert_history_candidates_consistent(
+        connection,
+        [
+            (capture_id, observation_count)
+            for (
+                _started,
+                capture_id,
+                _attempt_id,
+                _classification,
+                observation_count,
+                _attempt,
+                _capture,
+                _request,
+                _result_context,
+            ) in candidates
+        ],
+        resolved.derivation_version_id,
+        kinds,
+    )
     reverse = order == "desc"
     candidates.sort(key=lambda item: (item[0], item[1]), reverse=reverse)
     selected = candidates[:limit]

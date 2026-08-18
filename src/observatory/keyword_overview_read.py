@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Final, Literal
 
-from psycopg import Connection
+from psycopg import Connection, sql
 
 from observatory.capture_event import PAID_ADAPTER_CONTRACT
 from observatory.dataforseo_keyword_overview import (
@@ -30,7 +30,15 @@ HISTORY_PROVIDER: Final[str] = "dataforseo"
 HISTORY_ADAPTER: Final[str] = PAID_ADAPTER_CONTRACT
 HISTORY_LIMIT_DEFAULT: Final[int] = 20
 HISTORY_LIMIT_MAX: Final[int] = 100
-
+_KIND_TABLES: Final[dict[str, str]] = {
+    COVERAGE_KIND: "keyword_overview_coverage",
+    METRICS_KIND: "keyword_overview_metrics",
+    MONTHLY_KIND: "keyword_overview_monthly_search_volume",
+    TREND_KIND: "keyword_overview_search_volume_trend",
+    PROPERTIES_KIND: "keyword_overview_properties",
+    BACKLINKS_KIND: "keyword_overview_avg_backlinks",
+    INTENT_KIND: "keyword_overview_search_intent",
+}
 
 
 class ProviderAttemptNotFound(Exception):
@@ -246,6 +254,57 @@ def _verify_captures(
     return verified
 
 
+def _assert_history_candidates_consistent(
+    connection: Connection[Any],
+    candidates: Sequence[tuple[str, int]],
+    derivation_version_id: str,
+    kinds: Sequence[str],
+    kind_tables: Mapping[str, str],
+) -> None:
+    if not candidates:
+        return
+    capture_ids = [capture_id for capture_id, _count in candidates]
+    expected_counts = {capture_id: count for capture_id, count in candidates}
+    envelope_rows = connection.execute(
+        """
+        SELECT capture_id, within_capture_identity, observation_kind
+        FROM observation_envelopes
+        WHERE derivation_version_id = %s AND capture_id = ANY(%s)
+        """,
+        (derivation_version_id, capture_ids),
+    ).fetchall()
+    envelopes: dict[str, set[tuple[str, str]]] = {
+        capture_id: set() for capture_id in capture_ids
+    }
+    for row in envelope_rows:
+        envelopes[str(row[0])].add((str(row[1]), str(row[2])))
+    typed: dict[str, set[tuple[str, str]]] = {
+        capture_id: set() for capture_id in capture_ids
+    }
+    for kind in kinds:
+        table = kind_tables.get(kind)
+        if table is None:
+            raise IntegrityError("resolved recipe names an unknown Observation kind")
+        rows = connection.execute(
+            sql.SQL(
+                """
+                SELECT capture_id, within_capture_identity, observation_kind
+                FROM {}
+                WHERE derivation_version_id = %s AND capture_id = ANY(%s)
+                """
+            ).format(sql.Identifier(table)),
+            (derivation_version_id, capture_ids),
+        ).fetchall()
+        for row in rows:
+            typed[str(row[0])].add((str(row[1]), str(row[2])))
+    for capture_id, expected_count in expected_counts.items():
+        keys = envelopes[capture_id]
+        if len(keys) != expected_count:
+            raise IntegrityError("envelope set disagrees with Outcome observation_count")
+        if typed[capture_id] != keys:
+            raise IntegrityError("typed Observation keys disagree with envelopes")
+
+
 def load_keyword_overview_history(
     store: EvidenceStore,
     connection: Connection[Any],
@@ -273,6 +332,10 @@ def load_keyword_overview_history(
          AND o.attempt_id = e.attempt_id
         WHERE c.requested_keyword = %s
           AND c.derivation_version_id = %s
+          AND o.classification IN (
+                'observation_admitted',
+                'observation_admitted_empty'
+          )
         """,
         (requested_keyword, resolved.derivation_version_id),
     ).fetchall()
@@ -307,6 +370,24 @@ def load_keyword_overview_history(
                 capture,
             )
         )
+    _assert_history_candidates_consistent(
+        connection,
+        [
+            (capture_id, observation_count)
+            for (
+                _started,
+                capture_id,
+                _attempt_id,
+                _classification,
+                observation_count,
+                _attempt,
+                _capture,
+            ) in candidates
+        ],
+        resolved.derivation_version_id,
+        kinds,
+        _KIND_TABLES,
+    )
     reverse = order == "desc"
     candidates.sort(key=lambda item: (item[0], item[1]), reverse=reverse)
     selected = candidates[:limit]

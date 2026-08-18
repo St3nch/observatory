@@ -5,11 +5,13 @@ from __future__ import annotations
 import copy
 import json
 import secrets
+import socket
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlencode
 
+import pytest
 from fastapi.testclient import TestClient
 
 from observatory.api import create_app
@@ -84,6 +86,20 @@ KEYWORDS = (
     "ai search optimization",
 )
 HISTORY = "/v1/providers/dataforseo/google/keyword-overview/history"
+INTEGRITY_SIGNAL = "evidence_integrity_failure"
+
+
+@pytest.fixture(autouse=True)
+def _no_public_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    real = socket.create_connection
+
+    def guarded(address: Any, *args: Any, **kwargs: Any) -> socket.socket:
+        host = address[0] if isinstance(address, tuple) else address
+        if host not in {"127.0.0.1", "::1", "localhost"}:
+            raise AssertionError(f"public-network request forbidden: {host}")
+        return real(address, *args, **kwargs)
+
+    monkeypatch.setattr(socket, "create_connection", guarded)
 PROVIDER_TABLES = (
     "provider_recipes",
     "provider_recipe_selections",
@@ -386,7 +402,11 @@ def test_history_core_and_extended_shapes(tmp_path: Path, postgres_dsn: str) -> 
     }
     assert group["coverage"]["observation_kind"] == COVERAGE_KIND
     assert group["metrics"]["observation_kind"] == METRICS_KIND
+    assert group["capture_outcome"]["observation_count"] == 471
     assert len(group["monthly_search_volume"]) == 85
+    assert group["capture_outcome"]["observation_count"] != len(
+        group["monthly_search_volume"]
+    )
     assert group["search_volume_trend"]["observation_kind"] == TREND_KIND
     assert group["properties"]["observation_kind"] == PROPERTIES_KIND
     assert group["avg_backlinks"]["observation_kind"] == BACKLINKS_KIND
@@ -405,6 +425,7 @@ def test_history_core_and_extended_shapes(tmp_path: Path, postgres_dsn: str) -> 
     assert "avg_backlinks" not in core_group
     assert "search_intent" not in core_group
     assert core_group["metrics"] is not None
+    assert core_group["capture_outcome"]["observation_count"] == 10
 
 
 def test_history_ignores_foreign_attempt_outcome_for_same_capture(
@@ -722,3 +743,119 @@ def test_selector_isolation_does_not_leak(tmp_path: Path, postgres_dsn: str) -> 
             (other,),
         ).fetchone()
     assert other_current == (TEST_RECIPE_ID,)
+
+
+def test_history_excludes_non_admitted_sibling_and_keeps_healthy_capture(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    healthy_attempt, healthy_capture = _commit_paid(
+        store, _body(), "61" * 32, started="2026-08-16T21:37:01.100000Z"
+    )
+    planted_attempt, planted_capture = _commit_paid(
+        store, _body(), "62" * 32, started="2026-08-16T21:38:01.100000Z"
+    )
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_keyword_overview_extended(store, connection)
+        select_provider_recipe(connection, store_adapter(), EXTENDED_RECIPE_ID)
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET classification = 'provider_error'
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (planted_capture, EXTENDED_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        response = _history(client, "ai search optimization")
+    assert response.status_code == 200
+    captures = response.json()["captures"]
+    assert [item["capture_id"] for item in captures] == [healthy_capture]
+    assert captures[0]["attempt_id"] == healthy_attempt
+    assert captures[0]["capture_outcome"]["classification"] == "observation_admitted"
+    assert planted_attempt not in {item["attempt_id"] for item in captures}
+
+
+def test_history_missing_typed_row_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, attempt_id, capture_id = _prepare_pf03(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        deleted = connection.execute(
+            """
+            DELETE FROM keyword_overview_metrics
+            WHERE capture_id = %s AND derivation_version_id = %s
+              AND requested_keyword = 'seo api'
+            RETURNING within_capture_identity
+            """,
+            (capture_id, EXTENDED_RECIPE_ID),
+        ).fetchone()
+        assert deleted is not None
+    before_ops = list(store.recorded_ops)
+    before_pg = _xmin_snapshot(postgres_dsn)
+    with _app(store, postgres_dsn) as client:
+        missing = _history(client, "keyword research")
+        attempt = client.get(f"/v1/attempts/{attempt_id}")
+    assert missing.status_code == 409
+    assert missing.json()["detail"] == INTEGRITY_SIGNAL
+    assert "captures" not in missing.json()
+    assert attempt.status_code == 200
+    assert attempt.json()["capture_outcome"]["observation_count"] == 471
+    assert store.recorded_ops == before_ops
+    assert _xmin_snapshot(postgres_dsn) == before_pg
+
+
+def test_history_wrong_outcome_count_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, attempt_id, capture_id = _prepare_pf03(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET observation_count = observation_count + 1
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (capture_id, EXTENDED_RECIPE_ID),
+        )
+    before_ops = list(store.recorded_ops)
+    before_pg = _xmin_snapshot(postgres_dsn)
+    with _app(store, postgres_dsn) as client:
+        wrong_count = _history(client, "keyword research")
+        attempt = client.get(f"/v1/attempts/{attempt_id}")
+    assert wrong_count.status_code == 409
+    assert wrong_count.json()["detail"] == INTEGRITY_SIGNAL
+    assert attempt.status_code == 200
+    assert attempt.json()["capture_outcome"]["observation_count"] == 472
+    assert store.recorded_ops == before_ops
+    assert _xmin_snapshot(postgres_dsn) == before_pg
+
+
+def test_history_consistency_damage_outside_limit_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    _commit_paid(store, _body(), "81" * 32, started="2026-08-16T21:37:01.100000Z")
+    later_attempt, later_capture = _commit_paid(
+        store, _body(), "82" * 32, started="2026-08-16T21:38:01.100000Z"
+    )
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_keyword_overview_extended(store, connection)
+        select_provider_recipe(connection, store_adapter(), EXTENDED_RECIPE_ID)
+        connection.execute(
+            """
+            DELETE FROM keyword_overview_metrics
+            WHERE capture_id = %s AND derivation_version_id = %s
+              AND requested_keyword = 'seo api'
+            """,
+            (later_capture, EXTENDED_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        limited = _history(client, "keyword research", limit=1, order="asc")
+        later = client.get(f"/v1/attempts/{later_attempt}")
+    assert limited.status_code == 409
+    assert limited.json()["detail"] == INTEGRITY_SIGNAL
+    assert "captures" not in limited.json()
+    assert later.status_code == 200

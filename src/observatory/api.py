@@ -32,6 +32,8 @@ _HEX64: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
 _PROVIDER_ATTEMPT_ADAPTERS: Final[frozenset[str]] = frozenset(
     {HISTORY_ADAPTER, ORGANIC_ADAPTER_CONTRACT}
 )
+_FIXTURE_ADAPTER: Final[str] = "fixture-panel-v1"
+_FIXTURE_PROVIDER: Final[str] = "fixture"
 INTEGRITY_SIGNAL: Final[str] = "evidence_integrity_failure"
 
 
@@ -136,12 +138,24 @@ def _verify_backing(
         raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
     if attempt is None:
         raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL)
+    if (
+        attempt.get("provider") != _FIXTURE_PROVIDER
+        or attempt.get("adapter_contract") != _FIXTURE_ADAPTER
+    ):
+        raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL)
     for capture_id in sorted(capture_ids):
         try:
             capture = store.read_capture(capture_id)
         except IntegrityError as exc:
             raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
         if capture is None:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL)
+        if capture.get("attempt_id") != attempt_id:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL)
+        if (
+            capture.get("provider") != _FIXTURE_PROVIDER
+            or capture.get("adapter_contract") != _FIXTURE_ADAPTER
+        ):
             raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL)
 
 

@@ -302,3 +302,48 @@ def test_unknown_attempt_is_not_a_success_envelope(
     assert missing.status_code == 404
     assert malformed.status_code == 404
     assert "attempt_outcome" not in missing.json()
+
+
+def test_fixture_cross_linked_capture_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    first = capture_fixture(store, _inputs("admitted_results"))
+    second = capture_fixture(
+        store,
+        FixtureCaptureInputs(
+            scenario="admitted_empty",
+            panel_id="panel-alpha",
+            subject_key="subject-two",
+            depth=2,
+            attempt_nonce=secrets.token_hex(32),
+            response_headers_at="2026-08-11T20:15:30.900000Z",
+            response_body_ended_at="2026-08-11T20:15:30.950000Z",
+            **SHARED_TIMES,
+        ),
+    )
+    assert first.attempt_id != second.attempt_id
+    assert first.capture_id != second.capture_id
+    with connect(postgres_dsn) as connection:
+        derive(store, connection, DEFAULT_VERSION)
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET capture_id = %s
+            WHERE attempt_id = %s AND capture_id IS NOT NULL
+              AND derivation_version_id = %s
+            """,
+            (second.capture_id, first.attempt_id, DEFAULT_VERSION),
+        )
+    before_ops = list(store.recorded_ops)
+    with _app(store, postgres_dsn) as client:
+        crossed = client.get(f"/v1/attempts/{first.attempt_id}")
+        intact = client.get(f"/v1/attempts/{second.attempt_id}")
+        unknown = client.get("/v1/attempts/" + ("ab" * 32))
+    assert crossed.status_code == 409
+    assert crossed.json()["detail"] == "evidence_integrity_failure"
+    assert "observations" not in crossed.json()
+    assert intact.status_code == 200
+    assert intact.json()["capture_outcome"]["capture_id"] == second.capture_id
+    assert unknown.status_code == 404
+    assert store.recorded_ops == before_ops

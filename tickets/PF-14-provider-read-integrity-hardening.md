@@ -1,10 +1,10 @@
 # PF-14 — Provider read-path integrity hardening
 
-**Status:** ready  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; PF-13 closed  
 **Approved by:** Project Steward  
-**Start commit:** 59559a1e5cf1671f2867d902530032de6ab9685f
+**Start commit:** `db0ceec246d19556be79cf40e1eb419b05e272ff`
 
 ## Purpose
 
@@ -306,3 +306,133 @@ changed paths, acceptance-to-test map, and command evidence. It must also report
 
 Do not broaden implementation to repair adjacent findings. Report them for Steward
 reconciliation.
+
+## Implementation report
+
+**Parent:** `db0ceec246d19556be79cf40e1eb419b05e272ff`  
+**Child:** supplied in the implementer handoff (a commit cannot embed its own final hash).  
+**Status:** `review`
+
+### Loaded skills
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### A. Start gate
+
+- branch: `main`
+- exact HEAD: `db0ceec246d19556be79cf40e1eb419b05e272ff`
+- working tree: clean
+- PF-14: `ready` at start; set `in-progress` then `review`
+
+### B. Changed paths
+
+- `src/observatory/keyword_overview_read.py` (admission predicate; Capture-wide key-set check)
+- `src/observatory/google_organic_read.py` (Capture-wide key-set check; occurrence-parent check)
+- `src/observatory/api.py` (fixture provider/adapter/parent provenance; HTTP 409)
+- `tests/test_api_keyword_overview.py`
+- `tests/test_api_google_organic.py`
+- `tests/test_api_attempts.py`
+- this ticket
+
+No schema, migration, recipe, fixture, parser, identity, Derivation writer, Evidence, or selection change.
+
+### C. Behavior
+
+Keyword Overview history membership now requires
+`classification IN ('observation_admitted', 'observation_admitted_empty')`.
+After Evidence verify and before sort/limit, every matching candidate is checked
+Capture-wide: envelope keys `(within_capture_identity, observation_kind)` must have
+cardinality equal to Outcome `observation_count` and must equal the union of
+recipe-enabled typed keys. CORE uses coverage+metrics. EXTENDED uses all seven
+tables. One keyword's response arrays are never compared to the Capture count.
+
+Organic history uses the same envelope/typed equality across the six semantic
+tables. Result context and occurrence rows are excluded from the 237 count.
+Every AIO source and every related-question parent must have at least one
+occurrence. Admitted-empty (0 envelopes, 0 typed rows, context present) remains
+valid.
+
+Fixture `_verify_backing` now requires fixture `provider`/`fixture-panel-v1` on
+the Attempt and every cited Capture, and `capture.attempt_id ==` requested
+Attempt. Failures raise `HTTPException(409, evidence_integrity_failure)` and
+cannot leak as 500. Provider Attempt GET is unchanged and may still show a stale
+count.
+
+Consistency SELECTs are batched with `capture_id = ANY(%s)` so cost is one
+envelope query plus one query per recipe-enabled table (plus two Organic
+occurrence-existence queries) per history request, not per candidate.
+
+### D. Acceptance map
+
+| Criterion | Proving test |
+|---|---|
+| KO non-admitted excluded; healthy sibling remains | `test_history_excludes_non_admitted_sibling_and_keeps_healthy_capture` |
+| Multi-keyword Capture-wide check (471 vs 85 monthly) | `test_history_core_and_extended_shapes` |
+| KO missing non-anchor typed row → 409; Attempt GET still 200 | `test_history_missing_typed_row_is_409` |
+| KO wrong Outcome count → 409; Attempt GET still 200 | `test_history_wrong_outcome_count_is_409` |
+| KO damage outside `limit=1` → 409 | `test_history_consistency_damage_outside_limit_is_409` |
+| Organic missing typed row → 409 | `test_history_missing_typed_row_is_409` |
+| Organic wrong Outcome count → 409 | `test_history_wrong_organic_outcome_count_is_409` |
+| Zero-occurrence AIO / PAA → 409 | `test_history_zero_aio_occurrences_is_409`; `test_history_zero_paa_occurrences_is_409` |
+| Organic damage outside `limit=1` → 409 | `test_history_consistency_damage_outside_limit_is_409` |
+| Fixture cross-linked valid Capture → 409; sibling 200; unknown 404 | `test_fixture_cross_linked_capture_is_409` |
+| Healthy fixture / CORE / EXTENDED / Organic / 237 / AIO 15/18 / PAA | existing PF-08/PF-13 tests remain green |
+| Read-only after 409 GET | xmin/ops in KO missing-row and wrong-count tests; existing Organic/fixture read-only tests |
+| Non-empty two-database equality | existing KO and Organic two-database tests |
+| Network guard | KO module autouse guard; Organic existing guard |
+
+### E. Validation
+
+Before: HEAD `db0ceec246d19556be79cf40e1eb419b05e272ff`, dirty working tree with PF-14 edits.
+
+| Command | UTC start | UTC end | Elapsed | Exit |
+|---|---|---|---|---|
+| `uv run pytest -q` | 2026-08-18T23:46:24.955Z | 2026-08-18T23:48:58.559Z | 153.604 s (pytest 153.04 s) | 0 |
+| `uv run ruff check .` | 2026-08-18T23:48:58.560Z | 2026-08-18T23:48:58.595Z | 0.035 s | 0 |
+| `uv run mypy` | 2026-08-18T23:48:58.596Z | 2026-08-18T23:48:59.065Z | 0.469 s | 0 |
+
+`906 passed, 1 skipped, 1 warning`. Prior PF-13 count was 896. 48 source files. No leftover `observatory-ce05-*` container. Final suite covers the final product bytes (test rename and blank-line cleanup only; no logic change after pytest).
+
+### F. Review
+
+Code-review against `db0ceec246d19556be79cf40e1eb419b05e272ff`.
+
+**Standards:** 0 hard. Residual: duplicated surface-local consistency helpers (in-scope); positional candidate tuples deferred.
+
+**Spec:** 0 missing/partial/wrong. History-only consistency confirmed. Admission sibling proof present.
+
+### G. Candid assessment
+
+**Capture-wide vs keyword grain.** Envelope/typed equality and Outcome count are Capture-wide, including other requested keywords. History membership and response families remain requested-keyword grain. Organic occurrence-parent check is Capture-wide for matching candidates.
+
+**Detected.** Non-admitted KO membership; missing typed row; extra/missing envelope vs typed keys; wrong Outcome count; zero-occurrence AIO/PAA parent; fixture cross-link and wrong fixture adapter/provider; Evidence damage (pre-existing).
+
+**Undetectable without re-Derivation.** Coordinated delete of typed+envelope+matching count; deletion of the only candidate anchor; partial occurrence loss while ≥1 remains; value/identity corruption that preserves keys and counts. Provider Attempt GET may still display a stale count (accepted PF-14 limit).
+
+**Query cost.** Batched: 1 envelope SELECT + 2 (CORE) or 7 (EXTENDED) typed SELECTs per KO history request; Organic 1+6+2. Independent of `limit`. Dominant cost remains Evidence `read_capture`/`read_attempt` per matching candidate.
+
+**Helpers.** Surface-local copies are acceptable. No shared framework extracted. `load_provider_attempt` not relocated.
+
+**Strong.** Admission hole closed. Capture-wide key-set avoids the one-keyword/471 trap. Fixture parent check is the exact missing provenance test. 409 vs Attempt GET 200 proves history-only scope.
+
+**Weak.** Duplicated consistency helpers. KO admitted-empty filter remains unreachable via coverage. Naive per-request table count is fine today but still O(candidates) Evidence reads.
+
+**False-green risks avoided.** Admission test keeps a healthy sibling. Two-database tests remain non-empty. Outside-limit damage uses a later Capture. Attempt GET 200 on stale count is asserted so the history-only limit cannot be mistaken for a missed 409.
+
+**Ticket premises.** All held. No product defect in writers; these are read-path holes.
+
+**PF-15 / next surface.** PF-15 still owns migration hygiene. Next acquisition history should ship with an admission predicate and Capture-wide envelope/detail key-set from day one, plus occurrence-parent rules taken from that surface's writer.
+
+### H. Confirmations
+
+- no schema/recipe/parser/identity/Derivation/Evidence/selection/new-surface change
+- no provider/DNS/credentials/paid-gate use
+- no push
+
+### I. Commit
+
+- parent SHA: `db0ceec246d19556be79cf40e1eb419b05e272ff`
+- child SHA: recorded in this implementation commit
