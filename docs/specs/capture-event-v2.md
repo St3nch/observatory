@@ -524,6 +524,110 @@ The internal loopback seam accepts only
 unreachable from the public CLI. No real paid invocation is authorized until F6 is
 satisfied and the Steward provides the exact operator command.
 
+#### Planned Google Organic Live Advanced paid-probe adapter
+
+PF-10 freezes a third exact event-version-2 adapter contract for later implementation:
+
+    dataforseo-serp-google-organic-live-advanced-paid-probe-v1
+
+This section is normative for PF-10 when that ticket is transitioned to `ready`. It does not
+authorize a provider call. A real call remains separately gated by fresh provider contract
+and pricing review, retention/privacy/terms/API-redistribution acceptance, bounded F6
+off-host protection, and explicit [CHAZ] authorization.
+
+Its provider is exactly `dataforseo`. Its production target is exactly one POST to
+`https://api.dataforseo.com/v3/serp/google/organic/live/advanced`. The request contains
+exactly one task. Redirects, retries, polling, task-post/task-get, account/catalog preflights,
+and any automatic second exchange are forbidden. `load_async_ai_overview=true` is provider-
+side work represented in this one Live POST response; it does not create Observatory
+multi-exchange provenance.
+
+The closed `parameters` object has exactly:
+
+| Property | JSON type | Constraint |
+|---|---|---|
+| `contract` | string | exact adapter token above |
+| `keyword` | string | closed natural-language grammar and operator denial below |
+| `location_code` | integer | exactly `2840` |
+| `language_code` | string | exactly `en` |
+| `depth` | integer | exactly `100` |
+| `device` | string | exactly `desktop` |
+| `os` | string | exactly `windows` |
+| `load_async_ai_overview` | boolean | exactly `true` |
+| `group_organic_results` | boolean | exactly `true` |
+
+`keyword` is 1..80 printable ASCII characters and at most 10 words, where a word is a
+maximal nonempty run separated by ASCII space. It begins and ends with ASCII alphanumeric.
+Internal characters are limited to `A-Z a-z 0-9 space & ' ( ) + , . / : -`.
+
+After ASCII lowercasing, validation rejects the keyword before Attempt creation if it
+contains any of these substrings anywhere:
+
+    allinanchor: allintext: allintitle: allinurl: cache: define: definition:
+    filetype: id: inanchor: info: intext: intitle: inurl: link: related: site:
+
+The deny set is intentionally conservative. It is the adapter contract even where mutable
+provider documentation lists a smaller set. A fresh provider review may stop the probe; it
+may not silently widen the accepted keyword grammar. Changing the grammar requires an
+amended adapter contract.
+
+The provider task is `parameters` without `contract`. Request-body bytes are UTF-8 JCS of a
+singleton array containing that task, with no trailing newline. The credential-free request
+is HTTPS, host `api.dataforseo.com`, null port, exact path
+`/v3/serp/google/organic/live/advanced`, method `POST`, empty query, and the same five
+committed application headers in the same identity-bearing order as the accepted DataForSEO
+HTTP-v2 adapters:
+
+    [["accept","application/json"],["accept-encoding","identity"],
+     ["connection","close"],["content-type","application/json"],
+     ["user-agent","observatory-dataforseo-v1"]]
+
+Transport may add only the accepted Authorization, Host, and Content-Length fields after a
+verified Attempt capability is issued.
+
+The closed `policy` is exactly:
+
+    {"max_authorized_cost_micro_usd":30000,"mode":"paid_probe",
+     "policy_version":"dataforseo-google-organic-live-paid-probe-v1",
+     "pricing_basis":"dataforseo-google-organic-live-2026-08-18"}
+
+The public capture path requires exact `--authorize-max-micro-usd 30000`. The one-shot guard
+is keyed by this exact adapter token, not merely by `policy.mode`; Keyword Overview
+paid-probe Evidence in the same store does not block this distinct adapter. No automatic
+retry is allowed after Attempt creation.
+
+The adapter-owned response-body ceiling is `33_554_432` bytes. Its adapter-owned timeout
+profile is `httpx.Timeout(connect=30.0, read=120.0, write=30.0, pool=30.0)`. PF-09 may share
+the streaming/client mechanics but neither value becomes an Observatory-wide default or a
+public caller option.
+
+`group_organic_results=true` is identity-bearing request context. Under the claimed provider
+contract, related results are nested under their parent organic item. `false` would promote
+them to separate organic items and can change result cardinality and later rank
+interpretation, so it is a materially distinct future contract branch.
+
+`depth=100` is requested provider parse depth. It is not a promise of 100 organic rows and
+does not establish logical corpus completeness. A transport-complete response may contain
+fewer organic rows plus heterogeneous SERP features. Any later Derivation must use
+provider-returned counts/context from verified Evidence rather than infer completeness from
+requested depth.
+
+The event-v2 validator may add only this third exact adapter branch. It must validate the
+request, parameters, policy, body equation, provider, and target for this token without
+weakening the sandbox or Keyword Overview branches and without introducing a dynamic
+registry. Existing event-v2 conformance bytes/IDs remain unchanged. Existing Derivations
+skip this Evidence-only adapter until a separate Google Organic recipe is accepted.
+
+The internal deterministic loopback seam, used only by tests, may replace scheme/host/port
+with `http`, `127.0.0.1`, and an explicit test port while retaining the exact production
+path. It is not reachable through the public CLI.
+
+Explicit non-acquisition remains part of this contract: `group_organic_results=false`,
+mobile/macOS/iOS, explicit `se_domain`, `search_param`/time-filtered context, depth 101..200,
+PAA expansion, rectangles, target/stop-crawl, direct URL input/rewriting, and other optional
+fields require separately authorized contract branches when their distinct testimony is
+materially required.
+
 #### Request fingerprint and Attempt version 2
 
 The request object uses the shared closed `request` shape. Its constants and body are

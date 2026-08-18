@@ -251,3 +251,118 @@ GROK must explicitly report:
 - all code paths capable of network I/O and why ordinary tests cannot reach a real provider;
 - the weakest part of the adapter design and any contract ambiguity he intentionally did not
   guess around.
+
+## Steward amendment after adversarial review
+
+This amendment is normative for PF-10 and closes the identity, spend-grammar, timeout, and
+grouping decisions that the original planned text left implicit.
+
+### Closed keyword grammar
+
+`keyword` is one string of 1..80 printable ASCII characters and at most 10 words. A word is
+a maximal nonempty run separated by ASCII space. The keyword begins and ends with an ASCII
+alphanumeric. Internal characters are limited to:
+
+`A-Z a-z 0-9 space & ' ( ) + , . / : -`
+
+After lowercasing the ASCII keyword, reject it before Attempt creation if it contains any of
+these substrings anywhere:
+
+`allinanchor:`, `allintext:`, `allintitle:`, `allinurl:`, `cache:`, `define:`,
+`definition:`, `filetype:`, `id:`, `inanchor:`, `info:`, `intext:`, `intitle:`,
+`inurl:`, `link:`, `related:`, `site:`.
+
+This intentionally conservative deny set is the union needed to fail safely across the
+current official Google Organic Live/Advanced documentation and pricing/help material, whose
+operator lists are not perfectly consistent. It also rejects prefixed forms such as
+`-site:` because they contain `site:`. A fresh provider-price review may stop the probe if
+the provider contract changes; it may not silently widen this grammar. A different grammar
+requires an amended adapter contract.
+
+### Exact identity-bearing envelope
+
+The closed `parameters` object has exactly these keys and values:
+
+- `contract`: `dataforseo-serp-google-organic-live-advanced-paid-probe-v1`
+- `keyword`: the validated operator-supplied keyword above
+- `location_code`: `2840`
+- `language_code`: `en`
+- `depth`: `100`
+- `device`: `desktop`
+- `os`: `windows`
+- `load_async_ai_overview`: `true`
+- `group_organic_results`: `true`
+
+The provider task is exactly `parameters` without `contract`. Request-body bytes are UTF-8
+JCS of a singleton array containing that task, with no trailing newline.
+
+The closed `policy` object has exactly these keys and values:
+
+- `max_authorized_cost_micro_usd`: `30000`
+- `mode`: `paid_probe`
+- `policy_version`: `dataforseo-google-organic-live-paid-probe-v1`
+- `pricing_basis`: `dataforseo-google-organic-live-2026-08-18`
+
+The one-shot guard is keyed by the exact adapter contract, not by `policy.mode`; a store that
+contains Keyword Overview paid-probe Evidence does not thereby block this distinct probe.
+
+### Adapter-owned timeout and response bound
+
+PF-10 owns the production timeout profile:
+
+`httpx.Timeout(connect=30.0, read=120.0, write=30.0, pool=30.0)`
+
+PF-10 also owns the planned `33_554_432` byte response-body ceiling. Both values are private
+adapter policy passed to the PF-09 seam. Neither is a CLI/API/user-controlled option or an
+Observatory-wide default. No retry is authorized after any committed Attempt.
+
+### Grouping and completeness semantics
+
+`group_organic_results=true` is identity-bearing request context. Under the current claimed
+provider contract, related results are nested as `related_result` snippets of their parent
+organic item; `false` would promote them to separate organic items and can change result
+cardinality and later rank interpretation. `false` is therefore a materially distinct future
+contract branch, not an omitted sample of this adapter.
+
+`depth=100` is requested provider parse depth, not a promise of 100 organic rows and not a
+universal historical-completeness claim. A transport-complete HTTP response can legitimately
+contain fewer organic items and heterogeneous SERP features. Any later Derivation must model
+provider-returned counts/context from Evidence rather than infer completeness from depth.
+
+### Public and loopback seams
+
+The implementation module is exactly `observatory.dataforseo_google_organic_paid_probe`.
+
+Its public `capture` subcommand requires `--evidence-root`, exactly one `--keyword`, and
+exact `--authorize-max-micro-usd 30000`. Its public `inspect` subcommand requires
+`--evidence-root` and one `--capture-id`. Neither public subcommand accepts an endpoint,
+timeout, response ceiling, provider options, task JSON, headers, location/language/device,
+or alternate spend ceiling.
+
+The internal deterministic loopback override accepts only the loopback host
+`127.0.0.1`, an explicit test port, and the exact path
+`/v3/serp/google/organic/live/advanced`; it is unreachable from the public CLI.
+
+### Explicit non-acquisition / revisit triggers
+
+- `group_organic_results=false`: revisit only if separately ranked related-result cardinality
+  is materially required.
+- mobile/macOS/iOS variants: revisit when device-specific SERP divergence is a deliberate
+  measurement requirement.
+- explicit `se_domain`: revisit when provider-selected domain from location/language is
+  insufficient for a deliberate country/domain comparison.
+- `search_param` or time-filtered search context: revisit when a bounded time/search-mode
+  comparison is deliberately required.
+- depth 101..200, PAA expansion, rectangles, target/stop-crawl, URL input/rewriting, and
+  other optional fields remain separate cost/testimony branches as already stated.
+
+### Additional adversarial tests
+
+- confused-contract matrix across sandbox, Keyword Overview paid probe, and this adapter;
+- operator-deny cases including uppercase forms, `cache:`, `definition:`, `related:`, and
+  `-site:`, plus a natural-language false-positive control such as `website comparison`;
+- keyword empty/81-character/11-word/leading-or-trailing-space/disallowed-character cases;
+- one-shot isolation proving Keyword Overview paid-probe Evidence does not block this adapter;
+- sandbox and Keyword Overview inspection/capability objects are refused by this adapter and
+  this adapter's objects are refused by their paths;
+- fixture and Keyword Overview Derivations skip this Evidence-only adapter.

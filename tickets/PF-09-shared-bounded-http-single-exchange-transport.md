@@ -196,3 +196,36 @@ In addition to the normal implementation report, GROK must explicitly report:
 - conformance IDs/digests before/after;
 - the weakest remaining duplication or coupling that he deliberately did **not** generalize;
 - any reason the shared seam would make a third one-exchange adapter unsafe or awkward.
+
+## Steward amendment after adversarial review
+
+This amendment is normative for PF-09 and supersedes any earlier wording that implies a
+universal transport or one Observatory-wide timeout policy.
+
+- Reuse is limited to a later separately authorized adapter that fits the same accepted
+  one-request/one-response HTTP-v2 mechanics. PF-09 does not create a universal provider
+  transport.
+- Each adapter owns its timeout profile in addition to its response-body byte ceiling.
+  Sandbox and Keyword Overview keep their existing `httpx.Timeout(30.0)` behavior.
+  The shared production-client mechanic accepts the adapter-owned timeout profile and does
+  not hard-code one global timeout.
+- The shared exchange seam receives only already-resolved transport inputs from an
+  adapter-owned verified one-use path: exact resolved URL, exact request-body bytes, the
+  adapter-supplied committed credential-free application-header list, an already-built
+  Authorization value, the adapter-owned timeout profile, the adapter-owned response-body
+  ceiling, and an optional injected client for deterministic tests.
+- The shared module must not receive a provider credential object, import one global
+  `HTTP_HEADERS` list as Observatory law, choose a provider target, expose a caller URL, or
+  own Attempt/capability/Capture/spend/target validation.
+- Cross-module capability isolation is explicit: a sandbox-issued capability cannot execute
+  the paid exchange path and a paid-issued capability cannot execute the sandbox exchange
+  path. Existing second-use rejection remains adapter-local.
+- Direct shared-seam tests must prove adapter-supplied timeout and response-limit
+  parameterization without changing existing conformance bytes/IDs.
+- Do not add continuation hooks, async workflow state, retry policy, pagination, task-get,
+  or another transport-failure enum in this refactor.
+
+The intended implementation remains “finish the proven extraction”: shared exchange-result,
+production-client mechanics, sent-header assembly from adapter-supplied application headers,
+HTTP-version validation, secret-header omission, body-state construction, exception mapping,
+and one bounded streaming exchange. Everything else stays adapter-owned.
