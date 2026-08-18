@@ -514,3 +514,27 @@ exact committed-ID set equality proof.
 These acceptances do **not** authorize the provider exchange. The one-shot live command still
 requires a separate explicit [CHAZ] authorization after presentation of the exact command and
 the fresh contract/pricing review against the 30,000 micro-USD ceiling.
+
+## Steward live-gate record — one-shot authorization
+
+On 2026-08-18, after the exact command and fresh contract/pricing review were presented,
+[CHAZ] explicitly authorized the PF-10 one-shot provider exchange for exactly:
+
+- keyword: `conspiracy theories`;
+- Evidence root: `$HOME/.local/share/observatory/pf10-google-organic-conspiracy-theories-2026-08-18`;
+- authorization acknowledgement: `30000` micro-USD;
+- adapter contract: `dataforseo-serp-google-organic-live-advanced-paid-probe-v1`;
+- exactly one provider exchange, with no retry or automatic second request.
+
+The authorized command is:
+
+```bash
+uv run python -m observatory.dataforseo_google_organic_paid_probe capture \
+  --evidence-root "$HOME/.local/share/observatory/pf10-google-organic-conspiracy-theories-2026-08-18" \
+  --keyword "conspiracy theories" \
+  --authorize-max-micro-usd 30000
+```
+
+This authorization does not authorize any second exchange. Any unresolved Attempt, transport
+failure, credential-echo refusal, partial Capture, or other unsuccessful outcome remains a
+stop condition requiring a new Steward/[CHAZ] decision before another provider call.
