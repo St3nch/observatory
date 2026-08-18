@@ -1,6 +1,6 @@
 # PF-11 — DataForSEO Google Organic strict parser and PF-10 conformance fixture
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Start commit:** `aee38a5fa8dd5d752c96017e6ced4eb9d4128b94`  
 
@@ -404,3 +404,43 @@ mypy elapsed is a warm cache; a prior cold run at `b64c6ac4` was 15.330 s.
 Code-review against `b64c6ac4`. Standards: 0 hard. Spec: Steward identity
 blockers closed; residual is later persistence aggregating occurrence
 locations under the new semantic identities.
+
+## Steward closure — 2026-08-18
+
+PF-11 is accepted and closed after Steward review of implementation commit
+`b64c6ac4c4090bcca8f21f7b666990b9b08e5666` against parent
+`aee38a5fa8dd5d752c96017e6ced4eb9d4128b94`, followed by identity correction
+`ad859f16b31557e4f882ed09f49b7e29c8e20cd6`.
+
+Verified:
+
+- clean `main` at the correction commit before closure;
+- original implementation changed only the five accepted PF-11 paths, and the correction
+  changed only the parser recipe, frozen recipe JCS, dedicated tests, and this ticket;
+- frozen PF-10 response fixture remains exactly 135722 bytes with SHA-256
+  `7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f`;
+- accepted Google Organic recipe is 2487 bytes with derivation version
+  `338fc2080d31a35b1f7cc5d7a71c971d25d72517ca3b846959ccb501b666acde`;
+- `ai_overview_source.v1` identity is semantic
+  `(requested_keyword, locus, url)`; AIO array indexes remain non-identity IR testimony;
+- `related_question.v1` identity is semantic `(requested_keyword, title)`;
+  `question_index` remains non-identity ordering testimony;
+- the frozen fixture retains 18 AIO source occurrences mapping deterministically to 15
+  semantic identities, with top-level versus element loci distinct and same-locus exact-URL
+  repeats intentionally sharing identity;
+- AIO and PAA identity sets remain stable under response-array reordering, and a second PAA
+  block with repeated titles does not create conflicting semantic identities;
+- duplicate organic URLs remain distinct placements; both provider rank axes remain
+  non-universal testimony; requested Attempt keyword remains the subject;
+- Keyword Overview CORE identity remains
+  `319af798f3e0b3e5fe4579539442c4ca5d384b683e1f4bce0f7a1b3e26cd5908`;
+- operator-independent clean-commit run at `ad859f16…`: `867 passed, 1 skipped,
+  1 warning`, exit 0, 95.13 seconds, with a clean tree before and after;
+- independent Steward `uv run ruff check .`: clean;
+- independent Steward `uv run mypy`: clean;
+- no provider/network call, PostgreSQL derive/API work, PF-12 work, or push occurred.
+
+Carried limits remain bounded to later triggers: unobserved right-rail rank behavior,
+cross-type item-field diagnostic precision, `item_types` versus emitted-type
+reconciliation, raw sitelinks/`related_result`, and deterministic persistence aggregation
+of non-identity occurrence locations.
