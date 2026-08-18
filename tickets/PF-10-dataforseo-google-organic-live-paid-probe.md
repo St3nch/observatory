@@ -1,13 +1,13 @@
 # PF-10 — DataForSEO Google Organic Live Advanced bounded paid probe
 
-**Status:** planned
+**Status:** ready
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** provider adapter / bounded paid contract probe
 **Blocked by:** PF-09 closed; Steward transition to `ready`; live operator run additionally
 blocked by fresh pricing review, text-retention/terms acceptance, an accepted bounded F6
 off-host protection path, and explicit [CHAZ] authorization
-**Approved by:** Project Steward for planning only
-**Start commit:** implementer fills when assigned
+**Approved by:** Project Steward for implementation only; live provider invocation remains separately gated below
+**Start commit:** `2fbd61bf78b46e4268978666aef3c0ad1df3546c`
 
 ## What to build
 
