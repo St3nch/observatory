@@ -1,6 +1,6 @@
 # PF-14 — Provider read-path integrity hardening
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; PF-13 closed  
 **Approved by:** Project Steward  
@@ -436,3 +436,62 @@ Code-review against `db0ceec246d19556be79cf40e1eb419b05e272ff`.
 
 - parent SHA: `db0ceec246d19556be79cf40e1eb419b05e272ff`
 - child SHA: recorded in this implementation commit
+
+## Steward closure — 2026-08-18
+
+**Accepted by:** Project Steward  
+**Accepted implementation:** `307c1d19d682c0382c2a60655605ea88633e1e4c`  
+**Accepted parent:** `db0ceec246d19556be79cf40e1eb419b05e272ff`
+
+PF-14 is accepted and closed after GROK's mandatory pre-implementation technical review,
+ticket reconciliation, one bounded implementation commit, independent Steward code review,
+and independent operator verification.
+
+Keyword Overview normal-history membership now requires an admitted Capture Outcome.
+Every matching Keyword Overview and Google Organic history candidate is Evidence-verified
+and then checked before sort/limit at full Capture/recipe grain: the envelope cardinality
+must equal the Capture Outcome observation_count, and the recipe-enabled typed semantic key
+set must equal the envelope key set. Keyword Overview CORE covers coverage and metrics;
+EXTENDED covers all seven accepted kinds. The check never mistakes one requested keyword's
+response arrays for the multi-keyword Capture-wide Outcome count.
+
+Google Organic preserves the accepted 237-envelope boundary: result context and subordinate
+occurrence rows are excluded, while every persisted AIO source and related-question parent
+must retain at least one occurrence. Admitted-empty context with zero envelopes remains
+valid. Fixture Attempt reads now require exact fixture provider/adapter provenance and each
+cited Capture's parent Attempt, returning the stable 409 evidence_integrity_failure signal
+for cross-links rather than leaking a 500.
+
+The accepted implementation batches consistency SELECTs by matching Capture set. Added
+database cost is one envelope query plus two CORE or seven EXTENDED typed-table queries for
+Keyword Overview, and one envelope plus six semantic plus two occurrence-existence queries
+for Organic, independent of the returned limit. Existing Evidence verification remains
+per matching candidate and therefore O(matching history), consistent with the accepted
+verify-all-before-limit rule.
+
+Independent Steward review found no authority, spec, correctness, security, or scope
+blocker. The diff is limited to the three read modules, three dedicated API test modules,
+and this ticket. Independent static verification at the accepted child:
+
+- `uv run ruff check .`: clean;
+- `uv run mypy`: clean, 48 source files.
+
+Independent operator verification at the accepted child:
+
+- exact HEAD `307c1d19d682c0382c2a60655605ea88633e1e4c`;
+- clean working tree before and after;
+- `uv run pytest -q`: 906 passed, 1 skipped, 1 upstream Starlette/httpx
+  deprecation warning, exit 0;
+- 150.94 seconds wall time;
+- no remaining `observatory-ce05-*` container.
+
+Accepted limits remain explicit. Provider Attempt GET retains Evidence verification but does
+not run the new history completeness checks and may display a stale PostgreSQL count.
+Coordinated typed/envelope deletion with a matching Outcome-count rewrite, deletion of the
+only candidate anchor, partial occurrence loss while another occurrence survives, and
+value corruption that preserves persisted keys/counts remain undetectable without new
+independent state or re-Derivation. Those mechanisms remain outside PF-14.
+
+No schema, migration, recipe, parser, identity, Derivation, Evidence, selection, provider,
+credential, paid-gate, network, or new-surface change occurred. Nothing was pushed during
+closure.
