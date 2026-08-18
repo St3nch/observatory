@@ -1,13 +1,13 @@
 # PF-10 — DataForSEO Google Organic Live Advanced bounded paid probe
 
-**Status:** ready
+**Status:** review
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** provider adapter / bounded paid contract probe
 **Blocked by:** PF-09 closed; Steward transition to `ready`; live operator run additionally
 blocked by fresh pricing review, text-retention/terms acceptance, an accepted bounded F6
 off-host protection path, and explicit [CHAZ] authorization
 **Approved by:** Project Steward for implementation only; live provider invocation remains separately gated below
-**Start commit:** `2fbd61bf78b46e4268978666aef3c0ad1df3546c`
+**Start commit:** `34c083474b4e1fbf8d0c3b84ab0eb210476e0976`
 
 ## What to build
 
@@ -166,25 +166,25 @@ boundary. If that gate is not accepted, do not send.
 
 ## Acceptance criteria — implementation commit
 
-- [ ] Third exact HTTP-v2 adapter token is recognized without weakening the two existing
+- [x] Third exact HTTP-v2 adapter token is recognized without weakening the two existing
       adapter contracts or introducing generic endpoint execution.
-- [ ] Closed request contains exactly the task fields/values above and one keyword.
-- [ ] Public CLI cannot alter target, context, depth, enrichment flags, headers, timeout,
+- [x] Closed request contains exactly the task fields/values above and one keyword.
+- [x] Public CLI cannot alter target, context, depth, enrichment flags, headers, timeout,
       response limit, retry behavior, or spend ceiling.
-- [ ] Exact 30,000 micro-USD authorization acknowledgement is required before Attempt commit.
-- [ ] Store-level one-shot guard refuses a second Attempt for this probe adapter.
-- [ ] Committed Attempt precedes any transport and exact request bytes are read-back verified.
-- [ ] PF-09 shared transport is used with adapter-owned 32 MiB bound.
-- [ ] Complete/partial/no-response branches preserve existing HTTP-v2 semantics.
-- [ ] Credentials and secret-class response-header values cannot enter Evidence or emitted
+- [x] Exact 30,000 micro-USD authorization acknowledgement is required before Attempt commit.
+- [x] Store-level one-shot guard refuses a second Attempt for this probe adapter.
+- [x] Committed Attempt precedes any transport and exact request bytes are read-back verified.
+- [x] PF-09 shared transport is used with adapter-owned 32 MiB bound.
+- [x] Complete/partial/no-response branches preserve existing HTTP-v2 semantics.
+- [x] Credentials and secret-class response-header values cannot enter Evidence or emitted
       errors/output.
-- [ ] Capture is committed and verify-on-read checked when transport testimony exists.
-- [ ] Inspection refuses wrong adapter, partial/no-response, malformed/tampered Evidence and
+- [x] Capture is committed and verify-on-read checked when transport testimony exists.
+- [x] Inspection refuses wrong adapter, partial/no-response, malformed/tampered Evidence and
       performs no mutation/network.
-- [ ] Existing sandbox and Keyword Overview conformance vectors/digests remain unchanged.
-- [ ] Existing fixture/provider Derivations do not create rows for this Evidence-only adapter.
-- [ ] No provider network, DNS, credentials, or spend occurs in ordinary tests/review.
-- [ ] `uv run pytest -q`, `uv run ruff check .`, and `uv run mypy` are green.
+- [x] Existing sandbox and Keyword Overview conformance vectors/digests remain unchanged.
+- [x] Existing fixture/provider Derivations do not create rows for this Evidence-only adapter.
+- [x] No provider network, DNS, credentials, or spend occurs in ordinary tests/review.
+- [x] `uv run pytest -q`, `uv run ruff check .`, and `uv run mypy` are green.
 
 ## Required tests
 
@@ -366,3 +366,101 @@ The internal deterministic loopback override accepts only the loopback host
 - sandbox and Keyword Overview inspection/capability objects are refused by this adapter and
   this adapter's objects are refused by their paths;
 - fixture and Keyword Overview Derivations skip this Evidence-only adapter.
+
+## Implementation report
+
+**Parent:** `34c083474b4e1fbf8d0c3b84ab0eb210476e0976`
+**Child:** recorded in this implementation commit.
+**Status:** `review`
+**PF-10 only:** yes. Nothing pushed.
+
+### Changed paths
+
+- `src/observatory/capture_event.py` (third exact HTTP-v2 branch)
+- `src/observatory/dataforseo_google_organic_paid_probe.py` (new)
+- `tests/test_dataforseo_google_organic_paid_probe.py` (new)
+- this ticket (Start commit, Status, Implementation report)
+
+### Adapter token
+
+`dataforseo-serp-google-organic-live-advanced-paid-probe-v1`
+
+### Deterministic vector
+
+Fixed inputs: keyword `observatory test`, nonce `5555…55`,
+`authorized_at=2026-08-18T20:00:00.000000Z`,
+`observatory_version=conformance-google-organic-paid-probe-v1`.
+
+| Artifact | Value |
+|---|---|
+| request body (179 bytes) | `[{"depth":100,"device":"desktop","group_organic_results":true,"keyword":"observatory test","language_code":"en","load_async_ai_overview":true,"location_code":2840,"os":"windows"}]` |
+| request SHA-256 | `0ea1022be28baf54e8a68f49002c963ada85f78082dec843030db28458498e2b` |
+| fingerprint | `9ab79d6031d2a82a9aec4d9c6c5399bd540fcbbea80fca8a0216911333cedb02` |
+| Attempt ID | `b577bc1fb75f4ba7576a96c1328fbe74df9d975f3bd03f6c01d7441dfed1a1be` |
+| sample complete Capture ID | `ab94c98e528e776317c459a2dc2f8010b33b8ce142bab52d4e699fb5599d41c4` |
+
+### Public CLI and pre-Attempt gates
+
+```
+uv run python -m observatory.dataforseo_google_organic_paid_probe capture \
+  --evidence-root PATH --keyword "…" --authorize-max-micro-usd 30000
+uv run python -m observatory.dataforseo_google_organic_paid_probe inspect \
+  --evidence-root PATH --capture-id 64_HEX
+```
+
+No public endpoint/timeout/limit/location/device/depth/headers/task JSON/alternate ceiling.
+Gates before Attempt: exact int `30000`, closed keyword grammar + operator deny, one-shot
+keyed on this adapter token (KO Evidence does not block), loopback-only internal override
+`http://127.0.0.1:<port>/v3/serp/google/organic/live/advanced`.
+
+### PF-09 ownership inherited
+
+Adapter owns URL resolution, headers, Authorization, timeout
+`httpx.Timeout(connect=30.0, read=120.0, write=30.0, pool=30.0)`, ceiling `33_554_432`,
+capability, spend, Capture. Shared seam only streams. Shared module still has no 32 MiB or
+120s constants. Tests truncate with a 16-byte substitute bound.
+
+### Existing conformance IDs unchanged
+
+- sandbox Attempt `22adc4841c86b7cd98b90bba683aeac204a0cb568428b590fd399e8627eb4640`
+- KO Attempt `89904bf8a6812fb3d0d845310e4705962bb4db928b80da3be67342dff5def185`
+- existing `test_http_event_v2` / `test_dataforseo_paid_probe` / `test_dataforseo_sandbox`
+  / `test_http_single_exchange` remain green
+
+### Network I/O paths
+
+The only send is `_exchange` → `perform_bounded_http_exchange` → `production_http_client`
+when no test client is injected, targeting `https://api.dataforseo.com/v3/serp/google/organic/live/advanced`.
+Public `capture_*` and CLI capture use that path. Inspect performs no I/O. Ordinary tests
+autouse-block `socket.create_connection` except `127.0.0.1`/`::1`, inject `MockTransport`,
+and delete credential env vars. No live probe was run.
+
+### Isolation evidence
+
+Confused-contract validators; sandbox/KO capabilities cannot execute this `_exchange` and
+this capability cannot execute theirs; used capability is one-exchange; inspect refuses
+sandbox, KO, partial, no-response, and tamper; fixture and KO derive write no rows for this
+adapter; one-shot ignores existing KO Attempts.
+
+### Weakest part / unguessed ambiguity
+
+The adapter gate is a close clone of the KO paid probe (deliberate isolation, will drift).
+Operator deny is conservative substring match (`fluid:` would fail). I did not guess
+provider max response size, whether 120s is enough for depth-100 + async AIO, rank meaning
+of `group_organic_results=true`, or current Live price vs the $0.002 snapshot. Live send
+remains separately gated.
+
+### Checks
+
+`uv run pytest -q`: 845 passed, 1 skipped  
+`uv run ruff check .`: clean  
+`uv run mypy`: clean
+
+Review vs `34c0834`: added inspect KO/no-response/tamper, credential-echo, successful
+loopback, and mixed-store KO Evidence. Residual: local type name
+`GoogleOrganicPaidProbeOutcome` follows the KO `PaidProbeOutcome` pattern and is not the
+domain Outcome.
+
+### Unproven
+
+No TLS, real timeout, provider behavior, F6, F7, or live spend.

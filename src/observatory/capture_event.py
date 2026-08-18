@@ -75,6 +75,37 @@ PAID_POLICY: Final[dict[str, object]] = {
     "policy_version": "dataforseo-paid-probe-v1",
     "pricing_basis": "dataforseo-labs-google-live-2026-08-16",
 }
+ORGANIC_ADAPTER_CONTRACT: Final[str] = (
+    "dataforseo-serp-google-organic-live-advanced-paid-probe-v1"
+)
+ORGANIC_HOST: Final[str] = "api.dataforseo.com"
+ORGANIC_PATH: Final[str] = "/v3/serp/google/organic/live/advanced"
+ORGANIC_AUTHORIZED_COST_MICRO_USD: Final[int] = 30000
+ORGANIC_POLICY: Final[dict[str, object]] = {
+    "max_authorized_cost_micro_usd": ORGANIC_AUTHORIZED_COST_MICRO_USD,
+    "mode": "paid_probe",
+    "policy_version": "dataforseo-google-organic-live-paid-probe-v1",
+    "pricing_basis": "dataforseo-google-organic-live-2026-08-18",
+}
+_ORGANIC_KEYWORD_OPERATORS: Final[tuple[str, ...]] = (
+    "allinanchor:",
+    "allintext:",
+    "allintitle:",
+    "allinurl:",
+    "cache:",
+    "define:",
+    "definition:",
+    "filetype:",
+    "id:",
+    "inanchor:",
+    "info:",
+    "intext:",
+    "intitle:",
+    "inurl:",
+    "link:",
+    "related:",
+    "site:",
+)
 _LANGUAGE_RE: Final[re.Pattern[str]] = re.compile(r"^[a-z]{2}$")
 _PAID_KEYWORD_RE: Final[re.Pattern[str]] = re.compile(
     r"^[A-Za-z0-9](?:[A-Za-z0-9 &'()+,./:-]{0,78}[A-Za-z0-9])?$"
@@ -145,6 +176,19 @@ _PAID_PARAMETER_KEYS: Final[frozenset[str]] = frozenset(
         "keywords",
         "language_code",
         "location_code",
+    }
+)
+_ORGANIC_PARAMETER_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "contract",
+        "depth",
+        "device",
+        "group_organic_results",
+        "keyword",
+        "language_code",
+        "load_async_ai_overview",
+        "location_code",
+        "os",
     }
 )
 _SOFTWARE_KEYS: Final[frozenset[str]] = frozenset({"observatory_version"})
@@ -218,6 +262,8 @@ class DocumentError(ValueError):
 __all__ = [
     "EMPTY_BODY_SHA256",
     "HTTP_ADAPTER_CONTRACT",
+    "ORGANIC_ADAPTER_CONTRACT",
+    "ORGANIC_AUTHORIZED_COST_MICRO_USD",
     "PAID_ADAPTER_CONTRACT",
     "PAID_AUTHORIZED_COST_MICRO_USD",
     "DocumentError",
@@ -232,6 +278,10 @@ __all__ = [
     "http_capture_document",
     "http_fingerprint_document",
     "http_request",
+    "organic_http_attempt_document",
+    "organic_http_capture_document",
+    "organic_http_fingerprint_document",
+    "organic_http_request",
     "paid_http_attempt_document",
     "paid_http_capture_document",
     "paid_http_fingerprint_document",
@@ -242,6 +292,8 @@ __all__ = [
     "validate_fixture_request",
     "validate_http_parameters",
     "validate_http_request",
+    "validate_organic_http_parameters",
+    "validate_organic_http_request",
     "validate_paid_http_parameters",
     "validate_paid_http_request",
     "validate_parameters",
@@ -581,6 +633,107 @@ def paid_http_capture_document(
     return _validate_capture(document, attempt=parent)
 
 
+def organic_http_request(*, body: bytes) -> dict[str, object]:
+    """Build the closed HTTP-v2 Google Organic paid-probe request wrapping *body*."""
+
+    if len(body) < 1:
+        raise DocumentError("HTTP request body must be present_nonempty")
+    return _validate_organic_http_request(
+        {
+            "body": {"body": body_ref(body), "state": "present_nonempty"},
+            "headers": [list(pair) for pair in HTTP_HEADERS],
+            "host": ORGANIC_HOST,
+            "method": "POST",
+            "path": ORGANIC_PATH,
+            "port": None,
+            "query": [],
+            "scheme": "https",
+        }
+    )
+
+
+def organic_http_fingerprint_document(*, request: Mapping[str, object]) -> dict[str, object]:
+    """Build the closed request-fingerprint preimage for the Organic paid probe."""
+
+    return _validate_fingerprint(
+        {
+            "adapter_contract": ORGANIC_ADAPTER_CONTRACT,
+            "provider": HTTP_PROVIDER,
+            "request": dict(request),
+            "schema": "observatory.request-fingerprint",
+            "version": 2,
+        }
+    )
+
+
+def organic_http_attempt_document(
+    *,
+    parameters: Mapping[str, object],
+    attempt_nonce: str,
+    authorized_at: str,
+    observatory_version: str,
+) -> dict[str, object]:
+    """Construct a closed Google Organic paid HTTP-v2 Attempt."""
+
+    params = _validate_organic_http_parameters(dict(parameters))
+    request = organic_http_request(body=_organic_http_request_body_bytes(params))
+    fingerprint = organic_http_fingerprint_document(request=request)
+    document: dict[str, object] = {
+        "adapter_contract": ORGANIC_ADAPTER_CONTRACT,
+        "attempt_nonce": attempt_nonce,
+        "authorized_at": authorized_at,
+        "parameters": params,
+        "policy": dict(ORGANIC_POLICY),
+        "provider": HTTP_PROVIDER,
+        "request": request,
+        "request_fingerprint": content_digest(canonical_json(fingerprint)),
+        "schema": "observatory.attempt-event",
+        "software": {"observatory_version": observatory_version},
+        "version": 2,
+    }
+    return _validate_attempt(document)
+
+
+def organic_http_capture_document(
+    *,
+    attempt: Mapping[str, object],
+    request_started_at: str,
+    transport_ended_at: str,
+    transport_state: str,
+    response: Mapping[str, object] | None,
+    transport_failure: Mapping[str, object] | None,
+    response_headers_at: str | None,
+    response_body_ended_at: str | None,
+    observatory_version: str | None = None,
+) -> dict[str, object]:
+    """Construct a closed Google Organic paid HTTP-v2 Capture."""
+
+    parent = validate_attempt(attempt)
+    software = (
+        {"observatory_version": observatory_version}
+        if observatory_version is not None
+        else dict(cast(Mapping[str, object], parent["software"]))
+    )
+    document: dict[str, object] = {
+        "adapter_contract": ORGANIC_ADAPTER_CONTRACT,
+        "attempt_id": content_digest(canonical_json(parent)),
+        "provider": HTTP_PROVIDER,
+        "request": parent["request"],
+        "request_fingerprint": parent["request_fingerprint"],
+        "request_started_at": request_started_at,
+        "response": None if response is None else dict(response),
+        "response_body_ended_at": response_body_ended_at,
+        "response_headers_at": response_headers_at,
+        "schema": "observatory.capture-event",
+        "software": software,
+        "transport_ended_at": transport_ended_at,
+        "transport_failure": None if transport_failure is None else dict(transport_failure),
+        "transport_state": transport_state,
+        "version": 2,
+    }
+    return _validate_capture(document, attempt=parent)
+
+
 def validate_parameters(value: object) -> dict[str, object]:
     """Validate a closed fixture request / Attempt `parameters` document."""
 
@@ -631,6 +784,24 @@ def validate_paid_http_request(value: object) -> dict[str, object]:
 
     parsed, original = _parse(value)
     document = _validate_paid_http_request(parsed)
+    _require_re_jcs(document, original)
+    return document
+
+
+def validate_organic_http_parameters(value: object) -> dict[str, object]:
+    """Validate a closed HTTP-v2 Google Organic paid-probe `parameters` document."""
+
+    parsed, original = _parse(value)
+    document = _validate_organic_http_parameters(parsed)
+    _require_re_jcs(document, original)
+    return document
+
+
+def validate_organic_http_request(value: object) -> dict[str, object]:
+    """Validate a closed HTTP-v2 Google Organic paid-probe `request` object."""
+
+    parsed, original = _parse(value)
+    document = _validate_organic_http_request(parsed)
     _require_re_jcs(document, original)
     return document
 
@@ -1004,6 +1175,24 @@ def _validate_paid_http_request(value: object) -> dict[str, object]:
     return request
 
 
+def _validate_organic_http_request(value: object) -> dict[str, object]:
+    request = _validate_request_shape(value)
+    _reject_request_credential_headers(request["headers"])
+    if (
+        request["method"] != "POST"
+        or request["scheme"] != "https"
+        or request["host"] != ORGANIC_HOST
+        or request["port"] is not None
+        or request["path"] != ORGANIC_PATH
+        or request["query"] != []
+        or request["headers"] != HTTP_HEADERS
+        or not isinstance(request["body"], Mapping)
+        or request["body"].get("state") != "present_nonempty"
+    ):
+        raise DocumentError("request does not match the organic HTTP adapter contract")
+    return request
+
+
 def _validate_parameters(value: object) -> dict[str, object]:
     obj = _object(value, "parameters")
     _reject_unknown(obj, _PARAMETER_KEYS, "parameters")
@@ -1125,6 +1314,75 @@ def _paid_http_request_body_bytes(parameters: Mapping[str, object]) -> bytes:
     return canonical_json([_paid_http_task(parameters)])
 
 
+def _organic_keyword(value: object) -> str:
+    if (
+        not isinstance(value, str)
+        or _PAID_KEYWORD_RE.fullmatch(value) is None
+        or _paid_keyword_word_count(value) > _PAID_KEYWORD_MAX_WORDS
+    ):
+        raise DocumentError("parameters.keyword is not a permitted keyword")
+    lowered = value.lower()
+    if any(operator in lowered for operator in _ORGANIC_KEYWORD_OPERATORS):
+        raise DocumentError("parameters.keyword contains a denied search operator")
+    return value
+
+
+def _organic_http_task(parameters: Mapping[str, object]) -> dict[str, object]:
+    return {key: parameters[key] for key in parameters if key != "contract"}
+
+
+def _organic_http_request_body_bytes(parameters: Mapping[str, object]) -> bytes:
+    return canonical_json([_organic_http_task(parameters)])
+
+
+def _validate_organic_http_parameters(value: object) -> dict[str, object]:
+    obj = _object(value, "parameters")
+    _reject_unknown(obj, _ORGANIC_PARAMETER_KEYS, "parameters")
+    contract = _exact_string(
+        _require(obj, "contract", "parameters"),
+        ORGANIC_ADAPTER_CONTRACT,
+        "parameters.contract",
+    )
+    keyword = _organic_keyword(_require(obj, "keyword", "parameters"))
+    location_code = _json_int(
+        _require(obj, "location_code", "parameters"),
+        "parameters.location_code",
+    )
+    if location_code != 2840:
+        raise DocumentError("parameters.location_code must be exactly 2840")
+    language_code = _exact_string(
+        _require(obj, "language_code", "parameters"),
+        "en",
+        "parameters.language_code",
+    )
+    depth = _json_int(_require(obj, "depth", "parameters"), "parameters.depth")
+    if depth != 100:
+        raise DocumentError("parameters.depth must be exactly 100")
+    device = _exact_string(_require(obj, "device", "parameters"), "desktop", "parameters.device")
+    os_name = _exact_string(_require(obj, "os", "parameters"), "windows", "parameters.os")
+    load_async = _exact_bool(
+        _require(obj, "load_async_ai_overview", "parameters"),
+        True,
+        "parameters.load_async_ai_overview",
+    )
+    group_organic = _exact_bool(
+        _require(obj, "group_organic_results", "parameters"),
+        True,
+        "parameters.group_organic_results",
+    )
+    return {
+        "contract": contract,
+        "depth": depth,
+        "device": device,
+        "group_organic_results": group_organic,
+        "keyword": keyword,
+        "language_code": language_code,
+        "load_async_ai_overview": load_async,
+        "location_code": location_code,
+        "os": os_name,
+    }
+
+
 def _validate_paid_http_parameters(value: object) -> dict[str, object]:
     obj = _object(value, "parameters")
     _reject_unknown(obj, _PAID_PARAMETER_KEYS, "parameters")
@@ -1230,11 +1488,43 @@ def _validate_paid_http_policy(value: object) -> dict[str, object]:
     }
 
 
+def _validate_organic_http_policy(value: object) -> dict[str, object]:
+    obj = _object(value, "policy")
+    _reject_unknown(obj, _PAID_POLICY_KEYS, "policy")
+    cost = _json_int(
+        _require(obj, "max_authorized_cost_micro_usd", "policy"),
+        "policy.max_authorized_cost_micro_usd",
+    )
+    if cost != ORGANIC_AUTHORIZED_COST_MICRO_USD:
+        raise DocumentError(
+            "policy.max_authorized_cost_micro_usd must be exactly 30000"
+        )
+    mode = _exact_string(_require(obj, "mode", "policy"), "paid_probe", "policy.mode")
+    policy_version = _exact_string(
+        _require(obj, "policy_version", "policy"),
+        "dataforseo-google-organic-live-paid-probe-v1",
+        "policy.policy_version",
+    )
+    pricing_basis = _exact_string(
+        _require(obj, "pricing_basis", "policy"),
+        "dataforseo-google-organic-live-2026-08-18",
+        "policy.pricing_basis",
+    )
+    return {
+        "max_authorized_cost_micro_usd": cost,
+        "mode": mode,
+        "policy_version": policy_version,
+        "pricing_basis": pricing_basis,
+    }
+
+
 def _recognized_http_v2_adapter(value: object, name: str) -> str:
     if value == HTTP_ADAPTER_CONTRACT:
         return HTTP_ADAPTER_CONTRACT
     if value == PAID_ADAPTER_CONTRACT:
         return PAID_ADAPTER_CONTRACT
+    if value == ORGANIC_ADAPTER_CONTRACT:
+        return ORGANIC_ADAPTER_CONTRACT
     raise DocumentError(f"{name} adapter_contract is not a recognized event-v2 adapter")
 
 
@@ -1315,6 +1605,8 @@ def _validate_fingerprint_v2(obj: Mapping[str, object]) -> dict[str, object]:
     raw_request = _require(obj, "request", "fingerprint")
     if adapter == PAID_ADAPTER_CONTRACT:
         request = _validate_paid_http_request(raw_request)
+    elif adapter == ORGANIC_ADAPTER_CONTRACT:
+        request = _validate_organic_http_request(raw_request)
     else:
         request = _validate_http_request(raw_request)
     return {
@@ -1463,6 +1755,11 @@ def _validate_attempt_v2(obj: Mapping[str, object]) -> dict[str, object]:
         parameters = _validate_paid_http_parameters(raw_parameters)
         policy = _validate_paid_http_policy(raw_policy)
         encoded_body = _paid_http_request_body_bytes(parameters)
+    elif adapter == ORGANIC_ADAPTER_CONTRACT:
+        request = _validate_organic_http_request(raw_request)
+        parameters = _validate_organic_http_parameters(raw_parameters)
+        policy = _validate_organic_http_policy(raw_policy)
+        encoded_body = _organic_http_request_body_bytes(parameters)
     else:
         request = _validate_http_request(raw_request)
         parameters = _validate_http_parameters(raw_parameters)
@@ -1870,6 +2167,8 @@ def _validate_capture_v2(
     raw_request = _require(obj, "request", "capture")
     if adapter == PAID_ADAPTER_CONTRACT:
         request = _validate_paid_http_request(raw_request)
+    elif adapter == ORGANIC_ADAPTER_CONTRACT:
+        request = _validate_organic_http_request(raw_request)
     else:
         request = _validate_http_request(raw_request)
     request_fingerprint = _hex64(
