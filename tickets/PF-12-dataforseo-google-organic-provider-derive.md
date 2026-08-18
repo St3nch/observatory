@@ -123,17 +123,29 @@ domain, title, and source.
 
 PF-11's `element_index` and `reference_index` are occurrence testimony, never
 Observation identity. Persist every admitted occurrence in a subordinate typed occurrence
-relation:
+relation.
 
-- top-level occurrence: `element_index IS NULL`, nonnegative `reference_index`;
-- element occurrence: nonnegative `element_index` and `reference_index`;
-- no sentinel and no split Observation kind;
-- constraints must distinguish top-level and element occurrence shapes;
-- duplicate occurrence keys are refused rather than conflict-ignored.
+Each occurrence carries `locus` and is structurally bound to its parent AIO-source detail
+through the parent key including Capture, recipe, semantic identity, exact kind, and locus.
+PostgreSQL enforces:
+
+- `locus='top_level'` implies `element_index IS NULL` and nonnegative
+  `reference_index`;
+- `locus='element'` implies nonnegative `element_index` and
+  `reference_index`;
+- occurrence uniqueness uses `UNIQUE NULLS NOT DISTINCT` on
+  `(capture_id, derivation_version_id, within_capture_identity, element_index,
+  reference_index)`;
+- ordinary `UNIQUE` is not acceptable because PostgreSQL would admit duplicate
+  top-level `(NULL, reference_index)` keys;
+- no integer sentinel and no split Observation kind.
 
 All occurrences sharing one semantic identity must agree exactly on semantic detail
-(including every field state/value). Disagreement is an ambiguous Derivation and fails
-closed; do not choose first/last testimony.
+(including every domain/title/source field state/value). Disagreement rejects the entire
+Capture-stage Derivation unit as `provider_envelope_rejected`: write its zero-Observation
+Capture Outcome, but no normal Observation envelopes, typed details, result context, or
+occurrence rows. Do not choose first/last testimony, drop only the conflicting group, emit
+the other kinds, or misclassify the conflict as Attempt reconciliation failure.
 
 The frozen fixture must produce 15 semantic AIO-source envelopes from 18 occurrence rows:
 seven top-level and eleven element-level occurrences. Reordering returned reference arrays
@@ -144,10 +156,11 @@ may change occurrence indexes but must not change the semantic Observation ident
 Emit one semantic Observation per exact `(requested_keyword, title)`.
 `question_index` is block-local occurrence/order testimony and is never identity.
 
-PF-12 must retain the parent PAA block's provider placement
-`(page, position, rank_group, rank_absolute)` on each question occurrence, extending the
-typed IR if necessary without changing recipe bytes. Persist every occurrence in a
-subordinate typed relation keyed by the semantic question plus parent block placement and
+PF-12 must extend `RelatedQuestion` with the parent PAA block's exact `page`,
+`position`, `rank_group`, and `rank_absolute`, copied from the parent
+`people_also_ask` top-level item. These fields are occurrence testimony and do not change
+the recipe bytes or identity axes. Persist every occurrence in a subordinate typed relation
+keyed by the semantic question plus those four non-NULL parent-placement fields and a
 nonnegative block-local `question_index`.
 
 A synthetic second PAA block with the same four titles must yield four semantic question
@@ -162,15 +175,16 @@ deduplication; do not normalize queries or recreate repeated per-page chips as n
 
 ## Result context and time semantics
 
-Persist the typed result context needed for later Evidence-backed reads under the
-Capture/recipe Derivation unit, without turning it into extra Observation kinds:
+Persist exactly one typed result-context row per
+`(capture_id, derivation_version_id)`, without turning it into an extra Observation kind:
 
-- exact requested and provider-returned keyword testimony;
-- request location/language context;
+- exact required requested keyword plus provider-returned keyword field state/value;
+- required Attempt `location_code` and `language_code` as stated request context;
 - `se_domain` field state/value;
 - result `datetime` field state/value;
 - `se_results_count` and `pages_count` field state/value;
-- `items_count` and exact `item_types`.
+- `items_count` as a nonnegative `BIGINT NOT NULL`;
+- exact provider-order `item_types` as `TEXT[] NOT NULL`.
 
 Name and treat result `datetime` as provider SERP result/retrieval time. It is distinct
 from Observatory Capture/acquisition time and is not Provider Update Time. Never inherit a
@@ -180,8 +194,8 @@ Every optional state/value pair must be constrained so `stated` requires a non-N
 and non-stated states require SQL NULL. Retain legitimate zero, `FALSE`, and empty values.
 PostgreSQL types must preserve exact testimony without binary-float round trip.
 
-Provider cost, task UUID, and check URL do not become Observations or new API fields in this
-ticket.
+Provider cost, task UUID, and check URL remain in raw Evidence only. PF-12 does not persist
+them in PostgreSQL, turn them into Observations, or expose new API fields.
 
 ## Frozen-Capture cardinality
 
@@ -206,10 +220,19 @@ increase `outcomes.observation_count`.
   fixture semantic label or a Keyword Overview recipe.
 - One Capture's Outcome, typed result context, diagnostics, envelopes, typed details, and
   subordinate occurrence rows are atomic.
-- Same recipe + same verified Evidence compares the complete intended row set. Identical
-  content is idempotent; any planted mismatch, missing row, extra row, or occurrence-detail
-  disagreement fails closed.
-- Do not use `ON CONFLICT DO NOTHING` or last-write-wins as semantic equality.
+- Same recipe + same verified Evidence compares the complete intended Capture/recipe row
+  set. PF-06/PF-07 per-identity closed-row comparison is necessary but not sufficient:
+  after planned rows are inserted or exactly compared, and before commit, compare the
+  intended and stored identity sets and counts for the one Capture Outcome, generic
+  envelopes, every PF-12 typed detail relation, both occurrence relations, the one result
+  context, and diagnostics.
+- A previously missing rebuildable planned row may be restored by the Derivation, but the
+  post-write stored set must exactly equal the intended set. Any extra row, conflicting
+  content, wrong Outcome count, or post-write missing row aborts the transaction.
+- `outcomes.observation_count` must equal both the planned envelope count and the actual
+  stored envelope count for the Capture/recipe unit.
+- Do not treat the existing PF-06/PF-07 writer as proof of complete-set equality. Do not use
+  `ON CONFLICT DO NOTHING` or last-write-wins as semantic equality.
 - Diagnostics preserve PF-11 bounded unknown-extension paths.
 - Two fresh PostgreSQL databases rebuilt from the same verified Evidence/recipe must be
   logically equivalent across all PF-12 relations.
@@ -227,7 +250,8 @@ increase `outcomes.observation_count`.
 - [ ] All 97 organic placements persist despite ten duplicate exact URLs.
 - [ ] AIO sources persist as 15 semantic Observations plus all 18 occurrences; nullable
       `element_index` is testimony, not a sentinel or identity axis.
-- [ ] Same-identity AIO semantic-content disagreement fails closed atomically.
+- [ ] Same-identity AIO semantic-content disagreement produces
+      `provider_envelope_rejected` for the whole Capture-stage unit and zero normal rows.
 - [ ] PAA title identity survives reorder and a second block; parent block placement plus
       local index preserves all occurrences without identity collision.
 - [ ] Related queries remain nine exact semantic facts for the frozen Capture.
@@ -239,8 +263,9 @@ increase `outcomes.observation_count`.
       and zero normal Observations.
 - [ ] Damaged Attempt/Capture/body Evidence produces no Capture-stage provider rows; a
       separately verified Attempt-stage Outcome remains valid.
-- [ ] Exact-content rerun is idempotent; planted envelope/detail/context/occurrence conflicts
-      are refused.
+- [ ] Exact-content rerun is idempotent; planted content conflicts and extra
+      envelope/detail/context/occurrence/diagnostic rows are refused by complete-set
+      comparison, while missing rebuildable planned rows are restored to the exact set.
 - [ ] Two real PostgreSQL databases rebuilt from the same Evidence/recipe are logically
       equivalent.
 - [ ] Existing fixture, Keyword Overview derivation/selection/API, and PF-11 parser behavior
@@ -254,16 +279,28 @@ increase `outcomes.observation_count`.
 - Exact 237 Outcome count and per-kind envelope/detail counts
 - 97 placement rows versus 87 unique URLs, including duplicate-URL distinct identities
 - AIO 15 semantic rows / 18 occurrence rows / 7 top-level / 11 element, including
-  field-state agreement and planted disagreement refusal
+  field-state agreement and planted whole-unit disagreement refusal
+- Duplicate top-level AIO occurrence rejection proving NULL-safe uniqueness
 - PAA reorder and duplicated second-block proof: four semantic rows / eight occurrence rows
-- Wrong-kind typed-detail and invalid occurrence-shape PostgreSQL rejection
+- Wrong-kind typed-detail, wrong-parent-locus, and invalid occurrence-shape PostgreSQL
+  rejection
 - Result-context field-state constraints and independent provider-result/Capture times
 - Provider error, strict-envelope rejection, reconciliation failure, transport states, and
   Evidence damage
-- Exact-content idempotency plus planted context/detail/occurrence mismatch
+- Exact-content idempotency plus planted content conflicts and extra
+  envelope/detail/context/occurrence/diagnostic rows
 - Additive migration over an accepted populated PF-08 schema
 - Two-database logical equivalence across every new table
-- Full existing regression suite
+- One full existing regression-suite run at the completed implementation commit
+
+During TDD, prefer the bounded loop below and use one session-scoped PostgreSQL fixture:
+
+    uv run pytest -q tests/test_dataforseo_google_organic.py tests/test_dataforseo_google_organic_derive.py
+Run the full suite, Ruff, and mypy once after the implementation is complete and before its
+single commit.
+
+A valid admitted zero-item SERP maps to `observation_admitted_empty`. Do not change PF-11
+string admission or invent a new empty-title rule without provider evidence.
 
 ## Out of scope
 
