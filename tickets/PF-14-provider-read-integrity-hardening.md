@@ -58,6 +58,12 @@ unchanged.
 Before sorting and limiting matching history candidates, validate each candidate at the
 grain of its exact Capture and resolved recipe.
 
+These envelope/detail and subordinate-occurrence consistency checks apply to the two
+provider history resources only. PF-14 does not add them to the shared provider
+GET /v1/attempts/{attempt_id} audit representation. That resource continues to verify cited
+Evidence and may still display a stale PostgreSQL observation_count until the corresponding
+history read or a rebuild detects the projection mismatch; this is an accepted PF-14 limit.
+
 For both provider surfaces:
 
 1. Load the complete observation_envelopes key set for the exact
@@ -134,6 +140,10 @@ Missing, damaged, cross-linked, or wrong-adapter backing remains HTTP 409
 evidence_integrity_failure. Ordinary unknown Attempts and no-derived-row behavior retain
 their accepted 404 semantics.
 
+Fixture provenance checks must not leak IntegrityError as HTTP 500. They must either retain
+the existing direct HTTPException mapping or add an explicit fixture-path catch so every
+new fixture integrity failure returns the stable HTTP 409 evidence_integrity_failure signal.
+
 ## Honest detection boundary
 
 PF-14 must not claim that a PostgreSQL-only read check proves equality with Evidence.
@@ -183,7 +193,8 @@ count, or a broad Outcome scan into GET.
 At minimum, tests must prove:
 
 - a planted Keyword Overview coverage/envelope/Outcome candidate with a non-admitted
-  classification is excluded from normal history;
+  classification is excluded while a healthy admitted sibling Capture remains in the same
+  history response; captures: [] is not sufficient proof;
 - a real multi-keyword Keyword Overview Capture succeeds, proving the consistency check uses
   the full Capture rather than one keyword's returned arrays;
 - deleting one non-anchor Keyword Overview typed row while its envelope remains yields 409;
@@ -236,9 +247,10 @@ Do not route the full suite through a synchronous MCP gateway.
 
 ## One implementation commit must prove
 
-All three accepted read paths refuse the bounded projection/provenance inconsistencies this
-ticket can detect, while healthy Evidence-backed fixture and provider responses remain
-unchanged and GET remains a read-only projection operation.
+The fixture Attempt route refuses the bounded fixture-provenance inconsistencies, and both
+provider history routes refuse the bounded admission/projection inconsistencies this ticket
+can detect. Healthy Evidence-backed fixture and provider responses remain unchanged and GET
+remains a read-only projection operation.
 
 ## Mandatory pre-implementation technical review
 
@@ -256,6 +268,25 @@ GROK must stop and report one of:
 
 No implementation, ticket edit, commit, full suite, or provider/network call occurs during
 that review. Implementation begins only after Steward reconciliation.
+
+## Pre-implementation technical-review reconciliation
+
+GROK completed the mandatory read-only review at
+6d7ea14bb358556107a314560df2f1ac59f02850 with no design blocker and no authority decision.
+The review confirmed the admission defect, Capture-wide count grain, complete recipe table
+sets, occurrence-parent invariant, fixture cross-link feasibility, read-only implementation
+shape, and the ticket's detection limits.
+
+The Steward accepted three IMPORTANT clarifications into this amendment:
+
+- fixture integrity failures must map to the stable 409 rather than escape as an uncaught
+  IntegrityError;
+- envelope/detail/occurrence consistency is explicitly history-only in PF-14;
+- the KO admission adversary must retain a healthy admitted sibling to prevent an empty
+  history false green.
+
+Optional batching remains an implementation judgment. Shared-module relocation, migration
+hygiene, authority refresh, and broader completeness mechanisms remain deferred.
 
 ## Implementer report required
 
