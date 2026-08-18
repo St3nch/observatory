@@ -497,3 +497,20 @@ PF-10 remains `review` until the ticket's live closure gate is separately satisf
 official contract/pricing review, retention/privacy/provider-terms/API-redistribution
 acceptance, bounded F6 off-host protection acceptance, explicit [CHAZ] one-shot authorization,
 the resulting Evidence inspection/scrub/protection/restore proof, and final Steward closure.
+
+## Steward live-gate record — pre-authorization
+
+On 2026-08-18, [CHAZ] selected the exact PF-10 keyword `conspiracy theories`.
+
+[CHAZ] explicitly accepted retention of the resulting bounded PF-10 provider response as
+immutable Observatory Evidence for this probe, with any later public/API redistribution of
+substantial returned content remaining separately gated.
+
+[CHAZ] also explicitly accepted reuse of the previously proven manual encrypted restic →
+Google Drive F6 protection procedure for this one-shot Evidence root, including post-capture
+scrub, off-host protection, restore to a fresh local root, scrub of the restored root, and
+exact committed-ID set equality proof.
+
+These acceptances do **not** authorize the provider exchange. The one-shot live command still
+requires a separate explicit [CHAZ] authorization after presentation of the exact command and
+the fresh contract/pricing review against the 30,000 micro-USD ceiling.
