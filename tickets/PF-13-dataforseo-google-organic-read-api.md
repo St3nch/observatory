@@ -1,10 +1,10 @@
 # PF-13 — DataForSEO Google Organic read/history API and recipe selection integration
 
-**Status:** ready  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; PF-12 closed  
 **Approved by:** Project Steward  
-**Start commit:** to be recorded by the implementer
+**Start commit:** `7f1218de71ebb726af6cb632147427db80f5c20f`
 
 ## Purpose
 
@@ -422,3 +422,174 @@ changed paths, acceptance-to-test map, command timings/results, and state explic
 
 Do not broaden implementation to fix adjacent findings. Report them for Steward
 reconciliation.
+
+## Implementation report
+
+**Parent:** `7f1218de71ebb726af6cb632147427db80f5c20f`  
+**Child:** supplied in the implementer handoff (a commit cannot embed its own final hash).  
+**Status:** `review`
+
+### Loaded skills
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### A. Start gate
+
+- branch: `main`
+- exact HEAD: `7f1218de71ebb726af6cb632147427db80f5c20f`
+- working tree: clean
+- PF-13: `ready` at start; set `in-progress` then `review`
+
+### B. Changed paths
+
+- `src/observatory/api.py` (exact paid-adapter Attempt dispatch; Organic history route)
+- `src/observatory/keyword_overview_read.py` (shared provider Attempt loader uses the verified Attempt adapter)
+- `src/observatory/google_organic_read.py` (new Organic history assembly)
+- `tests/test_api_google_organic.py` (new)
+- this ticket (Start commit, Status, Implementation report)
+
+No recipe, fixture, parser, identity, Derivation, schema, or Keyword Overview recipe bytes.
+
+### C. Recipe selection
+
+Reused `provider_recipe_selections` and `provider_recipe_selection`. No second table. No HTTP write. Current selection and explicit pin both resolve
+`338fc2080d31a35b1f7cc5d7a71c971d25d72517ca3b846959ccb501b666acde`
+for `dataforseo-serp-google-organic-live-advanced-paid-probe-v1`. Missing selection is `503 provider_recipe_not_selected`. Malformed, unknown, and wrong-adapter pins are 404. Changing Keyword Overview current selection does not change the Organic pointer.
+
+### D. Attempt dispatch
+
+`GET /v1/attempts/{attempt_id}` dispatches only:
+
+- Keyword Overview paid adapter
+- Organic paid adapter
+
+The Organic sandbox adapter stays on the fixture path and returns 404 without entering recipe selection. Shared `load_provider_attempt` now resolves and verifies against the Attempt's own adapter. Organic Attempt JSON is the provider representation only: identities, `recipe_resolution`, Attempt/Capture Outcomes. No Organic families, no fixture `panel_id`/`score`.
+
+### E. History
+
+`GET /v1/providers/dataforseo/google/organic/history`
+
+Candidate membership is `google_organic_result_context JOIN outcomes` on
+`(derivation_version_id, attempt_id, capture_id)` with
+`classification IN ('observation_admitted', 'observation_admitted_empty')`.
+No `observation_envelopes` join. Evidence `read_attempt` / `read_capture` runs for every matching candidate before sort/limit. Order is `(request_started_at, capture_id)`, reversed as a whole for `desc`. Limit is whole Capture groups.
+
+Request context is assembled from the seven verified Attempt parameters. `location_code` and `language_code` must agree with persisted result context. Missing/wrong-typed required parameters or disagreement raise `409 evidence_integrity_failure`.
+
+### F. Acceptance map
+
+| Criterion / required test | Proving test |
+|---|---|
+| Fixture and Keyword Overview Attempt/history remain isolated | `test_fixture_and_ko_remain_isolated_from_organic_selection`; existing `tests/test_api_attempts.py` and `tests/test_api_keyword_overview.py` in the full suite |
+| Organic Attempt selected/pinned; sandbox not provider-dispatched | `test_organic_attempt_selected_pinned_and_http_errors`; sandbox 404 in isolation test |
+| Missing selection 503; malformed/unknown/wrong-adapter pin 404; selected recipe with no Attempt rows 404 | `test_organic_attempt_selected_pinned_and_http_errors` |
+| Organic selection does not alter Keyword Overview | isolation test |
+| Frozen PF-10 one 237-Observation Capture; exact keys; 97/87; exact `item_types`; every family `observation_kind`/`within_capture_identity`; persisted-to-API field mapping | `test_frozen_history_shape_counts_times_and_request_context` via `_persisted_projection` |
+| AIO 15 exact `(locus, URL)` parents; 18 exact occurrence tuples; nested under the correct source; 7/11 locus split; domain/title/source `{state, value}` | same |
+| Exact PAA titles and one nested occurrence each; exact related-query strings | same |
+| Field states, distinct clocks, frozen request context | same |
+| Admitted-empty complete group; envelope set empty; planted non-admitted context excluded | `test_admitted_empty_and_non_admitted_context_stay_distinct` |
+| Second Capture revision; asc/desc; whole-Capture `limit=1`; equal `request_started_at` / `capture_id` tie-break | `test_second_capture_paa_block_order_limit_and_tie_break` |
+| Synthetic second PAA: four titles; two occurrences each; parent-block axes; title-bound `question_index` | same |
+| Foreign-Attempt Outcome adversary | `test_foreign_attempt_outcome_does_not_supply_history` |
+| Attempt/context disagreement, missing/wrong-typed Attempt parameter, in-window and outside-limit Evidence damage 409 | `test_request_context_integrity_and_damage_409` |
+| Read-only PostgreSQL/Evidence | `test_api_reads_do_not_mutate_organic_state` |
+| Two-database JSON equality with real 237-count data | `test_two_databases_return_equal_organic_history` |
+| Route/OpenAPI and invalid query bounds | frozen-shape test (`/api/v1/openapi.json`, 422s) |
+| Autouse public-network socket guard | module `_no_public_network` |
+
+### G. Validation
+
+One completed-implementation full-suite run, then a type-comment-only remediations of the Attempt-parameter mutator so `mypy` accepts the test double. Pytest was not re-run after that comment-only change.
+
+| Command | UTC start | UTC end | Elapsed | Exit |
+|---|---|---|---|---|
+| `uv run pytest -q` | 2026-08-18T22:19:35.870Z | 2026-08-18T22:21:49.402Z | 133.532 s (pytest 133.12 s) | 0 |
+| `uv run ruff check .` | 2026-08-18T22:21:49.403Z | 2026-08-18T22:21:49.434Z | 0.031 s | 0 |
+| `uv run mypy` (after test type-ignore) | 2026-08-18T22:22:54.063Z | 2026-08-18T22:22:54.328Z | 0.265 s | 0 |
+
+`896 passed, 1 skipped, 1 warning` (upstream Starlette/`httpx` deprecation). Prior accepted PF-12 count was 887. Versions: pytest 8.4.2, ruff 0.16.2, mypy 1.20.2, 48 source files. No leftover `observatory-ce05-*` container.
+
+### H. Review
+
+Code-review against `7f1218de71ebb726af6cb632147427db80f5c20f`.
+
+**Standards:** 0 hard. Residual judgement: JSON/field helpers are copied from Keyword Overview rather than extracted; `HISTORY_LIMIT_*` and Attempt views still live under the Keyword Overview module name; history candidates are a positional tuple.
+
+**Spec:** 0 missing/partial/wrong on the named contract. Residual: missing/wrong-typed Attempt parameters cannot be committed through Organic validation, so that 409 path is proved by a post-verify `read_attempt` mutator.
+
+### I. Candid assessment
+
+**Strong.** The response keeps placement, occurrence, field-state, and time axes distinct. Membership does not use envelopes, so admitted-empty appears and a planted non-admitted context does not. Dispatch is an exact two-adapter allowlist, not “anything non-fixture.” Verify-all-before-limit matches accepted PF-08 fail-closed behavior, including damage outside the returned window.
+
+**Weak.** There is still only one production Organic recipe, so selected vs pinned is the same digest with different `recipe_resolution`. Request-parameter 409 for missing/wrong types is a defensive check that ordinary committed Organic Attempts cannot reach. The Attempt audit resource remains one URL with two JSON shapes.
+
+**What generalized from PF-08.** Adapter-aware resolve/pin/503/404, discriminated provider Attempt JSON, Capture-group history query contract, verify-before-limit, foreign-Attempt Outcome adversary, xmin/ops read-only proof, two-database JSON equality.
+
+**What did not.** Candidate membership (context+Outcome+admission, not coverage+envelope). Request context is seven Organic Attempt parameters plus Attempt/context agreement, not KO enrichment flags. Occurrences nest under semantic AIO/PAA identity. Result context is not an Observation kind. There is no CORE/EXTENDED kind split.
+
+**Shared Attempt loader.** Keep it shared. Outcome lookup and Capture verify are the same for both paid adapters. Do not put Organic family SQL in `keyword_overview_read.py`. A later rename/extract of the Attempt view into a neutral module would be naming hygiene, not a PF-13 need.
+
+**Weakest assumption.** History 409s if any admission-matching candidate fails Evidence or request-context checks, including Captures a `limit` window would omit. That is tested and fail-closed. Selection remains a mutable pointer with no prior-pointer history.
+
+**False-green / scale.** Two-database equality asserts a non-empty 237-count payload so two empty `captures: []` cannot pass. Module-scoped frozen setup is reused for the happy-path shape test; mutation tests rebuild. Verify-all-before-limit will not scale to large keyword histories; that is accepted fail-closed behavior, not a cursor.
+
+**Not in PF-13.** Consumer-facing field docs; a second Organic recipe; HTTP selection writes; generic `/observations`; AIO prose/PAA answers; cost/check URL/task UUID.
+
+**Next ticket.** The next provider history should copy Organic’s context-JOIN-Outcome membership and occurrence nesting, not Keyword Overview’s coverage-envelope join. Keep Attempt dispatch as an explicit adapter allowlist.
+
+### J. Confirmations
+
+- Organic recipe `338fc2080d31a35b1f7cc5d7a71c971d25d72517ca3b846959ccb501b666acde` and PF-10 fixture bytes/hash unchanged
+- Keyword Overview CORE `319af798…` and EXTENDED `cade41cb…` unchanged
+- no provider/DNS/credentials/paid-gate use
+- no Evidence mutation in product paths
+- no recipe/parser/identity/Derivation/schema change
+- no generic Observation API, no new acquisition surface
+- no `scripts/verify-all`
+- no push
+
+### K. Commit
+
+- parent SHA: `7f1218de71ebb726af6cb632147427db80f5c20f`
+- child SHA: recorded in this implementation commit
+
+### L. Steward remediation
+
+Steward review of `e0ebcfda0b77e6185ed944d85fbb6025d2dfc154` found 0 authority/spec blockers and 0 demonstrated product-code defects, but one IMPORTANT acceptance-proof gap: family counts were stronger than exact serialization and occurrence attachment.
+
+**Changes.** Test-only. `_persisted_projection` reads accepted PF-12 rows and maps them independently to the history JSON shape. It does not call `google_organic_read` helpers.
+
+**Added assertions.**
+
+- exact keys for top-level history, Capture group, result context, every typed family, and nested AIO/PAA occurrences
+- every semantic family row’s `observation_kind` and 64-hex `within_capture_identity`
+- complete persisted-to-API equality for features, ranked rows, AIO presence, AIO sources, PAA questions, and related queries
+- exact provider-order `item_types` `["ai_overview", "organic", "people_also_ask", "top_stories", "video", "related_searches"]`
+- ranked URL/domain/title, description/website_name field states, and placement axes via full-list equality
+- AIO 15 exact `(locus, URL)` parents, 18 exact `(parent locus, parent URL, occurrence locus, element_index, reference_index)` tuples, attachment under the matching source, and 7 null / 11 element `element_index` values
+- AIO domain/title/source `{state, value}` objects
+- frozen PAA four exact titles, each with one nested occurrence
+- exact nine related-query strings from the PF-11 first-seen list
+- synthetic second PAA: four title parents; each title has two occurrences; first block `rank_absolute=3`/`rank_group=1` and second `112`/`2`; `question_index` bound to first-seen title order 0..3
+
+**Product defect exposed?** No. Stronger proof matched the existing assembler.
+
+**Remaining unproved serialization assumption.** `_persisted_projection` uses the ticket’s presentation `ORDER BY` to compare arrays. That proves content and attachment, and that API order matches the specified order. It does not independently re-derive identities from recipe bytes. Feature/ranked placement values are proved by full persisted-row equality rather than a second handwritten fixture table.
+
+### M. Remediation validation
+
+Targeted: `uv run pytest -q tests/test_api_google_organic.py` — 9 passed, 1 warning.
+
+One completed-remediation full-suite run. First mypy pass failed on `expected["result_context"]["item_types"]` because `_persisted_projection` was typed `dict[str, object]`; the helper return type was widened to `dict[str, Any]`. Pytest was not re-run after that type-only change.
+
+| Command | UTC start | UTC end | Elapsed | Exit |
+|---|---|---|---|---|
+| `uv run pytest -q` | 2026-08-18T22:42:40.728Z | 2026-08-18T22:44:55.084Z | 134.356 s (pytest 133.88 s) | 0 |
+| `uv run ruff check .` | 2026-08-18T22:44:55.085Z | 2026-08-18T22:44:55.119Z | 0.034 s | 0 |
+| `uv run mypy` (after return-type fix) | 2026-08-18T22:45:09.195Z | 2026-08-18T22:45:09.485Z | 0.290 s | 0 |
+
+`896 passed, 1 skipped, 1 warning`. 48 source files. No leftover `observatory-ce05-*` container. No product-code change. No push.

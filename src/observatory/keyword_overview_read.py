@@ -191,8 +191,6 @@ def load_provider_attempt(
 
     adapter = _require_text(attempt, "adapter_contract")
     provider = _require_text(attempt, "provider")
-    if adapter != HISTORY_ADAPTER:
-        raise ProviderAttemptNotFound("Attempt is not the Keyword Overview adapter")
     resolved = resolve_provider_recipe(connection, adapter, pinned_version)
     rows = connection.execute(
         """
@@ -216,7 +214,7 @@ def load_provider_attempt(
             capture_ids.add(envelope.capture_id)
     if attempt_stage is None:
         raise ProviderAttemptNotFound("no provider Outcome for this recipe")
-    _verify_captures(store, attempt_id, capture_ids)
+    _verify_captures(store, attempt_id, capture_ids, adapter)
     return ProviderAttemptView(
         attempt_id=attempt_id,
         provider=provider,
@@ -229,7 +227,10 @@ def load_provider_attempt(
 
 
 def _verify_captures(
-    store: EvidenceStore, attempt_id: str, capture_ids: set[str]
+    store: EvidenceStore,
+    attempt_id: str,
+    capture_ids: set[str],
+    adapter: str,
 ) -> dict[str, dict[str, object]]:
     verified: dict[str, dict[str, object]] = {}
     for capture_id in sorted(capture_ids):
@@ -239,7 +240,7 @@ def _verify_captures(
         parent = capture.get("attempt_id")
         if parent != attempt_id:
             raise IntegrityError("Capture parent does not match derived provenance")
-        if capture.get("adapter_contract") != HISTORY_ADAPTER:
+        if capture.get("adapter_contract") != adapter:
             raise IntegrityError("Capture adapter does not match this route")
         verified[capture_id] = capture
     return verified
