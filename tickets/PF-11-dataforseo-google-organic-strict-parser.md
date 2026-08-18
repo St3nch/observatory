@@ -1,8 +1,8 @@
 # PF-11 — DataForSEO Google Organic strict parser and PF-10 conformance fixture
 
-**Status:** ready  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Start commit:** unset  
+**Start commit:** `aee38a5fa8dd5d752c96017e6ced4eb9d4128b94`  
 
 ## Purpose
 
@@ -158,5 +158,177 @@ No provider exchange is authorized by this ticket.
 
 ## Implementation report
 
-[GROK] fills this section in the single implementation commit and sets Status to `review`.
-Only the Project Steward may set Status to `done`.
+**Parent:** `aee38a5fa8dd5d752c96017e6ced4eb9d4128b94`  
+**Child:** supplied in the implementer handoff (a commit cannot embed its own final hash).  
+**Status:** `review`
+
+### Loaded skills
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### Changed paths
+
+- `src/observatory/dataforseo_google_organic.py` (new parser, typed IR, closed recipe)
+- `tests/test_dataforseo_google_organic.py` (new)
+- `tests/fixtures/dataforseo_google_organic_pf10.json` (exact PF-10 response bytes)
+- `tests/fixtures/dataforseo_google_organic_recipe.jcs` (frozen JCS)
+- this ticket (Status, Start commit, Implementation report)
+
+No PostgreSQL persistence, migrate, derive CLI, API/history, other adapter, or
+fixture-v1 / Keyword Overview identity change.
+
+### Fixture provenance
+
+Copied from the service-owned inspect path
+`inspect_organic_paid_probe_body` against Evidence root
+`$HOME/.local/share/observatory/pf10-google-organic-conspiracy-theories-2026-08-18`,
+Capture `ff17d3d56e29281984c2171cf9dc065d47105a36116a4723dbe75e4c8a9c3c27`.
+Inspect bytes equal the committed fixture (`cmp` / SHA-256 match). The fixture
+is a Conformance copy, not Evidence authority.
+
+- length `135722`
+- SHA-256 `7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f`
+
+### Production recipe
+
+2551-byte JCS, SHA-256
+`9b8fa9cfad5acb1539684acfa27bdf88510a5355a61f7e82e14426d8db6d58d1`.
+Kinds: `serp_feature_presence.v1`, `ranked_result.v1`, `ai_overview_presence.v1`,
+`ai_overview_source.v1`, `related_question.v1`, `related_query.v1`.
+`closed_objects` is empty; unknown additive fields on extension-permitted objects
+are diagnostics. Organic placement identity does not include URL.
+
+### Acceptance → proving tests
+
+| Criterion | Test |
+|---|---|
+| Frozen PF-10 length/SHA-256 | `test_frozen_fixture_independent_sha256_and_length` |
+| Observed cardinalities; both rank axes; page/position; not a universal Google rank | `test_pf10_reproduces_observed_cardinalities_and_rank_axes` |
+| Duplicate exact URLs remain distinct placements | `test_duplicate_exact_urls_remain_distinct_placements` |
+| AIO top-level vs element loci remain distinct; prose not typed | `test_aio_top_level_and_element_loci_remain_distinct` |
+| PAA titles only; expansion shells not absence facts | `test_paa_types_visible_questions_and_ignores_expansion_shells` |
+| Related-search first-seen exact-string dedupe (80 → 9) | `test_related_search_strings_dedupe_by_exact_text_first_seen` |
+| Requested keyword remains subject | `test_requested_keyword_remains_subject_when_returned_differs_only_by_form` |
+| Duplicate member, BOM, NaN, unknown additive, missing required | `test_duplicate_member_unknown_field_and_missing_required` |
+| Wrong rank type, unknown item type, duplicate ranks | `test_wrong_rank_type_unknown_item_type_and_duplicate_ranks` |
+| Reorder keeps provider ranks; array index is not identity | `test_reordered_items_keep_provider_ranks_and_do_not_use_array_index` |
+| Malformed URL / result datetime | `test_malformed_required_url_and_result_datetime` |
+| Task error; items_count / result_count / task-length disagreement | `test_task_error_and_cardinality_disagreement` |
+| AIO locus type errors; null required arrays fail; emptying one locus does not relabel the other | `test_aio_source_locus_inconsistency_fails_closed` |
+| Null vs absent description/website_name; exact Decimal | `test_null_absence_and_decimal_variants` |
+| Returned location/language not substituted for Attempt | `test_context_reconciliation_does_not_substitute_attempt_subject` |
+| Recipe digest/kinds; semantic byte change changes identity | `test_google_organic_recipe_published_digest_and_kinds` |
+| Keyword Overview core identity unchanged | `test_keyword_overview_identities_remain_unchanged` |
+
+### Checks
+
+- `uv run pytest -q` — 862 passed, 1 skipped
+- `uv run ruff check .` — clean
+- `uv run mypy` — clean
+- Ordinary tests remain zero-network; autouse socket guard in PF-11 tests
+
+### Review
+
+Code-review against `aee38a5fa8dd5d752c96017e6ced4eb9d4128b94`.
+
+**Standards:** 0 hard. Residual judgement: rank/page/position travel together on
+several IR types; JSON decode helpers are copied from PF-05 rather than extracted;
+`_parse_aio_reference` still defends locus combinations the parser itself will not
+construct.
+
+**Spec:** valid finding fixed — JSON-null AIO `references`/`items` now fail closed
+instead of admitting an empty locus. Locus tests now also prove that emptying one
+locus does not relabel the other. Residual: `cost` and `check_url` are typed on
+the parse IR (and AIO sources carry provider `domain`/`title`/`source`) but are
+not Observation kinds. That matches PF-05 envelope testimony and the ticket's
+"as Observations" wording; no PG rows are written.
+
+### Unproven limits
+
+- Right-positioned `rank_absolute` as a separately counted sequence is implemented
+  (`(position, rank_absolute)` uniqueness) but unobserved in PF-10 (all 111 items
+  are `left`; `rank_absolute` happens to equal array index + 1).
+- Multiple PAA blocks would restart `question_index` per block; PF-10 has one.
+- `ai_overview_source.v1` declares integer `element_index`; top-level IR sources
+  use `None`. Persistence will need a sentinel or split kinds.
+- Related-search chips in this fixture are plain strings, not objects.
+- PAA `expanded_element` shells are left raw and unvalidated.
+- No PostgreSQL provider writes, derive CLI, or Observation emission.
+
+### Engineering assessment
+
+**Ticket awkwardness.** "Reordered array/rank disagreement" is ambiguous as a
+fail-closed case: the same ticket says `rank_absolute` is not a universal item
+index and right-positioned items may use a separate sequence. Implemented as
+preservation (ranks stay on the item; uniqueness is per position sequence), not
+as `rank_absolute == index+1`. "AIO source locus inconsistency" is also awkward
+because locus is derived from tree position, not a provider field; payload
+mutations can only destroy or empty a locus, not cross-label one. Location and
+language are "context" in the ticket; they are reconciled when stated but are
+not separate IR Fields.
+
+**PF-05 substrate.** Decode / duplicate-member / Decimal / FieldState /
+ParseClassification / recipe document shape generalized cleanly. Keyword
+Overview identity (one row per requested keyword) did not. SERP identity is
+placement-shaped. Reusing `Field` from `dataforseo_keyword_overview` is the
+smallest reuse; it couples a second parser to the first surface's module.
+
+**Protective vs harmful coupling.** Duplicating JSON decode and optional-field
+helpers is protective: a shared parse kernel would become a third thing to
+version. Importing `Field` is slightly harmful as a dependency direction, but
+extracting a types module now would be speculative. One union `_ITEM_KEYS` for
+all top-level item types is protective simplicity and harmful precision — a
+`url` on `related_searches` would not diagnostic.
+
+**IR bound.** The six kinds match the first slice. The IR is not forcing a
+feature-type hierarchy or a citation graph. `SerpFeaturePlacement` for organic
+items overlaps `OrganicPlacement` ranks; that is uniform item testimony, not a
+reason to abstract a placement base class yet.
+
+**Fragile edges.** (1) AIO source identity includes integer `element_index` while
+top-level sources have `None`. (2) PAA identity is `question_index`, not title,
+and is block-local. (3) Rank uniqueness assumes provider ranks are unique per
+`(position, rank_absolute)` and `(type, position, rank_group)`; a future
+right-rail sequence is the untested half. (4) URL is correctly excluded from
+organic identity; two different URLs with identical ranks would fail closed as
+duplicate ranks, which is right, but we have not seen that.
+
+**Under-proved adversarial cases.** Right-position ranks; two PAA blocks;
+related-search object items; AIO with only one of the two reference loci
+missing-as-key vs empty-array vs populated; `item_types` disagreeing with
+actually present types; sitelinks/`related_result` appearing under an organic
+row (left raw, untested). Constructor `aio_source_locus` checks remain
+unreachable from input.
+
+**111-item pressure.** Parse is one linear walk of 135 KB; not a runtime
+concern. The pressure is Observation cardinality at derive time: 111 feature
+placements + 97 organic + 1 AIO presence + 18 source relationships + 4
+questions + 9 queries ≈ 240 rows per Capture, before sitelinks, AIO prose, or
+a second locale. That is the number that should inform later write/API batching,
+not this parser.
+
+**Do not refactor yet.** Do not extract a shared provider-JSON kernel. Do not
+introduce a placement base type. Do not split AIO source kinds. Do not type PAA
+expansions or AIO markdown. Do not change KO.
+
+**Refactor triggers.** A third provider parser that would otherwise copy `Field`
+and decode helpers. A right-rail Capture that falsifies the rank uniqueness
+rule. Observation persistence hitting the `element_index: int | None` vs integer
+axis. A second PAA block in a real Capture. Related-search items arriving as
+objects.
+
+**Fixture surprise that changes opinion.** PAA `expanded_element` is not an
+empty/null shell. Each of the four questions carries a list of structured
+AIO-like objects (`type`, `items`, `references`, `asynchronous_ai_overview`)
+with `items` itself null. Leaving that raw is still correct; treating PF-10 as
+proof that expansions are "empty" would be wrong. Future PAA-click work should
+assume nested AIO-shaped shells, not blank answers. Second surprise: result
+`datetime` is stored as `2026-08-18 17:37:36 \u002B00:00` in the exact bytes;
+JSON decode yields a literal `+`, so the PF-05 timestamp grammar still holds.
+Third: `rank_absolute == index+1` in this Capture is an observation, not a
+contract — do not bake it into the recipe. Fourth: 10 exact URL duplicates
+across later pages are real provider testimony, not scrape errors; URL-as-
+identity would have been silently wrong.
