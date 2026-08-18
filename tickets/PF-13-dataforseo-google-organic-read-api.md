@@ -100,6 +100,14 @@ accepted provider representation already used for Keyword Overview:
 - Attempt-stage Outcome
 - Capture-stage Outcome, or null when unresolved
 
+Dispatch only the exact paid Organic adapter
+`dataforseo-serp-google-organic-live-advanced-paid-probe-v1`. Do not route every
+non-fixture adapter through provider recipe selection; in particular, the nearby Organic
+sandbox adapter remains outside this resource. A bounded generalization of the shared
+provider Attempt view/loader is allowed so Keyword Overview and paid Organic share Outcome
+lookup and Evidence verification. Do not duplicate that provenance logic, and do not put
+Organic family SQL in `keyword_overview_read.py`.
+
 Outcome lookup uses the full recipe/Attempt/Capture provenance. Before returning success,
 verify every cited Capture and its parent Attempt through the Evidence Store.
 
@@ -137,6 +145,14 @@ Candidate Captures are anchored by the exact PF-12 result-context grain and join
 Capture Outcome through the full
 `(derivation_version_id, attempt_id, capture_id)` provenance. A foreign-Attempt Outcome
 for the same Capture/recipe must neither duplicate nor supply classification/count.
+
+Candidate membership is
+`google_organic_result_context JOIN outcomes` on that full tuple only. Do not join
+`observation_envelopes` to decide membership: an admitted-empty Capture has context and
+zero envelopes, while an admitted frozen Capture has 237 envelopes. Membership also
+requires `outcomes.classification IN ('observation_admitted',
+'observation_admitted_empty')`; existence of a context row alone does not establish
+admission.
 
 Verify every matching candidate's Attempt, Capture, and cited body through
 `EvidenceStore.read_attempt()` / `read_capture()` before returning normal history.
@@ -180,6 +196,12 @@ Every returned Capture group includes:
 - Capture Outcome classification and observation count;
 - one typed `result_context`;
 - the six surface-specific families below.
+
+Assemble all seven request-context fields from the verified Attempt parameters.
+`location_code` and `language_code` must agree with the persisted result context; their
+presence there is not authority to widen PF-12 with the other five fields. A missing or
+wrong-typed required Organic Attempt parameter, or disagreement between Attempt and context,
+returns 409 `evidence_integrity_failure`.
 
 The result context exposes:
 
@@ -254,6 +276,11 @@ position, `rank_group`, `rank_absolute`, and block-local `question_index`.
 
 Title remains semantic identity. Occurrence order does not become identity.
 
+The frozen Capture's four questions and four occurrences are not sufficient proof of this
+attachment. A synthetic second PAA block must reach history as four title-identified
+questions with eight total nested occurrences, preserving each parent placement and
+block-local `question_index` without collapsing by title or index.
+
 ### `related_queries`
 
 Return the nine exact-string semantic query rows from the frozen Capture. Do not recreate
@@ -306,7 +333,10 @@ All API PostgreSQL connections retain
       values or identity.
 - [ ] Provider result time, Capture time, and placement/rank axes remain distinct.
 - [ ] A valid admitted-empty Capture returns a complete Capture group with context, zero
-      observation count, empty arrays, and null AIO presence.
+      observation count, empty arrays, and null AIO presence despite having no
+      `observation_envelopes`.
+- [ ] A planted context row whose full-tuple Outcome is non-admitted does not enter normal
+      history.
 - [ ] Two Capture-anchored testimonies for the same requested keyword remain distinct and
       sort deterministically; `limit=1` returns one complete Capture group.
 - [ ] A foreign-Attempt Outcome for the same Capture/recipe does not duplicate or supply
@@ -329,9 +359,14 @@ All API PostgreSQL connections retain
 - Duplicate exact URLs remain 97 placement rows / 87 unique strings
 - Field-state serialization including JSON null/absence/stated values where represented
 - Independent acquisition time and provider-result-time serialization
-- Admitted-empty Capture response
+- Frozen request context assembled from the verified Attempt; missing/wrong-typed required
+  Attempt parameter and Attempt/context disagreement return 409
+- Admitted-empty Capture response with an explicit assertion that its envelope set is empty
+- Planted non-admitted full-tuple Outcome plus matching context remains outside history
 - Synthetic second Capture revising content at the same placement identity; asc/desc and
   whole-Capture limit behavior
+- Synthetic second PAA block through the API: four title-identified questions, eight nested
+  occurrences, preserved parent placement axes, and block-local `question_index`
 - Foreign-Attempt Outcome provenance adversary
 - Attempt/Capture/body Evidence damage 409
 - PostgreSQL/Evidence read-only before/after proof across selection, Outcomes, envelopes,
@@ -349,6 +384,8 @@ fixture. Run the full suite only once after implementation is complete.
 - any Derivation, recipe, parser, identity, or PF-12 schema change
 - automatic recipe selection or HTTP selection writes
 - a second production Organic recipe
+- generic non-fixture Attempt dispatch or Organic family reads in
+  `keyword_overview_read.py`
 - generic `/observations`, universal SERP rank, URL/Page normalization, or cross-provider
   projection
 - AIO prose/markdown, sentence citations, PAA expanded answers, sitelinks,
