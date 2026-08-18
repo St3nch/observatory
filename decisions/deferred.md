@@ -29,39 +29,45 @@ for the rebuildable query store cannot be met with the simpler design.
 **Cost of forgetting:** Maintenance or recovery windows for rebuildable stores may
 eventually exceed acceptable limits. Evidence Store backup remains governed by D8 and F6.
 
-## F3 — Broad provider coverage
+## F3 — Routine broad provider/surface rollout
 
-**Deferred by:** The narrow v1 proof in VISION.md and D8 fixture-first rule.
+**Deferred by:** D8–D12 bounded provider activation discipline.
 
-**Why not now:** Each adapter multiplies capture and normalization cases before the shared
-capture-event Evidence path has proved itself. First implementation remains fixture-only
-(`fixture-panel-v1`).
+**Why not now:** Broad, materially useful measurement coverage is product direction, but
+moving from individually authorized adapters to routine multi-surface/provider acquisition
+would multiply spend, acquisition workflows, completeness/retention obligations, and
+recurring operations before their shared prerequisites and orchestration are accepted.
 
-**Trigger:** The first provider-neutral vertical slice passes its API and Evidence Store
-recovery acceptance tests and a real consumer requires another source; Steward authorizes
-paid-provider sequencing.
+**Trigger:** The Product Owner and Steward explicitly authorize routine multi-surface or
+multi-provider acquisition after the required workflow-specific provenance, routine F6
+Evidence protection, text-retention posture where applicable, and acquisition orchestration
+are accepted for the intended operating mode.
 
-**Cost of forgetting:** Observatory may prove a sound data path but remain too narrow for
-the next consumer.
+**Cost of forgetting:** Observatory may remain adapter-by-adapter indefinitely, or broad
+acquisition may emerge ad hoc without adequate spend, provenance, retention, cadence, or
+recovery controls.
 
 **Bounded activation:** D9 authorizes the provider-neutral HTTP event foundation and one
 DataForSEO Google Organic Live Advanced tracer against the free sandbox. D10 additionally
 authorizes implementation of one tightly budgeted DataForSEO Labs Google Keyword Overview
 Live adapter, with a maximum of five keywords and one exchange. D11 subsequently authorizes
 provider Derivation for the captured Keyword Overview contract, and D12 defines the bounded
-provider-discovery method. None of these decisions fires broad provider coverage,
-Standard/asynchronous adapters, another provider call, or recurring acquisition. Those
-remain deferred to their recorded triggers or separate authorization.
+provider-discovery method. Future individually authorized adapters and probes may proceed
+under D12 without firing F3 when their contract fits the accepted substrate and all other
+gates. An unresolved asynchronous/continuation design for one contract does not by itself
+block a bounded one-exchange contract. F3 remains unfired and does not authorize recurring
+acquisition.
 
 **Provider direction:** DataForSEO is the first provider, not Observatory's exclusive
-provider. Ahrefs and Semrush are expected future supplementary and comparison sources.
-Naming them records product direction only; neither integration is currently authorized
-or scheduled, and this does not fire the trigger above.
+provider. Additional independent providers and materially useful surface families are
+expected future coverage where their testimony adds value. Naming a provider or family
+records product direction only; it does not authorize an integration, call, spend, or
+schedule and does not fire the trigger above.
 
 The intended DataForSEO testimony families are inventoried in
 `docs/dataforseo-surface-roadmap.md`. That roadmap records product direction and sequencing
-interest only; it does not authorize an adapter, provider call, spend, schedule, bulk
-collection, or broaden F3 by itself.
+constraints only; it does not authorize an adapter, provider call, spend, schedule, bulk
+collection, or F3 rollout by itself.
 
 ## F4 — Dedicated hammer ticket
 
@@ -262,3 +268,25 @@ capture/provider-update/data-period time axes. Fixture v1 identity remains uncha
 changes can silently alter or break ingestion, and monthly or provider-updated metrics can
 be presented as if they described the capture instant, producing false comparisons across
 time or providers.
+
+## F12 — Acquisition orchestration
+
+**Deferred by:** D3 and the current bounded operator/service-CLI acquisition model.
+
+**Why not now:** Isolated captures can be explicitly authorized with exact request context
+without creating durable Observatory state for why a subject is important, which surfaces
+should be coordinated, or when a measurement should repeat. Observatory must not turn
+strategy importance into its own scheduling policy.
+
+**Trigger:** Recurring or coordinated acquisition requires durable ownership of intended
+subject sets, cadence, cross-surface measurement policy, requested depth/limits,
+promotion/demotion to deeper monitoring, or event-triggered recapture beyond isolated
+operator runs.
+
+**Cost of forgetting:** Ad hoc schedules can create irregular or incompatible histories
+that weaken comparison and forecasting, obscure why deep monitoring began or ended, and
+pressure Observatory to absorb customer-specific strategy state or an internal scheduler.
+
+**Related deferrals:** F1 remains the separate, unfired question of canonical shared
+query-panel ownership. If a consumer later requires HTTP-initiated capture instead of the
+service CLI, F9 separately fires.

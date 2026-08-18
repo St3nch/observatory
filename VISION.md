@@ -17,7 +17,8 @@ observed.
 subjects, pages, domains, brands, and competitors appear or are referenced across search and
 AI surfaces: rankings and SERP composition; AI mentions, citations, and source relationships;
 query/topic demand and discovery; domain/page/entity relationships; backlinks and other
-provider-attributed visibility signals; and the historical changes in those measurements.
+provider-attributed visibility signals; bounded page/content/technical state when deliberately
+measured; and the historical changes in those measurements.
 Observatory preserves this testimony and its limits; downstream systems decide what it
 means for strategy or action.
 
@@ -99,16 +100,42 @@ commit leaves honest unresolved history.
   discovery, demand/history, provider classifications, measurement context, and independent
   provider times/periods. A field does not need an immediate UI or strategy rule to be worth
   preserving when it can materially support later historical or comparative analysis.
-- Data sufficiency does not mean indiscriminate collection. Provider catalogs are reviewed
-  surface by surface for strategic information value, historical uniqueness, overlap,
-  acquisition cost, and consumer need. Observatory keeps the useful testimony and its
-  provenance; the downstream strategy layer—not Observatory—uses that corpus with LLMs and
-  other analysis to discover opportunities, gaps, competitor advantages, visibility change,
-  and possible SEO/GEO actions.
+- Broad, materially useful measurement coverage is product direction. A measurement family
+  does not require an immediate downstream consumer ticket to be worth eventual coverage.
+  Build and activation order follows architecture dependencies, provider contract shape,
+  acquisition safety, historical uniqueness, overlap, cost, and implementation complexity.
+  This direction does not authorize indiscriminate collection, a provider call, recurring
+  acquisition, or a surface that has not passed its bounded activation review.
 - Do not prematurely collapse rich provider testimony into a score or thin convenience row
   when doing so would discard relationships or dimensions a later consumer may need. Raw
   Evidence remains available for re-derivation, while normalized Observations expose the
   useful typed facts needed for reliable machine and LLM analysis.
+- When relationships are the useful testimony, preserve the relationship rather than only a
+  summary count: query → ranked item → exact URL, prompt/question → answer → cited/source
+  URL, referring URL → target URL, seed query → discovered query, and provider-native
+  video/place identifiers when exposed. Requested context and provider-returned subject text
+  remain distinguishable where the provider can normalize or rewrite the subject.
+- Exact raw URLs remain testimony. Any normalized URL/page equivalence used for comparison is
+  a versioned, rebuildable Derivation concern, not Evidence identity or a universal Page ID.
+  The same restraint applies to lossy cross-surface query, brand, entity, and page
+  equivalence.
+- Historical ordering is only as precise as the available grains and provider-stated times.
+  Downstream systems may compare supported order or coarse intervals; Observatory exposes
+  incomparability rather than inventing a universal `event_time` or implying causation.
+- Completeness and absence are request-bound. A complete zero/absence, an incomplete or
+  truncated response, a request-disabled dimension, and no matching Capture are different
+  answers. When a consumer supplies an intended subject set, Observatory may report which
+  supplied subjects have qualifying Captures; the intended set and its importance are not
+  Observatory-owned panel or strategy state.
+- Source-attributed first-party search-performance testimony, such as Search Console-class
+  query↔page impressions and clicks, is compatible with Observatory's measurement boundary
+  when separately activated. This does not settle first-party analytics or conversion
+  outcomes, whose boundary remains a later decision.
+- Before acquiring substantial third-party full text or similarly sensitive retained
+  material—such as HTML, transcripts, reviews, comments, or screenshots—the bounded
+  activation must explicitly accept the retention, privacy/personal-data, provider-terms,
+  and API-redistribution posture. Because Evidence is immutable, material that is not safe
+  to retain should not be acquired merely because a provider can return it.
 
 ## Survival requirement
 
@@ -141,6 +168,23 @@ must not be treated as durable evidence roots.
 
 ## Boundary
 
+Owned project knowledge remains authoritative in its native project sources such as Git
+repositories, project documentation, and GitHub history. Downstream systems may read those
+sources through MCP/native interfaces and may build disposable, rebuildable retrieval
+indexes or caches that cite the native source. Those indexes are not a second authority.
+Observatory may independently measure deployed/runtime or external page state through its
+normal Attempt → Capture → Evidence lifecycle; disagreement between source history and
+measured live state is useful testimony, not something to smooth into one document corpus.
+
+Current external material needed only for a reasoning pass may be retrieved downstream
+using an appropriate commodity tool or provider. Historically meaningful external/deployed
+state belongs in Observatory only when deliberately acquired as measurement. The tool used
+for a downstream current read and the instrument used for Observatory Evidence need not be
+the same, and the existence of a tool that can be built, self-hosted, or bought does not
+itself create an architectural requirement.
+
+Current-knowledge retrieval architecture remains downstream under D3 and F5.
+
 Observatory does not own:
 
 - SEO or GEO strategy;
@@ -158,8 +202,8 @@ V1 is a narrow, working vertical slice—not broad provider coverage.
 
 The first implementation began **fixture-only** (`fixture-panel-v1`) to exercise the
 capture-event contract without real provider network activity. That proof remains the
-baseline; bounded provider work now proceeds under D9–D12 while broad provider coverage
-remains deferred under F3.
+baseline; bounded provider work now proceeds under D9–D12 while routine broad
+provider/surface rollout remains deferred under F3.
 
 The fixture vertical slice proves:
 
@@ -194,4 +238,5 @@ Observatory is on course when:
 
 Governance must not outrun execution. A document exists only when it unblocks work or
 protects an irreversible decision. Planning becomes tickets, ordinary tests are the
-default, and broad future features stay deferred until an observable trigger fires.
+default, and broad product direction does not bypass recorded activation, spend, Evidence,
+retention, or deferred-work gates.

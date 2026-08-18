@@ -19,8 +19,10 @@ bounded decision/ticket and must obey the existing Attempt → Capture → Evide
 → Observation lifecycle, D11 recipe identity, and provider-specific API semantics.
 
 The list is intentionally about testimony we may want, not about reproducing the complete
-DataForSEO catalog. Surfaces may move in priority as downstream consumers reveal which data
-actually changes decisions.
+DataForSEO catalog. Broad, materially useful coverage is product direction; this inventory
+does not rank whether a family deserves to exist. Build and activation order may change as
+architecture dependencies, provider contract shape, historical uniqueness, overlap,
+acquisition safety/cost, and implementation complexity are rechecked.
 
 ## Selection principles
 
@@ -33,13 +35,29 @@ actually changes decisions.
 - Treat DataForSEO-computed metrics, classifications, intent, sentiment, traffic estimates,
   and AI-search metrics as attributed provider testimony, not Observatory conclusions.
 - Avoid redundant collection merely because two endpoints expose overlapping fields. Use
-  the surface with the best historical coverage, context, cost, or consumer value, and add a
+  the surface with the best historical coverage, context, cost, or measurement value, and add a
   second source only when its independent testimony is useful.
 - Historical provider databases and active measurements are different observations. For
   example, an indexed LLM Mentions record and a newly requested LLM response are not the
   same kind of fact.
 - Provider catalogs, account data, pricing, and status endpoints are operational metadata;
   they do not automatically become SEO/GEO Observations.
+- Provider methodology/changelog and measurement-context catalogs may still be meaning-bearing
+  operational/context testimony when they explain a series break, supported model/location,
+  or acquisition meaning; preserve or cite them as context rather than keyword-like facts.
+- Prefer exact records and relationships over summary counts when the relationships are what
+  later reasoning needs: exact ranked/cited/referring/target URLs, source order, discovery
+  parent→child relationships, and provider-native place/video/channel/entity identifiers.
+- Preserve the exact raw URL and request context as testimony. Any URL normalization or
+  cross-surface equivalence is versioned and rebuildable rather than silently becoming
+  Evidence identity.
+- Similar words do not imply identical facts across surfaces. A web/content-analysis
+  citation is not an LLM citation; a Google video SERP item is not a YouTube Organic result;
+  provider-modeled AI demand is not direct LLM query-log demand.
+- Intentional cross-surface overlap can be more valuable than unrelated panels: measuring the
+  same supplied subject/query across demand, SERP, AI, video, or other relevant surfaces can
+  support later joins. The intended coordinated set remains downstream/orchestration policy,
+  not an Observatory priority-panel identity.
 
 ## Surface activation review
 
@@ -50,22 +68,40 @@ request options:
 
 - what questions the surface can answer for SEO, GEO, SERP visibility, competitor analysis,
   opportunity/gap discovery, and downstream LLM reasoning;
-- every materially useful returned field/relationship and which request options enable it;
+- every materially useful returned field/relationship, provider-native identifier, and
+  exact request option/enrichment that enables it;
+- requested subject/context versus provider-returned or normalized identity where those can
+  differ;
 - historical availability, provider update cadence, data periods, and active-vs-indexed
   measurement semantics;
 - location, language, device, model/platform, search-surface, domain/page/entity, and other
   context that changes meaning;
 - overlap with already collected DataForSEO testimony and whether the independent source or
   methodology adds useful evidence rather than redundant cost;
-- task/live/standard/asynchronous alternatives, pagination/bulk limits, expected cost, and
-  operational complexity;
+- task/live/standard/asynchronous alternatives and whether the contract is one exchange or
+  requires task submission, polling, continuation, or multiple result fetches;
+- corpus/completeness semantics: provider total count, returned count, requested limit/depth,
+  offset/token/continuation, sampling/prefix behavior, and Observatory transport truncation;
+- the response-size bound appropriate to this adapter contract rather than silently treating
+  D10's 8 MiB bound as a permanent global limit;
+- expected cost and operational complexity;
+- whether text-rich or personal-data testimony requires an explicit retention, privacy,
+  provider-terms, or API-redistribution decision before acquisition;
 - which useful testimony should become typed Observations now, which can remain preserved in
   raw Evidence for later recipes, and which fields are operational noise rather than
   strategy-relevant provider testimony.
+- which materially useful, historically irrecoverable testimony is deliberately not
+  requested and what trigger would justify revisiting that non-acquisition.
 
 The purpose is not to maximize field count. It is to avoid discovering later that a cheap,
 historically valuable, or strategically important provider dimension was available but was
-never captured or was discarded because the first consumer did not yet ask for it.
+never captured or was discarded because the first adapter was unnecessarily thin.
+
+A task/poll/continuation or other multi-exchange contract requires explicit provenance for
+how later requests depend on earlier provider testimony before that workflow is accepted.
+D9's `prior_attempt_id` must not be overloaded to claim that dependency. This prerequisite
+does **not** freeze bounded one-exchange Live contracts whose request and completeness can be
+stated honestly under the current HTTP event model.
 
 ### Evidence-first activation method
 
@@ -97,11 +133,11 @@ against under-modeling of returned data, not against data that was never request
 already satisfies the live Keyword Overview reconnaissance step for its exact closed adapter;
 PF-05 continues from that Evidence and does not restart exploration.
 
-## Priority A — expected core provider testimony
+## Broadly useful measurement families
 
-These families are expected to be broadly useful to the downstream strategy system and are
-the default candidates for future Observatory adapters after the current Keyword Overview
-run proves the provider-Derivation foundation.
+These families are expected to be broadly useful to downstream Strategy and are intended
+eventual coverage candidates. Their order in this document is not activation priority; each
+adapter contract still passes D12 review and separate authorization.
 
 ### 1. DataForSEO Labs — Google keyword research and historical demand
 
@@ -166,11 +202,19 @@ competitor visibility, source/domain patterns, growing or declining AI visibilit
 topics with AI-search demand. Those conclusions remain downstream; Observatory preserves
 the testimony.
 
+Search Mentions is indexed response/source testimony, not a historical archive of prior
+answer and citation sets. Its current contract is paginated and exposes total/returned
+counts plus offset/continuation state. Historical and timeseries endpoints provide
+aggregated mention/AI-search-volume history; their counts do not reconstruct an earlier
+answer body or citation set. If answer/source-set history matters, Observatory needs
+deliberate repeated Captures of the appropriate record-bearing contract.
+
 ### 4. AI Optimization — AI Keyword Data
 
-Expected use: provider estimates of keyword demand/trends in conversational or AI-search
-interfaces, including AI keyword search-volume testimony and provider-stated intent/context
-when exposed by the selected endpoint version.
+Expected use: provider-modeled AI Search Volume and trend testimony. The currently documented
+AI Search Volume calculation uses statistical data from questions in Google's People Also Ask
+SERP element, so this is attributed provider estimation—not direct LLM query-log demand and
+not citation testimony.
 
 This is independent from traditional Google search demand. The strategy layer should be
 able to compare the two without Observatory claiming they measure the same population.
@@ -197,7 +241,7 @@ Expected core search observation surfaces:
 - Google Organic rankings and SERP features;
 - Google AI Mode;
 - Google Maps / Local Finder when local-search measurement is required;
-- other Google SERP feature families only when a consumer needs their distinct testimony.
+- other Google SERP feature families when their distinct testimony is materially useful.
 
 SERP observations are point-in-time measurements with exact query/location/language/device
 context. Historical DataForSEO Labs testimony and newly captured SERPs must remain distinct.
@@ -209,10 +253,13 @@ Expected useful YouTube testimony includes:
 - YouTube Organic search results/rankings;
 - Video Info;
 - Subtitles when textual/video-topic analysis requires them;
-- Comments only when a consumer has a defined analysis requiring that testimony.
+- Comments only when their testimony is materially useful and the text-retention gate is accepted.
 
 YouTube search interest/rank behavior is not Google search demand and must retain its own
 surface identity.
+
+A Google Organic SERP video item and a YouTube Organic result are different provider facts;
+they may be joined through `video_id` when the provider actually exposes that identifier.
 
 ### 8. Backlinks API
 
@@ -245,75 +292,83 @@ These are especially useful when independent demand estimates or trend shapes ca
 gaps that one keyword database alone would hide. Overlap with Labs must be evaluated before
 collecting redundantly.
 
-## Priority B — valuable when the consumer/use case requires them
+## Additional materially useful measurement families
+
+These remain part of the coverage map; their activation is dependency- and contract-driven,
+not conditional on a consumer first proving that the family deserves to exist.
 
 ### Content Analysis API
 
 Candidate testimony: citation/search results, citation summaries, sentiment, rating
 distribution, phrase trends, and category trends. Useful for broader brand/entity mention
-and sentiment history beyond LLM-specific visibility.
+and sentiment history beyond LLM-specific visibility. A Content Analysis citation is broader
+web/content-analysis testimony and must not be collapsed into an LLM citation.
 
 ### Business Data API / Business Listings
 
 Candidate testimony for local SEO: business listings, public business profile information,
 categories, ratings/reviews, business updates, and other location-specific public business
-data exposed by an accepted endpoint. This becomes important when a local-search consumer is
-identified.
+data exposed by an accepted endpoint. This is a materially useful local-search family; its
+activation still requires a closed subject/geography/review contract.
 
 ### OnPage API
 
 Candidate technical-site testimony: crawl/page summaries, indexability, duplicate content,
 links, redirects, resources, structured data/microdata, performance/Lighthouse-style data,
-and content parsing. This is useful if Observatory becomes the shared historical source for
-technical-site measurements; it is not required merely because DataForSEO offers it.
+and content parsing. Bounded page/content/technical state is valid Observatory measurement
+when deliberately acquired as source-attributed historical testimony. DataForSEO OnPage is
+one possible instrument; the product boundary does not require it to be the only instrument
+or require a crawler merely because the provider offers one.
 
 ### Domain Analytics
 
 Candidate supplementary testimony: technologies used by a domain and Whois/domain context.
-Useful for competitor/site profiling when a real strategy workflow requires it.
+Useful for competitor/site profiling when its independent measurement value justifies the
+contract and acquisition cost.
 
 ### Labs market/category analysis
 
 Categories For Domain, Keywords For Categories, Domain Metrics By Categories, Top Searches,
-and related market-category endpoints are candidates when category/market discovery proves
-useful beyond ordinary keyword/domain research.
+and related market-category endpoints remain candidates where category/market discovery adds
+material testimony beyond ordinary keyword/domain research.
 
-## Not currently planned without a specific consumer trigger
+## Specialized families retained as candidates
 
-These are not rejected forever; they simply are not part of the present SEO/GEO provider
-roadmap:
+These are not rejected and do not require an immediate consumer ticket merely to remain in
+the future coverage map. Activation still requires a later review showing material value to
+Observatory's search/AI visibility scope and the same bounded D12 contract discipline:
 
 - Merchant / Google Shopping / Amazon product-price monitoring;
 - DataForSEO Labs Amazon product research;
 - Google Play and App Store app-intelligence surfaces;
 - hotel/travel-specialized business datasets;
 - finance, jobs, events, image-search, advertiser, or other specialized SERP families that
-  do not yet serve an identified Observatory consumer;
+  have not yet shown material value to Observatory's visibility scope;
 - full provider database downloads as a substitute for the Observatory API/Evidence model.
 
-If a future consumer needs one of these, F3's broad-provider/surface trigger is revisited and
-the surface receives the same bounded Evidence/Derivation review as any other adapter.
+If later review establishes material value, the surface receives the same bounded
+Evidence/Derivation review and authorization as any other adapter.
 
-## Sequencing direction
+## Dependency-based sequencing direction
 
-The current PF-04 → PF-08 Keyword Overview run comes first because it establishes and proves
-the provider recipe/parser/Observation/API machinery.
+PF-04 → PF-08 established the provider recipe/parser/Observation/API foundation. From that
+foundation, sequencing minimizes rework and acquisition risk rather than ranking which
+valuable measurement families deserve to exist.
 
-After that foundation is accepted, the default exploration order is:
+- A bounded one-exchange Live contract may proceed on the current HTTP event model when its
+  request and corpus/completeness boundary can be stated honestly.
+- Task/poll, continuation, multi-GET, or site-crawl workflows wait for explicit
+  multi-exchange provenance appropriate to that contract; they must not overload
+  `prior_attempt_id` as response-derived parentage.
+- Text-rich contracts wait for the accepted retention/privacy/provider-terms/API posture.
+- Routine recurring irreplaceable acquisition does not outrun routine F6 protection.
+- Subject sets, cadence, cross-surface coordination, promotion, and event-triggered recapture
+  remain deferred acquisition-orchestration concerns under F12.
+- Provider capability, overlap, cost, current contract stability, and learning value are
+  rechecked before each bounded adapter/probe.
 
-1. LLM Mentions — highest-priority GEO historical/citation dataset;
-2. AI Keyword Data — AI-query demand;
-3. Google Organic + Google AI Mode SERP observation;
-4. Labs keyword-discovery and competitor/history families;
-5. Backlinks history and source graph testimony;
-6. YouTube search/video testimony;
-7. LLM Scraper / LLM Responses for active benchmark panels;
-8. local Business Data, Content Analysis, OnPage, Domain Analytics, and category/market
-   surfaces as consumer needs justify them.
-
-This ordering is direction, not authorization. Cost, historical availability, provider
-contract stability, overlap, consumer need, and learning value are rechecked before every
-new adapter/probe.
+No fixed family order is authority. The next adapter is selected by readiness and learning
+value under separate authorization, while the broader coverage direction remains intact.
 
 ## Provider-documentation snapshot used for this inventory
 

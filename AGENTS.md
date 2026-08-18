@@ -120,7 +120,7 @@ add the smallest rule that addresses that failure — nothing more.
 - Do not weaken durability to improve development convenience.
 - Do not implement capture-event storage against obsolete models (flat payload without
   Capture root, Outcome-as-Evidence-parent, PG-as-Evidence).
-- Do not implement deferred work (F1–F10) before its recorded trigger fires.
+- Do not implement deferred work before its recorded trigger fires.
 
 ## Work method
 

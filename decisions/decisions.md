@@ -512,3 +512,32 @@ paid probe, recurring schedule, or provider still requires its own recorded auth
 
 **Normative detail:** `docs/specs/capture-event-v2.md`, section “Provider contract discovery
 and conformance.”
+
+## D13 — Materially useful measurement coverage is product direction; activation remains bounded
+
+**Decision:** Observatory intends eventual coverage of materially useful search/AI visibility
+measurement families. A family does not require an immediate downstream consumer ticket to
+qualify for eventual coverage. Build and activation order is determined by architectural
+dependencies, provider contract shape, acquisition safety, historical uniqueness, overlap,
+cost, and implementation complexity. Each adapter, provider call, recurring schedule, and
+other irreversible acquisition step still requires the existing bounded authorization and
+D12 evidence-first review.
+
+**Why:** Historical value compounds only for testimony that was actually acquired. Requiring
+an immediate consumer request before a useful family can enter the product direction risks
+permanently missing time-indexed evidence and encourages thin adapters. At the same time,
+broad product direction must not become speculative catalog-wide collection or bypass spend,
+retention, provenance, completeness, and Evidence-protection gates.
+
+**Cost:** The roadmap must distinguish eventual coverage from activation priority, and the
+Steward must sequence adapters by readiness and dependency rather than a permanent family
+ranking. Some useful families remain unimplemented for long periods while prerequisites are
+resolved.
+
+**Rejected:** Treat consumer demand as the existence gate for every measurement family; or,
+at the opposite extreme, treat broad product direction as standing authorization to collect
+every available provider surface.
+
+**Clarifies:** D12 and deferred F3. F3 remains unfired for routine broad provider/surface
+rollout; individually authorized bounded adapters may proceed under D12 when their contract
+fits the accepted substrate and all other gates.
