@@ -1,6 +1,6 @@
 # PF-09 — Shared bounded HTTP single-exchange transport substrate
 
-**Status:** review
+**Status:** done
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** provider foundation / zero-network refactor
 **Blocked by:** none; reviewed authority baseline is confirmed pushed at `91eb8ba26b3e8cb9975b6400c1dc61bbd50b3c65`
@@ -233,7 +233,7 @@ and one bounded streaming exchange. Everything else stays adapter-owned.
 ## Implementation report
 
 **Parent:** `7339156540f5a59c1bfcd615e2c4271ca2965446`
-**Child:** recorded in this implementation commit.
+**Child:** `62cb339a51ee8804bda71e72af867444db15b8b3`
 **Status:** `review`
 
 ### Changed paths
@@ -353,3 +353,32 @@ task-get/poll/retry on this seam. This ticket adds no continuation hook.
 - no TLS, HTTP/2, real timeout realism, or provider behavior
 - no F7 multi-process writer safety
 - 120s PF-10 read timeout is not implemented here
+
+## Steward closure
+
+Closed by the Project Steward after independent review of implementation commit
+`62cb339a51ee8804bda71e72af867444db15b8b3` against start commit
+`7339156540f5a59c1bfcd615e2c4271ca2965446`.
+
+Verified:
+
+- clean `main` at the implementation commit before closure;
+- bounded compare changed only the two accepted adapters, the new internal shared transport
+  module, its dedicated tests, and this PF-09 ticket;
+- shared transport owns only one-request/one-response HTTP-v2 mechanics, while adapter
+  target, request, credential, spend, Attempt/capability, Capture, timeout, and body-limit
+  policy remain adapter-owned;
+- sandbox and paid adapters retain `httpx.Timeout(30.0)` and `8_388_608`-byte bounds;
+- shared seam receives resolved URL/body/application headers/Authorization/timeout/body
+  bound and contains no generic CLI, adapter registry, retry, polling, pagination, or
+  continuation hook;
+- published sandbox and paid request/fingerprint/Attempt identities recompute unchanged,
+  with existing Capture identity regressions also green;
+- cross-module capability misuse, fabricated capability, and second-use rejection are
+  structurally tested;
+- no PF-10 implementation or provider/DNS/credential/spend activity occurred in review;
+- `uv run pytest -q`: `811 passed, 1 skipped`;
+- `uv run ruff check .`: clean;
+- `uv run mypy`: clean.
+
+PF-09 is accepted and closed. PF-10 remains planned and is not started by this closure.
