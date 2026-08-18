@@ -1,11 +1,11 @@
 # PF-09 — Shared bounded HTTP single-exchange transport substrate
 
-**Status:** ready
+**Status:** review
 **Parent spec:** `docs/specs/capture-event-v2.md`
 **Kind:** provider foundation / zero-network refactor
 **Blocked by:** none; reviewed authority baseline is confirmed pushed at `91eb8ba26b3e8cb9975b6400c1dc61bbd50b3c65`
 **Approved by:** Project Steward
-**Start commit:** implementer fills when assigned
+**Start commit:** `7339156540f5a59c1bfcd615e2c4271ca2965446`
 
 ## What to build
 
@@ -118,31 +118,31 @@ At minimum:
 
 ## Acceptance criteria
 
-- [ ] Shared single-exchange HTTP mechanics live in one internal module instead of being
+- [x] Shared single-exchange HTTP mechanics live in one internal module instead of being
       duplicated in both adapter modules.
-- [ ] Adapter-specific target, request, policy, credentials, authorization, spend, one-shot,
+- [x] Adapter-specific target, request, policy, credentials, authorization, spend, one-shot,
       Attempt, and Capture rules remain adapter-owned.
-- [ ] Existing sandbox and paid-probe public entrypoints and CLI argument surfaces are
+- [x] Existing sandbox and paid-probe public entrypoints and CLI argument surfaces are
       logically unchanged.
-- [ ] Existing HTTP-v2 sandbox conformance request/fingerprint/Attempt/Capture bytes and
+- [x] Existing HTTP-v2 sandbox conformance request/fingerprint/Attempt/Capture bytes and
       published IDs remain unchanged.
-- [ ] Existing paid-probe request/fingerprint/Attempt/Capture conformance bytes/digests
+- [x] Existing paid-probe request/fingerprint/Attempt/Capture conformance bytes/digests
       remain unchanged.
-- [ ] Complete response behavior is unchanged for both adapters.
-- [ ] Mid-body read failure remains `response_partial` with the accepted retained prefix.
-- [ ] Response-body bound exceed remains `response_partial` with exactly the bounded prefix
+- [x] Complete response behavior is unchanged for both adapters.
+- [x] Mid-body read failure remains `response_partial` with the accepted retained prefix.
+- [x] Response-body bound exceed remains `response_partial` with exactly the bounded prefix
       and the existing closed HTTP-v2 failure semantics.
-- [ ] Pre-header connection/write/protocol/timeout failures retain their accepted
+- [x] Pre-header connection/write/protocol/timeout failures retain their accepted
       `no_response` phase/code mapping.
-- [ ] Secret-class response-header values remain absent from Evidence; retained header
+- [x] Secret-class response-header values remain absent from Evidence; retained header
       ordering/duplicates and omission counts remain unchanged.
-- [ ] Sentinel credential material cannot enter Evidence, stdout/stderr, exception text, or
+- [x] Sentinel credential material cannot enter Evidence, stdout/stderr, exception text, or
       committed headers/bodies through the shared seam.
-- [ ] Sandbox and paid one-use capability isolation remains structurally tested.
-- [ ] Existing adapters continue to use an adapter-owned 8 MiB bound; the shared module has
+- [x] Sandbox and paid one-use capability isolation remains structurally tested.
+- [x] Existing adapters continue to use an adapter-owned 8 MiB bound; the shared module has
       no hard-coded global 8 MiB policy.
-- [ ] No provider network, DNS, credentials, or spend occurs in ordinary tests/review.
-- [ ] `uv run pytest -q`, `uv run ruff check .`, and `uv run mypy` are green.
+- [x] No provider network, DNS, credentials, or spend occurs in ordinary tests/review.
+- [x] `uv run pytest -q`, `uv run ruff check .`, and `uv run mypy` are green.
 
 ## Required tests
 
@@ -229,3 +229,127 @@ The intended implementation remains “finish the proven extraction”: shared e
 production-client mechanics, sent-header assembly from adapter-supplied application headers,
 HTTP-version validation, secret-header omission, body-state construction, exception mapping,
 and one bounded streaming exchange. Everything else stays adapter-owned.
+
+## Implementation report
+
+**Parent:** `7339156540f5a59c1bfcd615e2c4271ca2965446`
+**Child:** recorded in this implementation commit.
+**Status:** `review`
+
+### Changed paths
+
+- `src/observatory/http_single_exchange.py` (new internal seam)
+- `src/observatory/dataforseo_sandbox.py`
+- `src/observatory/dataforseo_paid_probe.py`
+- `tests/test_http_single_exchange.py` (new)
+- this ticket (Status, Start commit, Implementation report)
+
+### Shared-vs-adapter ownership split
+
+Adapter-owned (unchanged location of policy):
+
+- provider / adapter token, closed parameters, request-body JCS
+- production URL, loopback host/path validation
+- `DataForSEOCredentials`, Basic Authorization construction, credential-echo rejection
+- paid spend acknowledgement and one-shot guard
+- `_TIMEOUT = httpx.Timeout(30.0)` on each adapter
+- `MAX_RESPONSE_BODY_BYTES = 8_388_608` on each adapter
+- Attempt construction, commit, verify-on-read
+- per-adapter `_VerifiedAttempt` issuance / one-use / issued-set
+- Capture construction, commit, verify-on-read
+- paid inspect CLI
+
+Shared in `observatory.http_single_exchange`:
+
+- `HttpExchangeResult`
+- `production_http_client(timeout)`
+- sent-header assembly from **adapter-supplied** application headers plus Authorization/Host/Content-Length
+- HTTP version validation, `http-headers-v1` omission, body-state, exception mapping
+- `perform_bounded_http_exchange(...)` one bounded POST stream
+
+The shared function receives only: resolved URL, body bytes, application headers,
+Authorization value, timeout profile, response-body ceiling, optional test client.
+
+### Duplicated helpers removed and new location
+
+Removed from both adapters:
+
+- `_ExchangeResult` → `HttpExchangeResult`
+- `_production_client` → `production_http_client(timeout)`
+- `_sent_headers` → shared `_sent_headers` taking application headers
+- `_normalize_response_headers`, `_body_state`, `_map_failure`, `_http_version`
+- sandbox inlined stream loop and paid `_perform_bounded_http_exchange` →
+  `perform_bounded_http_exchange`
+
+Deliberately not moved: `_utc_now` (CLI `authorized_at`), `_freeze_maps`, loopback/target
+checks, capability factories, credential-echo, Attempt/Capture constructors.
+
+### No generic runner / public endpoint
+
+- no `main`, no `argparse`, no `__main__` in the shared module
+- not wired into `observatory.capture` or the HTTP API
+- no caller-supplied URL CLI; adapters still resolve and validate targets first
+- `HTTP_HEADERS` is not imported by the shared module
+
+### Existing 8 MiB and 30s remain adapter-owned
+
+- sandbox and paid still define `MAX_RESPONSE_BODY_BYTES = 8_388_608` and
+  `httpx.Timeout(30.0)`
+- shared source contains neither `8_388_608` nor `Timeout(30.0)`
+- parameterization tests use a 16-byte ceiling and a 12s / 1.25–4.0s timeout profile
+
+### Conformance IDs/digests before/after
+
+Recomputed from production constructors after the refactor; unchanged:
+
+| Vector | Digest/ID |
+|---|---|
+| sandbox request body | `d10484d2237e4b08e37a4f3fe66bd678a3dbc2dab96f9b712af1b858b8d6d070` |
+| sandbox fingerprint | `6b28e6d02fee14c8d8852889336baeb46bfa9918c5d4eee7b51e889f1823a2bb` |
+| sandbox Attempt | `22adc4841c86b7cd98b90bba683aeac204a0cb568428b590fd399e8627eb4640` |
+| paid request body | `3fc7205a55a1a5c464c0ae4ebca21a1e3088c2022565929a670fdf757ab7987b` |
+| paid fingerprint | `6cc5765911abe752a974d2fba268d927fdc055147c1286fffdfe0ee585cdc610` |
+| paid Attempt | `89904bf8a6812fb3d0d845310e4705962bb4db928b80da3be67342dff5def185` |
+
+Existing `tests/test_http_event_v2.py` and `tests/test_dataforseo_paid_probe.py` Capture
+identity regressions remain green (sandbox Capture `f347962c…` / paid Capture `dbaaf68a…`
+constructors unchanged).
+
+### Cross-module capability isolation
+
+`tests/test_http_single_exchange.py`:
+
+- sandbox-issued capability → paid `_exchange` raises `TypeError`
+- paid-issued capability → sandbox `_exchange` raises `TypeError`
+- fabricated `object()` rejected by both
+- used capability still one-exchange on each adapter
+
+### Checks
+
+- `uv run pytest -q`: 811 passed, 1 skipped
+- `uv run ruff check .`: clean
+- `uv run mypy`: clean
+
+Code review vs `7339156` (standards + spec sub-agents): added after-headers
+timeout/protocol mapping tests, sentinel-omission through the shared result, and removed
+httpx private-attribute probes. Remaining judgement: `http-headers-v1` secret-name set is
+still also in `capture_event` (validator, not transport).
+
+### Weakest remaining duplication deliberately not generalized
+
+Capability issuance, loopback/target validation, credential-echo, `_utc_now`, and
+`_freeze_maps` remain per adapter. Sharing them would collapse one-use isolation or turn
+the seam into a runner.
+
+### Later PF-10 one-exchange adapter
+
+Safe if it stays one POST, supplies its own timeout (including a longer read), 32 MiB
+ceiling, headers, URL, and Authorization after its own capability gate. Awkward/unsafe if
+someone imports `perform_bounded_http_exchange` without that gate, or tries to hang
+task-get/poll/retry on this seam. This ticket adds no continuation hook.
+
+### Unproven limits
+
+- no TLS, HTTP/2, real timeout realism, or provider behavior
+- no F7 multi-process writer safety
+- 120s PF-10 read timeout is not implemented here
