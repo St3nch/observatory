@@ -1,6 +1,6 @@
 # PF-12 — DataForSEO Google Organic provider Derivation and persistence
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; PF-11 closed  
 **Approved by:** Project Steward  
@@ -503,3 +503,79 @@ not split AIO kinds. Do not persist cost/check_url.
 Capture-level context row. Selection must not be this module. If history wants
 cost, that is a new context column, not a silent add here.
 
+## Steward closure — 2026-08-18
+
+**Accepted by:** Project Steward  
+**Accepted implementation:** `d8caf4dd52678e7805e394b608bc95d98f3ab712`  
+**Accepted parent:** `bea97ae4a8b06cc8fa8ae7a2437404981ca45382`
+
+PF-12 is accepted and closed after independent Steward review of the original implementation
+and amended remediation commit. The implementation remains one bounded commit from the
+accepted parent and changes only the parser IR, Google Organic provider Derivation,
+additive PostgreSQL schema, dedicated tests, and this ticket.
+
+The accepted Derivation registers and uses the unchanged 2487-byte Google Organic recipe
+`338fc2080d31a35b1f7cc5d7a71c971d25d72517ca3b846959ccb501b666acde`.
+The frozen 135722-byte PF-10 fixture remains unchanged with SHA-256
+`7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f`.
+Both accepted Keyword Overview recipe identities remain unchanged.
+
+One verified PF-10-shaped Capture derives exactly 237 normal Observation envelopes:
+111 SERP feature placements, 97 organic ranked results, one AIO presence, 15 semantic AIO
+sources, four semantic related questions, and nine related queries. All 97 organic
+placements survive despite only 87 unique exact URLs; URL remains content rather than
+placement identity.
+
+AIO source indexes remain subordinate occurrence testimony. The accepted schema stores
+15 semantic source details and all 18 occurrences, including seven top-level occurrences
+with nullable `element_index` and eleven element occurrences. PostgreSQL
+`UNIQUE NULLS NOT DISTINCT`, locus-shape checks, and the parent detail/locus foreign key
+prevent duplicate NULL-index occurrences, sentinels, wrong-locus rows, and orphaned source
+testimony. Same-identity domain/title/source disagreement rejects the whole Capture-stage
+unit as `provider_envelope_rejected` with zero normal rows.
+
+`RelatedQuestion` now carries its parent PAA page, position, `rank_group`, and
+`rank_absolute` solely as occurrence testimony. Semantic identity remains exact requested
+keyword plus title. A synthetic repeated PAA block proves four semantic question envelopes
+and eight placement/index occurrences without using block-local order as Observation
+identity.
+
+The Capture-scoped result context preserves requested/returned keyword testimony,
+Attempt location/language, SERP domain, provider result/retrieval time, provider counts, and
+provider-order item types. Provider result time remains distinct from both Capture time and
+Provider Update Time. State/value consistency is enforced in PostgreSQL, and the context's
+exact recipe/Attempt/Capture provenance is structurally bound to its Capture Outcome.
+Provider cost, task UUID, and check URL remain only in Evidence.
+
+Capture writes are atomic across Outcome, diagnostics, context, envelopes, typed details,
+and occurrence relations. Per-row content comparison is followed by exact complete-set
+comparison. A foreign-Attempt Outcome, extra envelope, extra occurrence, extra diagnostic,
+content conflict, wrong Outcome count, or post-write set mismatch is refused. Missing
+rebuildable planned rows may be restored, after which the stored set must exactly equal the
+plan. The additive migration is proved over representative populated pre-PF-12
+Keyword Overview recipe, selection, Outcome, envelope, and typed-detail state.
+
+Closed provider failure classifications produce zero normal rows. Tests cover no response,
+partial response, complete non-admissible transport, provider error, strict-envelope
+rejection, reconciliation failure, Evidence damage, and valid admitted-empty SERP behavior.
+Fixture Derivation and existing Keyword Overview derivation, selection, and API behavior
+remain unchanged.
+
+Independent Steward verification at the accepted amended implementation commit:
+
+- operator-independent `uv run pytest -q`: 887 passed, 1 skipped, 1 upstream
+  Starlette/httpx deprecation warning, exit 0, 117.70 seconds wall time;
+- clean working tree before and after that run;
+- no leftover `observatory-ce05-*` Docker container;
+- independent Steward `uv run ruff check .`: clean;
+- independent Steward `uv run mypy`: clean, 46 source files.
+
+Accepted limits remain explicit: AIO disagreement and a second PAA block are synthetic;
+right-rail rank behavior remains unobserved; the two-database proof is logical rather than a
+byte-for-byte dump of every column; the provider-derive walk/writer remains intentionally
+unextracted; and the third-tier occurrence layer is new but bounded by relational
+constraints. Google Organic recipe selection and read/history API work remain a separate
+later ticket.
+
+No provider or DNS call, credentials, paid-gate environment, Evidence mutation, API or
+selection work, another acquisition surface, `scripts/verify-all`, or push occurred.
