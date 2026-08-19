@@ -1,6 +1,6 @@
 # PF-15 — PostgreSQL migration catalog and widening hygiene
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; PF-14 closed  
 **Approved by:** Project Steward  
@@ -519,3 +519,64 @@ compared to an equivalent fresh seed. Catalog comparison is unchanged.
 The pre-upgrade seed accepted the four additive constraints. No production
 defect. No `src/` change.
 
+## Steward closure — 2026-08-18
+
+**Accepted by:** Project Steward  
+**Accepted implementation:** `8d49005834cdf55c16abc8915b17935c9527d850`  
+**Accepted parent:** `239623b29b82c57db779775ae696fcea0d1a747e`
+
+PF-15 is accepted and closed after GROK's mandatory pre-implementation
+technical review, ticket reconciliation, one amended bounded implementation
+commit, independent Steward code review, and independent operator verification.
+
+The four additive PostgreSQL constraint probes now bind both the accepted
+constraint name and the intended target relation. Same-named constraints on
+unrelated tables therefore cannot suppress installation on `outcomes`,
+`provider_recipes`, `observation_envelopes`, or
+`google_organic_result_context`. The integrated decoy path proves the exact
+installed `outcomes_identity` uniqueness constraint and
+`google_organic_result_context_outcome` foreign key through isolated
+savepoints, preserving the seeded fixture across both adversarial inserts and
+a second idempotent `apply_schema` call.
+
+The bounded I-JSON migration path now inspects exactly
+`outcomes.observation_count`, `observations.result_index`, and
+`observations.score`: `int4` widens to `BIGINT`, `int8` is skipped, and a
+missing or unexpected type fails closed with `SchemaError` before the success
+commit. Existing INTEGER rows survive widening; fresh and already-BIGINT
+schemas retain the accepted I-JSON boundary behavior.
+
+Fresh-versus-upgrade parity covers the four relation-scoped constraints, their
+types and normalized definitions, the three BIGINT catalog types, and a
+non-empty provenance projection. Derivation version, Attempt-stage and
+Capture-stage Outcomes, provider recipe, observation envelope, and Organic
+result context are planted before upgrade, survive unchanged, and equal the
+same rows on a fresh current schema.
+
+Independent Steward review found no authority, spec, correctness, security, or
+scope blocker after the two test-proof remediations. The remediation changed no
+production bytes. Independent static verification at the accepted child:
+
+- `uv run ruff check .`: clean;
+- `uv run mypy`: clean, 48 source files.
+
+Independent operator verification at the accepted child:
+
+- exact HEAD `8d49005834cdf55c16abc8915b17935c9527d850`;
+- clean working tree before and after;
+- `uv run pytest -q`: 911 passed, 1 skipped, 1 upstream Starlette/httpx
+  deprecation warning, exit 0;
+- 147.97 seconds wall time;
+- no remaining `observatory-ce05-*` container.
+
+Accepted limits remain explicit. PF-15 does not repair a correctly named but
+wrong-definition constraint already present on the correct target, invent a
+migration framework, make schema-qualified policy changes, or claim lock-time
+or concurrent-migration guarantees. The already-BIGINT no-ALTER proof remains
+at the bounded helper seam; unsupported historical shapes continue to fail
+closed or require Steward reconciliation rather than destructive catalog
+surgery.
+
+No API, provider, recipe, parser, identity, Derivation, Evidence, selection,
+credential, paid-gate, network, or new-surface change occurred. Nothing was
+pushed during closure.
