@@ -10,7 +10,7 @@ from pathlib import Path
 
 import psycopg
 import pytest
-from psycopg.errors import CheckViolation
+from psycopg.errors import CheckViolation, ForeignKeyViolation, UniqueViolation
 
 from observatory.capture import (
     PUBLISHED_AR_ATTEMPT_ID,
@@ -35,7 +35,13 @@ from observatory.derive import (
     main,
 )
 from observatory.evidence_store import EvidenceStore, IntegrityError, create_store
-from observatory.migrate import apply_migrations, apply_schema, connect
+from observatory.migrate import (
+    SchemaError,
+    _widen_ijson_columns,
+    apply_migrations,
+    apply_schema,
+    connect,
+)
 
 AR_RESPONSE_BODY = (
     b'{"contract":"fixture-panel-v1","panel_id":"panel-alpha","result_count":2,'
@@ -486,7 +492,8 @@ def test_migrate_creates_authorized_tables(postgres_dsn: str) -> None:
             """
             SELECT conname, pg_get_constraintdef(oid)
             FROM pg_constraint
-            WHERE conname = 'outcomes_identity'
+            WHERE conrelid = 'outcomes'::regclass
+              AND conname = 'outcomes_identity'
             """
         ).fetchone()
         pk = connection.execute(
@@ -888,6 +895,449 @@ def test_migrate_cli_on_real_postgres(postgres_dsn: str) -> None:
             """
         ).fetchone()
     assert count == (3,)
+
+
+_ADDITIVE_CONSTRAINTS: tuple[tuple[str, str, str], ...] = (
+    ("outcomes", "outcomes_identity", "u"),
+    ("provider_recipes", "provider_recipes_adapter_version", "u"),
+    ("observation_envelopes", "observation_envelopes_kind_identity", "u"),
+    ("google_organic_result_context", "google_organic_result_context_outcome", "f"),
+)
+_DECOY_TABLES: tuple[tuple[str, str], ...] = (
+    ("decoy_outcomes_identity", "outcomes_identity"),
+    ("decoy_recipes_adapter_version", "provider_recipes_adapter_version"),
+    ("decoy_envelopes_kind_identity", "observation_envelopes_kind_identity"),
+    ("decoy_organic_context_outcome", "google_organic_result_context_outcome"),
+)
+
+
+def _normalize_constraintdef(value: object) -> str:
+    return " ".join(str(value).split())
+
+
+def _additive_constraint_projection(
+    connection: psycopg.Connection[tuple[object, ...]],
+) -> list[tuple[str, str, str, str]]:
+    rows = connection.execute(
+        """
+        SELECT c.conrelid::regclass::text, c.conname, c.contype,
+               pg_get_constraintdef(c.oid)
+        FROM pg_constraint AS c
+        WHERE (c.conrelid, c.conname) IN (
+            ('outcomes'::regclass, 'outcomes_identity'),
+            ('provider_recipes'::regclass, 'provider_recipes_adapter_version'),
+            ('observation_envelopes'::regclass,
+             'observation_envelopes_kind_identity'),
+            ('google_organic_result_context'::regclass,
+             'google_organic_result_context_outcome')
+        )
+        ORDER BY 1, 2
+        """
+    ).fetchall()
+    return [
+        (str(table), str(name), str(kind), _normalize_constraintdef(definition))
+        for table, name, kind, definition in rows
+    ]
+
+
+def _decoy_constraint_projection(
+    connection: psycopg.Connection[tuple[object, ...]],
+) -> list[tuple[str, str, str]]:
+    rows = connection.execute(
+        """
+        SELECT c.conrelid::regclass::text, c.conname, c.contype
+        FROM pg_constraint AS c
+        WHERE (c.conrelid, c.conname) IN (
+            ('decoy_outcomes_identity'::regclass, 'outcomes_identity'),
+            ('decoy_recipes_adapter_version'::regclass,
+             'provider_recipes_adapter_version'),
+            ('decoy_envelopes_kind_identity'::regclass,
+             'observation_envelopes_kind_identity'),
+            ('decoy_organic_context_outcome'::regclass,
+             'google_organic_result_context_outcome')
+        )
+        ORDER BY 1, 2
+        """
+    ).fetchall()
+    return [(str(table), str(name), str(kind)) for table, name, kind in rows]
+
+
+def _install_decoy_and_incomplete_targets(
+    connection: psycopg.Connection[tuple[object, ...]],
+) -> None:
+    for table, conname in _DECOY_TABLES:
+        connection.execute(
+            f"""
+            CREATE TABLE {table} (
+                marker INTEGER,
+                CONSTRAINT {conname} CHECK (true)
+            )
+            """
+        )
+    connection.execute(
+        """
+        CREATE TABLE derivation_versions (
+            derivation_version_id TEXT PRIMARY KEY
+                CHECK (derivation_version_id ~ '^[A-Za-z0-9._+:-]{1,128}$'),
+            adapter_contract TEXT NOT NULL,
+            registered_at TIMESTAMPTZ NOT NULL
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE outcomes (
+            attempt_id TEXT NOT NULL
+                CHECK (attempt_id ~ '^[0-9a-f]{64}$'),
+            capture_id TEXT
+                CHECK (capture_id IS NULL OR capture_id ~ '^[0-9a-f]{64}$'),
+            derivation_version_id TEXT NOT NULL
+                REFERENCES derivation_versions (derivation_version_id),
+            classification TEXT NOT NULL,
+            observation_count BIGINT NOT NULL
+                CHECK (
+                    observation_count >= 0
+                    AND observation_count <= 9007199254740991
+                )
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE provider_recipes (
+            derivation_version_id TEXT PRIMARY KEY
+                CHECK (derivation_version_id ~ '^[0-9a-f]{64}$')
+                REFERENCES derivation_versions (derivation_version_id),
+            provider TEXT NOT NULL,
+            adapter_contract TEXT NOT NULL,
+            recipe_canonical_bytes BYTEA NOT NULL
+                CHECK (octet_length(recipe_canonical_bytes) >= 1)
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE observation_envelopes (
+            capture_id TEXT NOT NULL
+                CHECK (capture_id ~ '^[0-9a-f]{64}$'),
+            attempt_id TEXT NOT NULL
+                CHECK (attempt_id ~ '^[0-9a-f]{64}$'),
+            derivation_version_id TEXT NOT NULL
+                REFERENCES provider_recipes (derivation_version_id),
+            provider TEXT NOT NULL,
+            adapter_contract TEXT NOT NULL,
+            observation_kind TEXT NOT NULL,
+            within_capture_identity TEXT NOT NULL
+                CHECK (within_capture_identity ~ '^[0-9a-f]{64}$'),
+            PRIMARY KEY (
+                capture_id, derivation_version_id, within_capture_identity
+            )
+        )
+        """
+    )
+    connection.execute(
+        """
+        CREATE TABLE google_organic_result_context (
+            capture_id TEXT NOT NULL,
+            derivation_version_id TEXT NOT NULL
+                REFERENCES provider_recipes (derivation_version_id),
+            attempt_id TEXT NOT NULL,
+            requested_keyword TEXT NOT NULL,
+            returned_keyword_state TEXT NOT NULL,
+            location_code BIGINT NOT NULL,
+            language_code TEXT NOT NULL,
+            se_domain_state TEXT NOT NULL,
+            result_datetime_state TEXT NOT NULL,
+            se_results_count_state TEXT NOT NULL,
+            pages_count_state TEXT NOT NULL,
+            items_count BIGINT NOT NULL,
+            item_types TEXT[] NOT NULL,
+            PRIMARY KEY (capture_id, derivation_version_id)
+        )
+        """
+    )
+
+
+def _populated_provenance_projection(
+    connection: psycopg.Connection[tuple[object, ...]],
+) -> dict[str, list[tuple[object, ...]]]:
+    versions = connection.execute(
+        """
+        SELECT derivation_version_id, adapter_contract, registered_at
+        FROM derivation_versions
+        ORDER BY derivation_version_id
+        """
+    ).fetchall()
+    outcomes = connection.execute(
+        """
+        SELECT attempt_id, capture_id, derivation_version_id,
+               classification, observation_count
+        FROM outcomes
+        ORDER BY capture_id NULLS FIRST
+        """
+    ).fetchall()
+    recipes = connection.execute(
+        """
+        SELECT derivation_version_id, provider, adapter_contract,
+               recipe_canonical_bytes
+        FROM provider_recipes
+        ORDER BY derivation_version_id
+        """
+    ).fetchall()
+    envelopes = connection.execute(
+        """
+        SELECT capture_id, attempt_id, derivation_version_id, provider,
+               adapter_contract, observation_kind, within_capture_identity
+        FROM observation_envelopes
+        ORDER BY within_capture_identity
+        """
+    ).fetchall()
+    contexts = connection.execute(
+        """
+        SELECT capture_id, derivation_version_id, attempt_id,
+               requested_keyword, returned_keyword_state, location_code,
+               language_code, items_count, item_types
+        FROM google_organic_result_context
+        ORDER BY capture_id
+        """
+    ).fetchall()
+    return {
+        "derivation_versions": list(versions),
+        "outcomes": list(outcomes),
+        "provider_recipes": list(recipes),
+        "observation_envelopes": list(envelopes),
+        "google_organic_result_context": list(contexts),
+    }
+
+
+def _seed_additive_rows(connection: psycopg.Connection[tuple[object, ...]]) -> None:
+    version = "aa" * 32
+    attempt_id = "ab" * 32
+    capture_id = "ac" * 32
+    identity = "ad" * 32
+    connection.execute(
+        """
+        INSERT INTO derivation_versions (
+            derivation_version_id, adapter_contract, registered_at
+        )
+        VALUES (%s, 'fixture-panel-v1', TIMESTAMPTZ '2026-08-18T00:00:00Z')
+        """,
+        (version,),
+    )
+    connection.execute(
+        """
+        INSERT INTO outcomes (
+            attempt_id, capture_id, derivation_version_id,
+            classification, observation_count
+        )
+        VALUES
+            (%s, NULL, %s, 'authorized_unresolved', 0),
+            (%s, %s, %s, 'observation_admitted', 1)
+        """,
+        (attempt_id, version, attempt_id, capture_id, version),
+    )
+    connection.execute(
+        """
+        INSERT INTO provider_recipes (
+            derivation_version_id, provider, adapter_contract,
+            recipe_canonical_bytes
+        )
+        VALUES (%s, 'dataforseo', 'test-adapter', %s)
+        """,
+        (version, b"{}"),
+    )
+    connection.execute(
+        """
+        INSERT INTO observation_envelopes (
+            capture_id, attempt_id, derivation_version_id, provider,
+            adapter_contract, observation_kind, within_capture_identity
+        )
+        VALUES (
+            %s, %s, %s, 'dataforseo', 'test-adapter', 'test.kind.v1', %s
+        )
+        """,
+        (capture_id, attempt_id, version, identity),
+    )
+    connection.execute(
+        """
+        INSERT INTO google_organic_result_context (
+            capture_id, derivation_version_id, attempt_id, requested_keyword,
+            returned_keyword_state, location_code, language_code,
+            se_domain_state, result_datetime_state, se_results_count_state,
+            pages_count_state, items_count, item_types
+        )
+        VALUES (
+            %s, %s, %s, 'conspiracy theories', 'absent', 2840, 'en',
+            'absent', 'absent', 'absent', 'absent', 0, ARRAY[]::TEXT[]
+        )
+        """,
+        (capture_id, version, attempt_id),
+    )
+
+
+def test_same_named_decoys_do_not_suppress_target_constraints(
+    postgres_dsn: str,
+) -> None:
+    with connect(postgres_dsn) as connection:
+        _install_decoy_and_incomplete_targets(connection)
+        _seed_additive_rows(connection)
+        apply_schema(connection)
+        first = _additive_constraint_projection(connection)
+        decoys = _decoy_constraint_projection(connection)
+        types = _ijson_column_types(connection)
+        with pytest.raises(UniqueViolation) as unique, connection.transaction():
+            connection.execute(
+                """
+                INSERT INTO outcomes (
+                    attempt_id, capture_id, derivation_version_id,
+                    classification, observation_count
+                )
+                VALUES (%s, %s, %s, 'observation_admitted', 1)
+                """,
+                ("ab" * 32, "ac" * 32, "aa" * 32),
+            )
+        with pytest.raises(ForeignKeyViolation) as missing, connection.transaction():
+            connection.execute(
+                """
+                INSERT INTO google_organic_result_context (
+                    capture_id, derivation_version_id, attempt_id,
+                    requested_keyword, returned_keyword_state, location_code,
+                    language_code, se_domain_state, result_datetime_state,
+                    se_results_count_state, pages_count_state, items_count,
+                    item_types
+                )
+                VALUES (
+                    %s, %s, %s, 'other', 'absent', 2840, 'en',
+                    'absent', 'absent', 'absent', 'absent', 0, ARRAY[]::TEXT[]
+                )
+                """,
+                ("ff" * 32, "aa" * 32, "ab" * 32),
+            )
+        apply_schema(connection)
+        second = _additive_constraint_projection(connection)
+        survived = _populated_provenance_projection(connection)
+    assert len(first) == 4
+    assert {(row[0], row[1], row[2]) for row in first} == set(_ADDITIVE_CONSTRAINTS)
+    assert all("UNIQUE" in row[3] or "FOREIGN KEY" in row[3] for row in first)
+    assert decoys == [
+        ("decoy_envelopes_kind_identity", "observation_envelopes_kind_identity", "c"),
+        ("decoy_organic_context_outcome", "google_organic_result_context_outcome", "c"),
+        ("decoy_outcomes_identity", "outcomes_identity", "c"),
+        ("decoy_recipes_adapter_version", "provider_recipes_adapter_version", "c"),
+    ]
+    assert types == {
+        ("outcomes", "observation_count"): "bigint",
+        ("observations", "result_index"): "bigint",
+        ("observations", "score"): "bigint",
+    }
+    assert unique.value.diag.constraint_name == "outcomes_identity"
+    assert missing.value.diag.constraint_name == (
+        "google_organic_result_context_outcome"
+    )
+    assert all(survived.values())
+    assert second == first
+
+
+def test_fresh_and_decoy_upgrade_share_bounded_catalog(
+    postgres_dsn: str, postgres_second_dsn: str
+) -> None:
+    with connect(postgres_dsn) as connection:
+        _install_decoy_and_incomplete_targets(connection)
+        _seed_additive_rows(connection)
+        before = _populated_provenance_projection(connection)
+        connection.commit()
+    assert all(before.values())
+    apply_migrations(postgres_dsn)
+    apply_migrations(postgres_second_dsn)
+    with connect(postgres_dsn) as upgraded, connect(postgres_second_dsn) as fresh:
+        _seed_additive_rows(fresh)
+        after = _populated_provenance_projection(upgraded)
+        fresh_rows = _populated_provenance_projection(fresh)
+        upgraded_proj = (
+            _additive_constraint_projection(upgraded),
+            _ijson_column_types(upgraded),
+        )
+        fresh_proj = (
+            _additive_constraint_projection(fresh),
+            _ijson_column_types(fresh),
+        )
+    assert after == before
+    assert after == fresh_rows
+    assert all(after.values())
+    assert upgraded_proj == fresh_proj
+    assert upgraded_proj[0]
+    assert upgraded_proj[1]
+
+
+def test_already_bigint_schema_skips_type_alter(postgres_dsn: str) -> None:
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        apply_schema(connection)
+        actions = _widen_ijson_columns(connection)
+        connection.commit()
+    assert actions == ("skip", "skip", "skip")
+
+
+def test_unexpected_ijson_column_type_fails_closed(postgres_dsn: str) -> None:
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            CREATE TABLE derivation_versions (
+                derivation_version_id TEXT PRIMARY KEY,
+                adapter_contract TEXT NOT NULL,
+                registered_at TIMESTAMPTZ NOT NULL
+            )
+            """
+        )
+        connection.execute(
+            """
+            CREATE TABLE outcomes (
+                attempt_id TEXT NOT NULL,
+                capture_id TEXT,
+                derivation_version_id TEXT NOT NULL
+                    REFERENCES derivation_versions (derivation_version_id),
+                classification TEXT NOT NULL,
+                observation_count TEXT NOT NULL
+            )
+            """
+        )
+        connection.commit()
+    with connect(postgres_dsn) as connection, pytest.raises(
+        SchemaError, match="outcomes.observation_count"
+    ):
+        apply_schema(connection)
+    with connect(postgres_dsn) as connection:
+        types = _ijson_column_types(connection)
+    assert types[("outcomes", "observation_count")] == "text"
+
+
+def test_missing_ijson_column_fails_closed(postgres_dsn: str) -> None:
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            CREATE TABLE derivation_versions (
+                derivation_version_id TEXT PRIMARY KEY,
+                adapter_contract TEXT NOT NULL,
+                registered_at TIMESTAMPTZ NOT NULL
+            )
+            """
+        )
+        connection.execute(
+            """
+            CREATE TABLE outcomes (
+                attempt_id TEXT NOT NULL,
+                capture_id TEXT,
+                derivation_version_id TEXT NOT NULL
+                    REFERENCES derivation_versions (derivation_version_id),
+                classification TEXT NOT NULL
+            )
+            """
+        )
+        connection.commit()
+    with connect(postgres_dsn) as connection, pytest.raises(
+        SchemaError, match="outcomes.observation_count is missing"
+    ):
+        apply_schema(connection)
 
 
 def test_list_committed_ids_ignores_uncommitted_residue(tmp_path: Path) -> None:

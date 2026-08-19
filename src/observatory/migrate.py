@@ -7,7 +7,7 @@ import sys
 from typing import Any, Final
 
 import psycopg
-from psycopg import Connection
+from psycopg import Connection, sql
 
 from observatory.settings import get_settings
 
@@ -42,7 +42,8 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1
         FROM pg_constraint
-        WHERE conname = 'outcomes_identity'
+        WHERE conrelid = 'outcomes'::regclass
+          AND conname = 'outcomes_identity'
     ) THEN
         ALTER TABLE outcomes
             ADD CONSTRAINT outcomes_identity
@@ -93,7 +94,8 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1
         FROM pg_constraint
-        WHERE conname = 'provider_recipes_adapter_version'
+        WHERE conrelid = 'provider_recipes'::regclass
+          AND conname = 'provider_recipes_adapter_version'
     ) THEN
         ALTER TABLE provider_recipes
             ADD CONSTRAINT provider_recipes_adapter_version
@@ -145,7 +147,8 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1
         FROM pg_constraint
-        WHERE conname = 'observation_envelopes_kind_identity'
+        WHERE conrelid = 'observation_envelopes'::regclass
+          AND conname = 'observation_envelopes_kind_identity'
     ) THEN
         ALTER TABLE observation_envelopes
             ADD CONSTRAINT observation_envelopes_kind_identity
@@ -853,7 +856,8 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1
         FROM pg_constraint
-        WHERE conname = 'google_organic_result_context_outcome'
+        WHERE conrelid = 'google_organic_result_context'::regclass
+          AND conname = 'google_organic_result_context_outcome'
     ) THEN
         ALTER TABLE google_organic_result_context
             ADD CONSTRAINT google_organic_result_context_outcome
@@ -896,11 +900,56 @@ SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_PF12_SCHEMA_STATEMENTS + (
     GOOGLE_ORGANIC_CONTEXT_OUTCOME_FK_SQL,
 )
 
-WIDEN_IJSON_COLUMNS_SQL: Final[tuple[str, ...]] = (
-    "ALTER TABLE outcomes ALTER COLUMN observation_count TYPE BIGINT",
-    "ALTER TABLE observations ALTER COLUMN result_index TYPE BIGINT",
-    "ALTER TABLE observations ALTER COLUMN score TYPE BIGINT",
+WIDEN_IJSON_COLUMNS: Final[tuple[tuple[str, str], ...]] = (
+    ("outcomes", "observation_count"),
+    ("observations", "result_index"),
+    ("observations", "score"),
 )
+WIDEN_IJSON_COLUMNS_SQL: Final[tuple[str, ...]] = tuple(
+    f"ALTER TABLE {table} ALTER COLUMN {column} TYPE BIGINT"
+    for table, column in WIDEN_IJSON_COLUMNS
+)
+
+
+class SchemaError(Exception):
+    """Rebuildable schema migration refused."""
+
+
+def _widen_ijson_columns(connection: Connection[Any]) -> tuple[str, ...]:
+    """Widen leftover INTEGER I-JSON columns; skip already-BIGINT columns."""
+
+    actions: list[str] = []
+    for table, column in WIDEN_IJSON_COLUMNS:
+        row = connection.execute(
+            """
+            SELECT t.typname
+            FROM pg_attribute AS a
+            JOIN pg_class AS c ON c.oid = a.attrelid
+            JOIN pg_namespace AS n ON n.oid = c.relnamespace
+            JOIN pg_type AS t ON t.oid = a.atttypid
+            WHERE n.nspname = current_schema()
+              AND c.relname = %s
+              AND a.attname = %s
+              AND a.attnum > 0
+              AND NOT a.attisdropped
+            """,
+            (table, column),
+        ).fetchone()
+        if row is None:
+            raise SchemaError(f"{table}.{column} is missing")
+        typname = str(row[0])
+        if typname == "int8":
+            actions.append("skip")
+            continue
+        if typname != "int4":
+            raise SchemaError(f"{table}.{column} has unexpected type {typname}")
+        connection.execute(
+            sql.SQL("ALTER TABLE {} ALTER COLUMN {} TYPE BIGINT").format(
+                sql.Identifier(table), sql.Identifier(column)
+            )
+        )
+        actions.append("alter")
+    return tuple(actions)
 
 
 def resolve_database_url(explicit: str | None) -> str:
@@ -921,8 +970,7 @@ def apply_schema(connection: Connection[Any]) -> None:
 
     for statement in SCHEMA_STATEMENTS:
         connection.execute(statement)
-    for statement in WIDEN_IJSON_COLUMNS_SQL:
-        connection.execute(statement)
+    _widen_ijson_columns(connection)
     connection.commit()
 
 

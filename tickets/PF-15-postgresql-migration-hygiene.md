@@ -1,10 +1,10 @@
 # PF-15 — PostgreSQL migration catalog and widening hygiene
 
-**Status:** ready  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; PF-14 closed  
 **Approved by:** Project Steward  
-**Start commit:** dc9534b44c0f15353cf194b436866d7f0270a6c1
+**Start commit:** `239623b29b82c57db779775ae696fcea0d1a747e`
 
 ## Purpose
 
@@ -276,4 +276,246 @@ paths, acceptance-to-test map, and command evidence. It must report candidly:
 
 Do not broaden implementation to repair adjacent migration history. Report it for Steward
 reconciliation.
+
+## Implementation report
+
+**Parent:** `239623b29b82c57db779775ae696fcea0d1a747e`  
+**Child:** supplied in the implementer handoff (a commit cannot embed its own final hash).  
+**Status:** `review`
+
+### Loaded skills
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### A. Start gate
+
+- branch: `main`
+- exact HEAD: `239623b29b82c57db779775ae696fcea0d1a747e`
+- working tree: dirty only with this ticket's authorized files at validation time
+- PF-15: `ready` at assignment; set `in-progress` then `review`
+- local `main` was one commit ahead of `origin/main` at start
+
+### B. Changed paths
+
+- `src/observatory/migrate.py`
+- `tests/test_derive_admitted_results.py`
+- `tests/test_provider_recipe_selection.py`
+- this ticket
+
+No API, provider, recipe, parser, Derivation, Evidence, selection, or new-surface change.
+
+### C. Behavior
+
+Additive existence probes now require both the accepted `conname` and
+`conrelid = '<table>'::regclass` for:
+
+- `outcomes_identity` on `outcomes`
+- `provider_recipes_adapter_version` on `provider_recipes`
+- `observation_envelopes_kind_identity` on `observation_envelopes`
+- `google_organic_result_context_outcome` on `google_organic_result_context`
+
+Unqualified `regclass` follows the same search_path resolution as the existing
+CREATE/ALTER statements. Constraint names and definitions are unchanged.
+
+I-JSON widening is a bounded helper over the three exact targets. Catalog type
+`int4` executes `ALTER COLUMN ... TYPE BIGINT`. Catalog type `int8` returns
+`skip` and does not issue the type ALTER. A missing column or any other type
+raises `SchemaError` before `apply_schema` commits. Transaction/commit shape is
+unchanged: statements run, then widen, then one commit.
+
+`WIDEN_IJSON_COLUMNS_SQL` remains the generated public import seam used by the
+populated PF-08 fixture. `apply_schema` no longer executes those strings
+unconditionally.
+
+### D. Acceptance map
+
+| Criterion | Proving test |
+|---|---|
+| Same-named CHECK decoys do not suppress target constraints | `test_same_named_decoys_do_not_suppress_target_constraints` |
+| Target relation + name + type + normalized definition | same; `_additive_constraint_projection` |
+| Target uniqueness is `outcomes_identity` | `test_same_named_decoys_do_not_suppress_target_constraints` (`diag.constraint_name`) |
+| Organic context FK is `google_organic_result_context_outcome` after valid recipe/version | same (`diag.constraint_name`; isolated savepoint) |
+| Seeded fixture survives both isolated violations | same (`_populated_provenance_projection` after second apply) |
+| Decoys survive untouched | same; `_decoy_constraint_projection` |
+| Second `apply_schema` is idempotent | same (`second == first` after both savepoints) |
+| Genuine INTEGER start widens and preserves planted rows | `test_apply_schema_upgrades_integer_columns_and_preserves_rows` |
+| Fresh schema starts BIGINT | `test_fresh_schema_ijson_columns_are_bigint` |
+| I-JSON bounds and adjacent rejection | `test_ijson_column_bounds_accepted_and_adjacent_rejected` |
+| Already-BIGINT takes no type ALTER (`skip`,`skip`,`skip`) | `test_already_bigint_schema_skips_type_alter` |
+| Unexpected type fails closed; no success commit | `test_unexpected_ijson_column_type_fails_closed` |
+| Missing column fails closed | `test_missing_ijson_column_fails_closed` |
+| Fresh vs decoy/incomplete-target catalog + pre-upgrade row survival | `test_fresh_and_decoy_upgrade_share_bounded_catalog` |
+| Global `conname` probes tightened | `test_migrate_creates_authorized_tables`; `test_additive_selection_schema_works_on_populated_pf07_tables` |
+| Populated PF-08→PF-12 upgrade remains green | `test_populated_pf08_schema_then_organic_derive` |
+| Recipe selection / envelopes / Outcomes / Organic derive | existing PF-04/PF-08/PF-12 tests remain green |
+
+### E. Validation
+
+First implementation suite (HEAD `239623b`, dirty product + tests + ticket):
+
+| Command | UTC start | UTC end | Elapsed | Exit |
+|---|---|---|---|---|
+| `uv run pytest -q` | 2026-08-19T00:21:20Z | 2026-08-19T00:23:53Z | 153 s (pytest 152.64 s) | 0 |
+| `uv run ruff check .` | 2026-08-19T00:24:04Z | 2026-08-19T00:24:04Z | 0 s (second resolution) | 0 |
+| `uv run mypy` | 2026-08-19T00:24:04Z | 2026-08-19T00:24:04Z | 0 s (second resolution) | 0 |
+
+Remediation suite (HEAD `c7676ee0a95fbebc35cec355a2ffc383a4dedcf2`; dirty
+`tests/test_derive_admitted_results.py` and this ticket only):
+
+| Command | UTC start | UTC end | Elapsed | Exit |
+|---|---|---|---|---|
+| `uv run pytest -q` | 2026-08-19T00:35:19Z | 2026-08-19T00:37:49Z | 150 s (pytest 149.66 s) | 0 |
+| `uv run ruff check .` | 2026-08-19T00:37:49Z | 2026-08-19T00:37:49Z | 0 s (second resolution) | 0 |
+| `uv run mypy` | 2026-08-19T00:37:49Z | 2026-08-19T00:37:50Z | 1 s | 0 |
+
+`911 passed, 1 skipped, 1 warning`. 48 source files. No leftover
+`observatory-ce05-*` container. After the remediation pytest run, only this
+report / status change was added. No `src/` or `tests/` bytes changed after
+that pytest. No `src/` change in the remediation.
+
+### F. Review
+
+Code-review against `239623b29b82c57db779775ae696fcea0d1a747e`.
+Standards and Spec axes ran as parallel read-only sub-agents on the first
+implementation tree, then again on the test-only remediation.
+
+**Standards:** 0 hard. Residual judgement unchanged: private
+`_widen_ijson_columns` no-ALTER seam; `"skip"`/`"alter"` strings; repeated
+DO-block shape; dual widen import seam; `current_schema()` + `relname` versus
+unqualified `regclass`. Remediation added a shared populated-row projection
+helper in tests only.
+
+**Spec:** first implementation left two false-green proofs (whole-connection
+rollback after `UniqueViolation`; post-migration Outcome-only seed). Remediation
+closes both. Remaining residuals: decoy test still uses UNIQUE/FK substrings
+for definition while parity holds full normalized defs; insert uniqueness is
+still outcomes + Organic FK, not the other two UNIQUEs; INTEGER conversion
+still does not re-insert adjacent I-JSON bounds.
+
+### G. Candid assessment
+
+**Catalog predicates.**
+`WHERE conrelid = '<table>'::regclass AND conname = '<accepted>'`.
+`regclass` identifies the search_path relation the CREATE/ALTER statements
+already use. `conname` alone is not a database-global identity.
+
+**Decoy planting.** Four unrelated tables
+(`decoy_outcomes_identity`, `decoy_recipes_adapter_version`,
+`decoy_envelopes_kind_identity`, `decoy_organic_context_outcome`) each carry a
+same-named `CHECK (true)`. UNIQUE decoys were not used: their backing index
+names are schema-unique and can collide, proving the wrong thing. Targets were
+created incomplete (no additive constraints), not as a fresh current schema
+with production constraints dropped. `apply_schema` then installed the four
+target constraints.
+
+**Parity path.** Fresh current schema (`postgres_second_dsn` +
+`apply_migrations`) versus the decoy/incomplete-target upgrade. Catalog
+projection remains target relation, `conname`, `contype`, normalized
+`pg_get_constraintdef`, plus the three I-JSON BIGINT types. Populated
+projection now includes derivation version, Attempt-stage and Capture-stage
+Outcomes, provider recipe, observation envelope, and Organic result context.
+Those rows are seeded and committed on the incomplete targets *before*
+`apply_schema`; the same projection is compared after upgrade and against an
+equivalent fresh seed. INTEGER-start and populated PF-08→PF-12 remain
+separate regression boundaries.
+
+**No-ALTER proof.** `_widen_ijson_columns` returns `("skip", "skip", "skip")`
+when all three catalog types are `int8`. A recording execute wrapper was
+abandoned after mypy rejected an untyped Connection stand-in; the
+action-returning helper is the ticket-authorized alternative. A second
+row-preserving `apply_schema` is not treated as no-ALTER proof.
+
+**Missing / unexpected types.** Missing column and non-`int4`/`int8` types
+raise `SchemaError` and do not reach `commit()`. Unexpected `text` remains
+`text`. Representative coverage is `outcomes.observation_count`; the helper
+uses one loop for all three targets.
+
+**Dependencies.** `outcomes_identity` is the UNIQUE that Organic context
+references. `provider_recipes_adapter_version` is the UNIQUE that selections
+reference. `observation_envelopes_kind_identity` is the UNIQUE that typed
+observation tables reference. The integrated fixture did not expose a
+dependency problem; `CREATE TABLE IF NOT EXISTS` leaves incomplete targets in
+place and the DO blocks add the missing constraints in `SCHEMA_STATEMENTS`
+order.
+
+**Strong.** Honest CHECK decoy adversary on one `apply_schema` path. Catalog
+assertions are relation-scoped. Genuine INTEGER conversion test kept, not
+replaced. Fail-closed widening. Pre-upgrade populated rows survive additive
+constraints and match a fresh seed. Isolated savepoints assert exact
+constraint names.
+
+**Weak.** INTEGER conversion proves planted-row survival and BIGINT types, not
+a post-ALTER adjacent-bound insert; I-JSON bound CHECKs remain proven on the
+fresh schema. No-ALTER is proved at the helper seam, not by intercepting
+`apply_schema`'s internal execute list. Incomplete targets are hand-built
+subsets, not historical dumps. `test_provider_recipe.py` still has a
+`derivation_diagnostics_identity` catalog check that was not an identified
+PF-15 assertion.
+
+**False-green risks closed in remediation.** Whole-connection rollback after
+the duplicate Outcome insert no longer erases the recipe/version fixture.
+Organic FK proof now requires `diag.constraint_name ==
+google_organic_result_context_outcome` with a capture_id that lacks only the
+composite Outcome. Parity no longer seeds only after migration or compares
+Outcomes alone.
+
+**False-green risks remaining.** A correctly named wrong-definition constraint
+already on the target still satisfies `IF NOT EXISTS` and is skipped. That is
+an unsupported state: PF-15 does not drop, replace, or silently repair it.
+Global `conname` probes outside the identified tests can still false-green.
+
+**Lock / scaling.** Skipping `ALTER COLUMN ... TYPE BIGINT` on already-`int8`
+columns avoids repeating that catalog rewrite on current schemas. No lock
+duration, concurrency, or multi-process claim. INTEGER conversion still issues
+the type ALTER. F7 remains deferred.
+
+**Unsupported states.** Wrong-definition-on-correct-target; unexpected column
+types other than the fail-closed refusal; schema-qualified vs unqualified
+split; historical tables beyond the three I-JSON columns and four additive
+constraints.
+
+**Later authority / next surface.** Additive migrations must key
+`(conrelid, conname)`. Do not treat PostgreSQL constraint names as global.
+UNIQUE decoys are the wrong collision adversary. Do not add a migration DSL or
+destructive catalog surgery from this ticket.
+
+**Ticket premises.** All held. Integrated four-decoy path was feasible. The
+audit claim that INTEGER-start proof was missing remains obsolete.
+
+### H. Confirmations
+
+- no API / provider / recipe / parser / Derivation / Evidence / selection /
+  new-surface change
+- no provider / DNS / credentials / paid-gate use
+- no push
+
+### I. Commit
+
+- parent SHA: `239623b29b82c57db779775ae696fcea0d1a747e`
+- child SHA: recorded in this amended implementation commit
+- previous child `c7676ee0a95fbebc35cec355a2ffc383a4dedcf2` is replaced by amend
+  and was never pushed
+
+### J. Remediation
+
+Steward accepted production `migrate.py` and required two test-only proofs.
+
+Finding 1: seed now runs on the incomplete targets and `apply_schema` commits
+those rows before adversarial inserts. Each violation uses
+`connection.transaction()`. Duplicate Outcome asserts `outcomes_identity`.
+Organic insert keeps derivation version `aa…`, recipe, and Attempt `ab…`
+valid and uses capture_id `ff…` so only the composite Outcome is missing;
+the exception must be `google_organic_result_context_outcome`. The second
+`apply_schema` still runs after both savepoints.
+
+Finding 2: `_populated_provenance_projection` captures version, both
+Outcome stages, recipe, envelope, and Organic context. That projection is
+taken before upgrade, committed, compared after `apply_migrations`, and
+compared to an equivalent fresh seed. Catalog comparison is unchanged.
+
+The pre-upgrade seed accepted the four additive constraints. No production
+defect. No `src/` change.
 

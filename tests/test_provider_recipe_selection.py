@@ -81,7 +81,8 @@ def test_additive_selection_schema_works_on_populated_pf07_tables(postgres_dsn: 
             """
             SELECT 1
             FROM pg_constraint
-            WHERE conname = 'provider_recipes_adapter_version'
+            WHERE conrelid = 'provider_recipes'::regclass
+              AND conname = 'provider_recipes_adapter_version'
             """
         ).fetchone()
         apply_migrations(postgres_dsn)
