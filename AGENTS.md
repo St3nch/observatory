@@ -208,19 +208,30 @@ issue-tracker scaffolding.
 
 ## Commands
 
-Intended repository commands as modules exist:
+Repository verification commands:
 
     uv run pytest -q
     uv run ruff check .
     uv run mypy
+
+Implemented module entrypoints:
+
     uv run python -m observatory.migrate
     uv run python -m observatory.capture
     uv run python -m observatory.derive
     uv run python -m observatory.evidence status
     uv run python -m observatory.evidence scrub
+    uv run python -m observatory.dataforseo_sandbox
+    uv run python -m observatory.dataforseo_paid_probe
+    uv run python -m observatory.keyword_overview_derive
+    uv run python -m observatory.provider_recipe_selection
+    uv run python -m observatory.dataforseo_google_organic_paid_probe
+    uv run python -m observatory.google_organic_derive
+    uv run python -m observatory.serve
 
-Migration, capture, derivation, and evidence commands remain placeholders until
-implemented.
+Listing an entrypoint does not authorize provider transport, credentials, spend, Evidence
+creation, or deferred work. The relevant authority, ticket, and explicit Product Owner
+gate still apply.
 
 ## Grok skill policy
 

@@ -1148,6 +1148,33 @@ does not authorize transport or Evidence creation.
 `(capture_id, derivation_version_id, within_capture_result_id)` with
 `within_capture_result_id = "result:"` + decimal index; provider `fixture`.
 
+### Current provider schema and read-surface pointer
+
+The accepted Keyword Overview and Google Organic implementations add rebuildable provider
+relations without changing the Evidence boundary. Shared relations are `provider_recipes`,
+`provider_recipe_selections`, `observation_envelopes`, and
+`derivation_diagnostics`. Keyword Overview typed details are
+`keyword_overview_coverage`, `keyword_overview_metrics`,
+`keyword_overview_monthly_search_volume`, `keyword_overview_search_volume_trend`,
+`keyword_overview_properties`, `keyword_overview_avg_backlinks`, and
+`keyword_overview_search_intent`. Google Organic uses
+`google_organic_result_context`, `google_organic_serp_features`,
+`google_organic_ranked_results`, `google_organic_aio_presence`,
+`google_organic_aio_sources`, `google_organic_aio_source_occurrences`,
+`google_organic_related_questions`,
+`google_organic_related_question_occurrences`, and
+`google_organic_related_queries`. Their closed recipes and accepted semantics remain
+authoritative through the registered canonical recipe bytes and PF-04 through PF-15
+acceptance records; this paragraph is a discovery pointer, not a duplicate schema.
+
+The canonical versioned resource namespace is `/v1`. Current provider reads are
+`GET /v1/attempts/{attempt_id}`,
+`GET /v1/providers/dataforseo/google/keyword-overview/history`, and
+`GET /v1/providers/dataforseo/google/organic/history`. Development documentation is served
+at `/api/v1/docs` with OpenAPI at `/api/v1/openapi.json`; those documentation locations do
+not create a second `/api/v1` resource namespace or a compatibility mount. The API remains
+read-only, loopback-only, and unauthenticated until the recorded deferred triggers fire.
+
 For fixture v1, `derivation_version_id` is an operator-supplied semantic label matching
 `[A-Za-z0-9._+:-]{1,128}`. It is the immutable identity of one derivation meaning under
 its registered `adapter_contract`; changing derivation behavior requires a new label.
@@ -1237,6 +1264,17 @@ coverage Observation keyed by the exact requested keyword.
 
 Filesystem traversal order, request-array order, provider result order, and provider task
 echo order are never Observation identities.
+
+#### Accepted Google Organic AIO optionality
+
+For the current Google Organic recipe, an AI Overview item's top-level `references` and
+`items` members are required arrays; either missing or JSON null fails parsing closed. For
+an `ai_overview_element` inside `items`, an absent `references` member and a JSON-null
+`references` member are intentionally interpreted alike: neither emits element-locus AIO
+source occurrences, and neither establishes an absence Observation. The exact distinction
+remains recoverable from raw Evidence. Aligning or otherwise changing that asymmetry is a
+recipe-semantic change and therefore requires new canonical recipe bytes and a new
+`derivation_version_id`.
 
 #### Provider Observation envelope and typed details
 

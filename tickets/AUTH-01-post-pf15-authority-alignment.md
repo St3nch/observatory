@@ -1,6 +1,6 @@
 # AUTH-01 — Post-PF-15 authority alignment
 
-**Status:** ready  
+**Status:** done  
 **Owner:** [GPT] Project Steward  
 **Blocked by:** none; PF-15 closed  
 **Approved by:** Project Steward  
@@ -59,4 +59,33 @@ Owner's post-PF-15 acquisition boundary before selecting another provider surfac
 
 ## Steward report
 
-Pending.
+Completed as a Steward-only authority reconciliation.
+
+- `AGENTS.md` now lists the three repository verification commands and every current
+  executable module discovered through the implemented `__main__` seams. The command list
+  expressly grants no provider, credential, spend, Evidence, or deferred-work authority.
+- `VISION.md` now forbids direct automation or scraping of consumer LLM/AI-search
+  interfaces, while preserving the ability to activate documented provider services or
+  official APIs under all existing gates. A provider product named “scraper” is not
+  confused with Observatory operating its own consumer-interface scraper.
+- `docs/specs/capture-event-v2.md` now points to the accepted shared, Keyword Overview, and
+  Google Organic rebuildable relations and the three provider read resources. `/v1` is the
+  sole canonical resource namespace; `/api/v1/docs` and `/api/v1/openapi.json` are
+  documentation locations only.
+- The spec now records the existing Organic recipe behavior for AIO arrays: top-level
+  arrays are required and null fails closed, while missing and null element-level
+  `references` both emit no element-locus occurrence and make no absence claim. Raw
+  Evidence retains the distinction; changing the rule requires a new recipe identity.
+
+Verification:
+
+- clean `main` at start commit
+  `e828b82bc35a21f2c2f8a9e2271cb72b7b618f75`;
+- current implementation inspected directly for entrypoint seams, route mounts, table
+  names, and AIO parsing behavior;
+- changed paths limited to `AGENTS.md`, `VISION.md`,
+  `docs/specs/capture-event-v2.md`, and this ticket;
+- no `src/` or `tests/` change, so pytest/ruff/mypy were not rerun;
+- no provider, DNS, credential, paid-gate, Evidence, PostgreSQL, or network activity;
+- no next acquisition surface selected or implemented;
+- no push.

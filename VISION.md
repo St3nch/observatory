@@ -106,6 +106,16 @@ commit leaves honest unresolved history.
   acquisition safety, historical uniqueness, overlap, cost, and implementation complexity.
   This direction does not authorize indiscriminate collection, a provider call, recurring
   acquisition, or a surface that has not passed its bounded activation review.
+- Consumer-facing LLM and AI-search interfaces are not Observatory acquisition surfaces.
+  Observatory does not automate or scrape those interfaces through browser sessions,
+  consumer-account cookies, private or unofficial endpoints, CAPTCHA or anti-bot
+  circumvention, or equivalent impersonation of interactive use. AI answer, mention,
+  source, and citation testimony may be acquired only through a separately activated
+  documented provider service or official API under the applicable provider-terms,
+  retention, privacy/personal-data, API-redistribution, Evidence, and spend gates. A
+  contracted provider product whose name includes “scraper” remains provider-attributed
+  testimony obtained through that documented service; its name is not permission for
+  Observatory to scrape the underlying consumer interface itself.
 - Do not prematurely collapse rich provider testimony into a score or thin convenience row
   when doing so would discard relationships or dimensions a later consumer may need. Raw
   Evidence remains available for re-derivation, while normalized Observations expose the
