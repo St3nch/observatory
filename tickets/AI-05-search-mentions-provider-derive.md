@@ -1,16 +1,16 @@
 # AI-05 — Search Mentions provider Derivation and typed persistence
 
-**Status:** technical review  
-**Owner:** [GPT] Steward design / [GROK] technical review and later implementation  
-**Blocked by:** GROK technical review and Steward reconciliation  
-**Approved by:** not yet; this ticket is not ready for implementation  
-**Review base:** 90e213f0a31067a4c19d29a94229f8748d3977ce  
+**Status:** ready  
+**Owner:** [GROK] implementation / [GPT] Steward review  
+**Blocked by:** none; GROK technical review reconciled  
+**Approved by:** Project Steward  
+**Technical-review base:** 9782ab37b4a949c514c90feee0aa29a8940dde32  
+**Implementation start:** the ready-transition commit supplied in the Steward handoff  
 
 ## Purpose
 
-Design and, only after a separate ready transition, implement the first Search Mentions
-Derivation Recipe, semantic Observation identities, typed PostgreSQL persistence, and
-deterministic rebuild proof for the exact closed adapter:
+Implement the first Search Mentions Derivation Recipe, semantic Observation identities,
+typed PostgreSQL persistence, and deterministic rebuild proof for the exact closed adapter:
 
     dataforseo-ai-optimization-llm-mentions-search-mentions-live-paid-probe-v1
 
@@ -19,9 +19,9 @@ recipe-selection and read/history API ticket. AI-05 authorizes no provider excha
 continuation request, recurring acquisition, Target Metrics work, second platform, or
 cross-provider projection.
 
-The current ticket is deliberately in technical review. GROK must challenge the proposed
-identity, occurrence, schema, time, and complete-set rules before the Steward marks it ready.
-No src/ or tests/ implementation may begin from this status.
+GROK independently challenged the identity, occurrence, schema, time, and complete-set
+rules and returned READY_AFTER_TICKET_RECONCILIATION. The accepted corrections below are
+implementation authority. No provider call or additional probe is required.
 
 ## Authority and accepted foundation
 
@@ -79,14 +79,14 @@ AI-05 must not add:
 - a generic provider-derive framework or unrelated parser/migration refactor;
 - Evidence mutation or PostgreSQL authority over raw bodies.
 
-## Proposed Recipe contract for technical review
+## Recipe contract
 
 The Recipe is a closed canonical I-JSON document registered through the accepted provider
 recipe substrate. Its derivation_version_id is SHA-256 of exact JCS Recipe bytes. The
 implementation must publish the final byte length and digest and prove independent
 recomputation.
 
-The proposed Recipe fixes:
+The Recipe fixes:
 
 - exact provider and adapter contract;
 - the AI-04 parser contract;
@@ -106,22 +106,27 @@ Any later change to these semantics requires different Recipe bytes and identity
 does not claim that provider order, item index, source array index, token contents, answer
 Markdown links, or raw value fields are Observation identity.
 
-## Proposed Observation families
+## Observation families
 
-GROK must test whether these are the smallest honest families. Do not accept them merely
-because they resemble Google Organic.
+The accepted model has exactly three semantic families. Their occurrence relations follow
+the accepted Organic distinction between semantic identity and repeated placement, but their
+keys and field rules are Search Mentions-specific.
 
-### 1. Search Mention result item
+### 1. Search Mentions result item
 
-Proposed kind:
+Kind:
 
-    dataforseo.google.ai_optimization.search_mention.v1
+    dataforseo.google.ai_optimization.search_mentions.item.v1
 
-Proposed semantic identity axes:
+Semantic identity axes:
 
 - exact requested keyword from the verified Attempt;
 - exact provider model_name;
 - exact returned question.
+
+model_name and question must each be nonempty exact strings. An empty semantic identity
+string rejects the entire Capture-stage unit as provider_envelope_rejected. Whitespace and
+Unicode remain exact testimony and are not normalized.
 
 The adapter already fixes Google platform, United States location, English language,
 answer-scope word matching, offset zero, and limit five. Those remain typed Capture context
@@ -146,18 +151,24 @@ A repeated semantic item identity must agree exactly on all item detail or rejec
 Capture-stage unit as provider_envelope_rejected. It must never choose first/last, merge
 answers, or silently discard one occurrence.
 
-Persist every item occurrence in a subordinate relation carrying its nonnegative provider
-item_index. item_index is physical occurrence/order testimony only and must never enter
+Persist every item occurrence in a subordinate relation. item_index is defined as the
+zero-based index in the parsed items tuple and may be assigned by enumerate; it is not a
+provider JSON field. It is physical occurrence/order testimony only and must never enter
 within_capture_identity or Recipe axes. Identical duplicate item occurrences produce one
 semantic envelope plus multiple occurrence rows.
 
+All occurrence identity columns are NOT NULL. Item occurrence uniqueness is ordinary UNIQUE
+on (capture_id, derivation_version_id, within_capture_identity, item_index). The occurrence
+must foreign-key to the matching typed item parent, including exact kind, not merely to an
+arbitrary observation_envelopes row.
+
 ### 2. Monthly AI search volume
 
-Proposed kind:
+Kind:
 
     dataforseo.google.ai_optimization.search_mentions.monthly_search_volume.v1
 
-Proposed semantic identity axes:
+Semantic identity axes:
 
 - exact requested keyword;
 - exact provider model_name;
@@ -170,20 +181,24 @@ is independent of Capture time, the item first/last clocks, and current ai_searc
 
 A repeated semantic monthly identity must agree exactly on search_volume or reject the whole
 Capture-stage unit. Persist a subordinate monthly occurrence row carrying item_index so
-identical duplicate question items do not disappear. Monthly array position is neither
-identity nor required persistent testimony because the explicit period is authoritative;
-GROK must challenge this omission if provider ordering carries a distinct necessary fact.
+identical duplicate question items do not disappear. Monthly occurrence uniqueness is
+ordinary UNIQUE on (capture_id, derivation_version_id, within_capture_identity, item_index),
+with a foreign key to the matching typed monthly parent.
+
+Monthly array position is not persisted: explicit year/month is the Data Period. Duplicate
+question items with unequal monthly windows admit the union of periods. Overlapping periods
+must agree on search_volume or the entire unit is rejected.
 
 Current ai_search_volume remains item detail and must not be derived from the newest monthly
 point. The frozen fixture contains three real disagreements.
 
 ### 3. Structured Search Mention source
 
-Proposed kind:
+Kind:
 
     dataforseo.google.ai_optimization.search_mentions.source.v1
 
-Proposed semantic identity axes:
+Semantic identity axes:
 
 - exact requested keyword;
 - exact provider model_name;
@@ -206,16 +221,19 @@ The source optional fields remain required null-or-opaque-string states under AI
 
 Persist every source occurrence in a subordinate relation carrying item_index and the
 positive provider rank. Rank is scoped to one item and is occurrence testimony, not semantic
-source identity. Duplicate exact URLs within one item or across repeated semantic items must
-remain separate occurrence rows.
+source identity. Source occurrence uniqueness is ordinary UNIQUE on (capture_id,
+derivation_version_id, within_capture_identity, item_index, rank), with a foreign key to the
+matching typed source parent. Rank restarts per item, so omitting item_index is a collision.
+Duplicate exact URLs within one item or across repeated semantic items must remain separate
+occurrence rows.
 
 All occurrences sharing one semantic source identity must agree exactly on source detail.
 Disagreement rejects the entire Capture-stage unit as provider_envelope_rejected. Do not
 select a preferred rank or metadata spelling.
 
-## Proposed frozen cardinality
+## Frozen-Capture cardinality
 
-Under the proposed three-kind model, the accepted AI-03 fixture emits:
+Under the accepted three-kind model, the accepted AI-03 fixture emits:
 
 | Kind | Semantic envelopes |
 |---|---:|
@@ -233,15 +251,16 @@ Subordinate occurrence counts are:
 These occurrence rows and the Capture result-context row do not increase
 outcomes.observation_count.
 
-GROK must independently recompute these counts from the frozen fixture and challenge any
-identity collision hidden by the fact that the live five questions and 48 URLs are unique.
+Tests must independently recompute these counts. The live five questions and 48 URLs are
+unique, so duplicate-identity behavior requires synthetic proofs; 113 is a frozen-Capture
+count, not a provider invariant.
 
-## Proposed Capture result context
+## Capture result context
 
 Persist exactly one Search Mentions result-context row per Capture and Recipe, structurally
 bound to the exact Capture Outcome by derivation_version_id, attempt_id, and capture_id.
 
-Proposed typed context:
+Typed context:
 
 - exact requested keyword, match_type, search_filter, and search_scope;
 - Attempt platform, location_code, language_code, limit, and offset;
@@ -254,10 +273,9 @@ must never become identity, be decoded, be followed, or be exposed as authorizat
 another request.
 
 Provider root/task version, messages, durations, costs, task ID/path, and task.data echo
-remain typed parser IR and raw Evidence in this proposal but are not duplicated into
-PostgreSQL. GROK must specifically assess whether omitting any of them would make AI-06
-materially under-specified. If one is justified, propose a bounded typed context column;
-do not add JSONB or a generic provider-envelope dump.
+remain typed parser IR and raw Evidence only; they are not duplicated into PostgreSQL.
+Echo disagreement remains recoverable from Evidence and IR. Do not add JSONB or a generic
+provider-envelope dump.
 
 A valid admitted empty page writes observation_admitted_empty, zero normal envelopes, and
 one result-context row preserving total_count, offset, item count zero, and cursor state.
@@ -272,10 +290,10 @@ one result-context row preserving total_count, offset, item count zero, and curs
 - Provider duration strings remain Evidence/IR durations, never timestamps.
 - Missing time is not filled from Capture or sibling structures.
 
-GROK must review whether first_response_at and last_response_at should be stored as
-TIMESTAMPTZ, exact strings with checked grammar, or paired typed/exact testimony. The chosen
-representation must retain their ordering constraint and must not imply precision or meaning
-the provider did not claim.
+Persist first_response_at and last_response_at as TEXT NOT NULL in the exact provider lexical
+form already validated by AI-04. PostgreSQL must CHECK last_response_at >= first_response_at;
+lexical order is valid for the fixed zero-padded UTC grammar and equality is legal. Do not
+store TIMESTAMPTZ, dual timestamp columns, or label these clocks Provider Update Time.
 
 ## Outcome and failure behavior
 
@@ -297,12 +315,23 @@ or semantic duplicate-content disagreement produce zero normal Search Mentions r
 Provider JSON errors remain provider_error. Damaged Attempt/Capture/body Evidence produces no
 Capture-stage provider rows; a separately verified Attempt-stage Outcome may remain.
 
-No normal rows from one Capture survive a whole-unit semantic disagreement.
+No normal rows from one Capture survive a whole-unit semantic disagreement. A
+provider_envelope_rejected unit writes its Capture Outcome with observation_count zero and
+writes no result context, envelopes, details, or occurrences. Result context is written only
+for observation_admitted and observation_admitted_empty.
 
 ## Schema and provenance requirements
 
 Use existing provider_recipes, outcomes, observation_envelopes, and
-derivation_diagnostics. Add only bounded Search Mentions typed relations.
+derivation_diagnostics. Add exactly these bounded Search Mentions relations:
+
+- search_mentions_items
+- search_mentions_item_occurrences
+- search_mentions_monthly_search_volume
+- search_mentions_monthly_occurrences
+- search_mentions_sources
+- search_mentions_source_occurrences
+- search_mentions_result_context
 
 Every typed detail relation must carry exact observation_kind and be structurally bound to a
 matching generic envelope through the accepted candidate key. Every occurrence relation must
@@ -312,15 +341,23 @@ The result context must cite a real matching Capture Outcome through the full pr
 tuple. Existing outcomes_identity must be present before the foreign key is applied.
 
 Use BIGINT for provider structural/count/rank/volume integers within the accepted I-JSON safe
-range. Use NUMERIC only for any decimal value that is actually authorized for persistence;
-the current proposal persists no cost.
+range. Counts, volumes, and item indexes are 0..9007199254740991; rank is
+1..9007199254740991. Monthly year is 1..9999 and month is 1..12, matching AI-04 rather than
+Keyword Overview's narrower period bounds. Use NUMERIC only for a decimal value explicitly
+authorized for persistence; AI-05 persists no cost.
 
 Field-state/value CHECKs must enforce stated plus non-NULL and non-stated plus SQL NULL.
-Google-null-only item states must be constrained to json_null.
+Google-null-only item states are state-only and constrained exactly to json_null; the generic
+state/value helper is insufficient because it would admit stated or absent.
 
-Schema changes are additive over the accepted PF-15 schema, preserve all existing fixture,
-Keyword Overview, and Google Organic rows, and are idempotent. Same-named decoy constraints
-on other relations must not suppress target constraints.
+Put constraints for these new relations inside CREATE TABLE IF NOT EXISTS statements appended
+to the current PF-15 schema sequence. Add a relation-scoped conrelid plus conname probe only
+if an existing relation must be altered. Do not introduce a global-conname probe or copy
+Organic's UNIQUE NULLS NOT DISTINCT: every Search Mentions occurrence key is NOT NULL.
+
+Schema changes are additive over a representative populated PF-15 schema containing fixture,
+Keyword Overview, and Google Organic rows, preserve those rows, and are idempotent.
+Same-named decoy constraints on other relations must not suppress target constraints.
 
 ## Atomic and complete-set behavior
 
@@ -339,8 +376,19 @@ Same Recipe plus same verified Evidence is content-consistent, not conflict-igno
 - compare all relevant tables before commit;
 - never use ON CONFLICT DO NOTHING or last-write-wins as semantic equality.
 
+Complete-set comparison is scoped by (capture_id, derivation_version_id) and includes
+attempt_id on Outcomes. Item and monthly occurrence sets compare
+(within_capture_identity, item_index); source occurrence sets compare
+(within_capture_identity, item_index, rank). Identity-only counts are insufficient.
+
+A second Search Mentions Recipe for the same Capture must coexist under its own Outcome,
+context, envelope, detail, and occurrence sets. Each Recipe's complete-set comparison must
+ignore the other Recipe's rows without becoming Capture-global. observation_count is per
+Recipe Outcome.
+
 Two fresh PostgreSQL databases rebuilt from the same verified Evidence and Recipe must be
-logically equivalent across every AI-05 relation.
+logically equivalent across every AI-05 relation, including token state/value, exact clocks,
+Google-null states, item indexes, and source ranks.
 
 Do not extract a shared provider-derive kernel in this ticket. Report repeated structure and
 a concrete later trigger instead.
@@ -358,86 +406,85 @@ At minimum, a later ready implementation must prove on real PostgreSQL:
 - item reorder leaves semantic identity sets unchanged while occurrence indexes remain
   non-identity testimony;
 - monthly reorder leaves semantic period identities unchanged;
-- identical duplicate question items create one semantic item plus multiple occurrences;
-- conflicting duplicate item detail rejects the whole Capture unit;
-- duplicate exact source URL occurrences survive without URL identity collapse;
+- identical duplicate question items create one semantic item plus multiple occurrences,
+  and their synthetic envelope count is recomputed rather than hardcoded to 113;
+- empty model_name or question rejects the whole Capture unit;
+- conflicting duplicate item detail rejects the whole Capture unit with zero context;
+- duplicate exact source URL creates one semantic source plus multiple distinct
+  (item_index, rank) occurrences without URL identity collapse;
 - conflicting same-identity source metadata rejects the whole Capture unit;
 - duplicate monthly identity with conflicting volume rejects the whole Capture unit;
-- wrong-kind typed detail, orphan/wrong-parent occurrence, invalid item index/rank, and
-  state/value inconsistency are rejected by PostgreSQL;
+- unequal duplicate-item monthly windows admit the union of nonoverlapping periods;
+- empty sources and empty monthly arrays emit zero child envelopes without inventing absence;
+- wrong-kind typed detail, orphan/wrong-parent occurrence, duplicate occurrence key, invalid
+  item index/rank, and state/value inconsistency are rejected by PostgreSQL;
 - admitted empty page writes context but zero normal envelopes;
 - provider error, parser rejection, reconciliation failure, partial/no-response, complete
   non-admissible transport, and Evidence damage produce the exact closed behavior;
 - exact-content rerun, missing-row repair, planted extra rows, content conflict, wrong count,
   and foreign-Attempt Outcome behavior;
-- migration over a representative populated PF-15 schema;
+- a second Search Mentions Recipe on the same Capture proves Recipe-scoped coexistence;
+- migration over representative populated PF-15 fixture, Keyword Overview, and Organic rows;
 - fresh versus upgraded schema parity for the bounded AI-05 catalog;
-- two-database logical equivalence;
+- two-database logical equivalence over every new column, not a selected thin projection;
 - existing fixture, Keyword Overview, Google Organic, AI-04 parser, recipes, and frozen
   fixture identities remain unchanged;
 - ordinary tests have no provider, DNS, credential, paid-gate, or external-network activity.
 
-## Technical-review questions for GROK
+## GROK technical-review reconciliation
 
-Before implementation, inspect the current parser, provider recipe helpers, Organic/Keyword
-Overview writers, migrations, and PostgreSQL tests. Answer directly:
+GROK reviewed the parser, recipe helpers, provider writers, migration catalog, and PostgreSQL
+proofs from clean commit 9782ab37b4a949c514c90feee0aa29a8940dde32. He independently
+verified the fixture digest, 5/48/60 occurrences, 3055/0 result context, 628-character opaque
+cursor, five unique live questions, 48 unique live URLs, and fixture-specific 113 envelopes.
 
-1. Are the three proposed Observation families semantically honest, or should answer/current
-   volume/source testimony be split differently?
-2. Is exact model_name a necessary identity axis, a content field whose disagreement should
-   reject, or a closed enum/context field? Explain the consequences across captures and
-   duplicate items.
-3. Does requested keyword plus model plus returned question safely identify a semantic item
-   without using provider order? Name any collision the ticket misses.
-4. Are item/monthly/source occurrence tables sufficient to preserve duplicate questions and
-   duplicate URLs? Identify every nullable-key or restarted-index trap.
-5. Should monthly array position be retained as occurrence testimony despite explicit
-   year/month identity?
-6. Is whole-unit rejection the correct response to same-identity answer, volume, or source
-   metadata disagreement? If not, propose an identity that does not smuggle values or array
-   indexes into identity.
-7. Is the proposed 113 envelope count correct?
-8. Is the result context sufficient for AI-06? Assess the opaque token, provider echo,
-   cost/task metadata, truncation, and request/result agreement.
-9. What is the least misleading PostgreSQL representation of first_response_at and
-   last_response_at?
-10. Which constraints must be relation-scoped or NULL-safe under PF-15?
-11. Where can complete-set comparison false-green, especially with a second Recipe for the
-    same Capture?
-12. What generalized safely from PF-12, and what would be cargo-culting?
-13. What is strongest, weakest, awkward, under-proved, or likely to become debt?
-14. Did AI-04 parser semantics omit any field needed for correct persistence?
-15. Is another provider probe materially justified before AI-05? D12 says no unless a
-    distinct unexercised branch could change the contract; identify that branch precisely
-    rather than asking for a statistical resample.
+Recommendation: READY_AFTER_TICKET_RECONCILIATION. No additional provider probe is justified.
 
-Return one of:
+Accepted findings:
 
-- READY_AFTER_TICKET_RECONCILIATION
-- BLOCKED_BY_IDENTITY_OR_CONTRACT
-- NEEDS_DISTINCT_PROBE
+- the three semantic families remain intact;
+- model_name is an exact identity axis and persisted content, not a fixed enum;
+- item_index is zero-based parsed-array occurrence testimony, never Observation identity;
+- every occurrence key is NOT NULL and uses ordinary UNIQUE with item_index;
+- monthly array position is not persisted;
+- same-identity disagreement rejects the whole Capture-stage unit;
+- provider echo, costs, task metadata, messages, and durations remain Evidence/IR only;
+- exact provider clocks are TEXT, not TIMESTAMPTZ or Provider Update Time;
+- year bounds match AI-04 at 1..9999;
+- complete-set comparison is Recipe-scoped and proves second-Recipe coexistence;
+- migration proof begins from populated PF-15 state;
+- AI-04 retains every field needed for persistence;
+- continuation, other platforms, Target Metrics, and a shared derive kernel remain deferred.
 
-For every proposed correction, cite the exact current code/schema/test reason and supply
-replacement ticket language. Do not edit any file during technical review.
+This will be the third surface-local provider writer. Accept that duplication here. Reconsider
+a shared kernel only at a fourth provider surface or after a real copy-paste complete-set
+defect.
 
-## Review deliverable
+## One implementation commit must prove
 
-GROK returns:
+One verified AI-03-shaped Capture re-derives into 113 semantic typed, provenance-bound
+Observation envelopes while every item/monthly/source occurrence survives without becoming
+identity, truncation and opaque cursor context remain explicit, and all failure, conflict,
+migration, coexistence, and rebuild-equivalence paths above hold.
 
-- loaded project-local skill paths;
-- exact branch, HEAD, clean status, and origin divergence;
-- confirmation that AI-05 is technical review, not ready;
-- fixture byte/hash verification and independently recomputed cardinalities;
-- answers to all 15 questions;
-- proposed Recipe kind names and exact identity axes;
-- proposed table/constraint shape;
-- acceptance-to-test critique;
-- strongest and weakest design points;
-- false-green and migration risks;
-- explicit recommendation;
-- confirmation of no files changed, no provider/network/credential access, no PostgreSQL
-  mutation, no implementation, and no push.
+## Implementer report required
 
-The Steward will reconcile the report into this existing ticket. Only a later Steward commit
-may set Status ready and supply an exact implementation Start commit.
+The implementation commit must fill Implementation start, set Status to review, and record
+exact parent, changed paths, final Recipe bytes/digest, frozen fixture identity,
+acceptance-to-test map, targeted/full commands and results, and no-container state.
 
+Report candidly:
+
+- what generalized safely from PF-12 and what did not;
+- strongest and weakest identity/occurrence/constraint/complete-set proofs;
+- every under-proved adversarial branch or fixture limitation;
+- whether any accepted table or identity was awkward in actual code;
+- any false-green discovered during TDD or two-database comparison;
+- the exact future trigger for extracting a shared provider-derive kernel;
+- confirmation that AI-04 parser and fixture bytes, existing Recipes, and existing rows are
+  unchanged;
+- confirmation of no provider/network/credential call, no selection/API/AI-06/Target Metrics
+  work, no other surface, and no push.
+
+Do not broaden implementation to fix adjacent findings. Stop at one clean implementation
+commit for Steward review.
