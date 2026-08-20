@@ -1,6 +1,6 @@
 # AI-04 — Search Mentions strict parser and AI-03 conformance fixture
 
-**Status:** review  
+**Status:** closed  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; GROK technical review reconciled  
 **Approved by:** Project Steward  
