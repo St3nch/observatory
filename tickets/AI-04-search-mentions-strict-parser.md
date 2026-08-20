@@ -1,10 +1,12 @@
 # AI-04 — Search Mentions strict parser and AI-03 conformance fixture
 
-**Status:** review  
-**Owner:** [GROK] technical review / [GPT] Steward reconciliation  
-**Blocked by:** technical review and Steward reconciliation; not ready for implementation  
+**Status:** ready  
+**Owner:** [GROK] implementation / [GPT] Steward review  
+**Blocked by:** none; GROK technical review reconciled  
 **Approved by:** Project Steward  
-**Start commit:** `7a76bee9843006e0c1c76b16913e926d1cf73e36`  
+**Review-ticket commit:** `7f4c57b82d16625193456f5a9e3527841a96b5ef`  
+**Implementation start:** the ready-transition commit containing this reconciliation, supplied
+in the Steward handoff  
 
 ## Purpose
 
@@ -102,17 +104,23 @@ The parser must:
 - reject a UTF-8 BOM, invalid UTF-8, duplicate JSON object member names, trailing
   non-whitespace material, and non-finite JSON constants;
 - parse structural integers as real integers, rejecting booleans and floats;
-- preserve decimal-capable lexical testimony exactly with `Decimal` or an equivalent
-  non-binary representation;
-- distinguish HTTP transport success from root/task provider status;
-- validate the exact one-task/one-result successful branch and all declared counts;
+- parse known decimal-capable cost fields with `Decimal` or an equivalent non-binary
+  representation, never through binary float; equal JSON numeric values compare equal and
+  AI-04 does not retain original numeral spelling;
+- consume only verified complete response-body bytes plus verified Attempt parameters; the
+  parser accepts no HTTP status or transport-state input;
+- classify root/task JSON provider status independently from transport and validate the exact
+  one-task/one-result successful branch and all declared counts;
 - preserve duration strings as durations, never as timestamps;
 - parse provider response clocks under the observed
   `YYYY-MM-DD HH:MM:SS +00:00` grammar with real calendar validation;
 - retain the continuation token as an opaque null-or-string field and never decode it;
 - use the verified Attempt parameters as request authority;
-- never substitute `task.data`, token internals, provider item order, or a returned
-  question for the requested context;
+- parse `task.data` as a closed provider-echo object, retain it in the IR, and never use it
+  to fill or override verified Attempt context; echo disagreement remains visible and does
+  not by itself rewrite or reject item context;
+- never substitute token internals, provider item order, or a returned question for the
+  requested context;
 - reconcile every item’s Google platform, location `2840`, and language `en` against the
   verified Attempt context;
 - retain exact returned question and exact Markdown answer independently of the requested
@@ -125,8 +133,9 @@ The parser must:
   testimony, not Capture time;
 - preserve JSON null, stated value, and permitted absence distinctly wherever the typed IR
   supports more than one state;
-- produce stable diagnostics for tolerated unknown additive fields without changing known
-  typed values;
+- treat every known AI-04 response object as closed: an unknown member name fails
+  deterministically; AI-04 emits no extension diagnostics and does not classify any object
+  as extension-permitted;
 - return deterministic parse failure/classification for known-field, status, count,
   context, or structural drift.
 
@@ -162,23 +171,19 @@ order, continuation-token contents, task echo, and answer-link position are forb
 semantic identity claims. Duplicate question strings and duplicate exact URLs must remain
 representable as distinct parser occurrences for AI-05 to reconcile deliberately.
 
-## Proposed field-state decision for review
+## Reconciled field-state decision
 
-The initial Steward proposal is:
-
-- on this Google adapter, `search_results`, `brand_entities`, and
-  `fan_out_queries` are required known keys whose only currently supported value is JSON
-  null; a non-null value is unsupported Google contract drift and fails closed;
-- source `publication_date`, `thumbnail`, and `markdown` are required known keys with
-  null-or-stated-string typed states under the claimed optional source contract; JSON null
-  is the only live state observed, strings are exercised synthetically, and any object,
-  array, number, or boolean fails closed;
-- missing required known keys remain failure rather than being silently converted to JSON
-  null.
-
-GROK must challenge this choice during technical review. AI-04 is not ready until the
-Steward reconciles whether claimed-contract string support is justified without a second
-live sample.
+- On this Google adapter, `search_results`, `brand_entities`, and
+  `fan_out_queries` are required known keys whose only supported value is JSON null. A
+  non-null value is unsupported Google contract drift and fails closed; AI-04 does not
+  import another platform’s shape.
+- Source `publication_date`, `thumbnail`, and `markdown` are required known keys with
+  null-or-stated-string typed states under the claimed optional source contract. JSON null
+  is the only live state observed. Synthetic strings are preserved opaquely; publication
+  date is not parsed as a clock. Objects, arrays, numbers, and booleans fail closed.
+- Missing required known keys fail rather than silently becoming JSON null or absence.
+- Every AI-04 object is closed. Extension-permitted policy and additive diagnostics belong
+  to AI-05’s first normative Recipe.
 
 ## Reconciliation and ordering rules
 
@@ -191,9 +196,10 @@ live sample.
 - Equal `ai_search_volume` values do not authorize an invented tie-break.
 - Source rank is scoped to one returned item. Rank is not Capture-wide and never equals
   source array index by definition.
-- Proposed rank rule for review: rank must be a positive integer and unique within an item;
-  reordering a source array preserves ranks; a positive rank gap is preserved with a stable
-  diagnostic rather than automatically renumbered or rejected.
+- Source rank must be a positive JSON integer, unique within an item, independent of array
+  index, and contiguous from one through the item’s source count. Duplicate, zero, negative,
+  boolean, float, and positive-gap ranks fail closed. Reordering a source array preserves
+  each exact `(url, rank)` pair; the parser never renumbers ranks.
 - Monthly identity is the explicit provider period, never array position. Reordering monthly
   arrays must not rewrite periods. Duplicate periods and invalid calendar months fail.
 - Item and source duplicates are preserved; the parser does not deduplicate by question,
@@ -226,31 +232,35 @@ The exact AI-03 fixture must prove:
 At minimum test:
 
 - duplicate JSON member, invalid UTF-8, BOM, trailing bytes, `NaN`/infinity;
-- missing known fields at every layer and tolerated additive-field diagnostics where
-  permitted;
-- root/task success disagreement, provider error, task/result count errors, two tasks, two
-  results, and HTTP-complete provider rejection classification;
-- `items` missing, null, empty, wrong type;
+- missing known fields and unknown additive fields at every layer; all fail closed;
+- root/task success disagreement, provider error, task/result count errors, two tasks, and
+  two results; provider status classification uses JSON only and accepts no HTTP argument;
+- `items` missing, null, and wrong type fail; `items=[]` with `items_count=0` parses as
+  a stated successful empty page whether `total_count` is zero or greater;
 - `items_count != len(items)`, `total_count < items_count`, negative/bool/float counts,
   and offset disagreement with the verified Attempt;
 - `current_offset` added or substituted for `offset`;
-- continuation null, stated string, missing, and wrong type; no token interpretation;
+- required continuation key as JSON null or nonempty string; missing, empty string, and
+  wrong type fail; no token interpretation;
 - item platform/location/language disagreement with Attempt context;
 - returned questions without requested words remain valid;
 - duplicate question occurrences remain distinct;
-- source reorder, repeated ranks, zero/negative/bool/float rank, positive rank gap,
-  duplicate exact URL within one item, and the same URL across items;
+- source reorder preserves exact `(url, rank)` pairs; repeated, zero, negative,
+  boolean, float, and positive-gap ranks fail; duplicate exact URLs within one item and
+  across items remain distinct occurrences;
 - URL query/fragment preservation and malformed required URL;
 - Markdown with CDN, Google-search, and unrelated links never creates structured sources;
-- monthly reorder, duplicate period, invalid month `0/13`, wrong/negative volume, empty
-  list, and per-item windows that differ;
+- monthly reorder, duplicate period, invalid month `0/13`, wrong/negative volume, and
+  per-item windows that differ; a required empty array is a stated empty series, while null
+  or missing fails; fixture-specific tests alone require 12 points;
 - current volume integer zero, wrong type, and disagreement with newest monthly point;
 - timestamp lexical/calendar failures, non-UTC offsets, and last before first;
 - `is_web_search_based=false` accepted and non-boolean rejected;
 - non-null Google-only item fields fail under the reconciled field-state decision;
 - source optional fields exercise null, supported stated form, missing, and wrong type;
-- cost lexical forms `0.105`, `0.1050`, exponent form, and high precision prove no binary
-  float round trip;
+- equivalent integer/decimal/exponent JSON number forms and high precision prove cost is
+  parsed without a binary-float round trip; tests assert Decimal value, not original numeral
+  spelling;
 - existing Keyword Overview, Google Organic, acquisition identities, and frozen fixtures
   remain unchanged.
 
@@ -264,8 +274,8 @@ Synthetic mutations prove parser behavior, not that those variants occurred in A
 - Known provider quirks and null states are preserved rather than corrected.
 - All count, status, known-field, context, numeric, period, time, and structural failures
   are deterministic and zero-network.
-- Additive-field handling is explicit and test-proved; known-field drift never hides as an
-  extension.
+- Every known object is closed; unknown additive fields and known-field drift fail
+  deterministically. Extension policy is deferred to AI-05’s Recipe.
 - Provider order and array indexes are not semantic identities.
 - Duplicate questions and URLs remain representable and are not silently collapsed.
 - The exact continuation token is opaque testimony and no continuation request exists.
@@ -273,8 +283,8 @@ Synthetic mutations prove parser behavior, not that those variants occurred in A
 - Ordinary tests perform zero provider, DNS, credential, paid-host, or other public-network
   activity.
 - `uv run pytest -q`, `uv run ruff check .`, and `uv run mypy` are clean.
-- Implementation is one commit from the reconciled ready-ticket parent and stops for
-  Steward review without push.
+- Implementation is one commit from the exact ready-transition HEAD supplied in the
+  Steward handoff and stops for Steward review without push.
 
 ## Explicit non-goals
 
@@ -289,25 +299,39 @@ Synthetic mutations prove parser behavior, not that those variants occurred in A
   strategy, or recommendations;
 - refactoring existing provider parsers into a shared framework.
 
-## GROK technical-review deliverable
+## GROK technical-review reconciliation
 
-Before implementation, independently review this ticket against current authority, code,
-tests, the exact AI-03 Evidence, and the prior payload audit. Report:
+GROK independently reverified the fixture identity and returned
+`READY_AFTER_TICKET_RECONCILIATION`; no new live Evidence is required.
 
-1. every wrong, missing, ambiguous, or over-specified requirement;
-2. whether the proposed null-or-string source-field treatment is justified;
-3. whether Google-null item fields should fail on non-null;
-4. whether positive source-rank gaps should parse with diagnostics or fail;
-5. whether duplicate question/source occurrences remain representable without prematurely
-   choosing AI-05 identity;
-6. whether unknown additive fields can be diagnosed without a Recipe in AI-04;
-7. the narrowest safe module/IR/test shape and dangerous coupling to avoid;
-8. a corrected acceptance-to-test outline;
-9. strong areas, weak areas, gaps, false-green risks, drift points, and anything another
-   live pull would uniquely settle.
+Accepted corrections:
 
-Return one verdict: `READY_AFTER_TICKET_RECONCILIATION` or
-`BLOCKED_PENDING_NEW_EVIDENCE`. Do not implement, edit, commit, push, or call a provider.
+- AI-04 has no Recipe and therefore no extension-permitted object policy or additive
+  diagnostics. Every object is closed until AI-05 versions a different semantic rule.
+- Source ranks are positive, per-item, unique, contiguous, reorder-stable field testimony;
+  they are never inferred from array index or renumbered.
+- Costs preserve exact decimal value without binary float, not the original JSON spelling.
+- Empty items and empty monthly arrays have explicit stated-empty semantics; required null,
+  missing, malformed, and count-disagreement cases fail.
+- The parser consumes verified body bytes and Attempt parameters, not HTTP status or
+  transport state. Provider errors are JSON classifications.
+- `task.data` remains typed provider echo testimony, never request authority. Echo
+  disagreement does not replace Attempt context.
+- Google-null item fields and null-or-opaque-string source fields follow the reconciled
+  rules above.
+- Duplicate questions and URLs remain separate IR occurrences. No
+  `within_capture_result_id`, URL deduplication, or persistence identity is introduced.
+- Token opacity is proved by exact string retention and refusal of missing, empty, or
+  wrong-typed forms, never by asserting decoded internals.
+- Golden contiguous ranks cannot alone prove rank/index separation; the decisive test
+  reorders sources and preserves exact `(url, rank)` pairs.
+- Markdown-link mutations must leave the structured source collection unchanged.
+- The implementation must reuse only small accepted IR/value types, not another parser’s
+  parsing functions, recipe, or surface structures.
+
+Carried limits are explicit: another offset-zero sample would only resample this branch;
+continuation and other platforms are distinct contracts; optional and adversarial variants
+remain synthetic until separately activated Evidence exists.
 
 ## Next ticket boundary
 
