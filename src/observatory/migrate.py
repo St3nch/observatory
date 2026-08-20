@@ -867,6 +867,268 @@ BEGIN
 END $$
 """
 
+SEARCH_MENTIONS_ITEM_KIND: Final[str] = (
+    "dataforseo.google.ai_optimization.search_mentions.item.v1"
+)
+SEARCH_MENTIONS_MONTHLY_KIND: Final[str] = (
+    "dataforseo.google.ai_optimization.search_mentions.monthly_search_volume.v1"
+)
+SEARCH_MENTIONS_SOURCE_KIND: Final[str] = (
+    "dataforseo.google.ai_optimization.search_mentions.source.v1"
+)
+_IJSON_MAX: Final[str] = "9007199254740991"
+_CLOCK_RE: Final[str] = (
+    r"^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} \+00:00$"
+)
+_SOURCE_OPTIONAL_CONSISTENCY_SQL: Final[str] = ",\n    ".join(
+    _state_value_consistency("search_mentions_sources", column)
+    for column in ("publication_date", "thumbnail", "markdown")
+)
+_TOKEN_CONSISTENCY_SQL: Final[str] = _state_value_consistency(
+    "search_mentions_result_context", "search_after_token"
+)
+
+SEARCH_MENTIONS_ITEMS_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS search_mentions_items (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL
+        CHECK (char_length(requested_keyword) >= 1),
+    platform TEXT NOT NULL,
+    model_name TEXT NOT NULL
+        CHECK (char_length(model_name) >= 1),
+    location_code BIGINT NOT NULL
+        CHECK (location_code >= 0 AND location_code <= {_IJSON_MAX}),
+    language_code TEXT NOT NULL,
+    question TEXT NOT NULL
+        CHECK (char_length(question) >= 1),
+    answer TEXT NOT NULL,
+    ai_search_volume BIGINT NOT NULL
+        CHECK (ai_search_volume >= 0 AND ai_search_volume <= {_IJSON_MAX}),
+    is_web_search_based BOOLEAN NOT NULL,
+    first_response_at TEXT NOT NULL
+        CHECK (first_response_at ~ '{_CLOCK_RE}'),
+    last_response_at TEXT NOT NULL
+        CHECK (last_response_at ~ '{_CLOCK_RE}'),
+    search_results_state TEXT NOT NULL
+        CHECK (search_results_state = 'json_null'),
+    brand_entities_state TEXT NOT NULL
+        CHECK (brand_entities_state = 'json_null'),
+    fan_out_queries_state TEXT NOT NULL
+        CHECK (fan_out_queries_state = 'json_null'),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT search_mentions_items_kind
+        CHECK (observation_kind = '{SEARCH_MENTIONS_ITEM_KIND}'),
+    CONSTRAINT search_mentions_items_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    CONSTRAINT search_mentions_items_clock_order
+        CHECK (last_response_at >= first_response_at),
+    {_ENVELOPE_FK}
+)
+"""
+
+SEARCH_MENTIONS_ITEM_OCCURRENCES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS search_mentions_item_occurrences (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    item_index BIGINT NOT NULL
+        CHECK (item_index >= 0 AND item_index <= {_IJSON_MAX}),
+    PRIMARY KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, item_index
+    ),
+    CONSTRAINT search_mentions_item_occurrences_kind
+        CHECK (observation_kind = '{SEARCH_MENTIONS_ITEM_KIND}'),
+    FOREIGN KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, observation_kind
+    )
+        REFERENCES search_mentions_items (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+)
+"""
+
+SEARCH_MENTIONS_MONTHLY_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS search_mentions_monthly_search_volume (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL
+        CHECK (char_length(requested_keyword) >= 1),
+    model_name TEXT NOT NULL
+        CHECK (char_length(model_name) >= 1),
+    question TEXT NOT NULL
+        CHECK (char_length(question) >= 1),
+    year BIGINT NOT NULL
+        CHECK (year >= 1 AND year <= 9999),
+    month BIGINT NOT NULL
+        CHECK (month >= 1 AND month <= 12),
+    search_volume BIGINT NOT NULL
+        CHECK (search_volume >= 0 AND search_volume <= {_IJSON_MAX}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT search_mentions_monthly_kind
+        CHECK (observation_kind = '{SEARCH_MENTIONS_MONTHLY_KIND}'),
+    CONSTRAINT search_mentions_monthly_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_ENVELOPE_FK}
+)
+"""
+
+SEARCH_MENTIONS_MONTHLY_OCCURRENCES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS search_mentions_monthly_occurrences (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    item_index BIGINT NOT NULL
+        CHECK (item_index >= 0 AND item_index <= {_IJSON_MAX}),
+    PRIMARY KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, item_index
+    ),
+    CONSTRAINT search_mentions_monthly_occurrences_kind
+        CHECK (observation_kind = '{SEARCH_MENTIONS_MONTHLY_KIND}'),
+    FOREIGN KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, observation_kind
+    )
+        REFERENCES search_mentions_monthly_search_volume (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+)
+"""
+
+SEARCH_MENTIONS_SOURCES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS search_mentions_sources (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL
+        CHECK (char_length(requested_keyword) >= 1),
+    model_name TEXT NOT NULL
+        CHECK (char_length(model_name) >= 1),
+    question TEXT NOT NULL
+        CHECK (char_length(question) >= 1),
+    url TEXT NOT NULL
+        CHECK (char_length(url) >= 1),
+    title TEXT NOT NULL,
+    domain TEXT NOT NULL,
+    source_name TEXT NOT NULL,
+    snippet TEXT NOT NULL,
+    publication_date TEXT,
+    publication_date_state TEXT NOT NULL
+        CHECK (publication_date_state {_FIELD_STATE_CHECK}),
+    thumbnail TEXT,
+    thumbnail_state TEXT NOT NULL
+        CHECK (thumbnail_state {_FIELD_STATE_CHECK}),
+    markdown TEXT,
+    markdown_state TEXT NOT NULL
+        CHECK (markdown_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT search_mentions_sources_kind
+        CHECK (observation_kind = '{SEARCH_MENTIONS_SOURCE_KIND}'),
+    CONSTRAINT search_mentions_sources_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_ENVELOPE_FK},
+    {_SOURCE_OPTIONAL_CONSISTENCY_SQL}
+)
+"""
+
+SEARCH_MENTIONS_SOURCE_OCCURRENCES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS search_mentions_source_occurrences (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    item_index BIGINT NOT NULL
+        CHECK (item_index >= 0 AND item_index <= {_IJSON_MAX}),
+    rank BIGINT NOT NULL
+        CHECK (rank >= 1 AND rank <= {_IJSON_MAX}),
+    PRIMARY KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, item_index, rank
+    ),
+    CONSTRAINT search_mentions_source_occurrences_kind
+        CHECK (observation_kind = '{SEARCH_MENTIONS_SOURCE_KIND}'),
+    FOREIGN KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, observation_kind
+    )
+        REFERENCES search_mentions_sources (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+)
+"""
+
+SEARCH_MENTIONS_CONTEXT_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS search_mentions_result_context (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL
+        REFERENCES provider_recipes (derivation_version_id),
+    attempt_id TEXT NOT NULL
+        CHECK (attempt_id ~ '{_HEX64}'),
+    requested_keyword TEXT NOT NULL
+        CHECK (char_length(requested_keyword) >= 1),
+    match_type TEXT NOT NULL,
+    search_filter TEXT NOT NULL,
+    search_scope TEXT[] NOT NULL,
+    platform TEXT NOT NULL,
+    location_code BIGINT NOT NULL
+        CHECK (location_code >= 0 AND location_code <= {_IJSON_MAX}),
+    language_code TEXT NOT NULL,
+    request_limit BIGINT NOT NULL
+        CHECK (request_limit >= 0 AND request_limit <= {_IJSON_MAX}),
+    request_offset BIGINT NOT NULL
+        CHECK (request_offset >= 0 AND request_offset <= {_IJSON_MAX}),
+    total_count BIGINT NOT NULL
+        CHECK (total_count >= 0 AND total_count <= {_IJSON_MAX}),
+    result_offset BIGINT NOT NULL
+        CHECK (result_offset >= 0 AND result_offset <= {_IJSON_MAX}),
+    items_count BIGINT NOT NULL
+        CHECK (items_count >= 0 AND items_count <= {_IJSON_MAX}),
+    search_after_token TEXT,
+    search_after_token_state TEXT NOT NULL
+        CHECK (search_after_token_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id),
+    CONSTRAINT search_mentions_result_context_outcome
+        FOREIGN KEY (derivation_version_id, attempt_id, capture_id)
+        REFERENCES outcomes (derivation_version_id, attempt_id, capture_id),
+    {_TOKEN_CONSISTENCY_SQL}
+)
+"""
+
 PRE_PF12_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     DERIVATION_VERSIONS_SQL,
     OUTCOMES_SQL,
@@ -887,7 +1149,7 @@ PRE_PF12_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     KEYWORD_OVERVIEW_INTENT_SQL,
 )
 
-SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_PF12_SCHEMA_STATEMENTS + (
+PRE_AI05_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_PF12_SCHEMA_STATEMENTS + (
     GOOGLE_ORGANIC_FEATURES_SQL,
     GOOGLE_ORGANIC_RANKED_SQL,
     GOOGLE_ORGANIC_AIO_PRESENCE_SQL,
@@ -898,6 +1160,16 @@ SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_PF12_SCHEMA_STATEMENTS + (
     GOOGLE_ORGANIC_QUERIES_SQL,
     GOOGLE_ORGANIC_CONTEXT_SQL,
     GOOGLE_ORGANIC_CONTEXT_OUTCOME_FK_SQL,
+)
+
+SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_AI05_SCHEMA_STATEMENTS + (
+    SEARCH_MENTIONS_ITEMS_SQL,
+    SEARCH_MENTIONS_ITEM_OCCURRENCES_SQL,
+    SEARCH_MENTIONS_MONTHLY_SQL,
+    SEARCH_MENTIONS_MONTHLY_OCCURRENCES_SQL,
+    SEARCH_MENTIONS_SOURCES_SQL,
+    SEARCH_MENTIONS_SOURCE_OCCURRENCES_SQL,
+    SEARCH_MENTIONS_CONTEXT_SQL,
 )
 
 WIDEN_IJSON_COLUMNS: Final[tuple[tuple[str, str], ...]] = (

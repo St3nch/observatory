@@ -1034,8 +1034,8 @@ def test_populated_pf08_schema_then_organic_derive(
     from observatory.capture_event import PAID_ADAPTER_CONTRACT
     from observatory.dataforseo_keyword_overview import CORE_RECIPE, COVERAGE_KIND
     from observatory.migrate import (
+        PRE_AI05_SCHEMA_STATEMENTS,
         PRE_PF12_SCHEMA_STATEMENTS,
-        SCHEMA_STATEMENTS,
         WIDEN_IJSON_COLUMNS_SQL,
     )
     from observatory.provider_recipe import (
@@ -1053,7 +1053,7 @@ def test_populated_pf08_schema_then_organic_derive(
     assert "google_organic_" not in joined_pre
     organic_statements = [
         statement
-        for statement in SCHEMA_STATEMENTS
+        for statement in PRE_AI05_SCHEMA_STATEMENTS
         if statement not in PRE_PF12_SCHEMA_STATEMENTS
     ]
     assert len(organic_statements) == 10

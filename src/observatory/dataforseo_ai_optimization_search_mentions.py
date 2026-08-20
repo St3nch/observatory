@@ -13,10 +13,28 @@ from urllib.parse import urlparse
 
 from observatory.capture_event import MENTIONS_ADAPTER_CONTRACT
 from observatory.dataforseo_keyword_overview import Field, ParseClassification
+from observatory.provider_recipe import (
+    IDENTITY_SCHEMA,
+    IDENTITY_VERSION,
+    SCHEMA,
+    SCHEMA_VERSION,
+    recipe_bytes,
+    recipe_derivation_version_id,
+    validate_recipe,
+)
 
 SUCCESS_STATUS: Final[int] = 20000
 YEAR_MIN: Final[int] = 1
 YEAR_MAX: Final[int] = 9999
+PROVIDER: Final[str] = "dataforseo"
+PARSER_CONTRACT: Final[str] = (
+    "dataforseo-ai-optimization-search-mentions-live-parser-v1"
+)
+ITEM_KIND: Final[str] = "dataforseo.google.ai_optimization.search_mentions.item.v1"
+MONTHLY_KIND: Final[str] = (
+    "dataforseo.google.ai_optimization.search_mentions.monthly_search_volume.v1"
+)
+SOURCE_KIND: Final[str] = "dataforseo.google.ai_optimization.search_mentions.source.v1"
 _PROVIDER_TIME_RE: Final[re.Pattern[str]] = re.compile(
     r"^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} \+00:00$"
 )
@@ -820,3 +838,105 @@ def _require_decimal(value: object, path: str) -> Decimal:
 
 def _escape(key: str) -> str:
     return key.replace("~", "~0").replace("/", "~1")
+
+
+def search_mentions_recipe() -> dict[str, object]:
+    """Return the first Search Mentions Derivation Recipe document."""
+
+    kinds = [
+        {
+            "axes": {
+                "model_name": "string",
+                "question": "string",
+                "requested_keyword": "string",
+            },
+            "observation_kind": ITEM_KIND,
+        },
+        {
+            "axes": {
+                "model_name": "string",
+                "month": "integer",
+                "question": "string",
+                "requested_keyword": "string",
+                "year": "integer",
+            },
+            "observation_kind": MONTHLY_KIND,
+        },
+        {
+            "axes": {
+                "model_name": "string",
+                "question": "string",
+                "requested_keyword": "string",
+                "url": "string",
+            },
+            "observation_kind": SOURCE_KIND,
+        },
+    ]
+    return validate_recipe(
+        {
+            "adapter_contract": MENTIONS_ADAPTER_CONTRACT,
+            "admission": {
+                "capture_outcomes": [
+                    "no_response",
+                    "observation_admitted",
+                    "observation_admitted_empty",
+                    "provider_envelope_rejected",
+                    "provider_error",
+                    "reconciliation_failed",
+                    "response_partial",
+                    "transport_complete_non_admissible",
+                ],
+                "rule": "recipe_closed_classifications",
+            },
+            "data_period": {
+                "inheritance": "never_from_capture",
+                "rule": "provider_stated_year_month_1_9999",
+            },
+            "extension_policy": {
+                "closed_objects": [
+                    "/",
+                    "/items",
+                    "/monthly_searches",
+                    "/result",
+                    "/sources",
+                    "/tasks",
+                    "/tasks/data",
+                ],
+                "extension_permitted_objects": [],
+                "unknown_closed_field": "fail_closed",
+                "unknown_extension_field": "fail_closed",
+            },
+            "field_state": {
+                "states": [
+                    "absent",
+                    "inapplicable",
+                    "json_null",
+                    "not_requested",
+                    "stated",
+                ]
+            },
+            "numeric": {"normalization": "exact_decimal"},
+            "observation_identity": {
+                "document_schema": IDENTITY_SCHEMA,
+                "document_version": IDENTITY_VERSION,
+                "kinds": kinds,
+            },
+            "observation_kinds": [ITEM_KIND, MONTHLY_KIND, SOURCE_KIND],
+            "parser_contract": PARSER_CONTRACT,
+            "provider": PROVIDER,
+            "provider_update_time": {
+                "inheritance": "never_from_capture_or_sibling",
+                "rule": "structure_stated_or_unstated",
+            },
+            "reconciliation": {"rule": "attempt_parameters_item_context"},
+            "schema": SCHEMA,
+            "version": SCHEMA_VERSION,
+        }
+    )
+
+
+SEARCH_MENTIONS_RECIPE: Final[dict[str, object]] = search_mentions_recipe()
+SEARCH_MENTIONS_RECIPE_BYTES: Final[bytes] = recipe_bytes(SEARCH_MENTIONS_RECIPE)
+SEARCH_MENTIONS_RECIPE_ID: Final[str] = recipe_derivation_version_id(
+    SEARCH_MENTIONS_RECIPE
+)

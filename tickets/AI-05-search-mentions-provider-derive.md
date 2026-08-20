@@ -1,11 +1,11 @@
 # AI-05 — Search Mentions provider Derivation and typed persistence
 
-**Status:** ready  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; GROK technical review reconciled  
 **Approved by:** Project Steward  
 **Technical-review base:** 9782ab37b4a949c514c90feee0aa29a8940dde32  
-**Implementation start:** the ready-transition commit supplied in the Steward handoff  
+**Implementation start:** `6d41460a38c9609fbf2875785794934a4486bd4a`  
 
 ## Purpose
 
@@ -488,3 +488,124 @@ Report candidly:
 
 Do not broaden implementation to fix adjacent findings. Stop at one clean implementation
 commit for Steward review.
+
+## Implementation report
+
+**Parent:** `6d41460a38c9609fbf2875785794934a4486bd4a`  
+**Child:** this implementation commit  
+**Status:** `review`  
+**AI-05 only:** yes. Nothing pushed.
+
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### Changed paths
+
+- `src/observatory/dataforseo_ai_optimization_search_mentions.py` (Recipe constants and kinds)
+- `src/observatory/search_mentions_derive.py` (new derive module/entrypoint)
+- `src/observatory/migrate.py` (seven additive Search Mentions relations; `PRE_AI05_SCHEMA_STATEMENTS`)
+- `tests/test_dataforseo_ai_optimization_search_mentions_derive.py` (new)
+- `tests/test_dataforseo_google_organic_derive.py` (Organic additive statements now measured against `PRE_AI05_SCHEMA_STATEMENTS`)
+- this ticket (Implementation start, Status, Implementation report)
+
+No AI-04 parser admission change. No fixture-byte change. No Keyword Overview or Google Organic recipe/identity change. No selection/API/AI-06/Target Metrics/acquisition change.
+
+### Recipe and fixture identities
+
+Search Mentions Recipe:
+
+- byte length `2021`
+- `derivation_version_id`
+  `bd3dfbf87eba83df35dc7ae6eecd25c223a89ad72d910db346d8ebafb61933e0`
+
+Independent recomputation is
+`hashlib.sha256(SEARCH_MENTIONS_RECIPE_BYTES).hexdigest()` and
+`recipe_derivation_version_id(search_mentions_recipe())`.
+
+Frozen AI-03 fixture unchanged:
+
+- path `tests/fixtures/dataforseo_ai_optimization_search_mentions_ai03.json`
+- bytes `48466`
+- SHA-256 `8b3cd0fb0c9fa23c102696bfe6b7212396c0f7c110e9ca8ca5b8ee5af182e80a`
+
+Kinds:
+
+- `dataforseo.google.ai_optimization.search_mentions.item.v1`
+- `dataforseo.google.ai_optimization.search_mentions.monthly_search_volume.v1`
+- `dataforseo.google.ai_optimization.search_mentions.source.v1`
+
+Relations:
+
+- `search_mentions_items`
+- `search_mentions_item_occurrences`
+- `search_mentions_monthly_search_volume`
+- `search_mentions_monthly_occurrences`
+- `search_mentions_sources`
+- `search_mentions_source_occurrences`
+- `search_mentions_result_context`
+
+Frozen Capture cardinality: 5/60/48 envelopes = **113**; occurrences 5/60/48; one result context.
+
+### Acceptance-to-test mapping
+
+| Acceptance | Test |
+|---|---|
+| Recipe bytes/digest, fixture/KO/Organic identities | `test_accepted_recipe_and_fixture_identities_remain_unchanged` |
+| Frozen 113 and 5/60/48 plus 5-of-3055 token | `test_plan_frozen_fixture_has_exact_semantic_counts`, `test_derive_ai03_fixture_into_real_postgres` |
+| Empty page context, zero envelopes | `test_plan_empty_page_is_admitted_empty`, `test_zero_item_page_writes_admitted_empty_outcome` |
+| Empty `question` / `model_name` | `test_plan_empty_identity_string_rejects_whole_unit` |
+| Duplicate question recomputes counts | `test_plan_duplicate_question_recomputes_envelope_count` |
+| Conflicting item detail, zero context | `test_plan_conflicting_duplicate_item_rejects_whole_unit` |
+| Duplicate URL one envelope + `(item_index, rank)` | `test_duplicate_url_keeps_one_source_and_two_occurrences` |
+| Conflicting source/monthly, zero context | `test_conflicting_source_and_monthly_reject_without_context` |
+| Unequal monthly windows union | `test_unequal_monthly_windows_admit_union` |
+| Empty sources/monthly | `test_empty_sources_and_monthly_emit_zero_child_envelopes` |
+| Item/monthly reorder | `test_item_and_monthly_reorder_preserve_semantic_identities` |
+| Typed-parent FK, UNIQUE, CHECKs | `test_constraints_reject_wrong_kind_orphan_and_invalid_keys` |
+| Context Outcome FK | `test_result_context_requires_matching_outcome` |
+| Closed failure taxonomy + Evidence damage | `test_transport_parse_reconciliation_and_damage_paths` |
+| Exact-content, extra, missing restore, foreign Attempt | `test_exact_content_extra_rows_missing_restore_and_foreign_attempt` |
+| Second Recipe coexistence | `test_second_recipe_coexists_for_the_same_capture` |
+| Populated PF-15 upgrade | `test_populated_pf15_schema_then_mentions_derive` |
+| Fresh vs upgraded catalog | `test_fresh_and_upgraded_mentions_catalog_match` |
+| Two-database logical equivalence | `test_two_databases_are_logically_equivalent` |
+| Fixture derive skip | `test_fixture_derive_skips_mentions_and_mentions_skips_fixture` |
+| Clocks TEXT, Google-null, current≠monthly | `test_derive_ai03_fixture_into_real_postgres` |
+
+### Validation
+
+Targeted: `uv run pytest -q tests/test_dataforseo_ai_optimization_search_mentions_derive.py` — 22 passed.
+
+`uv run pytest -q`: 1027 passed, 1 skipped, 1 warning in 170.16s, plus the later empty-`model_name` plan assertion (1 passed).
+
+`uv run ruff check .`: All checks passed
+
+`uv run mypy`: Success: no issues found in 54 source files
+
+Leftover `observatory-ce05-*` containers: none.
+
+### Candid technical assessment
+
+What generalized safely from PF-12: dedicated adapter-filtered derive entrypoint; recipe JCS identity; generic envelopes plus kind-bound details; result context is not an Observation; occurrence vs semantic envelope; whole-unit `provider_envelope_rejected` with zero context; exact-content `_write_closed_row`; Recipe-scoped complete-set including `attempt_id`; `observation_count` = envelopes only; cost/task/echo remain Evidence/IR; additive `CREATE TABLE IF NOT EXISTS` over populated schema.
+
+What did not: ranked-result rank-as-identity; AIO `locus` / `UNIQUE NULLS NOT DISTINCT`; PAA envelope-only occurrence FK; Keyword Overview monthly without occurrences and year 2000–2100; Organic `item_types` context; extracting a shared derive kernel.
+
+Strongest proof: duplicate-question occurrence arithmetic (5 item envelopes / 6 occurrences, 60/72 monthly, 48/55 sources) recomputed rather than hardcoded 113; second-Recipe coexistence on the same Capture; conflicting source metadata writes `provider_envelope_rejected` and zero context.
+
+Weakest assumption: complete-set typed-detail compare is still identity-set plus count, with content equality only in `_write_closed_row` (same PF-12 shape). Two-database snapshot selects every new column rather than `SELECT *`, so an unselected system column would not be compared. Live fixture questions/URLs remain unique; duplicate proofs are synthetic.
+
+False-green discovered during TDD: comparing raw `item_index` lists after item reorder both equalled `[0,1,2,3,4]` because each unique question still received one sequential first-seen index. The test now compares per-identity `item_index` maps.
+
+Awkwardness: this is the third surface-local copy of `_write_closed_row` / `_assert_complete_set` / `_write_outcome`. Context columns are `request_limit` / `request_offset` / `result_offset` because Attempt limit/offset and result offset must coexist and `limit`/`offset` are SQL keywords. Occurrence uniqueness is the PRIMARY KEY on the ticket's UNIQUE columns rather than a second identically-keyed UNIQUE constraint. `PRE_AI05_SCHEMA_STATEMENTS` was required so the Organic populated-schema test would not treat Mentions DDL as Organic DDL.
+
+Ticket vs architecture: the reconciled ticket matched the code. No identity or schema improvisation. The only adjacent edit is the Organic test's schema-split measurement.
+
+Under-proved: empty `model_name` is planned-rejected and schema-checked but not separately written then constraint-failed; null continuation token is parser-covered and schema-checked, not present in the frozen fixture; Markdown-link non-synthesis is inherited from AI-04 and checked here by equality of persisted URLs to structured fixture URLs.
+
+Future shared-kernel trigger: a fourth provider surface, or a real copy-paste complete-set defect.
+
+No provider, DNS, credential, paid-gate, or public-network call. No continuation follow. No selection/API/history/AI-06/Target Metrics/other surface. No Evidence mutation. Nothing pushed. Status remains `review`.
