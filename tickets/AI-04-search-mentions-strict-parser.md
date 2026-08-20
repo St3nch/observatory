@@ -1,12 +1,11 @@
 # AI-04 — Search Mentions strict parser and AI-03 conformance fixture
 
-**Status:** ready  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; GROK technical review reconciled  
 **Approved by:** Project Steward  
 **Review-ticket commit:** `7f4c57b82d16625193456f5a9e3527841a96b5ef`  
-**Implementation start:** the ready-transition commit containing this reconciliation, supplied
-in the Steward handoff  
+**Start commit:** `3c79a555ec0e97d3326407233022e4ccfe380f5f`  
 
 ## Purpose
 
@@ -342,4 +341,155 @@ After accepted implementation and Steward closure:
 2. AI-06 — read/history API.
 
 Target Metrics remains a separate later surface. AI-04 does not authorize it.
+
+## Implementation report
+
+**Parent:** `3c79a555ec0e97d3326407233022e4ccfe380f5f`
+**Child:** this implementation commit
+**Status:** `review`
+**AI-04 only:** yes. Nothing pushed.
+
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### Changed paths
+
+- `src/observatory/dataforseo_ai_optimization_search_mentions.py` (new parser/IR)
+- `tests/test_dataforseo_ai_optimization_search_mentions.py` (new)
+- `tests/fixtures/dataforseo_ai_optimization_search_mentions_ai03.json` (inspector stdout copy)
+- this ticket (Start commit, Status, Implementation report)
+
+### Fixture provenance
+
+Copied from local inspector stdout for Capture
+`bea666f9b982054df287da253fb49b0e0a9c1022b461c111a483b43d8606d4db`.
+Length `48466`. SHA-256
+`8b3cd0fb0c9fa23c102696bfe6b7212396c0f7c110e9ca8ca5b8ee5af182e80a`.
+No pretty-print, no regeneration, no token decode.
+
+### Parser interface
+
+`parse_search_mentions(body: bytes, parameters: Mapping) -> SearchMentionsIR`
+
+No HTTP status or transport-state argument. Provider success/error is JSON
+`status_code`. Request context is Attempt parameters. `task.data` is typed echo.
+
+### Acceptance-to-test mapping
+
+| Acceptance | Test |
+|---|---|
+| Fixture length/digest | `test_frozen_fixture_independent_sha256_and_length` |
+| Signature has no HTTP input | `test_parser_signature_has_no_http_or_transport_input` |
+| Golden IR / request vs result | `test_golden_parse_preserves_request_result_distinction` |
+| Answer-scope hits, not `question != keyword` only | `test_questions_are_answer_scope_hits_not_merely_unequal_to_keyword` |
+| Rank independent of index | `test_source_reorder_preserves_url_rank_pairs` |
+| Markdown ≠ sources | `test_markdown_links_do_not_become_sources` |
+| Decimal cost, not spelling | `test_cost_decimal_value_ignores_numeral_spelling`, `test_high_precision_cost_does_not_use_binary_float` |
+| Echo ≠ Attempt | `test_echo_disagreement_does_not_replace_attempt_context` |
+| Duplicate question/URL occurrences | `test_duplicate_questions_and_urls_remain_distinct` |
+| Empty page admitted | `test_empty_items_with_zero_count_is_admitted` |
+| Empty monthly series | `test_empty_monthly_array_is_stated_empty_series` |
+| Closed unknown keys / `current_offset` | `test_unknown_result_and_item_fields_fail_closed` (includes `/tasks/0/data` and `/tasks/0/data/target/0`) |
+| BOM/UTF-8/dup/trailing/NaN | `test_duplicate_json_member_invalid_utf8_bom_trailing_and_nonfinite` |
+| Missing keys | `test_missing_known_fields_fail` |
+| JSON provider error | `test_provider_error_and_inconsistent_status` (synthetics now set `tasks_error=1`) |
+| Declared `tasks_error` vs one task status | `test_wrong_tasks_error_fails_on_success_and_provider_error` |
+| Nonnegative `result_count` on every declared branch | `test_negative_result_count_fails_including_provider_error` |
+| Count/offset errors | `test_task_and_result_count_errors`, `test_items_null_wrong_type_and_count_mismatches` |
+| Token null/empty/wrong type | `test_continuation_null_empty_and_wrong_type` |
+| Item context | `test_item_context_mismatch_fails` |
+| Ranks | `test_invalid_source_ranks_fail`, `test_duplicate_and_gap_ranks_fail` |
+| URL http(s)+host, no spaces, exact preservation | `test_malformed_url_and_query_fragment_preservation` |
+| Google-null fields | `test_google_null_item_fields_reject_non_null` |
+| Source optionals opaque string | `test_source_optional_fields_null_string_missing_and_wrong_type` |
+| Monthly periods | `test_monthly_reorder_duplicate_invalid_and_null` |
+| Volume zero / type | `test_current_volume_zero_and_wrong_type` |
+| Clocks | `test_timestamp_failures` |
+| `is_web_search_based` | `test_web_search_boolean` |
+| Isolation | `test_existing_fixtures_and_parsers_unchanged` |
+
+### Steward remediation (findings 1–3)
+
+Independent investigation confirmed all three findings. No material disagreement. Product code changed only for findings 1 and 2; finding 3 was a missing proof of already-closed echo objects.
+
+#### Finding 1 — `tasks_error` not reconciled — **confirmed real**
+
+Parser type-checked `tasks_error` and rejected negatives, then stored whatever nonnegative integer was declared. It never required that count to equal the number of non-success task statuses. With the adapter’s exactly-one-task envelope that means `0` iff task JSON status is `20000`, else `1`.
+
+False-green path: golden fixture has `tasks_error=0` with status `20000`, so the success branch never mutated the count. Provider-error synthetics flipped root/task `status_code` to `40100` and left fixture `tasks_error=0`, then asserted `PROVIDER_ERROR`. Impossible envelopes were therefore admitted:
+
+- task status `20000` with `tasks_error=1` or `2` → `ADMITTED`
+- task status `40100` with `tasks_error=0` → `PROVIDER_ERROR`
+
+`result_count` on the success branch failed negatives only because `-1 != len(result)` (`count_mismatch`). The provider-error branch returned `_error_ir` with `result_count=-1`. Booleans and floats were already rejected by `_require_int`.
+
+Smallest fix: after reading the one task’s JSON status and `result_count`, require `result_count >= 0` on every declared branch, then `tasks_error == (0 if task_status == 20000 else 1)`. Success-branch equality of `result_count` with result length is unchanged and still runs only after both statuses are `20000`. Provider status remains JSON-only; no HTTP/transport argument.
+
+#### Finding 2 — source URL validation too weak — **confirmed real**
+
+`_require_url` accepted any `urlparse` scheme with nonempty netloc and did not reject spaces. `ftp://host.example/path`, `javascript://host`, and `https://example.com/path with space` were admitted. `not-a-url` already failed because it has empty scheme/netloc, so the existing malformed-URL test was green while the accepted Google Organic absolute HTTP(S) boundary was not enforced.
+
+Smallest fix: require scheme exactly `http` or `https`, nonempty netloc, and no spaces; return the original URL text unchanged (query and fragment included). Do not import Organic’s helper.
+
+#### Finding 3 — unknown field proofs missing at echo layers — **confirmed as a proof gap**
+
+`_parse_echo` already `_reject_unknown` on `task.data` and each `task.data.target` object. Tests planted unknown keys at root, task, result, item, source, and monthly, but not at `/tasks/0/data` or `/tasks/0/data/target/0`. A later weakening of echo closedness would not have been caught. No extension-diagnostics policy was added; every AI-04 object remains closed.
+
+### Remediation-to-test map
+
+| Steward requirement | Test |
+|---|---|
+| Wrong `tasks_error` on success (`20000` + `tasks_error=1`) | `test_wrong_tasks_error_fails_on_success_and_provider_error` |
+| Wrong `tasks_error` on provider-error (`40100` + `0` or `2`) | same |
+| Provider-error synthetics internally consistent | `test_provider_error_and_inconsistent_status` now sets `tasks_error=1` |
+| Negative `result_count` on success | `test_negative_result_count_fails_including_provider_error` |
+| Negative `result_count` on provider-error | same |
+| Boolean/float `result_count` still rejected, including error branch | same (`True`, `1.0`) |
+| Non-HTTP source scheme | `test_malformed_url_and_query_fragment_preservation` (`ftp://host.example/path`) |
+| Spaced/malformed URL | same (`https://example.com/path with space` and retained `not-a-url`) |
+| Query/fragment preservation | same; also asserts parsed URL vector equals fixture URL vector |
+| Unknown member in `/tasks/0/data` | `test_unknown_result_and_item_fields_fail_closed` (asserts pointer `/tasks/0/data/unexpected`) |
+| Unknown member in `/tasks/0/data/target/0` | same (asserts pointer `/tasks/0/data/target/0/unexpected`) |
+
+### Checks
+
+Targeted: `uv run pytest -q tests/test_dataforseo_ai_optimization_search_mentions.py` — 38 passed in 0.14s after remediation (red-then-green on findings 1–2; finding 3 proofs were already closed in product code).
+
+`uv run pytest -q`: 1005 passed, 1 skipped, 1 warning in 155.62s
+
+`uv run ruff check .`: All checks passed
+
+`uv run mypy`: Success: no issues found in 52 source files
+
+Leftover `observatory-ce05-*` containers: none.
+
+### Scope confirmations
+
+- No acquisition/capture-event/existing parser/fixture/migration/derive/API/authority edits except this ticket.
+- Fixture bytes unchanged.
+- No Recipe, PostgreSQL, Observation identity, or `within_capture_result_id`.
+- No provider/DNS/credential/paid-host/continuation/second-surface/push.
+
+### Review vs parent `3c79a555`
+
+Standards: no hard violations; parser duplicates KO decode/closed-object helpers rather than importing KO parse functions (ticket-required isolation). URL rule matches Organic’s accepted absolute HTTP(S) boundary by local duplication, not by importing `_require_http_url`.
+
+Spec: golden path, closed-object failures including echo and echo-target, rank/index separation, echo vs Attempt, Decimal costs, empty-page admission, Google-null drift, `tasks_error` reconciliation on the one-task envelope, nonnegative `result_count` on admitted and provider-error branches, and http(s) source URLs are covered. Post-remediation two-axis review vs this parent: Standards 0 hard / 3 judgement (required helper duplication, KO `Field` import, IR `outcome` name — all pre-existing); Spec 3/3 findings implemented, 0 material misses. Echo unknown-key proofs now assert the JSON Pointers.
+
+### Candid technical assessment
+
+Strongest proof: the two-axis `tasks_error` adversarial (`20000`+`1` and `40100`+`0`) plus the provider-error `result_count=-1` case. Those were live false-greens, not coverage cosmetics. The ftp and spaced-URL failures are equally decisive against the old scheme+netloc check.
+
+Weakest remaining assumption: `tasks_error` is interpreted only for the adapter’s exactly-one-task envelope as “0 if the one task JSON status is 20000 else 1”. Two-task bodies still fail earlier on `tasks_length`; this parser does not implement a general N-task error census. URL checking uses `urlparse` scheme/netloc plus a literal-space rejection and does not normalize, IDNA-map, strip credentials, or percent-decode; an encoded space (`%20`) remains admitted because it is not a literal space. That matches the Organic boundary this ticket was told to copy.
+
+False-green risks that remain: (1) `_require_int`’s `isinstance(value, bool)` guard is still load-bearing because `bool` subclasses `int`; (2) echo-layer unknown-key proofs plant one extra member named `unexpected` and would not notice a newly introduced nested object that forgot `_reject_unknown`; (3) success-path `result_count=-1` previously failed for the wrong reason (`count_mismatch`); it now fails `invalid_number` before length equality, which is the intended invariant but means a regression that restored only length equality would still look green on that one case — the provider-error negative remains the load-bearing nonnegative proof.
+
+Additional defect exposed during investigation: none beyond the three Steward findings. The earlier residual that `tasks_error < 0` cited `/tasks_count` was already stale in product code (`/tasks_error` was already used).
+
+No fixture-byte change. No HTTP/transport inference. Status remains `review`. Nothing pushed.
+
 
