@@ -1,10 +1,10 @@
 # AI-02 — Search Mentions Live bounded paid-probe adapter
 
-**Status:** ready  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; mandatory technical review reconciled at the ticket start gate  
 **Approved by:** Project Steward  
-**Start commit:** set by [GROK] from the reconciled ticket HEAD  
+**Start commit:** `3cf3f4ad9e5b5779c0f24221aedca73fc285708a`  
 
 ## Purpose
 
@@ -288,3 +288,178 @@ must report:
   push.
 
 Stop at `review` for Steward verification.
+
+## Implementation report
+
+**Parent:** `3cf3f4ad9e5b5779c0f24221aedca73fc285708a`
+**Child:** this implementation commit
+**Status:** `review`
+**AI-02 only:** yes. Nothing pushed.
+
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### Changed paths
+
+- `src/observatory/capture_event.py` (fourth exact HTTP-v2 branch)
+- `src/observatory/dataforseo_ai_optimization_search_mentions_paid_probe.py` (new)
+- `tests/test_dataforseo_ai_optimization_search_mentions_paid_probe.py` (new)
+- this ticket (Start commit, Status, Implementation report)
+
+### Adapter token
+
+`dataforseo-ai-optimization-llm-mentions-search-mentions-live-paid-probe-v1`
+
+### Deterministic vector
+
+Fixed inputs: keyword `observatory test`, nonce `6666…66`,
+`authorized_at=2026-08-20T20:00:00.000000Z`,
+`observatory_version=conformance-search-mentions-paid-probe-v1`.
+
+| Artifact | Value |
+|---|---|
+| request body | `[{"language_code":"en","limit":5,"location_code":2840,"offset":0,"platform":"google","target":[{"keyword":"observatory test","match_type":"word_match","search_filter":"include","search_scope":["answer"]}]}]` |
+| request SHA-256 | `f0299125e69fe6712cbea5e99ec4e23bbf2a71a357c356dcc96fed469e6494d4` |
+| fingerprint | `63f64b7284f4d94214e02beb3710256d056614e03d60535fa57dca9ccc7db2bd` |
+| Attempt ID | `5cf959940bec672f8f67bf1f7b5ad18aee2b86fd89e33dd00280f4092cf2741e` |
+| sample complete Capture ID | `37966993c0075e5de8a3cab063d34e37b46e69d3c115c4a9b598c31c09306658` |
+
+The operator live-call candidate `generative engine optimization` is accepted by the
+closed keyword grammar and is not embedded in product code.
+
+### Capture-event dispatch/validation branches changed
+
+Explicit fourth branch, not a registry. Else still means sandbox.
+
+- `_recognized_http_v2_adapter`
+- fingerprint v2 request dispatch
+- Attempt v2 request/parameters/policy/body-equation dispatch
+- Capture v2 request dispatch
+- new builders: `mentions_http_request`, `mentions_http_fingerprint_document`,
+  `mentions_http_attempt_document`, `mentions_http_capture_document`
+- new validators: `validate_mentions_http_parameters`, `validate_mentions_http_request`,
+  plus closed target-object validation
+
+Existing sandbox, Keyword Overview, and Google Organic validators and identities are
+untouched.
+
+### Gates
+
+- Authorization: exact Python `int` `200000` before Attempt. Rejects missing, other ints,
+  `True`, `200000.0`, and `"200000"`.
+- Attempt-before-transport: first mock handler and the loopback accept thread both read
+  the committed Attempt and exact `request.body` bytes before responding. Failed
+  `commit_attempt` never reaches the handler.
+- Capability: constructor refused; `object.__new__` forgery not in the issued list;
+  `copy.copy` hits immutability; pickle restore is not issued; replay is one-exchange;
+  sandbox/KO/Organic capabilities cannot call this `_exchange` and vice versa.
+- One-shot: keyed by this adapter token. Fixture, sandbox, KO, and Organic Attempts in the
+  same root do not block it. Unresolved, credential-echo, and over-limit paths refuse a
+  second Attempt.
+- Credentials: nonempty env may fail before Attempt. Authorization header is injected only
+  after the issued capability. Echo in body or retained header blocks Capture commit.
+- Timeout/body-limit: adapter-owned `httpx.Timeout(connect=30.0, read=120.0, write=30.0,
+  pool=30.0)` and `33_554_432`. Shared HTTP module still has neither constant. Tests
+  truncate with a 16-byte private override.
+- Inspect: byte-exact stdout, verify-on-read, no parse/pretty-print/summary/mutation.
+  Refuses wrong adapter, partial, no-response, bad IDs, and tampered bodies.
+
+### Continuation
+
+A complete JSON body with `search_after_token` and `total_count > items_count` still
+produces exactly one POST and one Capture. The request bytes do not contain
+`search_after_token`. The adapter never decodes JSON to decide a follow-up.
+
+### Acceptance-to-test mapping
+
+| Acceptance | Test |
+|---|---|
+| exact singleton JCS bytes | `test_closed_request_vector_and_attempt_identity` |
+| frozen field/key-set rejections | `test_frozen_fields_are_rejected`, `test_missing_required_keys_are_rejected` |
+| concrete-store requirement | `test_subclassed_store_cannot_issue` |
+| keyword grammar; no Organic deny set | `test_keyword_grammar_rejects_invalid_forms`, `test_operator_keywords_are_not_denied` |
+| exact authorization types | `test_authorization_required_before_attempt` |
+| Attempt-before-handler | `test_attempt_is_committed_before_first_handler`, `test_loopback_server_sees_attempt_and_does_not_follow_redirect` |
+| failed commit never transports | `test_failed_attempt_commit_never_reaches_handler` |
+| capability forgery/copy/mutation/replay | `test_forged_copied_mutated_and_replayed_capability_cannot_transport` |
+| cross-adapter isolation | `test_cross_adapter_capabilities_are_isolated` |
+| one-shot + neighbors | `test_one_shot_is_adapter_specific_and_allows_neighbors`, `test_unresolved_attempt_blocks_second_invocation` |
+| continuation still one POST | `test_continuation_token_response_is_still_one_exchange` |
+| credential echo unresolved | `test_credential_echo_leaves_unresolved_one_shot`, `test_credential_echo_in_retained_header_is_refused` |
+| over-limit one-shot | `test_over_limit_partial_consumes_one_shot` |
+| complete/partial/zero/no-response | `test_mid_body_timeout_zero_byte_and_no_response` |
+| inspect byte-exact | `test_inspect_emits_exact_bytes_without_mutation`, `test_inspect_rejects_wrong_adapter_partial_zero_and_tamper` (includes no-response and zero-byte) |
+| existing identities | `test_existing_adapter_identities_unchanged` |
+| derive/API isolation | `test_fixture_and_provider_derive_skip_search_mentions` |
+
+### Checks
+
+Targeted: `uv run pytest -q tests/test_dataforseo_ai_optimization_search_mentions_paid_probe.py` — 56 passed in 5.00s after spec-review test additions
+
+`uv run pytest -q`: 965 passed, 1 skipped, 1 warning in 161.63s
+
+`uv run ruff check .`: clean
+
+`uv run mypy`: clean after one test annotation fix
+
+Leftover `observatory-ce05-*` containers: none.
+
+### Strongest / weakest tests and false-green risk
+
+Strongest: Attempt identity and request bytes asserted *inside* the first mock handler and
+inside the loopback accept thread; failed commit with handler spy; continuation call
+count; credential-echo then one-shot; neighbor coexistence.
+
+Weakest: unknown HTTP version / unsupported-protocol is proved in the shared exchange
+module, not re-driven through this adapter with a forged `http_version`. Capability
+`_used` can still be flipped with `object.__setattr__`, matching accepted Organic/KO
+limits; tests prove the public-surface constructor, copy, pickle, and identity list.
+
+Copying Organic paid-probe tests after-the-fact Attempt existence would have been
+false-green; this ticket does not do that.
+
+### What generalized / what stayed surface-specific
+
+Generalized: HTTP-v2 envelope, `perform_bounded_http_exchange`, credential object,
+capability/one-shot/inspect shape, header omission, loopback override grammar.
+
+Surface-specific: nested `target` object, `platform=google`, `offset`/`limit`,
+`search_scope=["answer"]`, `match_type` (no trailing-space key), policy/pricing_basis,
+path `/v3/ai_optimization/llm_mentions/search_mentions/live`, keyword grammar without
+Organic operator denial, 200000 micro-USD.
+
+### Parser traps for a later Derivation ticket (not implemented)
+
+Paging-key contradiction (`current_offset` vs example `offset`); `total_count` vs
+`items_count` vs `result_count`; requested keyword vs returned `question`/`answer`;
+Google `sources` vs Organic AIO `references`; ChatGPT-only fields expected null;
+`search_after_token` is opaque continuation, not identity; default ordering because
+`order_by` is forbidden; `first_response_at`/`last_response_at` vs Capture time vs
+monthly periods; provider `cost` as JSON float.
+
+### Live-call operator plan
+
+No change required to sequencing: F6, fresh official price check, exact
+`--authorize-max-micro-usd 200000`, and explicit [CHAZ] authorization still gate any
+real POST. If credential-echo occurs, that root is consumed (unresolved); use a new
+Evidence root. `limit=5` is learning, not completeness. Do not follow
+`search_after_token`.
+
+Over-limit retains a `response_partial` Capture (shared HTTP testimony, item 8) and
+consumes one-shot. Credential-echo commits no Capture. Both refuse a second Attempt in
+that root.
+
+### Confirmations
+
+- No provider host, DNS, real credentials, account access, paid gate, or external HTTP.
+- Ordinary tests autouse-block non-loopback `socket.create_connection` and delete
+  credential env vars.
+- No parser, conformance fixture freeze, Recipe, schema, Derivation, selection, API,
+  history, recurring acquisition, or second surface.
+- No `AGENTS.md`, spec, decision, or vocabulary edits.
+- Nothing pushed.
+
