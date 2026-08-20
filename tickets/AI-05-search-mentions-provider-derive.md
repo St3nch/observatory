@@ -1,6 +1,6 @@
 # AI-05 — Search Mentions provider Derivation and typed persistence
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; GROK technical review reconciled  
 **Approved by:** Project Steward  
@@ -609,3 +609,40 @@ Under-proved: empty `model_name` is planned-rejected and schema-checked but not 
 Future shared-kernel trigger: a fourth provider surface, or a real copy-paste complete-set defect.
 
 No provider, DNS, credential, paid-gate, or public-network call. No continuation follow. No selection/API/history/AI-06/Target Metrics/other surface. No Evidence mutation. Nothing pushed. Status remains `review`.
+
+## Steward closure
+
+**Closed by:** [GPT] Project Steward  
+**Implementation parent:** `6d41460a38c9609fbf2875785794934a4486bd4a`  
+**Final implementation child:** `20398b47e3ef7601af30e5e27e3bb7f381f7ea03`  
+**Commit shape:** exactly one implementation child of the approved parent  
+
+The Steward review found three proof gaps in the original child: incomplete frozen-row
+projection proof, thin two-database equivalence projections, and absent wrong-count / extra-
+diagnostic adversaries. GROK reproduced and began test-only remediation before reaching his
+weekly limit. [CHAZ] explicitly authorized the Steward to finish the already-bounded work;
+the only Steward-authored implementation-byte change was the minimal test-only type guard
+required for mypy. The amended child differs from the original child only in
+`tests/test_dataforseo_ai_optimization_search_mentions_derive.py`; no accepted Recipe,
+fixture, identity, schema, parser, derive behavior, migration behavior, or adjacent product
+surface changed during remediation.
+
+Independent Steward review confirmed the amended proof now covers exact parser-IR-to-
+persistence rows across every explicit column of all seven AI-05 relations; every frozen
+answer and provider clock; exact opaque continuation value; exact source model/question/URL/
+rank/item-index attachment; full result context; catalog-driven two-database equivalence;
+corrupted intended Outcome `observation_count`; and a planted extra
+`derivation_diagnostics` row.
+
+Final exact-child validation:
+
+- `uv run ruff check .` — passed;
+- `uv run mypy` — passed, 54 source files;
+- independent [CHAZ] `uv run pytest -q` — **1029 passed, 1 skipped, 1 warning in 173.45s**;
+- HEAD remained `20398b47e3ef7601af30e5e27e3bb7f381f7ea03` and the tree remained clean after the run;
+- leftover `observatory-ce05-*` containers — none;
+- no provider/network/credential call, no continuation follow, no AI-06/API/selection/Target
+  Metrics/other-surface work, and no push occurred during review.
+
+AI-05 is accepted and closed. AI-06 remains separate and must not begin until this closure
+commit and its implementation ancestry are pushed by [CHAZ].
