@@ -2,7 +2,7 @@
 
 **Status:** ready  
 **Owner:** [CHAZ] operator / [GPT] Steward verification  
-**Blocked by:** explicit [CHAZ] authorization of the exact command below  
+**Blocked by:** clean synchronized preflight and the authorized operator execution  
 **Approved by:** Project Steward  
 **Start commit:** `17300a87cda821e338b6c4dd5a551f3a7f564a09`  
 
@@ -99,6 +99,25 @@ exchange. A nonzero exit, unresolved Attempt, missing Capture, `response_partial
 `no_response`, credential-echo refusal, provider error testimony, unexpected charge, or any
 other abnormal result is a hard stop. Do not retry and do not create a replacement Evidence
 root without a new Steward/[CHAZ] decision.
+
+## Steward one-shot authorization — 2026-08-20
+
+After reviewing the exact AI-03 ticket and command at synchronized commit
+`e31c8609c71db33605edd4149faa5c422d6be7bd`, [CHAZ] explicitly authorized exactly one
+AI-03 paid operator invocation for:
+
+- adapter:
+  `dataforseo-ai-optimization-llm-mentions-search-mentions-live-paid-probe-v1`;
+- keyword: `generative engine optimization`;
+- exact Evidence root:
+  `$HOME/.local/share/observatory/ai03-search-mentions-generative-engine-optimization-2026-08-20`;
+- exact authorization acknowledgment: `200000` micro-USD;
+- one process invocation and at most one POST;
+- no retry, continuation, follow-up, replacement root, or second provider exchange.
+
+Authorization is valid only from a clean `main` containing this durable record and
+synchronized with `origin/main`, after every preflight below passes. The command remains a
+hard stop after its first invocation regardless of exit code or transport/provider outcome.
 
 ## Preflight required before the command
 
