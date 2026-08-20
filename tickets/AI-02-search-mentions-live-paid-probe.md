@@ -1,6 +1,6 @@
 # AI-02 — Search Mentions Live bounded paid-probe adapter
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; mandatory technical review reconciled at the ticket start gate  
 **Approved by:** Project Steward  
@@ -159,8 +159,9 @@ remains a one-keyword operator entrypoint rather than embedding that phrase in p
   `total_count > items_count` produces one Capture and no subsequent request.
 - Response headers omit credential-bearing names under the shared header policy.
 - Credential echo in returned body or retained header is rejected before Capture commit.
-- Credential-echo and over-limit partial paths leave the committed Attempt without a
-  Capture, and a second invocation in that root is refused.
+- Credential echo leaves the committed Attempt without a Capture. An over-limit response
+  preserves its bounded prefix in a `response_partial` Capture. Both consume the adapter
+  one-shot, and a second invocation in that root is refused.
 - Inspect refuses wrong adapter, damaged Evidence, partial/no-response Capture, missing or
   zero-byte body, and malformed Capture ID; successful inspect is byte-exact and read-only.
 - Existing fixture, Keyword Overview, Google Organic, selection, Derivation, migration, and
@@ -463,3 +464,34 @@ that root.
 - No `AGENTS.md`, spec, decision, or vocabulary edits.
 - Nothing pushed.
 
+## Steward closure
+
+**Reviewed implementation:** `69528a431bd865c35c3ae2a007d3bda9fc2b114e`  
+**Implementation parent:** `3cf3f4ad9e5b5779c0f24221aedca73fc285708a`  
+**Disposition:** accepted
+
+The Steward independently reviewed the exact single-child diff and found no hard standards
+or specification defect. The adapter remains an explicit fourth HTTP-v2 branch, preserves
+the existing adapter identities, and remains Evidence-only. The governing HTTP-v2 contract
+requires an over-limit prefix to survive as a `response_partial` Capture; the stale
+acceptance sentence above was corrected at closure to match that authority and the accepted
+implementation.
+
+Independent static gates on the implementation child:
+
+- `uv run ruff check .` — exit 0, all checks passed
+- `uv run mypy` — exit 0, 50 source files clean
+
+[CHAZ] independently ran the final full suite on the exact implementation child:
+
+- UTC start: `2026-08-20T17:16:51Z`
+- UTC end: `2026-08-20T17:19:25Z`
+- `uv run pytest -q` — 967 passed, 1 skipped, 1 warning in 152.81 s; exit 0
+- wall time: 153.22 s
+- tree clean before and after
+- no remaining `observatory-ce05-*` container
+
+This final committed-child run supersedes the earlier 965-test implementation-report run.
+No provider host, DNS, credentials, account access, paid gate, external HTTP, or Evidence
+creation occurred during Steward review. No provider call is authorized by closure.
+Nothing was pushed.
