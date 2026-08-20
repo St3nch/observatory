@@ -1,6 +1,6 @@
 # AI-01 — DataForSEO AI Optimization activation review
 
-**Status:** ready  
+**Status:** done  
 **Owner:** [GROK] technical review / [GPT] Steward reconciliation  
 **Blocked by:** none; AUTH-01 closed locally  
 **Approved by:** Project Steward  
@@ -91,3 +91,42 @@ Report:
 Return one technical report to [CHAZ] for relay to the Project Steward. Stop after the
 report. The Steward will reconcile findings and decide whether to cut a separate bounded
 provider-probe ticket.
+
+## Steward reconciliation
+
+**Closed:** 2026-08-20
+
+The review is accepted. Search Mentions Live is the first AI Optimization foundation. It
+returns indexed provider testimony about questions, answers, mentions, and attached sources;
+it is not an active prompt execution and must remain distinct from Google Organic AIO
+testimony and Keyword Overview demand testimony.
+
+The selected next contract is:
+
+`dataforseo-ai-optimization-llm-mentions-search-mentions-live-paid-probe-v1`
+
+with one exact POST to:
+
+`/v3/ai_optimization/llm_mentions/search_mentions/live`
+
+The bounded first request is Google-only, United States (`location_code=2840`), English,
+one included keyword target searched within `answer` using `word_match`, `limit=5`,
+and `offset=0`. The adapter must forbid continuation tokens, additional targets, filters,
+ordering, domain targets, multi-platform behavior, and automatic follow-up calls. It uses a
+120-second read timeout and a 32 MiB response-body ceiling.
+
+Target Metrics is the runner-up, not part of this activation. ChatGPT, domain/source
+searches, continuation, historical/timeseries, multi-target, LLM Responses, AI Keyword
+Data, and provider products named LLM Scraper remain different contracts requiring later
+bounded review and authorization.
+
+The first implementation remains Evidence-only. It may build and test the adapter and
+operator inspection seam, but it does not authorize provider transport, credentials,
+spend, a real Capture, conformance-fixture freezing, parsing, a Derivation Recipe,
+PostgreSQL persistence, API exposure, recurring acquisition, or F3/F6/F12 activation.
+
+GROK completed the required read-only review without repository edits, tests, provider
+calls, credentials, Evidence creation, or a commit. The Steward independently confirmed
+the endpoint shape, one-task boundary, pagination contract, 120-second provider allowance,
+and per-request plus per-row billing shape from current official documentation. Exact
+pricing must be checked again immediately before any later live-call authorization.
