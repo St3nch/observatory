@@ -612,7 +612,7 @@ fewer organic rows plus heterogeneous SERP features. Any later Derivation must u
 provider-returned counts/context from verified Evidence rather than infer completeness from
 requested depth.
 
-The event-v2 validator may add only this third exact adapter branch. It must validate the
+The event-v2 validator may add this exact Google Organic adapter branch. It must validate
 request, parameters, policy, body equation, provider, and target for this token without
 weakening the sandbox or Keyword Overview branches and without introducing a dynamic
 registry. Existing event-v2 conformance bytes/IDs remain unchanged. Existing Derivations
@@ -627,6 +627,107 @@ mobile/macOS/iOS, explicit `se_domain`, `search_param`/time-filtered context, de
 PAA expansion, rectangles, target/stop-crawl, direct URL input/rewriting, and other optional
 fields require separately authorized contract branches when their distinct testimony is
 materially required.
+
+#### Planned Search Mentions Live paid-probe adapter
+
+AI-02 freezes a fourth exact event-version-2 adapter contract:
+
+    dataforseo-ai-optimization-llm-mentions-search-mentions-live-paid-probe-v1
+
+This section is normative for AI-02. It authorizes implementation of the guarded
+Evidence-only adapter, not a provider call. Transport against the production host remains
+separately gated by fresh contract and price confirmation, bounded F6 off-host protection,
+the exact operator command, and explicit [CHAZ] authorization.
+
+Its provider is exactly `dataforseo`. Its production target is exactly one POST to
+`https://api.dataforseo.com/v3/ai_optimization/llm_mentions/search_mentions/live`.
+The request contains exactly one task. Redirects, retries, polling, continuation,
+account/catalog preflights, and any automatic second exchange are forbidden.
+
+The closed `parameters` object has exactly:
+
+| Property | JSON type | Constraint |
+|---|---|---|
+| `contract` | string | exact adapter token above |
+| `target` | array | exactly one closed target object below |
+| `location_code` | integer | exactly `2840`; boolean is not an integer |
+| `language_code` | string | exactly `en` |
+| `platform` | string | exactly `google` |
+| `offset` | integer | exactly `0`; boolean is not an integer |
+| `limit` | integer | exactly `5`; boolean is not an integer |
+
+The one target object has exactly:
+
+| Property | JSON type | Constraint |
+|---|---|---|
+| `keyword` | string | closed natural-language grammar below |
+| `search_filter` | string | exactly `include` |
+| `search_scope` | array | exactly `["answer"]` |
+| `match_type` | string | exactly `word_match` |
+
+The accepted key is `match_type`. A key with trailing whitespace, including
+`"match_type "`, is unknown and rejected. Domain targets, `include_subdomains`, extra
+target entries, missing or extra keys, multi-platform requests, filters, ordering, tags,
+`search_after_token`, and any continuation form are rejected before Attempt creation.
+
+`keyword` is 1..80 printable ASCII characters and at most 10 words, where a word is a
+maximal nonempty run separated by ASCII space. It begins and ends with ASCII alphanumeric.
+Internal characters are limited to `A-Z a-z 0-9 space & ' ( ) + , . / : -`. This adapter
+does not inherit the Google Organic query-operator deny set. Changing this grammar requires
+an amended adapter contract.
+
+The provider task is `parameters` without `contract`. Request-body bytes are UTF-8 JCS of a
+singleton array containing that task, with no trailing newline. The credential-free request
+is HTTPS, host `api.dataforseo.com`, null port, the exact path above, method `POST`, empty
+query, and the same five committed application headers in the same identity-bearing order
+as the other accepted provider HTTP-v2 adapters:
+
+    [["accept","application/json"],["accept-encoding","identity"],
+     ["connection","close"],["content-type","application/json"],
+     ["user-agent","observatory-dataforseo-v1"]]
+
+Transport may add only the accepted Authorization, Host, and Content-Length fields after a
+verified Attempt capability is issued.
+
+The closed `policy` is exactly:
+
+    {"max_authorized_cost_micro_usd":200000,"mode":"paid_probe",
+     "policy_version":"dataforseo-ai-optimization-search-mentions-live-paid-probe-v1",
+     "pricing_basis":"dataforseo-llm-mentions-live-2026-08-20"}
+
+The public capture path requires exact `--authorize-max-micro-usd 200000`. The one-shot
+guard is keyed by this exact adapter token. Existing Evidence for another accepted adapter
+does not block it, and an unresolved Attempt for this adapter does. No automatic retry or
+continuation is allowed after Attempt creation.
+
+The adapter-owned response-body ceiling is `33_554_432` bytes. Its adapter-owned timeout
+profile is `httpx.Timeout(connect=30.0, read=120.0, write=30.0, pool=30.0)`. The shared
+streaming/client mechanics do not make either value a global default or caller option.
+
+The event-v2 validator may add this exact fourth adapter as an explicit branch. It must
+validate request, parameters, policy, body equation, provider, and target for this token
+without weakening an existing branch and without introducing a dynamic registry. Every
+existing event-v2 identity and conformance byte remains unchanged. Existing Derivation and
+read/API dispatch remain fail-closed for this Evidence-only adapter until separate
+authority accepts a recipe.
+
+The internal deterministic loopback seam may replace only scheme, host, and port with
+`http`, `127.0.0.1`, and an explicit test port while retaining the exact production path.
+It and any body-limit override are private test seams, not public CLI options.
+
+Credentials are nonempty environment inputs and may fail before Attempt creation.
+Authorization is constructed and injected only after the verified one-shot capability is
+issued. This adapter does not perform an account, balance, catalog, or User Data preflight.
+
+Operator inspection is verify-on-read and read-only. It accepts only a complete Capture
+for this adapter with a present nonempty body and writes those exact response bytes to
+stdout. It does not parse, pretty-print, summarize, normalize, or mutate the testimony.
+
+`limit=5` is bounded learning, not logical corpus completeness. A response that includes a
+continuation token or reports more available results still produces at most one Capture
+and no follow-up exchange. Provider status, task IDs, cost, counts, returned question and
+answer text, sources, timestamps, and continuation testimony remain uninterpreted response
+body bytes in AI-02.
 
 #### Request fingerprint and Attempt version 2
 

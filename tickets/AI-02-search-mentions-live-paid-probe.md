@@ -2,7 +2,7 @@
 
 **Status:** ready  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** mandatory pre-implementation technical review and Steward reconciliation  
+**Blocked by:** none; mandatory technical review reconciled at the ticket start gate  
 **Approved by:** Project Steward  
 **Start commit:** set by [GROK] from the reconciled ticket HEAD  
 
@@ -85,6 +85,28 @@ The provider documentation contains examples with a typographical space in `"mat
 the accepted request key is `match_type` as named by the field contract. The technical
 review must verify this interpretation before implementation.
 
+The closed Evidence `parameters` keys are exactly `contract`, `target`,
+`location_code`, `language_code`, `platform`, `offset`, and `limit`. The sole target object
+has exactly `keyword`, `search_filter`, `search_scope`, and `match_type`. Reject `domain`,
+`include_subdomains`, a trailing-space key, and every other missing or extra parameter or
+target key.
+
+The operator keyword is 1..80 printable ASCII characters and at most 10 ASCII-space
+separated words. It begins and ends with ASCII alphanumeric. Internal characters are
+limited to `A-Z a-z 0-9 space & ' ( ) + , . / : -`. This adapter does not inherit the
+Google Organic query-operator deny set.
+
+The closed Evidence policy is exactly:
+
+```json
+{
+  "max_authorized_cost_micro_usd": 200000,
+  "mode": "paid_probe",
+  "policy_version": "dataforseo-ai-optimization-search-mentions-live-paid-probe-v1",
+  "pricing_basis": "dataforseo-llm-mentions-live-2026-08-20"
+}
+```
+
 The first live-call candidate keyword is `generative engine optimization`. Naming it here
 does not authorize transport, spend, credentials, or Evidence creation, and the adapter
 remains a one-keyword operator entrypoint rather than embedding that phrase in product code.
@@ -110,9 +132,9 @@ remains a one-keyword operator entrypoint rather than embedding that phrase in p
 8. Commit at most one Capture preserving complete, partial, and no-response transport
    testimony exactly as the shared HTTP seam supplies it. Provider status codes or JSON
    status fields do not redefine transport completeness.
-9. Provide a read-only inspect operation that verifies the target Capture and returns or
-   summarizes the exact complete nonempty response bytes without parsing provider semantics
-   or mutating Evidence.
+9. Provide a read-only inspect operation that verifies the target Capture and writes the
+   exact complete nonempty response bytes to stdout. It must not parse, pretty-print,
+   summarize, normalize, or mutate Evidence.
 10. Permit an exact `http://127.0.0.1:<port>` path override only through the private test
     seam. Reject every other override shape.
 11. Keep all ordinary tests local and credential-free. They must not perform DNS, provider
@@ -124,6 +146,9 @@ remains a one-keyword operator entrypoint rather than embedding that phrase in p
 
 - Exact deterministic request parameters and body bytes are proved.
 - Attempt is durably committed and verified before the test server observes a request.
+- The decisive ordering test reads the committed Attempt and exact request-body bytes from
+  inside the first local request handler; a forced Attempt-commit failure proves the
+  handler is never reached.
 - A forged, copied, reconstructed, mutated, or reused capability cannot transport.
 - Any pre-transport validation failure leaves no Attempt and performs no exchange.
 - Process/test exceptions after Attempt commit preserve honest authorized/unresolved state
@@ -134,6 +159,8 @@ remains a one-keyword operator entrypoint rather than embedding that phrase in p
   `total_count > items_count` produces one Capture and no subsequent request.
 - Response headers omit credential-bearing names under the shared header policy.
 - Credential echo in returned body or retained header is rejected before Capture commit.
+- Credential-echo and over-limit partial paths leave the committed Attempt without a
+  Capture, and a second invocation in that root is refused.
 - Inspect refuses wrong adapter, damaged Evidence, partial/no-response Capture, missing or
   zero-byte body, and malformed Capture ID; successful inspect is byte-exact and read-only.
 - Existing fixture, Keyword Overview, Google Organic, selection, Derivation, migration, and
@@ -146,6 +173,8 @@ At minimum, prove:
 
 - exact singleton task and JCS bytes;
 - every frozen-field rejection class above;
+- the closed top-level and target key sets, including domain, include-subdomains,
+  trailing-space `match_type `, missing-key, and extra-key rejection;
 - exact authorization ceiling and Python type handling;
 - concrete-store requirement and read-back identity/body verification;
 - Attempt-before-request ordering;
@@ -153,12 +182,16 @@ At minimum, prove:
 - capability construction, mutation, copying, replay, and cross-adapter misuse resistance;
 - strict production URL and exact loopback override;
 - no redirects, environment proxy use, retry, continuation, or second request;
+- a complete response carrying a continuation token and
+  `total_count > items_count` still causes exactly one POST and one Capture;
 - credential absence from committed Attempt/Capture and response headers;
 - credential-echo rejection;
 - 120-second read timeout configuration and 32 MiB bound;
 - complete, partial-prefix, zero-byte, over-limit, timeout, and unsupported-protocol paths;
 - byte-exact verify-on-read inspection and no mutation;
-- existing adapter identities and frozen fixture bytes remain unchanged.
+- existing adapter identities and frozen fixture bytes remain unchanged;
+- neighboring accepted adapters coexist in one Evidence root while one-shot enforcement
+  remains adapter-specific.
 
 Use the smallest decisive test substrate. Ordinary tests may use a local loopback server and
 temporary Evidence Store. No provider host, credentials, DNS, or paid endpoint is permitted.
@@ -205,10 +238,29 @@ The review must verify:
   parser now;
 - false-green risks, weak tests, hidden coupling, and any premise requiring authority change.
 
+GROK returned `AMEND TICKET`. The Steward reconciled that review before implementation:
+
+- the governing capture-event-v2 spec now explicitly accepts this fourth adapter branch;
+- the parameter, target, keyword, policy, timeout, body-limit, credential, loopback,
+  one-shot, and byte-exact inspection contracts are closed above;
+- the Attempt-before-handler, commit-failure, unresolved, credential-echo, over-limit,
+  continuation, and neighboring-adapter proofs are required;
+- implementation remains explicit adapter dispatch, not a registry or generic framework;
+- the paid-adapter module may reuse the Organic shape and shared HTTP/capability/Evidence
+  mechanics but must not inherit the Organic operator deny set;
+- this Evidence-only adapter must not enter Derivation or API provider dispatch;
+- likely parser traps are report-only: paging-key contradiction, result/task count
+  distinctions, returned question/answer versus requested keyword, source identity,
+  Google-null ChatGPT fields, continuation non-identity, ordering, timestamps, and exact
+  numeric cost normalization.
+
+No authority decision was required. No implementation, provider activity, Evidence
+creation, or full suite occurred during the review.
+
 GROK must return exactly one verdict:
 
 - `PROCEED UNCHANGED`;
-- `AMEND TICKET`;
+- `AMEND TICKET` (returned and reconciled);
 - `AUTHORITY DECISION REQUIRED`.
 
 The review report must be candid: strongest and weakest seams, what genuinely generalizes,
