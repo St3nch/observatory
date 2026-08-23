@@ -1166,6 +1166,188 @@ def test_admitted_empty_and_non_admitted_context_stay_distinct(
     assert all(item["capture_id"] != "cd" * 32 for item in captures)
 
 
+def test_swapped_outcome_classification_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    document = _decoded()
+    _set_items(document, [])
+    store = create_store(tmp_path / "swap")
+    _empty_attempt, empty_capture = _commit_mentions(
+        store, _encode(document), "26" * 32, started="2026-08-20T17:36:02.100000Z"
+    )
+    _frozen_attempt, frozen_capture = _commit_mentions(
+        store, _body(), "11" * 32, started="2026-08-20T17:36:01.100000Z"
+    )
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_search_mentions(store, connection)
+        select_provider_recipe(
+            connection, MENTIONS_ADAPTER_CONTRACT, SEARCH_MENTIONS_RECIPE_ID
+        )
+        rows = connection.execute(
+            """
+            SELECT capture_id, classification, observation_count
+            FROM outcomes
+            WHERE capture_id IN (%s, %s) AND derivation_version_id = %s
+            """,
+            (frozen_capture, empty_capture, SEARCH_MENTIONS_RECIPE_ID),
+        ).fetchall()
+        by_id = {str(row[0]): (str(row[1]), int(row[2])) for row in rows}
+        frozen_envelopes = connection.execute(
+            """
+            SELECT count(*) FROM observation_envelopes
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (frozen_capture, SEARCH_MENTIONS_RECIPE_ID),
+        ).fetchone()
+        empty_envelopes = connection.execute(
+            """
+            SELECT count(*) FROM observation_envelopes
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (empty_capture, SEARCH_MENTIONS_RECIPE_ID),
+        ).fetchone()
+    assert by_id[frozen_capture] == ("observation_admitted", 113)
+    assert by_id[empty_capture] == ("observation_admitted_empty", 0)
+    assert frozen_envelopes == (113,)
+    assert empty_envelopes == (0,)
+    with _app(store, postgres_dsn) as client:
+        healthy = _history(client, order="asc")
+    assert healthy.status_code == 200
+    healthy_captures = healthy.json()["captures"]
+    assert [item["capture_id"] for item in healthy_captures] == [
+        frozen_capture,
+        empty_capture,
+    ]
+    assert healthy_captures[0]["capture_outcome"] == {
+        "classification": "observation_admitted",
+        "observation_count": 113,
+    }
+    assert len(healthy_captures[0]["search_mention_items"]) == 5
+    assert healthy_captures[1]["capture_outcome"] == {
+        "classification": "observation_admitted_empty",
+        "observation_count": 0,
+    }
+    assert healthy_captures[1]["search_mention_items"] == []
+    assert healthy_captures[1]["monthly_search_volume"] == []
+    assert healthy_captures[1]["structured_sources"] == []
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET classification = 'observation_admitted_empty'
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (frozen_capture, SEARCH_MENTIONS_RECIPE_ID),
+        )
+        planted = connection.execute(
+            """
+            SELECT classification, observation_count FROM outcomes
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (frozen_capture, SEARCH_MENTIONS_RECIPE_ID),
+        ).fetchone()
+        still_envelopes = connection.execute(
+            """
+            SELECT count(*) FROM observation_envelopes
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (frozen_capture, SEARCH_MENTIONS_RECIPE_ID),
+        ).fetchone()
+    assert planted == ("observation_admitted_empty", 113)
+    assert still_envelopes == (113,)
+    with _app(store, postgres_dsn) as client:
+        empty_label = _history(client)
+    assert empty_label.status_code == 409
+    assert empty_label.json()["detail"] == INTEGRITY_SIGNAL
+    assert "captures" not in empty_label.json()
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET classification = 'observation_admitted'
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (frozen_capture, SEARCH_MENTIONS_RECIPE_ID),
+        )
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET classification = 'observation_admitted'
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (empty_capture, SEARCH_MENTIONS_RECIPE_ID),
+        )
+        planted_empty = connection.execute(
+            """
+            SELECT classification, observation_count FROM outcomes
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (empty_capture, SEARCH_MENTIONS_RECIPE_ID),
+        ).fetchone()
+        still_empty_envelopes = connection.execute(
+            """
+            SELECT count(*) FROM observation_envelopes
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (empty_capture, SEARCH_MENTIONS_RECIPE_ID),
+        ).fetchone()
+    assert planted_empty == ("observation_admitted", 0)
+    assert still_empty_envelopes == (0,)
+    with _app(store, postgres_dsn) as client:
+        admitted_label = _history(client)
+    assert admitted_label.status_code == 409
+    assert admitted_label.json()["detail"] == INTEGRITY_SIGNAL
+    assert "captures" not in admitted_label.json()
+
+
+def test_classification_disagreement_outside_limit_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "outside")
+    _commit_mentions(store, _body(), "81" * 32, started="2026-08-20T17:36:01.100000Z")
+    later_attempt, later_capture = _commit_mentions(
+        store,
+        _body(),
+        "82" * 32,
+        started="2026-08-20T17:37:01.100000Z",
+        authorized_at="2026-08-20T17:37:00.000000Z",
+    )
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_search_mentions(store, connection)
+        select_provider_recipe(
+            connection, MENTIONS_ADAPTER_CONTRACT, SEARCH_MENTIONS_RECIPE_ID
+        )
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET classification = 'observation_admitted_empty'
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (later_capture, SEARCH_MENTIONS_RECIPE_ID),
+        )
+        planted = connection.execute(
+            """
+            SELECT classification, observation_count FROM outcomes
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (later_capture, SEARCH_MENTIONS_RECIPE_ID),
+        ).fetchone()
+    assert planted == ("observation_admitted_empty", 113)
+    with _app(store, postgres_dsn) as client:
+        limited = _history(client, limit=1, order="asc")
+        later = client.get(f"/v1/attempts/{later_attempt}")
+    assert limited.status_code == 409
+    assert limited.json()["detail"] == INTEGRITY_SIGNAL
+    assert "captures" not in limited.json()
+    assert later.status_code == 200
+    assert later.json()["capture_outcome"]["classification"] == "observation_admitted_empty"
+    assert later.json()["capture_outcome"]["observation_count"] == 113
+
+
 def test_duplicate_identities_collapse_and_cross_question_urls_stay_separate(
     tmp_path: Path, postgres_dsn: str
 ) -> None:

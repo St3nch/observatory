@@ -426,9 +426,12 @@ Candidates are `search_mentions_result_context JOIN outcomes` on the full
 `observation_admitted` / `observation_admitted_empty`, resolved Recipe, and exact
 keyword. Every matching candidate verifies Attempt and Capture Evidence, provider
 and adapter on both, Capture parent, Attempt/context agreement, then Capture-wide
-PostgreSQL checks, then sort/limit. Count grain is Capture-wide envelope
-cardinality vs Capture Outcome `observation_count`; typed union is items +
-monthly + sources; context and occurrences are excluded.
+PostgreSQL checks, then sort/limit. Check 7 is classification-gated: admitted-empty
+requires `observation_count == 0` and zero envelopes/typed rows/occurrences;
+admitted requires `observation_count > 0`, envelope cardinality equal to that
+count, typed-key union equal to the envelope set, and every typed parent at least
+one matching occurrence. Context and occurrences are excluded from envelope
+cardinality. Attempt audit still may display a stale classification/count.
 
 ### Frozen family / occurrence counts
 
@@ -462,6 +465,8 @@ Independent persisted-to-API projection of the AI-03 Capture:
 | Three volume/newest-monthly disagreements | `test_frozen_history_shape_counts_token_and_volume_disagreements` |
 | Duplicate item/source collapse; same URL under another question stays separate | `test_duplicate_identities_collapse_and_cross_question_urls_stay_separate` |
 | Admitted-empty + planted non-admitted excluded | `test_admitted_empty_and_non_admitted_context_stay_distinct` |
+| Classification/emptiness swap 409 both directions; valid admitted and admitted-empty 200 | `test_swapped_outcome_classification_is_409` |
+| Classification disagreement outside `limit=1` still 409; Attempt audit stale | `test_classification_disagreement_outside_limit_is_409` |
 | Asc/desc, capture-id tie-break, whole-group limit | `test_second_capture_order_limit_and_tie_break` |
 | Foreign-Attempt Outcome cannot supply membership/count | `test_foreign_attempt_outcome_does_not_supply_history` |
 | Missing/wrong Attempt parameters and Attempt/context disagreement 409 | `test_request_context_integrity_and_damage_409` |
@@ -568,6 +573,62 @@ One implementation commit on `main` whose parent is
 commit. Nothing pushed. No provider, DNS, credential, sandbox, paid, or public
 network call. No continuation follow. No schema or migration. No authority edit
 outside this ticket's implementer fields.
+
+### Classification-gated check 7 remediation
+
+Steward ruled check 7 classification-gated. Parent of this remediation:
+`74283f8703880c0b530a666173eb648b6d22f968`. Status remains `review`.
+
+Changed paths: `src/observatory/search_mentions_read.py`,
+`tests/test_api_search_mentions.py`, this Implementation report.
+
+Mechanism: `_assert_history_candidates_consistent` now receives
+`(capture_id, classification, observation_count)` for every matching candidate
+before sort/limit. `observation_admitted_empty` fail-closes unless count is 0 and
+envelope/typed sets are empty, then leftover occurrence rows fail closed.
+`observation_admitted` fail-closes unless count > 0, envelope cardinality equals
+count, typed keys equal envelopes, and every typed parent has a matching
+occurrence. Unexpected classification fail-closes.
+
+Planted swaps (classification only):
+
+- frozen admitted Capture relabeled `observation_admitted_empty` with count 113
+  and 113 envelopes → history HTTP 409 `evidence_integrity_failure`
+- derived admitted-empty Capture relabeled `observation_admitted` with count 0
+  and zero envelopes → history HTTP 409 `evidence_integrity_failure`
+- same swap on a later Capture with `limit=1` (earlier sibling healthy) → 409
+- valid admitted and admitted-empty GETs remain 200
+
+Adjacent finding (not implemented): Organic and Keyword Overview GET still
+accept a swapped classification when count/envelopes agree. Attempt audit still
+returns 200 with the planted stale classification/count.
+
+No schema, migration, Evidence, Recipe, Derivation, API shape, route, query,
+Organic, KO, unknown-query, framework, provider, or network change.
+
+Remediation suite after final behavior-affecting bytes:
+
+```
+uv run pytest -q
+```
+
+UTC `2026-08-23T21:49:28Z` → `2026-08-23T21:54:21Z`, exit 0, **1045 passed**,
+**1 skipped**, 1 Starlette TestClient deprecation warning, 292.59s.
+
+```
+uv run ruff check .
+```
+
+UTC `2026-08-23T21:54:25Z`, exit 0.
+
+```
+uv run mypy
+```
+
+UTC `2026-08-23T21:54:25Z` → `2026-08-23T21:54:26Z`, exit 0, 56 source files.
+
+No leftover `observatory-ce05-*` containers. Ticket report fill after this
+suite is documentation only.
 
 ## Closure
 

@@ -190,14 +190,15 @@ def _request_context(
 
 def _assert_history_candidates_consistent(
     connection: Connection[Any],
-    candidates: Sequence[tuple[str, int]],
+    candidates: Sequence[tuple[str, str, int]],
     derivation_version_id: str,
     kinds: Sequence[str],
 ) -> None:
     if not candidates:
         return
-    capture_ids = [capture_id for capture_id, _count in candidates]
-    expected_counts = {capture_id: count for capture_id, count in candidates}
+    capture_ids = [
+        capture_id for capture_id, _classification, _count in candidates
+    ]
     envelope_rows = connection.execute(
         """
         SELECT capture_id, within_capture_identity, observation_kind
@@ -230,13 +231,30 @@ def _assert_history_candidates_consistent(
         ).fetchall()
         for row in rows:
             typed[str(row[0])].add((str(row[1]), str(row[2])))
-    empty_ids = [capture_id for capture_id, count in expected_counts.items() if count == 0]
-    for capture_id, expected_count in expected_counts.items():
+    empty_ids = [
+        capture_id
+        for capture_id, classification, _count in candidates
+        if classification == "observation_admitted_empty"
+    ]
+    for capture_id, classification, expected_count in candidates:
         keys = envelopes[capture_id]
-        if len(keys) != expected_count:
-            raise IntegrityError("envelope set disagrees with Outcome observation_count")
-        if typed[capture_id] != keys:
-            raise IntegrityError("typed Observation keys disagree with envelopes")
+        typed_keys = typed[capture_id]
+        if classification == "observation_admitted_empty":
+            if expected_count != 0 or keys or typed_keys:
+                raise IntegrityError(
+                    "admitted-empty Outcome disagrees with envelope emptiness"
+                )
+        elif classification == "observation_admitted":
+            if expected_count <= 0:
+                raise IntegrityError("admitted Outcome has empty observation_count")
+            if len(keys) != expected_count:
+                raise IntegrityError(
+                    "envelope set disagrees with Outcome observation_count"
+                )
+            if typed_keys != keys:
+                raise IntegrityError("typed Observation keys disagree with envelopes")
+        else:
+            raise IntegrityError("history candidate has unexpected classification")
     if empty_ids:
         for table in _OCCURRENCE_TABLES:
             leftover = connection.execute(
@@ -390,12 +408,12 @@ def load_search_mentions_history(
     _assert_history_candidates_consistent(
         connection,
         [
-            (capture_id, observation_count)
+            (capture_id, classification, observation_count)
             for (
                 _started,
                 capture_id,
                 _attempt_id,
-                _classification,
+                classification,
                 observation_count,
                 _attempt,
                 _capture,
