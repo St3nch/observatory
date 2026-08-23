@@ -1251,9 +1251,9 @@ does not authorize transport or Evidence creation.
 
 ### Current provider schema and read-surface pointer
 
-The accepted Keyword Overview and Google Organic implementations add rebuildable provider
-relations without changing the Evidence boundary. Shared relations are `provider_recipes`,
-`provider_recipe_selections`, `observation_envelopes`, and
+The accepted Keyword Overview, Google Organic, and Search Mentions implementations add
+rebuildable provider relations without changing the Evidence boundary. Shared relations are
+`provider_recipes`, `provider_recipe_selections`, `observation_envelopes`, and
 `derivation_diagnostics`. Keyword Overview typed details are
 `keyword_overview_coverage`, `keyword_overview_metrics`,
 `keyword_overview_monthly_search_volume`, `keyword_overview_search_volume_trend`,
@@ -1264,17 +1264,24 @@ relations without changing the Evidence boundary. Shared relations are `provider
 `google_organic_aio_sources`, `google_organic_aio_source_occurrences`,
 `google_organic_related_questions`,
 `google_organic_related_question_occurrences`, and
-`google_organic_related_queries`. Their closed recipes and accepted semantics remain
-authoritative through the registered canonical recipe bytes and PF-04 through PF-15
-acceptance records; this paragraph is a discovery pointer, not a duplicate schema.
+`google_organic_related_queries`. Search Mentions uses
+`search_mentions_result_context`, `search_mentions_items`,
+`search_mentions_item_occurrences`, `search_mentions_monthly_search_volume`,
+`search_mentions_monthly_occurrences`, `search_mentions_sources`, and
+`search_mentions_source_occurrences`. Their closed recipes and accepted semantics remain
+authoritative through the registered canonical recipe bytes, PF-04 through PF-15 acceptance
+records, and AI-02 through AI-06 Search Mentions acceptance records; this paragraph is a
+discovery pointer, not a duplicate schema.
 
 The canonical versioned resource namespace is `/v1`. Current provider reads are
 `GET /v1/attempts/{attempt_id}`,
 `GET /v1/providers/dataforseo/google/keyword-overview/history`, and
-`GET /v1/providers/dataforseo/google/organic/history`. Development documentation is served
-at `/api/v1/docs` with OpenAPI at `/api/v1/openapi.json`; those documentation locations do
-not create a second `/api/v1` resource namespace or a compatibility mount. The API remains
-read-only, loopback-only, and unauthenticated until the recorded deferred triggers fire.
+`GET /v1/providers/dataforseo/google/organic/history`, and
+`GET /v1/providers/dataforseo/google/ai-optimization/search-mentions/history`.
+Development documentation is served at `/api/v1/docs` with OpenAPI at
+`/api/v1/openapi.json`; those documentation locations do not create a second `/api/v1`
+resource namespace or a compatibility mount. The API remains read-only, loopback-only, and
+unauthenticated until the recorded deferred triggers fire.
 
 For fixture v1, `derivation_version_id` is an operator-supplied semantic label matching
 `[A-Za-z0-9._+:-]{1,128}`. It is the immutable identity of one derivation meaning under

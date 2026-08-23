@@ -1,6 +1,6 @@
 # AI-06 — Search Mentions recipe selection and read API
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Parent spec:** `docs/specs/capture-event-v2.md`  
 **Blocked by:** AI-05 — Search Mentions provider Derivation and typed persistence (`done`)  
@@ -630,10 +630,51 @@ UTC `2026-08-23T21:54:25Z` → `2026-08-23T21:54:26Z`, exit 0, 56 source files.
 No leftover `observatory-ce05-*` containers. Ticket report fill after this
 suite is documentation only.
 
-## Closure
+## Steward closure
 
-<!-- Project Steward only. -->
+**Closed by:** [GPT] Project Steward  
+**Implementation parent:** `a0df3ab9b218b3c823dcf569c209d1d173069501`  
+**Implementation child:** `74283f8703880c0b530a666173eb648b6d22f968`  
+**Final remediation child:** `0dedd283b443a3d424fee8055bdec2696004e1b2`  
+**Comparison range:** `a0df3ab9b218b3c823dcf569c209d1d173069501..0dedd283b443a3d424fee8055bdec2696004e1b2`  
+**Evidence accepted:** yes
 
-- Closed at commit:
-- Evidence accepted: yes/no
+The Steward accepts the exact Search Mentions read surface, selected/pinned Recipe
+resolution, Organic-style context-plus-admission membership, full Attempt/Capture
+verify-before-limit, independently projected frozen response, complete occurrence nesting,
+two-database equality, and read-only/zero-network isolation. The remediation makes the
+Capture-wide consistency check classification-gated: `observation_admitted_empty` is
+valid only at zero count with no envelopes, typed rows, or occurrences, while
+`observation_admitted` requires a positive matching count, exact typed/envelope equality,
+and occurrence-bearing parents.
+
+Accepted final-byte evidence:
+
+- implementer `uv run pytest -q` — **1045 passed, 1 skipped, 1 existing warning in
+  292.59s**;
+- implementer `uv run ruff check .` — passed;
+- implementer `uv run mypy` — passed, 56 source files;
+- independent formal MCP review on an automatically removed workspace — **5 targeted
+  classification tests passed, 1041 deselected, 1 existing warning in 12.75s**;
+- independent actual-tree lint and typecheck — both passed;
+- no leftover test containers, no provider/DNS/credential/public-network call, no
+  continuation follow, and no push during implementation or review;
+- final reviewed HEAD `0dedd283b443a3d424fee8055bdec2696004e1b2` had a clean `main`
+  working tree.
+
+Accepted limits remain explicit: coordinated internally consistent rewrites/deletions,
+deletion of the sole context anchor, partial occurrence loss where another occurrence
+remains, value corruption preserving keys/counts, PostgreSQL equality to raw bodies without
+re-Derivation, completeness beyond 5-of-3055, concurrent writers, production
+authentication/non-loopback exposure, routine acquisition, prior Recipe-pointer history,
+and Provider Update Time semantics for item clocks are not proved. Verify-all-before-limit
+remains O(all matching Captures), and the surface has no API cursor.
+
+The adjacent Organic and Keyword Overview classification-gated-emptiness discrepancy is a
+separate follow-up, not an AI-06 defect. Unknown-query rejection, a shared assembler,
+authentication/concurrency/off-host restore, and the other recorded limits remain deferred
+to their own authority and tickets.
+
+AI-06 is accepted and closed.
+[CHAZ] retains push authority.
 
