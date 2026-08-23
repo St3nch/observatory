@@ -9,10 +9,23 @@ and serves them through an API. It does not perform SEO/GEO strategy.
 
 ## Current status
 
-Authority documents describe the capture-event Evidence boundary (D8). The Python service
-scaffold exposes process liveness only. Evidence Store, derive, observation schema, and
-provider adapters are not yet implemented. First implementation remains fixture-only
-(`fixture-panel-v1`).
+Observatory now implements the capture-event Evidence boundary, format-2 filesystem Evidence
+Store, verify-on-read and scrub tooling, rebuildable PostgreSQL derivation, provider
+Derivation Recipes, and integrity-checked read APIs.
+
+The implemented provider slices are:
+
+- DataForSEO Google Keyword Overview: bounded capture, strict parser, typed derivation,
+  Recipe selection, and history API;
+- DataForSEO Google Organic: bounded capture, strict parser, typed derivation, Recipe
+  selection, and history API;
+- DataForSEO AI Optimization Search Mentions: bounded capture, strict parser, and typed
+  PostgreSQL derivation. Recipe selection and read/history API remain a separate future
+  ticket.
+
+The fixture path remains supported for conformance and regression proofs. Provider transport
+is adapter-specific and gated; there is no generic paid runner or recurring acquisition
+orchestrator.
 
 ## Read first
 
@@ -20,7 +33,7 @@ Authority hierarchy for agents and humans:
 
 1. `VISION.md` — product doctrine, lifecycle, survival, v1 proof
 2. `VOCABULARY.md` — canonical terms
-3. `decisions/decisions.md` — settled decisions (see D8; D5 superseded for storage boundary)
+3. `decisions/decisions.md` — settled decisions (including D8–D13)
 4. `decisions/deferred.md` — deferred work with triggers
 5. `AGENTS.md` — agent hard boundaries and commands
 6. `docs/adr/0001-capture-event-evidence-boundary.md` — why the Evidence boundary is fixed
@@ -37,7 +50,7 @@ When a ticket exists, read it after the decision registers and before coding.
     AGENTS.md
     docs/adr/                  ADRs when the ADR bar is met
     docs/specs/                Normative implementation contracts
-    src/observatory/           Service package (scaffold)
+    src/observatory/           Service implementation
     tests/
 
 Directories are created only when they have content. Planning belongs in tickets, not a
@@ -58,18 +71,25 @@ prepared request
 
 PostgreSQL holds rebuildable Outcomes and Observations. It is not authoritative Evidence.
 
-## Build sequence
+## Implemented foundation
 
-1. Capture-event authority in-repo (this documentation stage).
-2. Implement Evidence Store primitives, Attempt/Capture commit, verify-on-read, and
-   fixture-only transport seam (no real provider network).
-3. Implement derive from committed Evidence into rebuildable PostgreSQL Outcomes and
-   Observations citing `capture_id` and `attempt_id`.
-4. Read API with Outcome and Observation visibility; integrity fail-closed on verify.
-5. Scrub and status; state unproven limits (off-host, multi-process, paid providers).
-6. Add a real provider only after the fixture path is sound and Steward authorizes it.
+- Immutable Attempt and Capture Evidence with SHA-256 identities and content-addressed body
+  objects.
+- Closed event-v1 and event-v2 validation with mixed-store compatibility.
+- Commit-before-send transport gates, bounded single-exchange HTTP, credential
+  non-disclosure, and exact complete/partial/no-response testimony.
+- Evidence inspection, status, scrub, tamper detection, and process-death hammer coverage.
+- PostgreSQL schema migration and deterministic re-derivation from verified Evidence.
+- Recipe-addressed provider Observations with typed detail, provenance, occurrence
+  testimony, and complete-set checks.
+- Read-only FastAPI service with health, Attempt, Keyword Overview history, and Google
+  Organic history surfaces that fail closed on Evidence/PostgreSQL disagreement.
 
-## Intended commands
+PostgreSQL remains rebuildable state, not authoritative Evidence. Multi-process writer
+safety, routine acquisition orchestration, production API authentication/non-loopback
+exposure, and Search Mentions read/history remain outside the implemented boundary.
+
+## Commands
 
     uv run pytest -q
     uv run ruff check .
@@ -79,6 +99,11 @@ PostgreSQL holds rebuildable Outcomes and Observations. It is not authoritative 
     uv run python -m observatory.derive
     uv run python -m observatory.evidence status
     uv run python -m observatory.evidence scrub
+    uv run python -m observatory.keyword_overview_derive
+    uv run python -m observatory.google_organic_derive
+    uv run python -m observatory.search_mentions_derive
+    uv run python -m observatory.provider_recipe_selection
+    uv run python -m observatory.serve
 
-Migration, capture, derivation, and evidence commands remain placeholders until
-implemented.
+Use each module's `--help` for its required operator arguments. Listing a provider command
+does not authorize credentials, transport, spend, or Evidence creation.
