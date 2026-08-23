@@ -99,6 +99,18 @@ MENTIONS_POLICY: Final[dict[str, object]] = {
     "policy_version": "dataforseo-ai-optimization-search-mentions-live-paid-probe-v1",
     "pricing_basis": "dataforseo-llm-mentions-live-2026-08-20",
 }
+TARGET_METRICS_ADAPTER_CONTRACT: Final[str] = (
+    "dataforseo-ai-optimization-llm-mentions-target-metrics-live-paid-probe-v1"
+)
+TARGET_METRICS_HOST: Final[str] = "api.dataforseo.com"
+TARGET_METRICS_PATH: Final[str] = "/v3/ai_optimization/llm_mentions/target_metrics/live"
+TARGET_METRICS_AUTHORIZED_COST_MICRO_USD: Final[int] = 200000
+TARGET_METRICS_POLICY: Final[dict[str, object]] = {
+    "max_authorized_cost_micro_usd": TARGET_METRICS_AUTHORIZED_COST_MICRO_USD,
+    "mode": "paid_probe",
+    "policy_version": "dataforseo-ai-optimization-target-metrics-live-paid-probe-v1",
+    "pricing_basis": "dataforseo-llm-mentions-live-2026-08-23",
+}
 _ORGANIC_KEYWORD_OPERATORS: Final[tuple[str, ...]] = (
     "allinanchor:",
     "allintext:",
@@ -222,6 +234,16 @@ _MENTIONS_TARGET_KEYS: Final[frozenset[str]] = frozenset(
         "search_scope",
     }
 )
+_TARGET_METRICS_PARAMETER_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "contract",
+        "internal_list_limit",
+        "language_code",
+        "location_code",
+        "platform",
+        "target",
+    }
+)
 _SOFTWARE_KEYS: Final[frozenset[str]] = frozenset({"observatory_version"})
 _POLICY_KEYS: Final[frozenset[str]] = frozenset({"mode", "policy_version"})
 _PAID_POLICY_KEYS: Final[frozenset[str]] = frozenset(
@@ -296,6 +318,8 @@ __all__ = [
     "MENTIONS_ADAPTER_CONTRACT",
     "MENTIONS_AUTHORIZED_COST_MICRO_USD",
     "ORGANIC_ADAPTER_CONTRACT",
+    "TARGET_METRICS_ADAPTER_CONTRACT",
+    "TARGET_METRICS_AUTHORIZED_COST_MICRO_USD",
     "ORGANIC_AUTHORIZED_COST_MICRO_USD",
     "PAID_ADAPTER_CONTRACT",
     "PAID_AUTHORIZED_COST_MICRO_USD",
@@ -315,6 +339,10 @@ __all__ = [
     "mentions_http_capture_document",
     "mentions_http_fingerprint_document",
     "mentions_http_request",
+    "target_metrics_http_attempt_document",
+    "target_metrics_http_capture_document",
+    "target_metrics_http_fingerprint_document",
+    "target_metrics_http_request",
     "organic_http_attempt_document",
     "organic_http_capture_document",
     "organic_http_fingerprint_document",
@@ -331,6 +359,8 @@ __all__ = [
     "validate_http_request",
     "validate_mentions_http_parameters",
     "validate_mentions_http_request",
+    "validate_target_metrics_http_parameters",
+    "validate_target_metrics_http_request",
     "validate_organic_http_parameters",
     "validate_organic_http_request",
     "validate_paid_http_parameters",
@@ -874,6 +904,111 @@ def mentions_http_capture_document(
     return _validate_capture(document, attempt=parent)
 
 
+def target_metrics_http_request(*, body: bytes) -> dict[str, object]:
+    """Build the closed HTTP-v2 Target Metrics paid-probe request wrapping *body*."""
+
+    if len(body) < 1:
+        raise DocumentError("HTTP request body must be present_nonempty")
+    return _validate_target_metrics_http_request(
+        {
+            "body": {"body": body_ref(body), "state": "present_nonempty"},
+            "headers": [list(pair) for pair in HTTP_HEADERS],
+            "host": TARGET_METRICS_HOST,
+            "method": "POST",
+            "path": TARGET_METRICS_PATH,
+            "port": None,
+            "query": [],
+            "scheme": "https",
+        }
+    )
+
+
+def target_metrics_http_fingerprint_document(
+    *, request: Mapping[str, object]
+) -> dict[str, object]:
+    """Build the closed request-fingerprint preimage for the Target Metrics probe."""
+
+    return _validate_fingerprint(
+        {
+            "adapter_contract": TARGET_METRICS_ADAPTER_CONTRACT,
+            "provider": HTTP_PROVIDER,
+            "request": dict(request),
+            "schema": "observatory.request-fingerprint",
+            "version": 2,
+        }
+    )
+
+
+def target_metrics_http_attempt_document(
+    *,
+    parameters: Mapping[str, object],
+    attempt_nonce: str,
+    authorized_at: str,
+    observatory_version: str,
+) -> dict[str, object]:
+    """Construct a closed Target Metrics paid HTTP-v2 Attempt."""
+
+    params = _validate_target_metrics_http_parameters(dict(parameters))
+    request = target_metrics_http_request(
+        body=_target_metrics_http_request_body_bytes(params)
+    )
+    fingerprint = target_metrics_http_fingerprint_document(request=request)
+    document: dict[str, object] = {
+        "adapter_contract": TARGET_METRICS_ADAPTER_CONTRACT,
+        "attempt_nonce": attempt_nonce,
+        "authorized_at": authorized_at,
+        "parameters": params,
+        "policy": dict(TARGET_METRICS_POLICY),
+        "provider": HTTP_PROVIDER,
+        "request": request,
+        "request_fingerprint": content_digest(canonical_json(fingerprint)),
+        "schema": "observatory.attempt-event",
+        "software": {"observatory_version": observatory_version},
+        "version": 2,
+    }
+    return _validate_attempt(document)
+
+
+def target_metrics_http_capture_document(
+    *,
+    attempt: Mapping[str, object],
+    request_started_at: str,
+    transport_ended_at: str,
+    transport_state: str,
+    response: Mapping[str, object] | None,
+    transport_failure: Mapping[str, object] | None,
+    response_headers_at: str | None,
+    response_body_ended_at: str | None,
+    observatory_version: str | None = None,
+) -> dict[str, object]:
+    """Construct a closed Target Metrics paid HTTP-v2 Capture."""
+
+    parent = validate_attempt(attempt)
+    software = (
+        {"observatory_version": observatory_version}
+        if observatory_version is not None
+        else dict(cast(Mapping[str, object], parent["software"]))
+    )
+    document: dict[str, object] = {
+        "adapter_contract": TARGET_METRICS_ADAPTER_CONTRACT,
+        "attempt_id": content_digest(canonical_json(parent)),
+        "provider": HTTP_PROVIDER,
+        "request": parent["request"],
+        "request_fingerprint": parent["request_fingerprint"],
+        "request_started_at": request_started_at,
+        "response": None if response is None else dict(response),
+        "response_body_ended_at": response_body_ended_at,
+        "response_headers_at": response_headers_at,
+        "schema": "observatory.capture-event",
+        "software": software,
+        "transport_ended_at": transport_ended_at,
+        "transport_failure": None if transport_failure is None else dict(transport_failure),
+        "transport_state": transport_state,
+        "version": 2,
+    }
+    return _validate_capture(document, attempt=parent)
+
+
 def validate_parameters(value: object) -> dict[str, object]:
     """Validate a closed fixture request / Attempt `parameters` document."""
 
@@ -960,6 +1095,24 @@ def validate_mentions_http_request(value: object) -> dict[str, object]:
 
     parsed, original = _parse(value)
     document = _validate_mentions_http_request(parsed)
+    _require_re_jcs(document, original)
+    return document
+
+
+def validate_target_metrics_http_parameters(value: object) -> dict[str, object]:
+    """Validate a closed HTTP-v2 Target Metrics paid-probe `parameters` document."""
+
+    parsed, original = _parse(value)
+    document = _validate_target_metrics_http_parameters(parsed)
+    _require_re_jcs(document, original)
+    return document
+
+
+def validate_target_metrics_http_request(value: object) -> dict[str, object]:
+    """Validate a closed HTTP-v2 Target Metrics paid-probe `request` object."""
+
+    parsed, original = _parse(value)
+    document = _validate_target_metrics_http_request(parsed)
     _require_re_jcs(document, original)
     return document
 
@@ -1369,6 +1522,24 @@ def _validate_mentions_http_request(value: object) -> dict[str, object]:
     return request
 
 
+def _validate_target_metrics_http_request(value: object) -> dict[str, object]:
+    request = _validate_request_shape(value)
+    _reject_request_credential_headers(request["headers"])
+    if (
+        request["method"] != "POST"
+        or request["scheme"] != "https"
+        or request["host"] != TARGET_METRICS_HOST
+        or request["port"] is not None
+        or request["path"] != TARGET_METRICS_PATH
+        or request["query"] != []
+        or request["headers"] != HTTP_HEADERS
+        or not isinstance(request["body"], Mapping)
+        or request["body"].get("state") != "present_nonempty"
+    ):
+        raise DocumentError("request does not match the Target Metrics HTTP adapter contract")
+    return request
+
+
 def _validate_parameters(value: object) -> dict[str, object]:
     obj = _object(value, "parameters")
     _reject_unknown(obj, _PARAMETER_KEYS, "parameters")
@@ -1602,6 +1773,55 @@ def _validate_mentions_http_parameters(value: object) -> dict[str, object]:
     }
 
 
+def _target_metrics_http_task(parameters: Mapping[str, object]) -> dict[str, object]:
+    return {key: parameters[key] for key in parameters if key != "contract"}
+
+
+def _target_metrics_http_request_body_bytes(parameters: Mapping[str, object]) -> bytes:
+    return canonical_json([_target_metrics_http_task(parameters)])
+
+
+def _validate_target_metrics_http_parameters(value: object) -> dict[str, object]:
+    obj = _object(value, "parameters")
+    _reject_unknown(obj, _TARGET_METRICS_PARAMETER_KEYS, "parameters")
+    contract = _exact_string(
+        _require(obj, "contract", "parameters"),
+        TARGET_METRICS_ADAPTER_CONTRACT,
+        "parameters.contract",
+    )
+    target = _validate_mentions_target(_require(obj, "target", "parameters"))
+    location_code = _json_int(
+        _require(obj, "location_code", "parameters"),
+        "parameters.location_code",
+    )
+    if location_code != 2840:
+        raise DocumentError("parameters.location_code must be exactly 2840")
+    language_code = _exact_string(
+        _require(obj, "language_code", "parameters"),
+        "en",
+        "parameters.language_code",
+    )
+    platform = _exact_string(
+        _require(obj, "platform", "parameters"),
+        "google",
+        "parameters.platform",
+    )
+    internal_list_limit = _json_int(
+        _require(obj, "internal_list_limit", "parameters"),
+        "parameters.internal_list_limit",
+    )
+    if internal_list_limit != 10:
+        raise DocumentError("parameters.internal_list_limit must be exactly 10")
+    return {
+        "contract": contract,
+        "internal_list_limit": internal_list_limit,
+        "language_code": language_code,
+        "location_code": location_code,
+        "platform": platform,
+        "target": target,
+    }
+
+
 def _validate_organic_http_parameters(value: object) -> dict[str, object]:
     obj = _object(value, "parameters")
     _reject_unknown(obj, _ORGANIC_PARAMETER_KEYS, "parameters")
@@ -1815,6 +2035,36 @@ def _validate_mentions_http_policy(value: object) -> dict[str, object]:
     }
 
 
+def _validate_target_metrics_http_policy(value: object) -> dict[str, object]:
+    obj = _object(value, "policy")
+    _reject_unknown(obj, _PAID_POLICY_KEYS, "policy")
+    cost = _json_int(
+        _require(obj, "max_authorized_cost_micro_usd", "policy"),
+        "policy.max_authorized_cost_micro_usd",
+    )
+    if cost != TARGET_METRICS_AUTHORIZED_COST_MICRO_USD:
+        raise DocumentError(
+            "policy.max_authorized_cost_micro_usd must be exactly 200000"
+        )
+    mode = _exact_string(_require(obj, "mode", "policy"), "paid_probe", "policy.mode")
+    policy_version = _exact_string(
+        _require(obj, "policy_version", "policy"),
+        "dataforseo-ai-optimization-target-metrics-live-paid-probe-v1",
+        "policy.policy_version",
+    )
+    pricing_basis = _exact_string(
+        _require(obj, "pricing_basis", "policy"),
+        "dataforseo-llm-mentions-live-2026-08-23",
+        "policy.pricing_basis",
+    )
+    return {
+        "max_authorized_cost_micro_usd": cost,
+        "mode": mode,
+        "policy_version": policy_version,
+        "pricing_basis": pricing_basis,
+    }
+
+
 def _recognized_http_v2_adapter(value: object, name: str) -> str:
     if value == HTTP_ADAPTER_CONTRACT:
         return HTTP_ADAPTER_CONTRACT
@@ -1824,6 +2074,8 @@ def _recognized_http_v2_adapter(value: object, name: str) -> str:
         return ORGANIC_ADAPTER_CONTRACT
     if value == MENTIONS_ADAPTER_CONTRACT:
         return MENTIONS_ADAPTER_CONTRACT
+    if value == TARGET_METRICS_ADAPTER_CONTRACT:
+        return TARGET_METRICS_ADAPTER_CONTRACT
     raise DocumentError(f"{name} adapter_contract is not a recognized event-v2 adapter")
 
 
@@ -1908,6 +2160,8 @@ def _validate_fingerprint_v2(obj: Mapping[str, object]) -> dict[str, object]:
         request = _validate_organic_http_request(raw_request)
     elif adapter == MENTIONS_ADAPTER_CONTRACT:
         request = _validate_mentions_http_request(raw_request)
+    elif adapter == TARGET_METRICS_ADAPTER_CONTRACT:
+        request = _validate_target_metrics_http_request(raw_request)
     else:
         request = _validate_http_request(raw_request)
     return {
@@ -2066,6 +2320,11 @@ def _validate_attempt_v2(obj: Mapping[str, object]) -> dict[str, object]:
         parameters = _validate_mentions_http_parameters(raw_parameters)
         policy = _validate_mentions_http_policy(raw_policy)
         encoded_body = _mentions_http_request_body_bytes(parameters)
+    elif adapter == TARGET_METRICS_ADAPTER_CONTRACT:
+        request = _validate_target_metrics_http_request(raw_request)
+        parameters = _validate_target_metrics_http_parameters(raw_parameters)
+        policy = _validate_target_metrics_http_policy(raw_policy)
+        encoded_body = _target_metrics_http_request_body_bytes(parameters)
     else:
         request = _validate_http_request(raw_request)
         parameters = _validate_http_parameters(raw_parameters)
@@ -2477,6 +2736,8 @@ def _validate_capture_v2(
         request = _validate_organic_http_request(raw_request)
     elif adapter == MENTIONS_ADAPTER_CONTRACT:
         request = _validate_mentions_http_request(raw_request)
+    elif adapter == TARGET_METRICS_ADAPTER_CONTRACT:
+        request = _validate_target_metrics_http_request(raw_request)
     else:
         request = _validate_http_request(raw_request)
     request_fingerprint = _hex64(

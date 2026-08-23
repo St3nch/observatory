@@ -1,10 +1,10 @@
 # AI-08 — Target Metrics Live paid-probe adapter
 
-**Status:** approved  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** AI-07 — Target Metrics activation review (`closed`)  
 **Approved by:** Project Steward  
-**Start commit:** [GROK] records the exact clean `main` HEAD before implementation
+**Start commit:** `c8f142f2ddca6b3acc8ef2a9918ce60d0ca47fc3`
 
 ## Purpose
 
@@ -214,3 +214,176 @@ one fresh Evidence root after a fresh contract/pricing check and explicit [CHAZ]
 authorization. AI-09 must inspect and scrub the resulting Evidence and complete the accepted
 single-root encrypted off-host snapshot, fresh restore, scrub, and exact committed-ID
 set-equality proof before closure.
+
+## Implementation report
+
+**Parent:** `c8f142f2ddca6b3acc8ef2a9918ce60d0ca47fc3`
+**Child:** this implementation commit
+**Status:** `review`
+**AI-08 only:** yes. Nothing pushed.
+
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### Changed-path allowlist
+
+- `src/observatory/capture_event.py` (fifth exact HTTP-v2 adapter branch)
+- `src/observatory/dataforseo_ai_optimization_target_metrics_paid_probe.py` (new)
+- `tests/test_dataforseo_ai_optimization_target_metrics_paid_probe.py` (new)
+- this ticket (Start commit, Status, Implementation report)
+
+### Adapter token
+
+`dataforseo-ai-optimization-llm-mentions-target-metrics-live-paid-probe-v1`
+
+Production POST `https://api.dataforseo.com/v3/ai_optimization/llm_mentions/target_metrics/live`
+
+### Independent vectors
+
+Fixed inputs: keyword `observatory test`, nonce `7777…77`,
+`authorized_at=2026-08-23T20:00:00.000000Z`,
+`observatory_version=conformance-target-metrics-paid-probe-v1`.
+Independent `hashlib.sha256` of literal JCS bytes (`test_independent_literal_vectors`);
+constructors reproduce them (`test_closed_request_vector_and_attempt_identity`).
+
+| Artifact | Value |
+|---|---|
+| request body | `[{"internal_list_limit":10,"language_code":"en","location_code":2840,"platform":"google","target":[{"keyword":"observatory test","match_type":"word_match","search_filter":"include","search_scope":["answer"]}]}]` |
+| request SHA-256 | `4414f03561a728f03a6b0e859bcb210f8876968c5e2b7c2e2cc5eeb1d209e170` |
+| fingerprint | `1404ce81eb7884e21a5571a30db02e1c0555fdcf6db5e805391255cf6e604bbd` |
+| Attempt ID | `1d2716ea2a6888c3c7b7aeb0d0ec4f9b5b3f84d4e8780f1ae270d306f89c907d` |
+| complete Capture ID (`{"ok":true}`) | `36ba18e80cce117709c56fab7e7b1df8256defd87390d43a7550c1faa8681e84` |
+
+Previously published sandbox / Keyword Overview / Organic / Search Mentions Attempt IDs remain byte-identical.
+
+### Structural gate and one-shot
+
+- Public capture and `_issue_verified_attempt` require `type is int` and value exactly `200000` before Attempt commit or send.
+- Concrete `EvidenceStore` only; subclass cannot issue.
+- `_target_metrics_attempt_exists` scans every committed Attempt in the root for this adapter token (including unresolved).
+- Refuse at `_open_or_create`, `_run_gated_capture`, and issuer.
+- Capability is unconstructible, immutable, one-use, identity-checked; exchange rechecks adapter/version/provider/policy/host/path/headers/parameters.
+- Neighbors (fixture, sandbox, KO, Organic, Search Mentions) coexist and do not consume this one-shot.
+
+### Mock/loopback request
+
+One POST, exact JCS body above, sent headers:
+`accept`, `accept-encoding: identity`, `connection: close`, `content-type`,
+`user-agent: observatory-dataforseo-v1`, `host: api.dataforseo.com`,
+`content-length: 210`, `authorization: Basic <sentinel>`.
+Loopback override only `http://127.0.0.1:<port>/v3/ai_optimization/llm_mentions/target_metrics/live`.
+Committed Attempt still names production HTTPS. Redirects not followed (302 is complete Capture).
+
+### Transport accounting
+
+- Adapter ceiling `8_388_608`; shared transport does not own it.
+- Default ceiling: `8_388_608+1` body → `response_partial` of exactly 8 MiB.
+- 200/302/404/500 nonempty → `response_complete`.
+- Zero-byte 200 → complete, `present_zero_bytes`.
+- Mid-body timeout → `response_partial`.
+- `ConnectError` → `no_response`.
+- Duplicate `x-request-id` retained; denylist names omitted.
+- Credential echo in body or retained header: no Capture; Attempt remains; one-shot consumed.
+
+### Mixed-store / derive
+
+Fixture + sandbox + KO + Organic + Search Mentions + Target Metrics: `scrub_store` empty.
+Fixture/KO/Organic/Search Mentions derive skip Target Metrics Evidence; zero PostgreSQL
+`outcomes` rows cite its Attempt/Capture IDs.
+
+### Credential non-disclosure
+
+Sentinel login/password/basic never appear in committed manifests or retained headers.
+Authorization is injected only after the capability is issued. Ordinary tests delete
+credential env vars and fail any non-loopback `socket.create_connection`.
+
+### Acceptance criterion to proving-test map
+
+| Criterion | Tests |
+|---|---|
+| Independent literals + hashlib | `test_independent_literal_vectors`, `test_closed_request_vector_and_attempt_identity` |
+| Constructors reproduce; old IDs unchanged | `test_closed_request_vector_and_attempt_identity`, `test_existing_adapter_identities_unchanged` |
+| Closed validator / unknown fields | `test_frozen_fields_are_rejected`, `test_missing_required_keys_are_rejected`, `test_wrong_policy_fields_are_rejected`, `test_confused_contracts_are_rejected`, keyword grammar tests |
+| Auth/concrete-store/commit/read-back/capability | `test_authorization_required_before_attempt`, `test_subclassed_store_cannot_issue`, `test_attempt_is_committed_before_first_handler`, `test_failed_attempt_commit_never_reaches_handler` |
+| One-shot complete/unresolved/echo/partial/neighbors | `test_one_shot_is_adapter_specific_and_allows_neighbors`, `test_unresolved_attempt_blocks_second_invocation`, `test_credential_echo_leaves_unresolved_one_shot`, `test_over_limit_partial_consumes_one_shot`, `test_default_8mib_ceiling_is_partial` |
+| Forged/copied/pickled/replayed/cross-adapter | `test_forged_copied_mutated_and_replayed_capability_cannot_transport`, `test_cross_adapter_capabilities_are_isolated` |
+| One request, JCS, headers, no redirect | `test_attempt_is_committed_before_first_handler`, `test_loopback_server_sees_attempt_and_does_not_follow_redirect`, `test_token_in_body_is_still_one_exchange` |
+| Complete/partial/no-response/8 MiB | `test_complete_status_classes_and_zero_byte`, `test_mid_body_timeout_and_no_response`, `test_default_8mib_ceiling_is_partial`, `test_secret_headers_omitted` |
+| Inspect | `test_inspect_emits_exact_bytes_without_mutation`, `test_inspect_rejects_wrong_adapter_partial_zero_and_tamper` |
+| Mixed scrub / zero derive | `test_one_shot_is_adapter_specific_and_allows_neighbors`, `test_fixture_and_provider_derive_skip_target_metrics` |
+| No public network / no real credentials | autouse `_no_public_network`, `_isolate_credentials` |
+| Public surface has no injection | `test_public_cli_and_function_have_no_injection_seams` |
+
+### Code-review
+
+**Standards:** 0 hard / 5 judgement. Worst: `_validate_target_metrics_http_parameters` reuses `_validate_mentions_target`, so a later Search Mentions target-admission change would retarget Target Metrics. Ticket authorized local duplication; this reuse is the accepted keyword/target grammar, not a widened Search Mentions schema.
+
+**Spec:** no wrong implementation or scope creep. Remaining partial proofs (listed below) do not block AI-09.
+
+### Strongest / weakest
+
+Strongest: independent JCS vectors; adapter-keyed whole-root one-shot including unresolved and credential-echo; Attempt-before-handler with sent-header equation; 8 MiB default-ceiling partial; mixed-store skip.
+
+Weakest: send/header-phase no-response not separately driven (ConnectError only, matching Search Mentions); inspect unknown-version not planted (cannot commit an invalid v2 Capture through constructors); capability subclass untested (`__slots__` + private class); `_require_target_metrics_target` does not re-read request-body bytes immediately before exchange (issuer already did).
+
+### Shared vs surface-specific
+
+Reused: Evidence Store commit/verify, PF-09 `perform_bounded_http_exchange`, credential env, header denylist, HTTP-v2 envelope, Search Mentions keyword grammar.
+
+Surface-specific: token, path, `internal_list_limit=10` (no `offset`/`limit`), policy/pricing_basis date, 8 MiB ceiling, one-shot scan keyed to this token, CLI module.
+
+### False-green / drift / parser traps for the later Recipe
+
+- Empty `items` + `total_count=0` in a real Target Metrics body must not be classified as Search Mentions emptiness.
+- Do not treat `internal_list_limit` truncation of `sources_domain` as corpus size.
+- Grouping `key` types mix int (location) and string (language/platform/domain).
+- `aggregated_metrics` is the payload; copying Search Mentions `_RESULT_KEYS` will fail closed or mis-admit.
+- Reusing `_validate_mentions_target` is a coupling hazard if Search Mentions target grammar ever changes.
+
+Improvements that **should not** block AI-09: generic dispatch table; send/header no-response extras; inspect unknown-version plant; duplicating the target validator.
+
+Improvements that **should** land in the Recipe/parser ticket, not here: Target Metrics emptiness vs Search Mentions; grouping identity; cost decimal; ChatGPT-only arrays on a google request.
+
+### Exact unproven limits
+
+- No live provider call, so real envelope, billing grain, and `internal_list_limit` honoring remain AI-09 Evidence.
+- F6, F7, power-loss, concurrent writers unproved.
+- `argparse type=int` CLI path is not the same as `type is int` on the public Python function; CLI still requires `--authorize-max-micro-usd 200000`.
+- AGENTS.md does not yet list this module entrypoint (Steward-owned).
+
+### Command evidence
+
+Final implementation bytes, then:
+
+```
+uv run mypy
+```
+
+UTC ~`2026-08-23T23:42:47Z` → `2026-08-23T23:47:39Z` (combined with ruff/pytest), exit 0, no issues in 58 source files.
+
+```
+uv run ruff check .
+```
+
+exit 0, all checks passed.
+
+```
+uv run pytest -q
+```
+
+exit 0, **1109 passed**, **1 skipped**, 1 Starlette TestClient deprecation warning, 289.04s.
+
+No leftover `observatory-ce05-*` containers. No behavior-affecting change after this suite.
+
+### Confirmation
+
+Zero DataForSEO / sandbox / DNS / paid-host / account / public-network requests.
+Zero real credentials. Zero live Evidence. Zero credit spend.
+No parser, conformance fixture from provider testimony, Recipe, Derivation, PostgreSQL
+schema, API route, ChatGPT branch, domain target, Historical, second list-limit, generic
+framework, other ticket, or authority document except this ticket's implementer fields.
+No amend. No push.
