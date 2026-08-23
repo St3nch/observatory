@@ -1,6 +1,6 @@
 # AI-07 — DataForSEO AI Optimization Target Metrics activation review
 
-**Status:** approved  
+**Status:** closed  
 **Owner:** [GROK] technical review / [GPT] Steward reconciliation  
 **Blocked by:** AI-06 — Search Mentions recipe selection and read API (`done`)  
 **Approved by:** Project Steward  
@@ -150,3 +150,62 @@ before another surface, and what should remain deliberately duplicated or surfac
 Return one bounded technical report to [CHAZ] for relay to the Project Steward, then stop.
 The Steward will reconcile the findings and decide whether to authorize a separate
 Evidence-only probe ticket.
+
+## Steward reconciliation and closure — 2026-08-23
+
+The Project Steward independently reconciled the AI-07 report and its targeted follow-up
+against current repository authority, the accepted Search Mentions one-shot implementation,
+the F6 bounded protection record, current official Target Metrics documentation, and the
+current DataForSEO price export supplied by [CHAZ].
+
+Accepted selection:
+
+- next surface: Live LLM Mentions Target Metrics;
+- adapter contract:
+  `dataforseo-ai-optimization-llm-mentions-target-metrics-live-paid-probe-v1`;
+- exact endpoint: one POST to
+  `/v3/ai_optimization/llm_mentions/target_metrics/live`;
+- platform `google`, location `2840`, language `en`;
+- exactly one included keyword target with `search_scope=["answer"]` and
+  `match_type="word_match"`;
+- `internal_list_limit=10`, sent explicitly;
+- one provider exchange maximum, one fresh Evidence root, exact
+  `200000` micro-USD acknowledgement, 120-second read timeout, and 8 MiB response-body
+  ceiling;
+- no continuation, retry, second list-limit sample, ChatGPT branch, domain target,
+  initial-dataset filter, catalog request, Recipe, Derivation, PostgreSQL, or API work in
+  the Evidence-only implementation.
+
+The initial two-call `internal_list_limit=1` then `10` proposal is rejected. The existing
+one-shot gate is correctly adapter-token keyed within an Evidence root and refuses a second
+Attempt even when the first remains unresolved. Two roots would require two independent
+authorizations and two complete bounded F6 protection units, while their different
+acquisition times would prevent the pair from isolating list-limit behavior from provider
+corpus drift. The second call would therefore add contract-knob testimony rather than
+irreplaceable visibility testimony. The documented maximum/default value `10` preserves
+the richest legal grouping list in the single accepted Capture.
+
+The earlier `500000` micro-USD matrix ceiling is also rejected. It had no structural
+authorization object and exceeded the sum of the proposed per-call acknowledgements. The
+accepted implementation and later activation each use one exact `200000` micro-USD
+ceiling. Current claimed pricing is `$0.10` per request plus `$0.001` per returned row;
+pricing must still be rechecked immediately before any live command.
+
+The current Target Metrics documentation states `internal_list_limit` minimum `1`,
+maximum `10`, default `10`. The retired Aggregated Metrics maximum `20` is not
+authority for this contract.
+
+Target Metrics fits the accepted one-exchange event-v2 and shared-transport substrate.
+Search Mentions item/envelope admission semantics do not generalize: Target Metrics'
+documented `total_count=0`, `items_count=0`, and null/empty `items` coexist with useful
+`aggregated_metrics` and must not later be classified as admitted-empty merely because no
+item rows exist.
+
+AI-07 authorizes only the separate zero-network implementation ticket AI-08. It does not
+authorize credentials, a DataForSEO API-host call, Evidence creation, spend, an activation
+command, or routine acquisition. Any live Capture remains separately gated by a fresh
+contract/pricing review, explicit [CHAZ] authorization, and the accepted single-root F6
+snapshot/restore/set-equality procedure.
+
+AI-07 review and follow-up performed zero repository mutation, tests, provider/API-host
+requests, credential use, Evidence creation, or spend.
