@@ -1,12 +1,12 @@
 # AI-06 — Search Mentions recipe selection and read API
 
-**Status:** ready-for-agent  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Parent spec:** `docs/specs/capture-event-v2.md`  
 **Blocked by:** AI-05 — Search Mentions provider Derivation and typed persistence (`done`)  
 **Approved by:** Project Steward  
 **Technical-review base:** `c73d4ec60daf1331de63e47113807473000eff03`  
-**Start commit:**
+**Start commit:** `a0df3ab9b218b3c823dcf569c209d1d173069501`
 
 ## Purpose
 
@@ -390,12 +390,184 @@ schema/migration, authority edit, push, or scope drift.
 
 ## Implementation report
 
-<!-- Implementer fills; may set Status: review; never Status: done. -->
+**Parent:** `a0df3ab9b218b3c823dcf569c209d1d173069501`  
+**Child:** this implementation commit  
+**Status:** `review`  
+**AI-06 only:** yes. Nothing pushed.
 
-- End commit:
-- Acceptance evidence:
-- Unproven limits:
-- Review findings remaining:
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### Changed paths
+
+- `src/observatory/api.py` (Search Mentions Attempt allowlist + history route)
+- `src/observatory/search_mentions_read.py` (new surface-local history assembly)
+- `tests/test_api_search_mentions.py` (new)
+- this ticket (Start commit, Status, Implementation report)
+
+No Recipe, parser, identity, Derivation, fixture, Evidence, schema, migration, README, spec, decision, or vocabulary change. `load_provider_attempt` was not relocated. No shared provider-read framework.
+
+### Route / query / response
+
+- `GET /v1/providers/dataforseo/google/ai-optimization/search-mentions/history`
+- query: required `requested_keyword`; optional `derivation_version_id`; `limit` default 20, min 1, max 100; `order` `asc`|`desc` default `asc`
+- OpenAPI path and closed parameter set proven
+- Capture groups expose `search_mention_items`, `monthly_search_volume`, `structured_sources` plus request, result_context, and provenance envelope
+- `observation_kinds` in Recipe order: item, monthly, source
+
+### Membership / provenance / verify-before-limit
+
+Candidates are `search_mentions_result_context JOIN outcomes` on the full
+`(derivation_version_id, attempt_id, capture_id)` tuple, filtered to
+`observation_admitted` / `observation_admitted_empty`, resolved Recipe, and exact
+keyword. Every matching candidate verifies Attempt and Capture Evidence, provider
+and adapter on both, Capture parent, Attempt/context agreement, then Capture-wide
+PostgreSQL checks, then sort/limit. Count grain is Capture-wide envelope
+cardinality vs Capture Outcome `observation_count`; typed union is items +
+monthly + sources; context and occurrences are excluded.
+
+### Frozen family / occurrence counts
+
+Independent persisted-to-API projection of the AI-03 Capture:
+
+- 5 items / 5 item occurrences
+- 60 monthly parents / 60 monthly occurrences
+- 48 source parents / 48 source occurrences
+- 113 envelopes
+- context `items_count=5`, `total_count=3055`, `result_offset=0`, exact stated token
+- three current-volume vs newest-monthly disagreements:
+  `search engine optimized` 135000 vs 110000,
+  `seos` 110000 vs 60500,
+  `engine optimization service` 110000 vs 49500
+
+### Selected / pinned / errors
+
+- no selection: HTTP 503 `provider_recipe_not_selected`
+- malformed / unknown / wrong-adapter pin: HTTP 404 `not found` on Attempt and history
+- selected/pinned production Recipe with no matching keyword: HTTP 200 `captures: []`
+- selected Recipe with no derived Outcomes: Attempt HTTP 404
+- integrity disagreement: HTTP 409 `evidence_integrity_failure`
+
+### Acceptance-to-test map
+
+| Criterion | Test |
+|---|---|
+| Exact route and closed query / OpenAPI | `test_frozen_history_shape_counts_token_and_volume_disagreements` |
+| Selected/pinned Attempt audit; 503/404; no family fields | `test_search_mentions_attempt_selected_pinned_and_http_errors` |
+| Frozen complete group + independent projection + token + 5-of-3055 | `test_frozen_history_shape_counts_token_and_volume_disagreements` |
+| Three volume/newest-monthly disagreements | `test_frozen_history_shape_counts_token_and_volume_disagreements` |
+| Duplicate item/source collapse; same URL under another question stays separate | `test_duplicate_identities_collapse_and_cross_question_urls_stay_separate` |
+| Admitted-empty + planted non-admitted excluded | `test_admitted_empty_and_non_admitted_context_stay_distinct` |
+| Asc/desc, capture-id tie-break, whole-group limit | `test_second_capture_order_limit_and_tie_break` |
+| Foreign-Attempt Outcome cannot supply membership/count | `test_foreign_attempt_outcome_does_not_supply_history` |
+| Missing/wrong Attempt parameters and Attempt/context disagreement 409 | `test_request_context_integrity_and_damage_409` |
+| Damaged/cross-linked/wrong-adapter Evidence 409 inside and outside `limit=1` | `test_request_context_integrity_and_damage_409`, `test_history_consistency_damage_outside_limit_is_409` |
+| Missing/extra typed keys, extra envelopes, wrong Outcome count, zero-occurrence parents 409 | `test_history_missing_and_extra_typed_rows_are_409`, `test_history_extra_envelope_wrong_count_and_zero_occurrences_are_409` |
+| Token performs zero continuation/transport/capture/derive | `test_token_presence_performs_zero_continuation_or_transport` |
+| Isolation from KO/Organic/fixture; second Recipe does not inflate selected history | `test_fixture_ko_and_organic_remain_isolated_from_search_mentions_selection` |
+| xmin/content + Evidence ops read-only | `test_api_reads_do_not_mutate_search_mentions_state` |
+| Two independently derived non-empty databases | `test_two_databases_return_equal_search_mentions_history` |
+| Fixture/KO/Organic/Attempt regressions | existing suites plus isolation test |
+| Zero public network/DNS/provider/credential | autouse socket/getaddrinfo/credential guards in `tests/test_api_search_mentions.py` |
+
+### Independent projection and two-database proof
+
+`_persisted_projection` maps the seven AI-05 relations plus envelope count to the
+API shape without calling `load_search_mentions_history`. Frozen history JSON
+equals that projection. Two PostgreSQL databases independently derived from one
+Evidence Store return equal non-empty history (`observation_count=113`).
+
+### Read-only / zero-network evidence
+
+GET uses `default_transaction_read_only=on`. xmin snapshots cover recipes,
+selections, Outcomes, envelopes, and all seven Search Mentions relations.
+Evidence `recorded_ops` is unchanged. Ordinary tests patch
+`socket.create_connection`, `socket.getaddrinfo`, and DataForSEO credential
+loaders; the token test also tripwires derive, paid capture, HTTP exchange, and
+fixture capture.
+
+### Query cost / scaling
+
+Verify-all-before-limit is O(all matching Captures): two Evidence reads per
+candidate, then Capture-wide envelope/typed/occurrence SQL for the full matching
+set, then sort/limit. Returned groups issue six family/occurrence queries each.
+There is no API cursor. This accepted cost was not weakened.
+
+### Strongest / weakest seams
+
+Strongest: Organic-style context⋈Outcome membership; verify-all-before-limit;
+independent projection; two-database equality; Capture-wide envelope/typed/
+occurrence fail-closed.
+
+Weakest: extra typed rows without an extra envelope are schema-blocked by the
+envelope FK, so extra typed is proven as extra envelope keys vs typed after
+`observation_count` is bumped to match; Attempt missing/wrong-typed parameters
+are proven by mutating the verified Attempt view, not by rewriting committed
+Attempt bytes; occurrence nesting order is presentation SQL, not identity.
+
+### Unproven limits
+
+Coordinated internally consistent rewrites/deletions; deletion of the only
+context anchor; loss of one occurrence while another remains; value corruption
+that preserves keys/counts; PostgreSQL equality to raw bodies without
+re-Derivation; completeness beyond 5-of-3055; concurrent writers; production
+auth/non-loopback exposure; routine acquisition; prior Recipe-pointer history;
+Provider Update Time semantics for item clocks.
+
+### False premises
+
+None that changed implementation. Source ranks in mutated duplicate-identity
+bodies must remain contiguous from 1 or the parser rejects the Capture.
+
+### Command evidence
+
+Final implementation bytes, then:
+
+```
+uv run pytest -q
+```
+
+UTC `2026-08-23T21:18:07Z` → `2026-08-23T21:22:51Z`, exit 0, **1043 passed**,
+**1 skipped**, 1 Starlette TestClient deprecation warning, 283.29s.
+
+```
+uv run ruff check .
+```
+
+UTC `2026-08-23T21:22:56Z`, exit 0, all checks passed.
+
+```
+uv run mypy
+```
+
+UTC `2026-08-23T21:22:56Z` → `2026-08-23T21:22:57Z`, exit 0, no issues in 56
+source files.
+
+No leftover `observatory-ce05-*` test containers. No behavior-affecting change
+after this suite.
+
+### Review findings remaining
+
+Standards: no hard violations. Judgement only — local helper names
+`_items`/`_monthly`/`_sources` vs presentation keys; candidate tuple vs named
+type; Organic-copied `_json_value` breadth. Ticket forbids extracting a shared
+read framework, so Organic duplication was left local.
+
+Spec gaps found and fixed in this commit: history-route pin 404s;
+`request_offset` disagreement; extra typed-key 409 isolated from extra-envelope
+count mismatch. No residual spec defects.
+
+### Clean tree / no push / no scope drift
+
+One implementation commit on `main` whose parent is
+`a0df3ab9b218b3c823dcf569c209d1d173069501`. Working tree clean after that
+commit. Nothing pushed. No provider, DNS, credential, sandbox, paid, or public
+network call. No continuation follow. No schema or migration. No authority edit
+outside this ticket's implementer fields.
 
 ## Closure
 
