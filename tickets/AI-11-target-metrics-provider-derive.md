@@ -695,7 +695,8 @@ Frozen Capture cardinality: 1 total + 10 source domains = **11**; one result con
 | Echo/path do not reject; Attempt remains authority | `test_plan_echo_and_path_disagreement_do_not_reject`, `test_adversarial_bodies_persist_on_postgres` |
 | Source count below/equal/above limit, no truncation | `test_plan_source_count_below_equal_above_limit_is_admitted`, `test_adversarial_bodies_persist_on_postgres` |
 | Empty/extra/wrong grouping keys | `test_plan_empty_extra_or_wrong_grouping_is_reconciliation_failed` |
-| Nonempty optional families | `test_plan_nonempty_optional_rejects_whole_unit`, `test_adversarial_bodies_persist_on_postgres` |
+| Nonempty optional families | `test_plan_nonempty_optional_family_rejects_whole_unit`, `test_adversarial_bodies_persist_on_postgres` |
+| Concrete EvidenceStore type guard | `test_derive_rejects_non_concrete_store_before_schema_or_evidence` |
 | Empty identity / I-JSON overflow | `test_plan_empty_identity_and_ijson_overflow_reject` |
 | Zero total admitted, not admitted_empty | `test_plan_zero_total_remains_admitted`, `test_zero_total_writes_admitted_outcome` |
 | Optional and items field states | `test_plan_optional_and_items_states_are_distinct`, `test_adversarial_bodies_persist_on_postgres` |
@@ -717,7 +718,12 @@ Frozen Capture cardinality: 1 total + 10 source domains = **11**; one result con
 
 ### Validation
 
-Targeted: `uv run pytest -q tests/test_dataforseo_ai_optimization_target_metrics_derive.py` — 28 passed in 15.43s (later 28+1 persist path in the combined 29-pass run).
+Targeted at implementation child `b30b69f596800af36bcf85cc638bbf217bc21965`:
+
+```
+uv run pytest -q tests/test_dataforseo_ai_optimization_target_metrics_derive.py
+28 passed in 15.43s
+```
 
 Final exact-tree:
 
@@ -817,8 +823,78 @@ Leftover `observatory-ce05-*` containers: none checked as none were created.
 
 ### Bounded question for the Steward
 
-Should a later bounded ticket relax the AI-10 parser-module `provider_recipe` source guard so Recipe bytes can live next to the kind constants, or should Recipe remain in the derive module as the durable seam?
+Answered in the remediation addendum below. `TARGET_METRICS_RECIPE` remains in
+`target_metrics_derive.py`.
 
 ### Confirmation
 
 No provider, DNS, credential, paid-gate, operator-Evidence-root, or public-network call. No AI-12/API/selection/strategy/F13/shared-kernel work. No Evidence mutation. No amend. No push. Status is `review`.
+
+## Remediation report
+
+**Parent:** `b30b69f596800af36bcf85cc638bbf217bc21965`  
+**Child:** this remediation commit  
+**Status:** `review` (unchanged)  
+**AI-11 only:** yes. Test and report remediation only. Nothing pushed. Nothing amended.
+
+### Steward decision — Recipe seam
+
+- `TARGET_METRICS_RECIPE` remains in `src/observatory/target_metrics_derive.py`.
+- Do not relax AI-10’s parser-module `provider_recipe` source guard merely to
+  colocate Recipe bytes with parser constants.
+- Recipe is derivation policy; keeping the parser independent is the accepted
+  durable seam unless a later concrete requirement proves otherwise.
+
+### Changed paths
+
+- `tests/test_dataforseo_ai_optimization_target_metrics_derive.py`
+- this ticket (remediation addendum and targeted-evidence correction)
+
+### Proofs added
+
+- parameterized planner coverage of stated-nonempty
+  `search_results_domain`, `brand_entities_title`, and
+  `brand_entities_category`, each `provider_envelope_rejected` with zero
+  envelopes, no context, and no typed facts;
+- duck-typed store rejected with `TypeError` against a poisoned connection
+  before schema work, Evidence reads, or connection use.
+
+Production code is unchanged. Parser admission is unchanged.
+
+### Targeted evidence correction
+
+The implementation report’s “28+1 persist path in the combined 29-pass run”
+wording is removed. That count mixed the AI-11 file with one Search Mentions
+baseline test and is not an AI-11 targeted result.
+
+Exact implementation-child targeted command:
+
+```
+uv run pytest -q tests/test_dataforseo_ai_optimization_target_metrics_derive.py
+28 passed in 15.43s
+```
+
+Exact remediation-tree targeted command:
+
+```
+uv run pytest -q tests/test_dataforseo_ai_optimization_target_metrics_derive.py
+31 passed in 16.45s
+```
+
+```
+uv run ruff check .
+All checks passed!
+```
+
+```
+uv run mypy
+Success: no issues found in 62 source files
+```
+
+The full suite was not rerun in this remediation. [CHAZ] will run one final
+exact-HEAD targeted/full/Ruff/mypy operator block after this commit.
+
+### Confirmation
+
+No production-code change. No provider/network/credential/Evidence/schema
+change. No AI-12/API/strategy/F13/shared-kernel work. No amend. No push.

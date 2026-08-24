@@ -605,15 +605,40 @@ def test_plan_empty_extra_or_wrong_grouping_is_reconciliation_failed() -> None:
     assert planned_empty.context is planned_extra.context is planned_wrong.context is None
 
 
-def test_plan_nonempty_optional_rejects_whole_unit() -> None:
+@pytest.mark.parametrize(
+    ("family", "key"),
+    [
+        ("search_results_domain", "results.example"),
+        ("brand_entities_title", "Example Brand"),
+        ("brand_entities_category", "Software"),
+    ],
+)
+def test_plan_nonempty_optional_family_rejects_whole_unit(
+    family: str, key: str
+) -> None:
     document = _decoded()
-    _agg(document)["search_results_domain"] = [_row("example.com", 1, 1)]
+    _agg(document)[family] = [_row(key, 1, 1)]
     planned = plan_target_metrics_capture(
         "a" * 64, "b" * 64, _complete_capture_dict(), _parameters(), _encode(document)
     )
     assert planned.classification == "provider_envelope_rejected"
     assert planned.envelopes == ()
     assert planned.context is None
+    assert planned.details["target_metrics_totals"] == ()
+    assert planned.details["target_metrics_source_domains"] == ()
+
+
+def test_derive_rejects_non_concrete_store_before_schema_or_evidence() -> None:
+    class DuckStore:
+        def __getattr__(self, name: str) -> object:
+            raise AssertionError(f"Evidence read before concrete-store check: {name}")
+
+    class PoisonedConnection:
+        def __getattr__(self, name: str) -> object:
+            raise AssertionError(f"connection used before concrete-store check: {name}")
+
+    with pytest.raises(TypeError, match="concrete EvidenceStore"):
+        derive_target_metrics(DuckStore(), PoisonedConnection())  # type: ignore[arg-type]
 
 
 def test_plan_empty_identity_and_ijson_overflow_reject() -> None:
