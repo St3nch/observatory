@@ -5,7 +5,10 @@ clean historical SEO/GEO observation data to many projects.
 
 It preserves Evidence on a filesystem Evidence Store (Attempt and Capture events plus
 content-addressed bodies), derives Outcomes and Observations into rebuildable PostgreSQL,
-and serves them through an API. It does not perform SEO/GEO strategy.
+and serves them through an API. It does not perform SEO/GEO strategy. Provider, Derivation,
+schema, and API work is nevertheless reviewed for whether a future connected strategy LLM
+can receive sufficient typed facts, relationships, provenance, completeness, and limitations
+without direct storage access or misleading inference.
 
 ## Current status
 
@@ -20,8 +23,10 @@ The implemented provider slices are:
 - DataForSEO Google Organic: bounded capture, strict parser, typed derivation, Recipe
   selection, and history API;
 - DataForSEO AI Optimization Search Mentions: bounded capture, strict parser, and typed
-  PostgreSQL derivation. Recipe selection and read/history API remain a separate future
-  ticket.
+  PostgreSQL derivation, Recipe selection, and history API;
+- DataForSEO AI Optimization Target Metrics: bounded capture, strict parser, and typed
+  PostgreSQL derivation. Recipe selection and read/history API remain the next separate
+  boundary.
 
 The fixture path remains supported for conformance and regression proofs. Provider transport
 is adapter-specific and gated; there is no generic paid runner or recurring acquisition
@@ -36,8 +41,10 @@ Authority hierarchy for agents and humans:
 3. `decisions/decisions.md` — settled decisions (including D8–D13)
 4. `decisions/deferred.md` — deferred work with triggers
 5. `AGENTS.md` — agent hard boundaries and commands
-6. `docs/adr/0001-capture-event-evidence-boundary.md` — why the Evidence boundary is fixed
-7. `docs/specs/capture-event-v2.md` — normative capture/evidence contract
+6. `docs/dataforseo-surface-roadmap.md` — provider direction, strategy-consumer review,
+   and current retrofit sequence
+7. `docs/adr/0001-capture-event-evidence-boundary.md` — why the Evidence boundary is fixed
+8. `docs/specs/capture-event-v2.md` — normative capture/evidence contract
 
 When a ticket exists, read it after the decision registers and before coding.
 
@@ -87,7 +94,7 @@ PostgreSQL holds rebuildable Outcomes and Observations. It is not authoritative 
 
 PostgreSQL remains rebuildable state, not authoritative Evidence. Multi-process writer
 safety, routine acquisition orchestration, production API authentication/non-loopback
-exposure, and Search Mentions read/history remain outside the implemented boundary.
+exposure, and Target Metrics read/history remain outside the implemented boundary.
 
 ## Commands
 
@@ -102,6 +109,7 @@ exposure, and Search Mentions read/history remain outside the implemented bounda
     uv run python -m observatory.keyword_overview_derive
     uv run python -m observatory.google_organic_derive
     uv run python -m observatory.search_mentions_derive
+    uv run python -m observatory.target_metrics_derive
     uv run python -m observatory.provider_recipe_selection
     uv run python -m observatory.serve
 

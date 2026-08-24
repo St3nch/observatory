@@ -8,9 +8,11 @@ Read in this order:
 2. `VOCABULARY.md`
 3. `decisions/decisions.md`
 4. `decisions/deferred.md`
-5. Relevant ticket under `tickets/`
-6. Relevant ADR under `docs/adr/`, when one exists
-7. Normative capture/evidence contract: `docs/specs/capture-event-v2.md` when the work
+5. `docs/dataforseo-surface-roadmap.md` when the work touches a DataForSEO provider
+   surface, Derivation, typed provider schema, or provider read API
+6. Relevant ticket under `tickets/`
+7. Relevant ADR under `docs/adr/`, when one exists
+8. Normative capture/evidence contract: `docs/specs/capture-event-v2.md` when the work
    touches Attempt, Capture, Evidence, Evidence Store, derive-from-capture, or fixture
    capture
 
@@ -130,6 +132,10 @@ add the smallest rule that addresses that failure — nothing more.
   can be named (Evidence Store vs PostgreSQL as appropriate under D6/D8).
 - Propose an ADR to the Steward only when the choice is hard to reverse, surprising without
   context, and the result of a real trade-off. The Steward writes it.
+- A provider-surface, Derivation-schema, or read-API ticket is defective unless it states
+  the downstream consumer questions, fact and relationship grain, completeness/absence/limit
+  semantics, provenance and Recipe disclosure, and inference traps. This consumer-readiness
+  review must not move strategy, scoring, recommendations, panels, or cadence into Observatory.
 - Do not generate planning, audit, closure, or status document trees.
 - When a decision changes, update the existing authority instead of adding a competing file.
 - Do not implement deferred work before its recorded trigger fires.
@@ -162,8 +168,9 @@ Main chain:
    Only the Steward writes `tickets/`, except for an implementer's own assigned ticket.
 6. **Steward provisional acceptance** of one bounded ticket for technical review
 7. **[GROK] read-only pre-implementation ticket review** → false premises, missing proofs,
-   overconstraints, architecture/provider traps, and ready-or-reconcile recommendation;
-   no implementation or repository mutation
+   overconstraints, architecture/provider traps, consumer-readiness gaps for applicable
+   provider/schema/API work, and ready-or-reconcile recommendation; no implementation or
+   repository mutation
 8. **Steward reconciliation and final ticket acceptance** → commit the reviewed ticket and
    issue the exact implementation start commit
 9. `implement` → `tdd` → `code-review` → remediation

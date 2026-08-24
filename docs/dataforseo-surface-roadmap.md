@@ -90,6 +90,12 @@ request options:
 - which useful testimony should become typed Observations now, which can remain preserved in
   raw Evidence for later recipes, and which fields are operational noise rather than
   strategy-relevant provider testimony.
+- what an empty consumer response means and how the API distinguishes unmeasured, failed,
+  incomplete, admitted-zero, and admitted-empty states;
+- how list limits disclose total matching records, returned records, and whether more records
+  exist rather than silently presenting a bounded slice as the complete history;
+- when identity includes rank, position, or array index, how a consumer can honestly track
+  the same URL, domain, question, or other stable subject across Captures;
 - which materially useful, historically irrecoverable testimony is deliberately not
   requested and what trigger would justify revisiting that non-acquisition.
 
@@ -177,9 +183,15 @@ search exposure without Observatory itself deciding what action to take.
 
 ### 3. AI Optimization — LLM Mentions
 
-**High-priority future surface.** This family is expected to be one of Observatory's most
-valuable GEO datasets because DataForSEO maintains provider-side AI-search/LLM mention
-testimony rather than requiring Observatory to create every observation itself.
+**Current bounded surfaces:** Search Mentions is implemented through Recipe selection and
+read/history API. Target Metrics is implemented through typed Derivation; Recipe selection
+and read/history remain the next separate boundary. Multi-Target Metrics, top-mentioned,
+Historical, Timeseries, and other family members remain future direction under separate
+activation.
+
+This family is expected to be one of Observatory's most valuable GEO datasets because
+DataForSEO maintains provider-side AI-search/LLM mention testimony rather than requiring
+Observatory to create every observation itself.
 
 Expected useful surfaces include:
 
@@ -348,6 +360,36 @@ Observatory's search/AI visibility scope and the same bounded D12 contract disci
 
 If later review establishes material value, the surface receives the same bounded
 Evidence/Derivation review and authorization as any other adapter.
+
+## Strategy-consumer retrofit sequence
+
+The current retrofit reviews implemented provider surfaces from the viewpoint of a future
+strategy LLM that can use only the versioned API. Reviews remain surface-specific, while a
+genuinely shared API defect may be remediated once across affected surfaces after each has
+been inspected. The sequence is:
+
+1. keep agent onboarding and this roadmap aligned with the consumer-readiness contract;
+2. perform a full read-only Keyword Overview review as the first complete API template;
+3. reconcile a proposed shared provider-history contract covering Outcome visibility,
+   observed-subject discovery, list completeness, limitations, and provider Attempt audit;
+4. review Google Organic and Search Mentions against that proposal, preserving their
+   different fact grains and provider semantics;
+5. after explicit [CHAZ] selection, implement shared API corrections in one bounded ticket
+   where behavior is truly shared and use separate tickets for surface-local changes;
+6. review Target Metrics and design AI-12 from the accepted contract rather than copying the
+   current history shape;
+7. review future provider capability families when they approach bounded activation, then
+   select individual adapters rather than treating this roadmap as implementation order.
+
+Each full surface pass is read-only first: [GROK] inspects code, tests, schema, fixtures, and
+API behavior; [GPT] independently verifies and reconciles the findings; [CHAZ] decides what
+should change; only then does the normal reviewed-ticket implementation loop begin. No step
+authorizes a provider call, spend, recurring acquisition, strategy state, or F5/F12 work.
+
+**Current checkpoint — 2026-08-24:** the initial code-informed discovery is complete and the
+onboarding/roadmap contract is recorded. The next action is the full read-only Keyword
+Overview strategy-consumer readiness review. No API remediation or provider exchange is yet
+authorized.
 
 ## Dependency-based sequencing direction
 
