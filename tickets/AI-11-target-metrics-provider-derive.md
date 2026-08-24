@@ -1,6 +1,6 @@
 # AI-11 — Target Metrics provider Derivation and typed persistence
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; mandatory GROK technical review reconciled  
 **Approved by:** [CHAZ] for final ticket publication / [GPT] Steward reconciliation  
@@ -898,3 +898,60 @@ exact-HEAD targeted/full/Ruff/mypy operator block after this commit.
 
 No production-code change. No provider/network/credential/Evidence/schema
 change. No AI-12/API/strategy/F13/shared-kernel work. No amend. No push.
+
+## Steward review and closure — 2026-08-24
+
+[CHAZ] explicitly authorized closure after the pre-implementation technical review,
+implementation report and coworker/strategy assessment, independent Steward code-and-test
+review, bounded remediation, and final exact-HEAD operator verification. The Steward accepts
+AI-11 as `done`.
+
+Accepted commits:
+
+- accepted ticket:
+  `b8998eedb06e713ee2f0922316949658c22a33c1`;
+- implementation:
+  `b30b69f596800af36bcf85cc638bbf217bc21965`;
+- review remediation:
+  `9b6954045f7741421a57a4a601accf68c8a6e10a`.
+
+The implementation comparison changed exactly the six ticket-allowed paths. The Steward
+read the production parser changes, complete Target Metrics derive module, additive
+migration, and tests directly. The review confirmed the closed two-kind / three-relation
+model, verified-Capture and exact-cited-Attempt authority, parameter revalidation, fail-closed
+reconciliation, content-addressed Recipe, exact-content writer behavior, recipe-scoped
+complete-set repair, migration parity, and real-PostgreSQL rebuild proof.
+
+The separate remediation commit changed only the Target Metrics derive test and this ticket;
+production code was unchanged. It added independent coverage for every nonempty optional
+grouping family and proved that a duck-typed store is rejected before schema work, Evidence
+reads, or connection use. The Steward also resolved the bounded design question:
+`TARGET_METRICS_RECIPE` remains in `target_metrics_derive.py`; AI-10's parser-module
+`provider_recipe` guard is not relaxed merely to colocate Recipe bytes.
+
+[CHAZ] returned final operator evidence on exact remediation HEAD
+`9b6954045f7741421a57a4a601accf68c8a6e10a`:
+
+- targeted Target Metrics derive suite: `31 passed`;
+- full suite: `1195 passed, 1 skipped, 1 warning`;
+- Ruff: passed;
+- mypy: passed;
+- initial and final tree: clean on the same commit.
+
+The warning is the known Starlette/`httpx` TestClient deprecation. No provider call,
+credential use, spend, new Evidence, Evidence mutation, AI-12 work, F13 work, amend, or push
+occurred during implementation, remediation, review, or closure.
+
+Accepted limits remain exact: one Google Capture proves existence rather than invariance. It
+does not prove order, rank, tie-break, partition, share, truncation, completeness,
+cross-platform behavior, location/language/platform effects, time series, provider Data
+Period, Provider Update Time, cross-surface identity, or billing formula. Nonempty optional
+families, `items=null`, above-limit rows, grouping disagreement, zeros, and strange provider
+error topology remain synthetic proof rather than live provider testimony.
+
+The next repository boundary is AI-12 — Target Metrics recipe selection and read/history API.
+The now-fired fourth-writer extraction trigger remains a separate Steward design question;
+AI-11 closure authorizes neither implementation boundary.
+
+This closure changes documentation and workflow authority only. No behavior-affecting change
+followed the final exact-HEAD test evidence, so the suite was not repeated.

@@ -249,6 +249,7 @@ Implemented module entrypoints:
     uv run python -m observatory.google_organic_derive
     uv run python -m observatory.dataforseo_ai_optimization_search_mentions_paid_probe
     uv run python -m observatory.dataforseo_ai_optimization_target_metrics_paid_probe
+    uv run python -m observatory.target_metrics_derive
     uv run python -m observatory.serve
 
 Listing an entrypoint does not authorize provider transport, credentials, spend, Evidence
