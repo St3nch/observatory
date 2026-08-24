@@ -177,6 +177,27 @@ Main chain:
 10. implement sets ticket status to `review` and records evidence; never `done`
 11. `handoff` as needed; **Steward closure** sets `done`
 
+### Question-resolution gate
+
+Before any major provider-surface review, ticket review, remediation, or implementation
+prompt:
+
+1. **[GROK] code-first questions** — inspect the actual authority, code, schema, tests, and
+   Evidence boundary, then return uncertainties and coworker questions without mutation.
+2. **[GPT] consolidation** — independently verify the material premises, remove answered or
+   duplicate questions, and separate Steward technical judgments from Product choices.
+3. **[CHAZ] Product resolution** — answer spending, scope, consumer meaning, live-provider,
+   and other Product questions before the major prompt is drafted.
+4. **Bounded [GROK] reaction when needed** — explain technical consequences of CHAZ's
+   answers without reopening settled Product direction or expanding the task.
+5. **[GPT] decision lock** — reconcile the answers into authority or the accepted work
+   boundary, then issue one major prompt with those decisions embedded.
+
+Questions discovered during major work are resolved before remediation, implementation
+expansion, or closure. Do not repeatedly rewrite large prompts around unresolved choices,
+bury CHAZ-directed questions inside an implementation report, or treat a coworker question
+as authorization.
+
 Optional and situational: `prototype` (throwaway design question), `wayfinder`
 (multi-session decision fog in `docs-temp/wayfinder/` only).
 

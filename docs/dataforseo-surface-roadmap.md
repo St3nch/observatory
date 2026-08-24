@@ -386,6 +386,14 @@ API behavior; [GPT] independently verifies and reconciles the findings; [CHAZ] d
 should change; only then does the normal reviewed-ticket implementation loop begin. No step
 authorizes a provider call, spend, recurring acquisition, strategy state, or F5/F12 work.
 
+The **question-resolution gate** runs before each major surface-review, remediation, or
+implementation prompt: [GROK] inspects the actual code and raises uncertainties; [GPT]
+independently verifies, consolidates, and separates technical from Product questions;
+[CHAZ] resolves Product choices; [GROK] gives only a bounded technical reaction when needed;
+and [GPT] locks the decisions before issuing the major prompt. Questions discovered later
+are resolved before remediation or closure rather than causing repeated large-prompt
+rewrites.
+
 ### Provisional shared provider-consumer contract
 
 The completed Keyword Overview review establishes this provisional boundary:
@@ -408,10 +416,12 @@ No coverage row may be invented for a failure or zero-envelope Capture. Before r
 F12-scale acquisition, the chosen inventory path must be scalable and rebuildable. D14
 records the full provisional decision.
 
-**Current checkpoint — 2026-08-24:** Keyword Overview review and Steward reconciliation are
-complete. The next action is the full read-only Google Organic strategy-consumer readiness
-review, followed by Search Mentions. No API/schema remediation, provider exchange, or AI-12
-implementation is yet authorized.
+**Current checkpoint — 2026-08-24:** Keyword Overview is reconciled and the Google Organic
+read-only review is complete. The question-resolution gate is now required. Next resolve
+Organic's remaining technical questions about non-null `related_result`, Outcome-count
+integrity, and route/OpenAPI disclosure; then record the Steward reconciliation and run the
+Search Mentions question-resolution gate before its major review. No API/schema remediation,
+provider exchange, or AI-12 implementation is yet authorized.
 
 ## Dependency-based sequencing direction
 
