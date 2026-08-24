@@ -1,10 +1,10 @@
 # AI-10 — Target Metrics strict parser and AI-09 conformance fixture
 
-**Status:** accepted  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** AI-09 — Target Metrics Live one-shot Evidence activation (`done`)  
 **Approved by:** Project Steward  
-**Start commit:** assigned in the Steward handoff  
+**Start commit:** `be6dd0b99272aadf5582da624709f2f79e5977f5`  
 
 ## Purpose
 
@@ -365,5 +365,194 @@ AI-10 authorizes neither boundary.
 
 ## Implementation report
 
-[GROK fills this section in the single implementation commit.]
+**Parent:** `be6dd0b99272aadf5582da624709f2f79e5977f5`  
+**Child:** this implementation commit  
+**Status:** `review`  
+**AI-10 only:** yes. Nothing pushed. Nothing amended.
+
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### Changed paths
+
+- `src/observatory/dataforseo_ai_optimization_target_metrics.py` (new parser/IR)
+- `tests/test_dataforseo_ai_optimization_target_metrics.py` (new)
+- `tests/fixtures/dataforseo_ai_optimization_target_metrics_ai09.json` (inspector stdout copy)
+- this ticket (Start commit, Status, Implementation report)
+
+### Fixture provenance
+
+Copied through the existing local read-only inspector, with stdout redirected
+to the required fixture path:
+
+```text
+uv run python -m observatory.dataforseo_ai_optimization_target_metrics_paid_probe inspect
+  --evidence-root /home/chaz/.local/share/observatory/ai09-target-metrics-generative-engine-optimization-2026-08-24
+  --capture-id 347d8eebf6c706370f59dbdc7057ca95c03010bcb01b5edb8eade05bc0e1295e
+```
+
+Independent `hashlib.sha256` and `sha256sum` both measured length `1775` and
+SHA-256 `7b6974704f73cff9687986a83ab14ba8ec942ccdbfde359ec7e8fde6bea8eee2`.
+No pretty-print, no regeneration, no BOM, no trailing newline. Inspector CLI
+does not load credentials and reads only the local Evidence Store. Ordinary
+tests never open that operator root after the copy. Zero provider, DNS,
+credential, paid-host, or other public-network activity.
+
+### Parser interface
+
+`parse_target_metrics(body: bytes, parameters: Mapping[str, object]) -> TargetMetricsIR`
+
+No HTTP status, headers, transport state, Capture classification, Evidence
+path, credentials, client, URL, or network seam. Provider success/error is
+JSON `status_code`. Request context is verified Attempt parameters. `task.data`
+is typed echo and never overrides Attempt context.
+
+Principal IR types: `RequestContext`, `ProviderEcho` / `EchoTarget`,
+`LocationRow`, `GroupingRow`, `TotalMetrics`, `AggregatedMetrics`,
+`TargetMetricsIR`. Optional lists and `items` use reused `Field` states.
+Parser classification reuses `ParseClassification` (`observation_admitted` /
+`provider_error`) as in AI-04; this is not a repository Outcome.
+
+### Acceptance-to-test mapping
+
+| Acceptance | Test |
+|---|---|
+| Fixture length/digest, independent of Evidence root | `test_frozen_fixture_independent_sha256_and_length` |
+| Signature has no HTTP/transport input | `test_parser_signature_has_no_http_or_transport_input` |
+| Golden IR, request/echo split, eight aggregates, ten source-domain rows, present-empty optionals, overlap, lexical indexes, durations | `test_golden_parse_preserves_request_echo_and_aggregates` |
+| Echo ≠ Attempt authority | `test_echo_disagreement_does_not_replace_attempt_context` |
+| Grouping-key disagreement with Attempt remains visible | `test_grouping_key_disagreement_with_attempt_remains_visible` |
+| Group values need not equal total | `test_grouping_value_disagreement_with_total_parses` |
+| Domain metrics are not a partition | `test_overlapping_domain_sums_greater_than_total_remain_valid` |
+| Reorder preserves key/metric tuples; index is lexical, not rank | `test_source_domain_reorder_preserves_key_metrics_and_reindexes` |
+| Count below/equal/above limit is not truncation | `test_source_count_below_and_equal_to_limit_is_not_truncation` |
+| Zero totals/metrics remain stated; not admitted-empty | `test_zero_totals_and_zero_metrics_are_stated_values` |
+| Decimal cost, not spelling or binary float | `test_cost_decimal_value_ignores_numeral_spelling`, `test_integer_json_cost_is_decimal`, `test_high_precision_cost_does_not_use_binary_float` |
+| BOM/UTF-8/dup/trailing/NaN/Infinity | `test_duplicate_json_member_invalid_utf8_bom_trailing_and_nonfinite` |
+| Unknown fields at every closed object layer | `test_unknown_fields_fail_at_every_closed_object_layer` |
+| Missing required fields, including language/platform/row members | `test_missing_known_fields_fail` |
+| Root/task disagreement, provider error | `test_provider_error_and_inconsistent_status` |
+| `tasks_error` on success and error branches | `test_wrong_tasks_error_fails_on_success_and_provider_error` |
+| Nonnegative `result_count` on every branch | `test_negative_result_count_fails_including_provider_error` |
+| Two tasks, two results, wrong `tasks_count` | `test_task_and_result_count_errors` |
+| Nonzero successful `total_count`/`offset`/`items_count` | `test_nonzero_successful_result_counts_fail` |
+| `items=[]` / `null` / absent distinct; nonempty/wrong-type fail | `test_items_empty_and_null_are_distinct_accepted_states`, `test_absent_items_is_distinct_from_null_and_empty`, `test_nonempty_and_wrong_typed_items_fail` |
+| Optional lists absent/null/empty/nonempty/wrong-type | `test_optional_aggregate_lists_preserve_absent_null_empty_nonempty_and_wrong_type` |
+| Nonempty optional rows typed, not persisted | `test_nonempty_optional_rows_are_typed_ir_not_persistence` |
+| Required total/group arrays null/wrong-shaped; empty required arrays parse | `test_required_total_and_group_arrays_reject_null_and_wrong_shape` |
+| Location integer key vs string/bool/float | `test_location_key_must_be_integer` |
+| String grouping keys vs non-strings | `test_string_grouping_keys_reject_non_strings` |
+| Structural counts reject bool/float/string/negative | `test_structural_counts_reject_bool_float_string_negative` |
+| Aggregate metrics reject negative/bool/float/string | `test_aggregate_metrics_reject_negative_bool_float_string` |
+| Duplicate histogram keys fail, including equal metrics and optional lists | `test_duplicate_grouping_keys_fail_even_when_metrics_agree` |
+| Existing parsers, fixtures, and adapter identity unchanged | `test_existing_fixtures_and_parsers_unchanged` |
+
+### Verification
+
+On this implementation tree, before the commit:
+
+```text
+uv run pytest -q tests/test_dataforseo_ai_optimization_target_metrics.py
+51 passed in 0.23s
+
+uv run pytest -q
+1164 passed, 1 skipped, 1 warning in 292.98s
+
+uv run ruff check .
+All checks passed!
+
+uv run mypy
+Success: no issues found in 60 source files
+```
+
+The warning is the existing Starlette `httpx` TestClient deprecation from
+`fastapi/testclient.py`, not this ticket.
+
+### Strongest proof
+
+Independent fixture digest plus golden literals for the ten source-domain
+rows, overlap sums, and distinct field states. Adversarial tests would go red
+if the parser treated limit-equality as truncation, forced group=total,
+accepted duplicate histogram keys as occurrences, or collapsed zero totals
+into admitted-empty.
+
+### Weakest assumption
+
+One Google AI-09 body proves existence of the eight-key aggregate topology,
+not invariance. Nonempty optional-list rows and `items=null` are synthetic
+parser proofs, not provider testimony. Parser classification reuses
+`ParseClassification.ADMITTED` (`observation_admitted`); AI-11 must not treat
+that string as a repository Outcome or as Search Mentions admitted-empty.
+
+### Possible false greens
+
+- Isolation tests hash other fixtures and re-parse them; they do not prove
+  absence of conceptual coupling via reused `Field` / `ParseClassification`.
+- `not hasattr(..., "rank")` / `"truncated" not in dataclass fields` prove
+  absence of those attributes, not that a caller cannot invent rank later.
+- Network guard patches `socket.create_connection` only, matching AI-04.
+- Source-text guards (`psycopg`, `provider_recipe`,
+  `observation_admitted_empty`) are string checks on this module.
+
+### Remaining caller-controlled influence
+
+Attempt `parameters` are caller-supplied. The parser type-checks them and
+requires the Target Metrics adapter contract, but it does not re-close
+adapter-level constants such as `internal_list_limit=10`. Echo disagreement
+is retained, not used as authority. AI-11 owns Recipe, reconciliation,
+admission, and persistence.
+
+### Architecture drift / coupling
+
+Small accepted value-type reuse: `Field` and `ParseClassification` from
+`dataforseo_keyword_overview`, plus `TARGET_METRICS_ADAPTER_CONTRACT` from
+`capture_event`. No shared parser framework, no recipe, no derive, no
+PostgreSQL, no API. Named aggregate fields rather than a dimension/EAV map.
+
+### Parser/provider traps exposed
+
+- Documented `items=null` versus real `items=[]`.
+- Overlapping source-domain histograms versus a partition of `total`.
+- Count-equals-`internal_list_limit` versus truncation/completeness.
+- Integer location keys versus string grouping keys.
+- Independent location/language/platform/total values that happen to agree
+  in this body.
+- Duplicate grouping keys are collisions, not occurrences.
+- `provider_array_index` is array position, not rank.
+
+### Deliberately duplicated seams
+
+Strict JSON decode (UTF-8, BOM, duplicate members, trailing data, non-finite
+numbers), closed-object rejection, Decimal cost parsing, one-task envelope,
+and `tasks_error` reconciliation are copied into this module rather than
+extracted from Search Mentions / Keyword Overview.
+
+### Code-review residuals
+
+- **Standards:** no hard violations. Judgement: location vs string-grouping
+  row loops left unextracted so a generic keyed-row helper cannot become an
+  EAV/dimension framework. `items` is `Field[tuple[object, ...]]` because
+  this contract defines no item-row type.
+- **Spec:** no wrong-implementation findings. Partial-proof gaps called out
+  in review (missing `language`/`platform`/row members, echo target golden
+  fields, above-limit cardinality) were closed before this commit.
+
+Nothing here should block closure of AI-10. AI-11 remains the next boundary.
+
+### Deferred to AI-11 or later
+
+Derivation Recipe, semantic identities, typed PostgreSQL persistence, rebuild
+proof, recipe selection, read/history API, whether nonempty optional rows are
+admitted, whether grouping-key disagreement is a reconciliation failure, and
+the repository Outcome for a stated zero total.
+
+### Confirmations
+
+No amend, no push, no provider/API-host/DNS/network call, no credentials, no
+spend, no Evidence mutation, no Recipe/Outcome/Observation/PostgreSQL/
+derivation/selection/API/history/projection/scoring/strategy work.
 
