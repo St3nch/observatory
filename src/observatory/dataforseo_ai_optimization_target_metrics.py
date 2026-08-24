@@ -12,6 +12,14 @@ from observatory.capture_event import TARGET_METRICS_ADAPTER_CONTRACT
 from observatory.dataforseo_keyword_overview import Field, ParseClassification
 
 SUCCESS_STATUS: Final[int] = 20000
+PROVIDER: Final[str] = "dataforseo"
+PARSER_CONTRACT: Final[str] = (
+    "dataforseo-ai-optimization-target-metrics-live-parser-v1"
+)
+TOTAL_KIND: Final[str] = "dataforseo.google.ai_optimization.target_metrics.total.v1"
+SOURCE_DOMAIN_KIND: Final[str] = (
+    "dataforseo.google.ai_optimization.target_metrics.source_domain.v1"
+)
 
 _ROOT_KEYS: Final[frozenset[str]] = frozenset(
     {

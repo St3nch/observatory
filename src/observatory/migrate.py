@@ -1129,6 +1129,191 @@ CREATE TABLE IF NOT EXISTS search_mentions_result_context (
 )
 """
 
+TARGET_METRICS_TOTAL_KIND: Final[str] = (
+    "dataforseo.google.ai_optimization.target_metrics.total.v1"
+)
+TARGET_METRICS_SOURCE_DOMAIN_KIND: Final[str] = (
+    "dataforseo.google.ai_optimization.target_metrics.source_domain.v1"
+)
+_TM_OPTIONAL_STATES: Final[str] = "IN ('stated', 'json_null', 'absent')"
+_TM_OPTIONAL_CONSISTENCY_SQL: Final[str] = ",\n    ".join(
+    (
+        f"CONSTRAINT target_metrics_result_context_{family}_consistency "
+        f"CHECK ("
+        f"({family}_state = 'stated' AND {family}_count IS NOT NULL) "
+        f"OR "
+        f"({family}_state <> 'stated' AND {family}_count IS NULL)"
+        f")"
+    )
+    for family in (
+        "search_results_domain",
+        "brand_entities_title",
+        "brand_entities_category",
+    )
+)
+
+TARGET_METRICS_TOTALS_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS target_metrics_totals (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL
+        CHECK (char_length(requested_keyword) >= 1),
+    mentions BIGINT NOT NULL
+        CHECK (mentions >= 0 AND mentions <= {_IJSON_MAX}),
+    ai_search_volume BIGINT NOT NULL
+        CHECK (ai_search_volume >= 0 AND ai_search_volume <= {_IJSON_MAX}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT target_metrics_totals_kind
+        CHECK (observation_kind = '{TARGET_METRICS_TOTAL_KIND}'),
+    CONSTRAINT target_metrics_totals_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_ENVELOPE_FK}
+)
+"""
+
+TARGET_METRICS_SOURCE_DOMAINS_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS target_metrics_source_domains (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL
+        CHECK (char_length(requested_keyword) >= 1),
+    domain TEXT NOT NULL
+        CHECK (char_length(domain) >= 1),
+    mentions BIGINT NOT NULL
+        CHECK (mentions >= 0 AND mentions <= {_IJSON_MAX}),
+    ai_search_volume BIGINT NOT NULL
+        CHECK (ai_search_volume >= 0 AND ai_search_volume <= {_IJSON_MAX}),
+    provider_array_index BIGINT NOT NULL
+        CHECK (provider_array_index >= 0 AND provider_array_index <= {_IJSON_MAX}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT target_metrics_source_domains_kind
+        CHECK (observation_kind = '{TARGET_METRICS_SOURCE_DOMAIN_KIND}'),
+    CONSTRAINT target_metrics_source_domains_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    CONSTRAINT target_metrics_source_domains_lexical
+        UNIQUE (capture_id, derivation_version_id, provider_array_index),
+    {_ENVELOPE_FK}
+)
+"""
+
+TARGET_METRICS_CONTEXT_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS target_metrics_result_context (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL
+        REFERENCES provider_recipes (derivation_version_id),
+    attempt_id TEXT NOT NULL
+        CHECK (attempt_id ~ '{_HEX64}'),
+    requested_keyword TEXT NOT NULL
+        CHECK (char_length(requested_keyword) >= 1),
+    match_type TEXT NOT NULL,
+    search_filter TEXT NOT NULL,
+    search_scope TEXT[] NOT NULL,
+    platform TEXT NOT NULL,
+    location_code BIGINT NOT NULL
+        CHECK (location_code >= 0 AND location_code <= {_IJSON_MAX}),
+    language_code TEXT NOT NULL,
+    internal_list_limit BIGINT NOT NULL
+        CHECK (internal_list_limit >= 0 AND internal_list_limit <= {_IJSON_MAX}),
+    total_count BIGINT NOT NULL
+        CHECK (total_count >= 0 AND total_count <= {_IJSON_MAX}),
+    result_offset BIGINT NOT NULL
+        CHECK (result_offset >= 0 AND result_offset <= {_IJSON_MAX}),
+    items_count BIGINT NOT NULL
+        CHECK (items_count >= 0 AND items_count <= {_IJSON_MAX}),
+    items_state TEXT NOT NULL
+        CHECK (items_state {_TM_OPTIONAL_STATES}),
+    location_key BIGINT NOT NULL
+        CHECK (location_key >= 0 AND location_key <= {_IJSON_MAX}),
+    location_mentions BIGINT NOT NULL
+        CHECK (location_mentions >= 0 AND location_mentions <= {_IJSON_MAX}),
+    location_ai_search_volume BIGINT NOT NULL
+        CHECK (location_ai_search_volume >= 0 AND location_ai_search_volume <= {_IJSON_MAX}),
+    location_provider_array_index BIGINT NOT NULL
+        CHECK (
+            location_provider_array_index >= 0
+            AND location_provider_array_index <= {_IJSON_MAX}
+        ),
+    location_row_count BIGINT NOT NULL
+        CHECK (location_row_count >= 0 AND location_row_count <= {_IJSON_MAX}),
+    language_key TEXT NOT NULL,
+    language_mentions BIGINT NOT NULL
+        CHECK (language_mentions >= 0 AND language_mentions <= {_IJSON_MAX}),
+    language_ai_search_volume BIGINT NOT NULL
+        CHECK (language_ai_search_volume >= 0 AND language_ai_search_volume <= {_IJSON_MAX}),
+    language_provider_array_index BIGINT NOT NULL
+        CHECK (
+            language_provider_array_index >= 0
+            AND language_provider_array_index <= {_IJSON_MAX}
+        ),
+    language_row_count BIGINT NOT NULL
+        CHECK (language_row_count >= 0 AND language_row_count <= {_IJSON_MAX}),
+    platform_key TEXT NOT NULL,
+    platform_mentions BIGINT NOT NULL
+        CHECK (platform_mentions >= 0 AND platform_mentions <= {_IJSON_MAX}),
+    platform_ai_search_volume BIGINT NOT NULL
+        CHECK (platform_ai_search_volume >= 0 AND platform_ai_search_volume <= {_IJSON_MAX}),
+    platform_provider_array_index BIGINT NOT NULL
+        CHECK (
+            platform_provider_array_index >= 0
+            AND platform_provider_array_index <= {_IJSON_MAX}
+        ),
+    platform_row_count BIGINT NOT NULL
+        CHECK (platform_row_count >= 0 AND platform_row_count <= {_IJSON_MAX}),
+    sources_domain_count BIGINT NOT NULL
+        CHECK (sources_domain_count >= 0 AND sources_domain_count <= {_IJSON_MAX}),
+    search_results_domain_count BIGINT
+        CHECK (
+            search_results_domain_count IS NULL
+            OR (
+                search_results_domain_count >= 0
+                AND search_results_domain_count <= {_IJSON_MAX}
+            )
+        ),
+    search_results_domain_state TEXT NOT NULL
+        CHECK (search_results_domain_state {_TM_OPTIONAL_STATES}),
+    brand_entities_title_count BIGINT
+        CHECK (
+            brand_entities_title_count IS NULL
+            OR (
+                brand_entities_title_count >= 0
+                AND brand_entities_title_count <= {_IJSON_MAX}
+            )
+        ),
+    brand_entities_title_state TEXT NOT NULL
+        CHECK (brand_entities_title_state {_TM_OPTIONAL_STATES}),
+    brand_entities_category_count BIGINT
+        CHECK (
+            brand_entities_category_count IS NULL
+            OR (
+                brand_entities_category_count >= 0
+                AND brand_entities_category_count <= {_IJSON_MAX}
+            )
+        ),
+    brand_entities_category_state TEXT NOT NULL
+        CHECK (brand_entities_category_state {_TM_OPTIONAL_STATES}),
+    PRIMARY KEY (capture_id, derivation_version_id),
+    CONSTRAINT target_metrics_result_context_outcome
+        FOREIGN KEY (derivation_version_id, attempt_id, capture_id)
+        REFERENCES outcomes (derivation_version_id, attempt_id, capture_id),
+    {_TM_OPTIONAL_CONSISTENCY_SQL}
+)
+"""
+
 PRE_PF12_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     DERIVATION_VERSIONS_SQL,
     OUTCOMES_SQL,
@@ -1162,7 +1347,7 @@ PRE_AI05_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_PF12_SCHEMA_STATEMENTS 
     GOOGLE_ORGANIC_CONTEXT_OUTCOME_FK_SQL,
 )
 
-SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_AI05_SCHEMA_STATEMENTS + (
+PRE_AI11_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_AI05_SCHEMA_STATEMENTS + (
     SEARCH_MENTIONS_ITEMS_SQL,
     SEARCH_MENTIONS_ITEM_OCCURRENCES_SQL,
     SEARCH_MENTIONS_MONTHLY_SQL,
@@ -1170,6 +1355,12 @@ SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_AI05_SCHEMA_STATEMENTS + (
     SEARCH_MENTIONS_SOURCES_SQL,
     SEARCH_MENTIONS_SOURCE_OCCURRENCES_SQL,
     SEARCH_MENTIONS_CONTEXT_SQL,
+)
+
+SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_AI11_SCHEMA_STATEMENTS + (
+    TARGET_METRICS_TOTALS_SQL,
+    TARGET_METRICS_SOURCE_DOMAINS_SQL,
+    TARGET_METRICS_CONTEXT_SQL,
 )
 
 WIDEN_IJSON_COLUMNS: Final[tuple[tuple[str, str], ...]] = (

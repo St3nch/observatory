@@ -1,11 +1,11 @@
 # AI-11 — Target Metrics provider Derivation and typed persistence
 
-**Status:** accepted  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; mandatory GROK technical review reconciled  
 **Approved by:** [CHAZ] for final ticket publication / [GPT] Steward reconciliation  
 **Technical-review base:** cd276059b98553cf74d24013e55e468763a9b762  
-**Implementation start:** the accepted-ticket commit supplied by the Steward in the implementation prompt  
+**Implementation start:** `b8998eedb06e713ee2f0922316949658c22a33c1`  
 
 ## Purpose
 
@@ -620,3 +620,205 @@ exact-HEAD test evidence, and explicit [CHAZ] closure authorization:
    trigger.
 
 AI-11 authorizes neither boundary.
+
+## Implementation report
+
+**Parent:** `b8998eedb06e713ee2f0922316949658c22a33c1`  
+**Child:** this implementation commit  
+**Status:** `review`  
+**AI-11 only:** yes. Nothing pushed. Nothing amended.
+
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### Changed paths
+
+- `src/observatory/dataforseo_ai_optimization_target_metrics.py` (kind, provider, parser-contract constants only)
+- `src/observatory/target_metrics_derive.py` (Recipe, derive module, local entrypoint)
+- `src/observatory/migrate.py` (`PRE_AI11_SCHEMA_STATEMENTS` plus three Target Metrics relations)
+- `tests/test_dataforseo_ai_optimization_target_metrics_derive.py` (new)
+- `tests/test_dataforseo_ai_optimization_search_mentions_derive.py` (Mentions seven-table layer measured against `PRE_AI11_SCHEMA_STATEMENTS`)
+- this ticket (Implementation start, Status, Implementation report)
+
+Recipe document lives in the derive module, not the parser module. AI-10
+`test_nonempty_optional_rows_are_typed_ir_not_persistence` forbids the substring
+`provider_recipe` in the parser source. Putting Recipe registration there would
+require editing an AI-10 test, which this ticket forbids. Kinds, provider, and
+parser-contract constants remain in the parser module. Parser admission is
+unchanged.
+
+### Recipe and fixture identities
+
+Target Metrics Recipe:
+
+- byte length `1586`
+- `derivation_version_id`
+  `b6addc49c60eff18de7aaf5dc6c35ebffa93e242649d5e2ddd009822b12e5104`
+
+Independent recomputation is
+`hashlib.sha256(TARGET_METRICS_RECIPE_BYTES).hexdigest()` and
+`recipe_derivation_version_id(target_metrics_recipe())`.
+
+Frozen AI-09 fixture unchanged:
+
+- path `tests/fixtures/dataforseo_ai_optimization_target_metrics_ai09.json`
+- bytes `1775`
+- SHA-256 `7b6974704f73cff9687986a83ab14ba8ec942ccdbfde359ec7e8fde6bea8eee2`
+- no BOM, no trailing newline
+
+Kinds:
+
+- `dataforseo.google.ai_optimization.target_metrics.total.v1`
+- `dataforseo.google.ai_optimization.target_metrics.source_domain.v1`
+
+Relations:
+
+- `target_metrics_totals`
+- `target_metrics_source_domains`
+- `target_metrics_result_context`
+
+Frozen Capture cardinality: 1 total + 10 source domains = **11**; one result context.
+`observation_count` is recomputed as `1 + len(sources_domain)`.
+
+### Acceptance-to-test mapping
+
+| Acceptance | Test |
+|---|---|
+| Recipe bytes/digest, fixture/KO/Organic/SM identities | `test_accepted_recipe_and_fixture_identities_remain_unchanged` |
+| Frozen 11 = 1 + len(sources_domain), metric vectors, overlap, context | `test_plan_frozen_fixture_has_exact_semantic_counts`, `test_derive_ai09_fixture_into_real_postgres` |
+| Never copy `parsed.outcome.value` | `test_plan_does_not_copy_parser_outcome_value` |
+| Grouping value ≠ total admitted | `test_plan_grouping_disagreement_with_total_is_admitted` |
+| Echo/path do not reject; Attempt remains authority | `test_plan_echo_and_path_disagreement_do_not_reject`, `test_adversarial_bodies_persist_on_postgres` |
+| Source count below/equal/above limit, no truncation | `test_plan_source_count_below_equal_above_limit_is_admitted`, `test_adversarial_bodies_persist_on_postgres` |
+| Empty/extra/wrong grouping keys | `test_plan_empty_extra_or_wrong_grouping_is_reconciliation_failed` |
+| Nonempty optional families | `test_plan_nonempty_optional_rejects_whole_unit`, `test_adversarial_bodies_persist_on_postgres` |
+| Empty identity / I-JSON overflow | `test_plan_empty_identity_and_ijson_overflow_reject` |
+| Zero total admitted, not admitted_empty | `test_plan_zero_total_remains_admitted`, `test_zero_total_writes_admitted_outcome` |
+| Optional and items field states | `test_plan_optional_and_items_states_are_distinct`, `test_adversarial_bodies_persist_on_postgres` |
+| Source reorder per-identity index map | `test_plan_source_reorder_preserves_identity_and_changes_index_map` |
+| Zero domain values persist | `test_adversarial_bodies_persist_on_postgres` |
+| Wrong-kind, orphan, lexical unique, I-JSON, empty identity, state/count | `test_constraints_reject_wrong_kind_orphan_index_and_state` |
+| Context Outcome FK | `test_result_context_requires_matching_outcome` |
+| Transport/parse/reconciliation/error/damage | `test_transport_parse_reconciliation_and_damage_paths` |
+| Cited Attempt A, sibling Attempt B unused | `test_production_uses_cited_attempt_not_sibling` |
+| Validator/non-Mapping/adapter mismatch integrity | `test_validator_non_mapping_and_adapter_mismatch_are_integrity_failures` |
+| Exact-content, extra, missing restore, foreign Attempt | `test_exact_content_extra_rows_missing_restore_and_foreign_attempt` |
+| Wrong observation_count, extra diagnostic | `test_wrong_outcome_count_and_extra_diagnostic_fail_closed` |
+| Second Recipe coexistence | `test_second_recipe_coexists_for_the_same_capture` |
+| Populated current-schema upgrade | `test_populated_current_schema_then_target_metrics_derive` |
+| Fresh vs upgraded catalog | `test_fresh_and_upgraded_target_metrics_catalog_match` |
+| Same-named decoy constraints | `test_same_named_decoy_does_not_suppress_target_constraints` |
+| Two-database full-column equivalence | `test_two_databases_are_logically_equivalent` |
+| Fixture derive skip | `test_fixture_derive_skips_target_metrics_and_target_metrics_skips_fixture` |
+
+### Validation
+
+Targeted: `uv run pytest -q tests/test_dataforseo_ai_optimization_target_metrics_derive.py` — 28 passed in 15.43s (later 28+1 persist path in the combined 29-pass run).
+
+Final exact-tree:
+
+```
+uv run pytest -q
+1192 passed, 1 skipped, 1 warning in 309.52s
+```
+
+Warning: Starlette/`httpx` TestClient deprecation from
+`.venv/lib/python3.12/site-packages/fastapi/testclient.py`, not this ticket.
+
+```
+uv run ruff check .
+All checks passed!
+```
+
+```
+uv run mypy
+Success: no issues found in 62 source files
+```
+
+Leftover `observatory-ce05-*` containers: none checked as none were created.
+
+### Real-PostgreSQL proofs
+
+- Frozen IR-to-row projection of every explicit column on all three AI-11 relations.
+- Catalog-driven two-database `SELECT` of every new column.
+- Populated PRE_AI11 upgrade preserves fixture, Keyword Overview, Organic, and Search Mentions rows, then derives 11 Target Metrics envelopes.
+- Complete-set: exact rerun, missing source-domain restore, planted extra envelope, content conflict, foreign-Attempt Outcome, corrupted `observation_count`, planted diagnostic.
+- Second Recipe coexistence on the same Capture.
+- Production two-Attempt store: persisted subject is Capture-cited Attempt A.
+- Integrity failures for validator DocumentError, non-Mapping parameters, adapter mismatch, and damaged body: no Capture-stage rows.
+
+### Candid technical assessment
+
+**Strongest proof:** frozen 11 recomputed as `1 + len(sources_domain)` plus IR-to-row projection of grouping context metrics, field states, and source-domain lexical indexes; grouping-key mismatch parses as AI-10 `observation_admitted` IR and becomes `reconciliation_failed` with zero context; sibling Attempt B cannot become production authority.
+
+**Weakest assumption:** complete-set typed-detail compare is still identity-set plus count, with content equality only in `_write_closed_row` (same PF-12/AI-05 shape). Two-database snapshot uses catalog column order rather than `SELECT *` system columns. Duplicate source-domain identity never occurs in the parser, so plan-level same-identity conflict is defense in depth. Validator/non-Mapping/adapter mismatch proofs monkeypatch `read_attempt` after a real commit because constructors cannot emit those documents.
+
+**Possible false greens:**
+
+- Isolation of AI-10 parser still hashes module source for `provider_recipe`; that is why Recipe is not in the parser module.
+- `socket.create_connection` guard does not prove all DNS absence.
+- Reorder proof compares per-identity index maps, not `range(n)` alone.
+- Echo/path persist test mutates IR-visible echo while Attempt parameters stay closed; it does not prove a live provider would emit that pair.
+
+**Remaining caller-controlled influence:**
+
+- `plan_target_metrics_capture` still accepts a Mapping; it is the test/planning seam, not production. Production `derive_target_metrics` revalidates the Capture-cited Attempt through `validate_target_metrics_http_parameters`.
+- `type(store) is EvidenceStore` still allows monkeypatching instance methods in-process.
+- `_exchange`-style transport influence is out of this ticket.
+
+**Architecture drift / coupling:**
+
+- Fourth surface-local copy of `_write_closed_row` / `_assert_complete_set` / `_write_outcome`.
+- Kind strings duplicated in parser constants and `migrate.py`, matching Organic/Mentions.
+- Small reuse: `Field` / `ParseClassification`, `validate_target_metrics_http_parameters`, generic envelopes.
+- No shared writer kernel. No JSONB/EAV/occurrence tables. No parser admission change.
+
+**Parser/provider traps handled:**
+
+- `ParseClassification.ADMITTED` is not the repository Outcome.
+- Empty `items` is not Search Mentions admitted-empty.
+- Grouping restatements are context, not Observation kinds.
+- Source-domain overlap is not a partition.
+- Limit equality/above is not truncation.
+- `provider_array_index` is lexical content with Recipe-scoped UNIQUE, not identity.
+- Error-path `result_count` is not topology.
+
+**Deliberately duplicated:** writer/complete-set cluster; closed Recipe document construction; context dict rebuilt in tests from parser IR rather than from the planner.
+
+**Fourth-writer extraction:** the AI-05 trigger has fired. Extraction still looks **dangerous**, not safe. This copy has no occurrence relations, no `observation_admitted_empty`, grouping-as-context columns, grouping-key reconciliation after parse, and production parameter revalidation that Search Mentions derive still lacks. A generic kernel would leak those differences or paper over them.
+
+**Closure blockers:** none known. Residual: Recipe is in the derive module rather than the parser module, forced by the AI-10 source guard and the AI-10-test allowlist exclusion.
+
+**Deferred:** AI-12 selection/read API; Steward design question on writer extraction; nonempty optional families; ChatGPT/other platforms; F13; AGENTS.md entrypoint listing.
+
+**Later reuse:** production verify-and-revalidate chain; `PRE_*_SCHEMA_STATEMENTS` layering; two-kind envelope plus rich context; catalog-driven two-database projection; field-state/count CHECKs.
+
+**Remain duplicated / provider-native:** Target Metrics `source_domain` vs Search Mentions structured source URL; TM `ai_search_volume` vs Keyword Overview / Search Mentions volumes; grouping restatements vs total.
+
+### Coworker/strategy assessment
+
+**Verified Evidence:** one Google Capture, 1775 bytes, digest above. Total 3061 mentions / 2336840 AI search volume. Ten unique source-domain rows whose mention sum 4415 and volume sum 3187610 exceed total. Location/language/platform each restated 3061 / 2336840. Optional families present-empty. `items=[]`.
+
+**Provider claimed contract:** grouping row shape `key/mentions/ai_search_volume`; `internal_list_limit` 1..10; documented `items=null` vs real `items=[]`.
+
+**Synthetic proof:** echo/path mismatch, grouping-key mismatch, value ≠ total, below/above limit, zeros, empty identity, I-JSON overflow, optional/items field states, nonempty optionals, provider error with strange `result_count`.
+
+**Useful later (downstream):** keyword-level AI mention and AI-search-volume history for this closed Google/US/English/answer/word-match request; presence of a raw domain in the returned histogram; change of those facts across later Captures.
+
+**Not safely inferable:** rank/sort/tie-break; share or partition of total; truncation or completeness; location/language/platform effects; ChatGPT behavior; Data Period or Provider Update Time; traffic or a universal visibility score; brand/entity/Page identity; equivalence to Search Mentions sources.
+
+**Schema help/harm:** two fact tables plus a rich context row give AI-12 an honest grain. Storing grouping metrics as context keeps disagreement recoverable without teaching a false “metrics by location” Observation surface. `provider_array_index` UNIQUE lets later analysis test order stability without calling it rank. Awkwardness: 15 grouping context columns on one row is wide but matches singleton Recipe v1; a second multi-location Recipe would need different relations rather than stretching these CHECKs into array constants.
+
+**Recommendation, not implemented:** keep location/language/platform as context until a probe shows they are not restatements of total.
+
+### Bounded question for the Steward
+
+Should a later bounded ticket relax the AI-10 parser-module `provider_recipe` source guard so Recipe bytes can live next to the kind constants, or should Recipe remain in the derive module as the durable seam?
+
+### Confirmation
+
+No provider, DNS, credential, paid-gate, operator-Evidence-root, or public-network call. No AI-12/API/selection/strategy/F13/shared-kernel work. No Evidence mutation. No amend. No push. Status is `review`.

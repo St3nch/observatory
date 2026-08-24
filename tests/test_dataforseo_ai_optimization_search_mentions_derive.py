@@ -47,8 +47,8 @@ from observatory.derive import DEFAULT_VERSION, DerivationError, derive
 from observatory.evidence_store import create_store
 from observatory.migrate import (
     PRE_AI05_SCHEMA_STATEMENTS,
+    PRE_AI11_SCHEMA_STATEMENTS,
     PRE_PF12_SCHEMA_STATEMENTS,
-    SCHEMA_STATEMENTS,
     WIDEN_IJSON_COLUMNS_SQL,
     apply_migrations,
     apply_schema,
@@ -1623,10 +1623,11 @@ def test_populated_pf15_schema_then_mentions_derive(
     assert "search_mentions_" not in joined_pre
     mentions_statements = [
         statement
-        for statement in SCHEMA_STATEMENTS
+        for statement in PRE_AI11_SCHEMA_STATEMENTS
         if statement not in PRE_AI05_SCHEMA_STATEMENTS
     ]
     assert len(mentions_statements) == 7
+    assert "target_metrics_" not in "\n".join(PRE_AI11_SCHEMA_STATEMENTS)
     assert any("search_mentions_items" in item for item in mentions_statements)
     assert any("search_mentions_result_context" in item for item in mentions_statements)
     assert len(PRE_AI05_SCHEMA_STATEMENTS) - len(PRE_PF12_SCHEMA_STATEMENTS) == 10
