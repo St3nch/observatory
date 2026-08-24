@@ -387,3 +387,156 @@ No parser, conformance fixture from provider testimony, Recipe, Derivation, Post
 schema, API route, ChatGPT branch, domain target, Historical, second list-limit, generic
 framework, other ticket, or authority document except this ticket's implementer fields.
 No amend. No push.
+
+## Remediation report
+
+**Parent:** `78f4db32c6d492e88ef305578432563ebb90785d`
+**Child:** this remediation commit
+**Status:** `review` (unchanged)
+**AI-08 only:** yes. Nothing pushed. No amend.
+
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### Changed-path allowlist
+
+- `src/observatory/dataforseo_ai_optimization_target_metrics_paid_probe.py`
+- `tests/test_dataforseo_ai_optimization_target_metrics_paid_probe.py`
+- this ticket (remediation report only; Status remains `review`)
+
+### Bypass to proving-test map
+
+| Bypass | Proof |
+|---|---|
+| `object.__setattr__` replaces `request_body` on a genuinely issued capability | `test_issued_request_body_replacement_cannot_transport`; first block of `test_pre_send_verifies_committed_attempt_and_request_body` |
+| `object.__setattr__` replaces `document` (and matching body) with a valid-looking Target Metrics Attempt | `test_issued_document_replacement_cannot_transport` (`validate_attempt` on the replacement) |
+| `object.__setattr__(_used, False)` after one successful exchange | `test_closure_owned_replay_protection_ignores_used_attribute` |
+| Committed Evidence body tamper (pool object with bundle `request.body` left original; bundle `request.body` tamper) | `test_pre_send_verifies_committed_attempt_and_request_body` |
+| Unchanged issued capability still one exchange | last block of `test_pre_send_verifies_committed_attempt_and_request_body` |
+
+Ordinary `__setattr__` rejection remains in `test_forged_copied_mutated_and_replayed_capability_cannot_transport` and is not the new proof.
+
+### Closure-owned issuance and consumption
+
+`_build_transport_gate` keeps a process-local `issued: list[_Issuance]`. Each record binds:
+
+- capability object identity (`record.capability is attempt`);
+- the concrete `EvidenceStore` instance that committed;
+- `attempt_id`;
+- `document_preimage` (`canonical_json` of the verified read-back Attempt);
+- `request_body` bytes copied from the committed bundle;
+- `consumed: bool`.
+
+Caller-visible `attempt_id` / `document` / `request_body` / `_used` remain on the capability for inspect/capture/outcome surfaces. They are not transport authority. `_exchange` never reads `_used`.
+
+On `_exchange`: require `type(attempt) is _VerifiedAttempt` and `record.capability is attempt`; if `record.consumed`, raise the existing one-exchange `StoreError`; set `record.consumed = True` (and `_used=True` only as a non-authoritative mirror) **before** field comparison, Evidence revalidation, or `perform_bounded_http_exchange`. Resetting `_used` cannot replay.
+
+### Pre-send revalidation sequence
+
+Immediately before `perform_bounded_http_exchange`:
+
+1. exact private type + exact issued object identity;
+2. consume the closure record;
+3. reject any difference between caller-visible `attempt_id`, JCS(`document`), and `request_body` vs the closure record;
+4. `store.read_attempt(attempt_id)` (D5 verify-on-read) on the bound concrete store;
+5. `store.verify_attempt_directory(bundle)` on the normative path (no weaker parallel verifier);
+6. exact canonical Attempt equality to the issuance preimage and identity `content_digest == attempt_id`;
+7. re-read bundle `request.body` and require byte equality with the closure-owned body;
+8. `validate_target_metrics_http_parameters` on the verified parameters, recompute singleton-task JCS, require equality with stored and closure-owned bytes;
+9. `_require_target_metrics_target` on the verified store document (adapter, version, provider, policy, production target, headers, parameters, 200000 ceiling);
+10. send `bytes(record.request_body)` only.
+
+### Request / handler accounting
+
+| Case | Handler calls | Bytes that can reach the handler |
+|---|---|---|
+| Issued `request_body` replacement | 0 | none |
+| Issued `document` (+ matching body) replacement | 0 | none |
+| Successful exchange then `_used=False` replay | 1 | original `TARGET_METRICS_REQUEST_BODY` once |
+| Pool-object Evidence tamper (bundle body unchanged) | 0 | none |
+| Bundle `request.body` Evidence tamper | 0 | none |
+| Unchanged issued capability | 1 | original `TARGET_METRICS_REQUEST_BODY` once |
+
+### Published vectors
+
+Unchanged. `test_independent_literal_vectors`, `test_closed_request_vector_and_attempt_identity`, and `test_existing_adapter_identities_unchanged` still pin:
+
+- request SHA-256 `4414f03561a728f03a6b0e859bcb210f8876968c5e2b7c2e2cc5eeb1d209e170`
+- Attempt `1d2716ea2a6888c3c7b7aeb0d0ec4f9b5b3f84d4e8780f1ae270d306f89c907d`
+- complete Capture `36ba18e80cce117709c56fab7e7b1df8256defd87390d43a7550c1faa8681e84`
+- prior sandbox / KO / Organic / Search Mentions Attempt IDs byte-identical
+
+Adapter token, production URL, closed parameters, policy, timeouts, and 8 MiB ceiling are unchanged.
+
+### Code-review
+
+**Standards:** 0 hard / 4 judgement. Worst: `_require_target_metrics_target` remains a second closed-contract walk on the send path (pre-existing; this remediation also runs `validate_target_metrics_http_parameters`). Nested lists in `_freeze_maps` stay mutable; canonical compare now fails closed on that mutation.
+
+**Spec:** 1 partial (resolved) / 0 creep / 0 wrong. Worst was that Evidence tamper only overwrote bundle `request.body`, which a weaker disk-vs-closure compare would also refuse. The test now tampers the pool object while leaving bundle `request.body` original, so a verifier that skipped `read_attempt` / `verify_attempt_directory` would send.
+
+### Strongest / weakest remaining tests
+
+Strongest: pool-object tamper with original bundle body; issued-object `object.__setattr__` body and valid-looking document replacement; closure-owned replay after `_used=False`.
+
+Weakest: send/header-phase no-response still ConnectError-only (pre-existing); inspect unknown-version still unplanted; capability `_used` is still written and still present on `__slots__`, which can mislead a later reader even though exchange ignores it.
+
+### Remaining caller-controlled influence (judgement)
+
+These cannot change the sent request body through capability attributes, but they remain:
+
+- `_exchange` still takes `client`, `endpoint`, and `max_response_body_bytes` (approved test seam). A holder can still deliver the **verified** body to loopback/mock, not a substitute body.
+- `_commit_target_metrics_capture` and the outcome `attempt_id` still read capability attributes after transport. Post-exchange `object.__setattr__` on `document` / `attempt_id` can still affect Capture construction and the returned id, not the HTTP body.
+- The bound `EvidenceStore` instance is mutable (`root`, monkeypatched `read_attempt` / `verify_attempt_directory`). Preimage + body equality still fail closed unless the attacker forges a store API that returns the original committed bytes (in which case the sent body is still the original).
+- `_Issuance` lives in `_exchange.__closure__`. A same-process caller can reach the list and flip `consumed` or replace `request_body`. Single-process closure state is accepted for AI-08; this is not F7.
+
+### Older adapter gates
+
+The same capability-attribute authority (`request_body`, `document`, `_used`) and `object.__setattr__` hole exist in:
+
+- `src/observatory/dataforseo_sandbox.py`
+- `src/observatory/dataforseo_paid_probe.py`
+- `src/observatory/dataforseo_google_organic_paid_probe.py`
+- `src/observatory/dataforseo_ai_optimization_search_mentions_paid_probe.py`
+
+Not remediated here. Recommended follow-up: four separately bounded tickets, one per remaining gate, each copying this proof list. Smallest first boundary: Search Mentions (nearest sibling). Do not introduce a shared capability framework in those tickets.
+
+### Exact unproven limits
+
+- No live provider call; real envelope/billing remain AI-09.
+- F6 / F7 / power-loss / concurrent writers unproved. Closure-owned `consumed` is single-process only.
+- TOCTOU between `verify_attempt_directory` and the subsequent `request.body` read is unproved.
+- `argparse type=int` CLI vs `type is int` on the Python function, as before.
+- AGENTS.md still does not list this module entrypoint (Steward-owned).
+
+### Command evidence
+
+Final remediation bytes, then:
+
+```
+uv run mypy
+```
+
+exit 0, no issues in 58 source files.
+
+```
+uv run ruff check .
+```
+
+exit 0, all checks passed.
+
+```
+uv run pytest -q
+```
+
+exit 0, **1113 passed**, **1 skipped**, 1 Starlette TestClient deprecation warning, 290.35s.
+
+### Confirmation
+
+Zero DataForSEO / sandbox / DNS / paid-host / account / public-network requests.
+Zero real credentials. Zero live Evidence. Zero credit spend.
+No other production module, `capture_event.py`, other adapter gate, authority document, or other ticket.
+No amend. No push.

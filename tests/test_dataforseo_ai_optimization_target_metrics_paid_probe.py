@@ -832,6 +832,221 @@ def test_forged_copied_mutated_and_replayed_capability_cannot_transport(
         client.close()
 
 
+def _replacement_target_metrics_body() -> bytes:
+    return target_metrics_request_body_bytes(
+        closed_target_metrics_parameters(keyword="forged keyword")
+    )
+
+
+def _replacement_target_metrics_document() -> dict[str, object]:
+    return target_metrics_http_attempt_document(
+        parameters=closed_target_metrics_parameters(keyword="forged keyword"),
+        attempt_nonce=NONCE,
+        authorized_at=AUTHORIZED_AT,
+        observatory_version=SOFTWARE,
+    )
+
+
+def test_issued_request_body_replacement_cannot_transport(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "issued-body")
+    issued = _issue_verified_attempt(
+        store,
+        _target_metrics_attempt(),
+        TARGET_METRICS_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    replacement = _replacement_target_metrics_body()
+    assert replacement != TARGET_METRICS_REQUEST_BODY
+    object.__setattr__(issued, "request_body", replacement)
+    calls: list[bytes] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.content)
+        raise AssertionError("handler must not run")
+
+    client = _mock_client(handler)
+    try:
+        with pytest.raises(StoreError):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert calls == []
+
+
+def test_issued_document_replacement_cannot_transport(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "issued-doc")
+    issued = _issue_verified_attempt(
+        store,
+        _target_metrics_attempt(),
+        TARGET_METRICS_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    replacement_document = _replacement_target_metrics_document()
+    replacement_body = _replacement_target_metrics_body()
+    assert replacement_document != _target_metrics_attempt()
+    validate_attempt(replacement_document)
+    object.__setattr__(issued, "document", replacement_document)
+    object.__setattr__(issued, "request_body", replacement_body)
+    calls: list[bytes] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.content)
+        raise AssertionError("handler must not run")
+
+    client = _mock_client(handler)
+    try:
+        with pytest.raises(StoreError):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert calls == []
+
+
+def test_closure_owned_replay_protection_ignores_used_attribute(
+    tmp_path: Path,
+) -> None:
+    store = create_store(tmp_path / "replay-used")
+    issued = _issue_verified_attempt(
+        store,
+        _target_metrics_attempt(),
+        TARGET_METRICS_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    calls: list[bytes] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.content)
+        return _streamed_response(200, TARGET_METRICS_RESPONSE_BODY)
+
+    client = _mock_client(handler)
+    try:
+        first = _exchange(issued, _credentials(), client=client)
+        object.__setattr__(issued, "_used", False)
+        with pytest.raises(StoreError, match="one-exchange"):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert first.transport_state == "response_complete"
+    assert calls == [TARGET_METRICS_REQUEST_BODY]
+
+
+def test_pre_send_verifies_committed_attempt_and_request_body(tmp_path: Path) -> None:
+    replacement = _replacement_target_metrics_body()
+    body_store = create_store(tmp_path / "pre-send-body")
+    body_issued = _issue_verified_attempt(
+        body_store,
+        _target_metrics_attempt(),
+        TARGET_METRICS_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    object.__setattr__(body_issued, "request_body", replacement)
+    body_calls: list[bytes] = []
+
+    def body_handler(request: httpx.Request) -> httpx.Response:
+        body_calls.append(request.content)
+        raise AssertionError("handler must not run")
+
+    body_client = _mock_client(body_handler)
+    try:
+        with pytest.raises(StoreError):
+            _exchange(body_issued, _credentials(), client=body_client)
+    finally:
+        body_client.close()
+    assert body_calls == []
+
+    evidence_store = create_store(tmp_path / "pre-send-evidence")
+    evidence_issued = _issue_verified_attempt(
+        evidence_store,
+        _target_metrics_attempt(),
+        TARGET_METRICS_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    request = evidence_issued.document["request"]
+    assert isinstance(request, Mapping)
+    body_state = request["body"]
+    assert isinstance(body_state, Mapping)
+    body_ref = body_state["body"]
+    assert isinstance(body_ref, Mapping)
+    digest = body_ref["sha256"]
+    assert isinstance(digest, str)
+    bundle = evidence_store.attempt_path(
+        str(evidence_issued.document["request_fingerprint"]),
+        str(evidence_issued.document["authorized_at"]),
+        evidence_issued.attempt_id,
+    )
+    pool = evidence_store.object_path(digest)
+    bundle_body = bundle / "request.body"
+    assert pool.is_file()
+    assert bundle_body.read_bytes() == TARGET_METRICS_REQUEST_BODY
+    assert pool.read_bytes() == TARGET_METRICS_REQUEST_BODY
+    assert pool.stat().st_ino != bundle_body.stat().st_ino
+    pool.write_bytes(replacement)
+    assert bundle_body.read_bytes() == TARGET_METRICS_REQUEST_BODY
+    evidence_calls: list[bytes] = []
+
+    def evidence_handler(request: httpx.Request) -> httpx.Response:
+        evidence_calls.append(request.content)
+        raise AssertionError("handler must not run")
+
+    evidence_client = _mock_client(evidence_handler)
+    try:
+        with pytest.raises(StoreError):
+            _exchange(evidence_issued, _credentials(), client=evidence_client)
+    finally:
+        evidence_client.close()
+    assert evidence_calls == []
+
+    bundle_store = create_store(tmp_path / "pre-send-bundle")
+    bundle_issued = _issue_verified_attempt(
+        bundle_store,
+        _target_metrics_attempt(),
+        TARGET_METRICS_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    bundle_only = bundle_store.attempt_path(
+        str(bundle_issued.document["request_fingerprint"]),
+        str(bundle_issued.document["authorized_at"]),
+        bundle_issued.attempt_id,
+    )
+    (bundle_only / "request.body").write_bytes(replacement)
+    bundle_calls: list[bytes] = []
+
+    def bundle_handler(request: httpx.Request) -> httpx.Response:
+        bundle_calls.append(request.content)
+        raise AssertionError("handler must not run")
+
+    bundle_client = _mock_client(bundle_handler)
+    try:
+        with pytest.raises(StoreError):
+            _exchange(bundle_issued, _credentials(), client=bundle_client)
+    finally:
+        bundle_client.close()
+    assert bundle_calls == []
+
+    clean_store = create_store(tmp_path / "pre-send-clean")
+    clean_issued = _issue_verified_attempt(
+        clean_store,
+        _target_metrics_attempt(),
+        TARGET_METRICS_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    clean_calls: list[bytes] = []
+
+    def clean_handler(request: httpx.Request) -> httpx.Response:
+        clean_calls.append(request.content)
+        return _streamed_response(200, TARGET_METRICS_RESPONSE_BODY)
+
+    clean_client = _mock_client(clean_handler)
+    try:
+        outcome = _exchange(clean_issued, _credentials(), client=clean_client)
+        with pytest.raises(StoreError, match="one-exchange"):
+            _exchange(clean_issued, _credentials(), client=clean_client)
+    finally:
+        clean_client.close()
+    assert outcome.transport_state == "response_complete"
+    assert clean_calls == [TARGET_METRICS_REQUEST_BODY]
+
+
 def test_cross_adapter_capabilities_are_isolated(tmp_path: Path) -> None:
     metrics_store = create_store(tmp_path / "metrics")
     metrics_cap = _issue_verified_attempt(
