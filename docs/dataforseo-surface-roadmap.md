@@ -386,10 +386,32 @@ API behavior; [GPT] independently verifies and reconciles the findings; [CHAZ] d
 should change; only then does the normal reviewed-ticket implementation loop begin. No step
 authorizes a provider call, spend, recurring acquisition, strategy state, or F5/F12 work.
 
-**Current checkpoint — 2026-08-24:** the initial code-informed discovery is complete and the
-onboarding/roadmap contract is recorded. The next action is the full read-only Keyword
-Overview strategy-consumer readiness review. No API remediation or provider exchange is yet
-authorized.
+### Provisional shared provider-consumer contract
+
+The completed Keyword Overview review establishes this provisional boundary:
+
+- surface-explicit Observation history contains admitted, subject-bound documents only;
+- a sibling Outcomes resource exposes all measurement classifications without pretending
+  failures are Observations;
+- a holdings resource exposes observed subjects and measurement inventory, not importance,
+  desired panels, cadence, or strategy;
+- every bounded list discloses scope, total matching, returned count, applied limit,
+  deterministic order, and whether more matching records exist;
+- per-adapter paths may share a lossless list envelope, while fact bodies and valid
+  admitted-empty semantics remain surface-specific;
+- subject-indexed failure inventory is not assumed to be API-only: Keyword Overview retains
+  failed subjects in verified Attempt Evidence, not current typed PostgreSQL rows.
+
+Whether failure-aware subject discovery uses a bounded Evidence scan or a rebuildable
+measurement-subject index remains open until Google Organic and Search Mentions are reviewed.
+No coverage row may be invented for a failure or zero-envelope Capture. Before recurring
+F12-scale acquisition, the chosen inventory path must be scalable and rebuildable. D14
+records the full provisional decision.
+
+**Current checkpoint — 2026-08-24:** Keyword Overview review and Steward reconciliation are
+complete. The next action is the full read-only Google Organic strategy-consumer readiness
+review, followed by Search Mentions. No API/schema remediation, provider exchange, or AI-12
+implementation is yet authorized.
 
 ## Dependency-based sequencing direction
 

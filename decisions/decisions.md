@@ -541,3 +541,58 @@ every available provider surface.
 **Clarifies:** D12 and deferred F3. F3 remains unfired for routine broad provider/surface
 rollout; individually authorized bounded adapters may proceed under D12 when their contract
 fits the accepted substrate and all other gates.
+
+## D14 — Provider consumer APIs separate admitted facts, measurement activity, and holdings
+
+**Status:** Provisional shared contract boundary. Google Organic and Search Mentions must be
+reviewed before shared implementation is authorized.
+
+**Decision:** A future connected strategy LLM remains an ordinary API consumer under D2 and
+D3. Provider-facing APIs use surface-explicit paths and may share a lossless list envelope,
+but they do not share one universal fact body or SEO metric model.
+
+Three consumer resources have distinct meanings:
+
+1. **Observation history** contains only admitted, subject-bound Observation documents under
+   one resolved Recipe. Its totals describe that admitted series, not all probes. Keyword
+   Overview history contains `observation_admitted` Captures; it must not promise
+   `observation_admitted_empty`, because a zero-envelope Keyword Overview Capture has no
+   subject-bound coverage document. Another surface may expose admitted-empty history only
+   when its Recipe preserves a valid subject-bearing result context.
+2. **Measurement Outcomes** expose Attempt- and Capture-stage classifications, including
+   unresolved activity, transport/provider failures, rejection, and admitted results, without
+   presenting failure material as Observations.
+3. **Holdings** expose subjects and measurement inventory that Observatory actually holds.
+   Holdings state no importance, priority, desired panel, recommendation, monitoring cadence,
+   or strategy-layer intent.
+
+Every bounded consumer list must disclose its scope, `total_matching`, `returned_count`,
+applied `limit`, deterministic `order`, and `has_more`. Multiple Captures prove multiple
+measurements, not an intentional monitoring program. Reads remain verify-on-read and fail
+closed with no partial fact payload when Evidence or rebuildable state disagrees.
+
+Subject identity for non-admitted activity must come from verified Evidence or a rebuildable
+index derived from it, not from invented coverage. Current Keyword Overview PostgreSQL rows
+do not retain requested keywords for failed or zero-envelope activity, so subject-filtered
+Outcome and holdings APIs are not merely JSON-envelope work. The choice between a bounded
+Evidence scan and a rebuildable measurement-subject index remains provisional until Google
+Organic and Search Mentions are reviewed. Before recurring F12-scale acquisition, any such
+inventory must have a scalable, rebuildable indexing boundary.
+
+**Why:** The first Keyword Overview consumer review found strong typed facts, field states,
+Recipe identity, time axes, and integrity behavior, but admitted-only subject lookup, silent
+list slicing, no discovery, and no failure inventory can mislead an API-only LLM about what
+was measured and whether a returned list is complete.
+
+**Cost:** The API gains several explicit resources instead of one convenient generic query.
+Failure-aware subject discovery may require a new rebuildable index. Each surface must define
+whether admitted-empty is a meaningful subject-bound document.
+
+**Rejected:** Treat `/history` as all measurement activity; return a bounded slice without
+cardinality disclosure; manufacture coverage rows for failures or empty Captures; overload
+Outcome with provider-specific subject arrays; expose direct database or Evidence access;
+encode panels, cadence, scoring, or recommendations in Observatory; or force unlike provider
+facts into one shared response body.
+
+**Implementation boundary:** This decision records the provisional contract only. It does
+not authorize API/schema work, provider calls, spending, F12 orchestration, or AI-12.
