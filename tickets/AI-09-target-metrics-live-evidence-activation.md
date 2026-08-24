@@ -1,12 +1,12 @@
 # AI-09 — Target Metrics Live one-shot Evidence activation
 
-**Status:** ready  
+**Status:** authorized  
 **Owner:** [CHAZ] operator / [GPT] Steward verification  
 **Blocked by:** AI-08 — Target Metrics Live paid-probe adapter (`done`)  
 **Approved by:** Project Steward  
 **Start commit:** `b5271d72cfa945b52d8c843c46fdd93b6de7bc8e`  
-**Product Owner direction:** [CHAZ] authorized AI-09 ticket creation on 2026-08-24;
-live-command authorization remains pending.
+**Product Owner direction:** [CHAZ] authorized AI-09 ticket creation and the exact
+one-shot live operation recorded below on 2026-08-24.
 
 ## Purpose
 
@@ -109,26 +109,35 @@ uv run python -m observatory.dataforseo_ai_optimization_target_metrics_paid_prob
   --authorize-max-micro-usd 200000
 ```
 
-This command is recorded but not authorized until [CHAZ] explicitly approves this exact
-adapter, keyword, Evidence root, acknowledgement ceiling, one process invocation, and at
-most one POST after seeing the synchronized ticket commit and preflight.
+This command is authorized only under the exact one-shot record below and becomes valid
+only from clean, synchronized `main` containing that durable record after every preflight
+passes.
 
 A nonzero exit, unresolved Attempt, missing Capture, `response_partial`, `no_response`,
 credential-echo refusal, provider error testimony, unexpected charge, or any other abnormal
 result is a hard stop. Do not retry and do not create a replacement Evidence root without a
 new Steward/[CHAZ] decision.
 
-## Steward one-shot authorization — pending
+## Steward one-shot authorization — 2026-08-24
 
-Before transport, this section must durably record [CHAZ]'s explicit authorization and the
-exact synchronized commit from which the command is allowed to run. The authorization must
-cover only:
+After reviewing the exact ticket and command at synchronized commit
+`c876c4678634246e6c4981bc24063225434e456f`, [CHAZ] explicitly authorized exactly one
+AI-09 paid operator invocation for:
 
-- the adapter and frozen inputs above;
-- the exact fresh Evidence root above;
-- the exact `200000` micro-USD acknowledgement;
+- adapter:
+  `dataforseo-ai-optimization-llm-mentions-target-metrics-live-paid-probe-v1`;
+- keyword: `generative engine optimization`;
+- exact Evidence root:
+  `$HOME/.local/share/observatory/ai09-target-metrics-generative-engine-optimization-2026-08-24`;
+- exact authorization acknowledgement: `200000` micro-USD;
 - one process invocation and at most one POST;
 - no retry, follow-up, replacement root, or second provider exchange.
+
+Authorization is valid only from a clean `main` containing this durable record and
+synchronized with `origin/main`, after every preflight below passes. The paid command is
+a hard stop after its first process invocation regardless of exit code or
+transport/provider outcome. A failed preflight consumes no authorization because the paid
+command has not begun; any invocation of the paid command consumes the authorization.
 
 ## Preflight required before the command
 
@@ -251,8 +260,8 @@ AI-09 authorizes none of those later steps.
 ## Hard boundaries
 
 - Operator activation ticket only; no `src/` or `tests/` edits.
-- No provider call until the pending authorization section is durably filled and [CHAZ]
-  explicitly approves the exact command.
+- No provider call unless the durable one-shot authorization record remains present and
+  every required preflight passes.
 - No retry, continuation, follow-up, second root, second list limit, ChatGPT branch, domain
   target, Multi-Target, Historical, Lite, top-list, catalog, account, balance, or User Data
   request.
