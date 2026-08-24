@@ -1,6 +1,6 @@
 # AI-09 — Target Metrics Live one-shot Evidence activation
 
-**Status:** review  
+**Status:** done  
 **Owner:** [CHAZ] operator / [GPT] Steward verification  
 **Blocked by:** AI-08 — Target Metrics Live paid-probe adapter (`done`)  
 **Approved by:** Project Steward  
@@ -324,8 +324,47 @@ Non-secret receipts were copied to the accepted off-host `receipts/` and
   or semantic/persistence identities. Those require bounded synthetic adversarial tests and
   later separately accepted tickets without another provider call.
 
-AI-09 now meets its technical and Evidence acceptance checks. It remains `review`, not
-`done`, pending explicit [CHAZ] authorization to close.
+At `df37692da4bff957027fc13659b7fe3085a6c754`, AI-09 met its technical and
+Evidence acceptance checks and remained `review` pending explicit [CHAZ] authorization
+to close. That authorization is recorded below.
+
+## Steward closure — 2026-08-24
+
+[CHAZ] explicitly authorized closure after reviewing the accepted live Evidence, payload
+assessment, F6 proof, and the challenged [GROK] strategy-oriented data review. The Steward
+independently reconciled that review against repository authority and accepts AI-09 as
+`done`.
+
+The review's durable implications for later separately accepted Target Metrics work are:
+
+- the returned aggregate testimony is useful as a source-attributed visibility baseline,
+  not as answer-level Evidence, a traffic forecast, a rank, or a universal visibility score;
+- reaching the requested `internal_list_limit` proves only count-equals-limit for this
+  Capture, not truncation or completeness;
+- the location, language, platform, and total aggregates are independent provider
+  structures; their equality in this body is observed testimony, not a rejection invariant;
+- a minimal future typed model should preserve one total aggregate and unique
+  source-domain aggregates, with request/result context and explicit field states; it
+  should not introduce a generic EAV dimension framework, domain occurrence semantics, or
+  array position as identity/rank;
+- provider array position may be retained lexically as `provider_array_index`, while
+  duplicate domain keys should fail closed rather than create occurrences;
+- a zero total remains a valid admitted Observation when the required total structure is
+  present; Target Metrics must not borrow Search Mentions' admitted-empty page semantics;
+- the present-empty optional arrays and `items=[]` are meaningful field states. Nonempty
+  brand/search-result shapes, documented `items=null`, alternate platforms, list limits,
+  and conflicting grouping values still require bounded synthetic proof and explicit later
+  Recipe decisions.
+
+These conclusions preserve the future strategy value of total visibility, source
+concentration, cross-surface overlap, trend, competitor, and citation-gap analysis while
+keeping all recommendations, scoring, and strategy outside Observatory. They authorize no
+parser, fixture promotion, Recipe, schema, Derivation, API, recurring acquisition, or
+provider call.
+
+This closure changes documentation only. No behavior-affecting change followed the accepted
+AI-08 test evidence or the verified AI-09 operator/F6 sequence, so the full suite was not
+repeated.
 
 ## Acceptance
 
