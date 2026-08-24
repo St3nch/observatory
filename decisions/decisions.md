@@ -671,6 +671,29 @@ is the shared history list envelope, then sibling Outcomes, then holdings. Searc
 Mentions-local typed/OpenAPI descriptions should build on the accepted shared envelope.
 This reconciliation authorizes none of that implementation.
 
+**Shared history-envelope question-resolution lock:** The first envelope ticket makes an
+additive change to the existing three `/v1` history routes. Existing provider, adapter,
+requested-subject, resolved-Recipe, and Observation-kind fields disclose list scope; no
+universal subject object or shared fact body is added.
+
+For the full matching admitted Capture series, each reader verifies Evidence and its complete
+surface-local PostgreSQL consistency before computing `total_matching`. Any disagreement,
+including outside the returned limit, remains HTTP 409 with no history envelope. The response
+then returns whole Capture documents in the existing deterministic
+`(request_started_at, capture_id)` order and adds `returned_count`, applied `limit`, echoed
+`order`, and `has_more`.
+
+`has_more` is disclosure only in this ticket. No outer offset or cursor is added; callers may
+raise `limit` only through the existing maximum of 100. A tail beyond 100 remains known but
+unavailable until a separately authorized outer-pagination ticket. Lists never become
+unbounded, and Search Mentions' inner provider token is unrelated and must not be followed.
+
+An empty 200 response means no matching admitted history under the query and resolved Recipe;
+it does not mean failed, never measured, or unmeasured. The shared ticket types the outer
+metadata for OpenAPI while Capture fact bodies remain surface-specific mappings. A small
+shared helper may own limit constants and envelope math; candidate selection, verification,
+projection, and admitted-empty behavior remain surface-local.
+
 **Why:** The first Keyword Overview consumer review found strong typed facts, field states,
 Recipe identity, time axes, and integrity behavior, but admitted-only subject lookup, silent
 list slicing, no discovery, and no failure inventory can mislead an API-only LLM about what

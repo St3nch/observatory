@@ -438,10 +438,12 @@ No Recipe, identity, text-exposure, pagination, or provider-acquisition change f
 the review.
 
 **Current checkpoint — 2026-08-24:** Keyword Overview, Google Organic, and Search Mentions
-consumer reviews are reconciled under accepted D14. The next action is the question-resolution
-gate for the shared outer history-list envelope before a provisional implementation ticket is
-drafted. Shared history-envelope, Outcomes, holdings, OpenAPI/schema remediation, pagination
-or another provider exchange, F12/F13 activity, and AI-12 implementation remain unauthorized.
+consumer reviews are reconciled under accepted D14. The shared outer history-list-envelope
+question gate is resolved: the first ticket adds truthful metadata to the existing bounded
+`/v1` lists but no outer cursor, offset, unbounded response, or inner provider continuation.
+API-01 is the provisional ticket for mandatory GROK review before implementation authority.
+Shared-envelope implementation, Outcomes, holdings, further OpenAPI/schema remediation,
+pagination or another provider exchange, F12/F13 activity, and AI-12 remain unauthorized.
 
 ## Dependency-based sequencing direction
 
