@@ -424,11 +424,20 @@ serving `observation_count` must prove envelope cardinality. The closed Organic 
 interpretation limits must later be represented by typed surface/OpenAPI contracts without
 adding per-Capture omission arrays.
 
+Search Mentions' question-resolution gate fixes one current Capture as a bounded first-page
+prefix, not a complete corpus or representative sample. Provider total/returned counts and
+the opaque continuation token remain truncation testimony and do not authorize another
+exchange. Exact Search Mentions question/answer/source text remains intentionally typed and
+API-visible; this surface-specific posture does not change Organic's Evidence-only prose.
+Its subject-bearing admitted-empty history remains valid, with result-context counts
+distinguishing an empty corpus from an empty page. The outer Capture list still needs D14's
+shared list envelope; inner corpus/paging state remains surface-specific.
+
 **Current checkpoint — 2026-08-24:** Keyword Overview and Google Organic are reconciled under
-D14, and their Product/technical questions are resolved. The next action is the Search
-Mentions question-resolution gate before its major strategy-consumer review. Shared
-history-envelope, Outcomes, holdings, OpenAPI/schema remediation, provider exchange, and
-AI-12 implementation remain unauthorized.
+D14. Search Mentions' Product questions and bounded technical consequences are locked; its
+major read-only strategy-consumer review is next. Shared history-envelope, Outcomes,
+holdings, OpenAPI/schema remediation, pagination or another provider exchange, F12/F13
+activity, and AI-12 implementation remain unauthorized.
 
 ## Dependency-based sequencing direction
 

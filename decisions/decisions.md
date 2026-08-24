@@ -544,8 +544,9 @@ fits the accepted substrate and all other gates.
 
 ## D14 — Provider consumer APIs separate admitted facts, measurement activity, and holdings
 
-**Status:** Provisional shared contract boundary. Google Organic and Search Mentions must be
-reviewed before shared implementation is authorized.
+**Status:** Provisional shared contract boundary. Google Organic is reconciled. Search
+Mentions' question-resolution gate is complete; its major review remains required before
+shared implementation is authorized.
 
 **Decision:** A future connected strategy LLM remains an ordinary API consumer under D2 and
 D3. Provider-facing APIs use surface-explicit paths and may share a lossless list envelope,
@@ -607,6 +608,37 @@ limits:
   subordinate-occurrence consistency remains the admitted fact-document/history boundary.
   The current Attempt audit retains PF-14's accepted narrower behavior until a later Outcomes
   ticket explicitly hardens it.
+
+**Search Mentions question-resolution lock:** The code-first gate fixes these Product and
+Steward boundaries for the major review:
+
+- one current Search Mentions Capture is a bounded first-page prefix under the closed
+  one-exchange request: offset 0, limit 5, answer scope, and word match.
+  `total_count`, `items_count`, and the opaque `search_after_token` are provider
+  corpus/truncation testimony, not a continuation queue or authority for another exchange.
+  The five returned rows are not a representative sample; unretrieved rows are unknown, not
+  unmentioned or absent. Pagination, token-following, another exchange, and recurring F12
+  acquisition require separate authorization and provenance design;
+- exact Search Mentions question text, Markdown answer, source snippet, and source Markdown
+  field state/value remain intentionally typed and API-visible under the accepted
+  surface-specific Recipe and read contract. This does not generalize to Google Organic,
+  whose prose remains Evidence-only, or authorize text exposure for another surface;
+- `observation_admitted_empty` remains a valid subject-bearing Search Mentions history
+  document because `search_mentions_result_context` is retained. `total_count=0`
+  distinguishes an empty provider corpus from a zero-item page of a nonempty corpus; neither
+  state means failure, never measured, or complete absence beyond the closed request;
+- Search Mention item identity remains requested keyword, model name, and exact question.
+  Source identity additionally includes exact URL. Item indexes and source ranks preserve
+  occurrences and ordering; they do not create cross-Capture or cross-surface semantic
+  identity;
+- D14's future shared list envelope applies to the outer Capture-history list. Inner provider
+  paging and truncation remain surface-specific result context. Failure subjects remain
+  available only through verified Evidence until a rebuildable inventory boundary exists;
+  no failure coverage row may be invented.
+
+This lock authorizes no pagination, provider call, Recipe change, API/schema remediation,
+F12 work, or F13-triggering acquisition-gate reuse. F13 still applies before the next live
+Search Mentions invocation, substantive gate modification, or reuse.
 
 After Search Mentions review, the intended implementation sequence is the shared history
 list envelope, then sibling Outcomes, then holdings. This reconciliation authorizes none of
