@@ -1,6 +1,6 @@
 # AI-10 — Target Metrics strict parser and AI-09 conformance fixture
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** AI-09 — Target Metrics Live one-shot Evidence activation (`done`)  
 **Approved by:** Project Steward  
@@ -555,4 +555,68 @@ the repository Outcome for a stated zero total.
 No amend, no push, no provider/API-host/DNS/network call, no credentials, no
 spend, no Evidence mutation, no Recipe/Outcome/Observation/PostgreSQL/
 derivation/selection/API/history/projection/scoring/strategy work.
+
+## Steward review and closure — 2026-08-24
+
+[CHAZ] explicitly authorized closure after the implementation report, strategic addendum,
+direct technical follow-up, independent Steward review, and exact-HEAD operator verification.
+The Steward accepts AI-10 as `done`.
+
+Accepted commits:
+
+- final reviewed ticket / implementation parent:
+  `be6dd0b99272aadf5582da624709f2f79e5977f5`;
+- implementation:
+  `60fa11dc10f53c536c6b73e8dcef9bf426be15e2`.
+
+The exact parent/child comparison changed only the four allowed paths. The Steward read the
+complete production parser and test file, verified the committed fixture independently as
+`1775` bytes without a trailing newline and SHA-256
+`7b6974704f73cff9687986a83ab14ba8ec942ccdbfde359ec7e8fde6bea8eee2`,
+and found no wrong implementation or required remediation.
+
+[CHAZ] returned exact-HEAD operator evidence on the implementation commit:
+
+- targeted Target Metrics parser suite: `51 passed`;
+- full suite: `1164 passed, 1 skipped, 1 warning`;
+- Ruff: passed;
+- mypy: passed;
+- final tree: clean on the same commit.
+
+The warning is the known Starlette/`httpx` TestClient deprecation. No provider call,
+credential use, spend, Evidence mutation, PostgreSQL mutation, amend, or push occurred in
+AI-10.
+
+The challenged implementation review and direct follow-up established these mandatory
+AI-11 guards:
+
+1. Repository Outcome is created only by the accepted Recipe after verified transport,
+   parse, reconciliation, and admission. Never assign it from
+   `TargetMetricsIR.outcome.value`.
+2. Do not copy Search Mentions' zero-envelope →
+   `observation_admitted_empty` rule. Target Metrics success is aggregate testimony; a
+   required stated total, including zeros, is not an empty page.
+3. Production derivation must verify the Capture and its exact cited Attempt, require the
+   Target Metrics adapter contract, revalidate the committed closed parameters, and pass
+   only those parameters and the verified body to the parser. Never construct provenance
+   context from provider echo, operator flags, an API query, an arbitrary Mapping, or
+   another Attempt.
+4. Never admit Observations from `ParseClassification.PROVIDER_ERROR`. Error-path
+   `result_count` remains unreconciled provider testimony, not valid result topology; a
+   later materially different error shape requires new bounded Evidence/Recipe review.
+5. Grouping-key disagreement with the verified Attempt remains parser-visible but receives
+   one explicit fail-closed, diagnostic, or admission rule in AI-11. Parser visibility is
+   not semantic identity.
+6. Nonempty optional grouping families, grouping/total disagreement, field-state
+   persistence, Observation kinds/identities, and whether location/language/platform are
+   facts or context remain AI-11 decisions. The parser does not settle them.
+
+Accepted explicit limits remain: the one Google body proves existence rather than
+invariance; it proves no truncation, completeness, stable order, partition, cross-platform
+behavior, time series, provider Data Period, provider update clock, cross-surface identity,
+or billing formula. Claimed nonempty optional rows and `items=null` remain synthetic parser
+coverage, not live Google testimony.
+
+This closure changes documentation and workflow authority only. No behavior-affecting change
+followed the exact-HEAD test evidence, so the full suite was not repeated.
 

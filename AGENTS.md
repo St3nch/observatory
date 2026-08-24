@@ -160,10 +160,15 @@ Main chain:
 4. **Steward acceptance** of the durable spec
 5. `to-tickets` → breakdown proposed to the Steward, who files the result under `tickets/`.
    Only the Steward writes `tickets/`, except for an implementer's own assigned ticket.
-6. **Steward acceptance** of the ticket set
-7. `implement` → `tdd` → `code-review` → remediation
-8. implement sets ticket status to `review` and records evidence; never `done`
-9. `handoff` as needed; **Steward closure** sets `done`
+6. **Steward provisional acceptance** of one bounded ticket for technical review
+7. **[GROK] read-only pre-implementation ticket review** → false premises, missing proofs,
+   overconstraints, architecture/provider traps, and ready-or-reconcile recommendation;
+   no implementation or repository mutation
+8. **Steward reconciliation and final ticket acceptance** → commit the reviewed ticket and
+   issue the exact implementation start commit
+9. `implement` → `tdd` → `code-review` → remediation
+10. implement sets ticket status to `review` and records evidence; never `done`
+11. `handoff` as needed; **Steward closure** sets `done`
 
 Optional and situational: `prototype` (throwaway design question), `wayfinder`
 (multi-session decision fog in `docs-temp/wayfinder/` only).
@@ -186,22 +191,37 @@ The handoff between lanes is a commit, not a working tree.
 
 All agent traffic is relayed by [CHAZ]. No agent contacts another directly.
 
-1. [GPT] (Steward) issues a bounded work prompt naming exactly one ticket.
-2. [GROK] implements and returns an implementation report.
-3. [CHAZ] relays that report to [GPT].
-4. [GPT] reviews the committed code and tests, reconciles the report and findings against
+1. [GPT] (Steward) prepares one bounded draft ticket.
+2. Before implementation, [GROK] performs a read-only adversarial ticket review and reports
+   false premises, missing acceptance proofs, overconstraints, likely false greens,
+   architecture/provider traps, and whether the ticket is ready or needs reconciliation.
+3. [CHAZ] relays that review to [GPT].
+4. [GPT] reconciles the findings, updates and commits the final accepted ticket, and issues
+   a bounded implementation prompt naming its exact start commit.
+5. [GROK] implements and returns an implementation report.
+6. [CHAZ] relays that report to [GPT].
+7. [GPT] reviews the committed code and tests, reconciles the report and findings against
    authority, and accepts the ticket or issues the next bounded prompt through [CHAZ].
 
 [GROK] is the only agent writing the working code, and the only one carrying the working
 context of having built it. His judgement on what is weak, fragile, or under-tested is a
-first-class input, and every work prompt must solicit it explicitly. This does not make him
-the only reader: [GPT] reads the committed code and tests directly when reviewing,
-because an implementer's account of their own work cannot be the only evidence.
-Such findings are inputs, not authority: they change the project only after the Steward
-reconciles them and records the result.
+first-class input. Every implementation report must candidly state the strongest and weakest
+parts, possible false greens, remaining caller influence, architecture drift/coupling,
+parser/provider traps, closure blockers, deferred work, what later surfaces should reuse,
+and what should deliberately remain duplicated. When the work exposes provider testimony,
+the report also distinguishes Evidence, claimed contract, synthetic proof, recommendation,
+and unproven inference, and assesses useful/not-useful future strategy and data-model
+implications without implementing strategy or broadening scope.
 
-[GPT] asks [GROK] direct questions when an answer is uncertain rather than
-assuming. A question relayed through [CHAZ] costs less than a wrong sequencing decision.
+This does not make [GROK] the only reader: [GPT] reads the committed code and tests directly
+when reviewing, because an implementer's account of their own work cannot be the only
+evidence. Such findings are inputs, not authority: they change the project only after the
+Steward reconciles them and records the result.
+
+[GPT] treats [GROK] as a coworker and asks direct bounded questions when an answer is
+uncertain or the implementer's context can materially improve judgement. Questions do not
+transfer Steward or Product Owner authority. A question relayed through [CHAZ] costs less
+than a wrong sequencing decision.
 
 Do not create `CONTEXT.md`, `CONTEXT-MAP.md`, `docs/agents/`, `.scratch/`, or external
 issue-tracker scaffolding.
