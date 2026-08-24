@@ -1,6 +1,6 @@
 # AI-09 — Target Metrics Live one-shot Evidence activation
 
-**Status:** authorized  
+**Status:** review  
 **Owner:** [CHAZ] operator / [GPT] Steward verification  
 **Blocked by:** AI-08 — Target Metrics Live paid-probe adapter (`done`)  
 **Approved by:** Project Steward  
@@ -226,6 +226,106 @@ After local and restored Evidence both verify, record:
 
 This assessment does not define semantic identities or database design. Those belong to
 later separately accepted parser and Derivation tickets.
+
+## Steward live evidence and payload assessment — 2026-08-24
+
+[CHAZ] performed exactly one authorized process invocation from clean, synchronized `main`
+at `acda2d56fc07eea96de0c35843f508f69e8659c3`. It started at
+`2026-08-24T03:09:19Z`, ended at `2026-08-24T03:09:21Z`, exited `0`, and
+left the repository clean. The authorization is consumed; no retry, follow-up, replacement
+root, continuation, or second provider exchange occurred or is authorized.
+
+Committed live Evidence:
+
+- Attempt `1edeabd8d8a4dd0f396a02692c35718837885ec6f175a49ee4cb2556083fdcd5`;
+- Capture `347d8eebf6c706370f59dbdc7057ca95c03010bcb01b5edb8eade05bc0e1295e`;
+- transport state: complete response;
+- exact inspected body: `1775` bytes;
+- inspected body SHA-256:
+  `7b6974704f73cff9687986a83ab14ba8ec942ccdbfde359ec7e8fde6bea8eee2`;
+- source status: `format-2 ok`;
+- source scrub: clean.
+
+The independently recorded source inventory contains exactly that Attempt and Capture and has
+SHA-256 `3026079597b46ba8d3f0662de66bd774d27c6f086b04ddeb3a62be949704473d`.
+
+The accepted encrypted repository `52a88583` created snapshot
+`c8b07a0519e159bde8ec91de63f94caae41fc78fc6c333cc7fb1dc78ddfa2bc6`,
+tagged `observatory-evidence-store` and `f6-paid-ai09`. A fresh restore opened as
+`format-2`, scrubbed clean, and independently reproduced the exact Attempt/Capture set.
+Source, snapshot-restored, and independently recomputed inventories all had the same
+SHA-256 above. The restored inspected body was exactly `1775` bytes with the same body
+SHA-256.
+
+Non-secret receipts were copied to the accepted off-host `receipts/` and
+`restore-proofs/` folders and verified byte-for-byte after upload:
+
+- `ai09-target-metrics-backup-c8b07a05.ok.json` SHA-256
+  `9784e1c6a10add7b1aa4c9445ca3f02d3e0e68883970c173cf3fbe73141df9f5`;
+- `ai09-target-metrics-restore-c8b07a05.ok.json` SHA-256
+  `75d1e566e8b807e299bc44e795a0424c48f0a2cb824a121625f8b30d45529501`.
+
+### Verified payload findings
+
+- Envelope version is `0.1.20260806`. Top-level and task statuses are `20000` /
+  `Ok.`; `tasks_count=1`, `tasks_error=0`, and task `result_count=1`.
+- Top-level and task cost both equal `0.101`. Reported times are `0.8758 sec.` and
+  `0.8400 sec.`. Task ID is `08240309-1463-0651-0000-7982d3d5ec07`, and the
+  path is exactly `v3/ai_optimization/llm_mentions/target_metrics/live`.
+- The task data exactly echoes `internal_list_limit=10`, English `en`, United States
+  `2840`, platform `google`, and one included `generative engine optimization`
+  keyword target with `word_match` and `search_scope=["answer"]`.
+- The result has exactly the keys `total_count`, `offset`, `items_count`,
+  `aggregated_metrics`, and `items`. It reports `total_count=0`, `offset=0`,
+  `items_count=0`, and an empty `items=[]` array.
+- The empty array is material provider-documentation drift: the freshly reviewed
+  documentation claimed `items=null`. The real fixture must preserve `[]`; later parser
+  work must deliberately decide and adversarially test the documented null branch rather
+  than silently treating null and empty as interchangeable.
+- `aggregated_metrics` has exactly eight keys: `location`, `language`, `platform`,
+  `sources_domain`, `search_results_domain`, `brand_entities_title`,
+  `brand_entities_category`, and `total`.
+- Location `2840`, language `en`, platform `google`, and `total` each independently
+  report `3061` mentions and AI search volume `2336840`.
+- `sources_domain` contains exactly ten rows, saturating the requested list limit. Every
+  row has exactly `key`, `mentions`, and `ai_search_volume`, in this provider order:
+
+| Domain | Mentions | AI search volume |
+|---|---:|---:|
+| `www.youtube.com` | 1641 | 1182010 |
+| `www.reddit.com` | 750 | 326780 |
+| `www.linkedin.com` | 395 | 445730 |
+| `www.coursera.org` | 308 | 80860 |
+| `www.semrush.com` | 262 | 280590 |
+| `digitalmarketinginstitute.com` | 249 | 49930 |
+| `clutch.co` | 234 | 222900 |
+| `en.wikipedia.org` | 217 | 245010 |
+| `firstpagesage.com` | 195 | 256380 |
+| `thriveagency.com` | 164 | 97420 |
+
+- Domain rows are descending by mentions in this body, but one fixture does not prove that
+  ordering or any tie-break rule as a provider invariant. Their mention sum is `4415` and
+  AI-search-volume sum is `3187610`, both greater than the total. Domain rows therefore
+  overlap and are not a partition; callers must not sum them into the overall total.
+- `search_results_domain`, `brand_entities_title`, and `brand_entities_category`
+  are present as empty arrays, not absent or null.
+- No duplicate object member names, zero aggregate values, decimal aggregate metrics, or
+  unknown fields relative to the freshly reviewed claimed shape were observed. The only
+  decimal number is cost `0.101`; execution times are provider strings. Cost being
+  `0.101` while `items_count=0` is testimony, not proof of a general billing formula.
+- The body is sufficient for a frozen primary Target Metrics conformance fixture: it
+  exercises a complete aggregate response, ten ordered source-domain rows, four mutually
+  agreeing overall groupings, overlapping domain totals, three present-empty optional
+  arrays, and the documented-null/actual-empty drift.
+- It does not prove nonempty search-result-domain or brand-entity shapes, `chat_gpt`
+  platform testimony, multiple location/language/platform groups, other target/match/scope
+  branches, list-limit behavior below ten, stable ordering or tie-breaks, non-integer
+  metrics, duplicate-domain absence, future unknown fields, aggregate-conflict handling,
+  or semantic/persistence identities. Those require bounded synthetic adversarial tests and
+  later separately accepted tickets without another provider call.
+
+AI-09 now meets its technical and Evidence acceptance checks. It remains `review`, not
+`done`, pending explicit [CHAZ] authorization to close.
 
 ## Acceptance
 
