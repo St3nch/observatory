@@ -21,6 +21,7 @@ from observatory.dataforseo_keyword_overview import (
     TREND_KIND,
 )
 from observatory.evidence_store import EvidenceStore, IntegrityError
+from observatory.provider_history import history_list_response
 from observatory.provider_recipe_selection import (
     ResolvedProviderRecipe,
     resolve_provider_recipe,
@@ -28,8 +29,6 @@ from observatory.provider_recipe_selection import (
 
 HISTORY_PROVIDER: Final[str] = "dataforseo"
 HISTORY_ADAPTER: Final[str] = PAID_ADAPTER_CONTRACT
-HISTORY_LIMIT_DEFAULT: Final[int] = 20
-HISTORY_LIMIT_MAX: Final[int] = 100
 _KIND_TABLES: Final[dict[str, str]] = {
     COVERAGE_KIND: "keyword_overview_coverage",
     METRICS_KIND: "keyword_overview_metrics",
@@ -388,9 +387,20 @@ def load_keyword_overview_history(
         kinds,
         _KIND_TABLES,
     )
+    unique: list[
+        tuple[str, str, str, str, int, dict[str, object], dict[str, object]]
+    ] = []
+    seen: set[str] = set()
+    for item in candidates:
+        capture_id = item[1]
+        if capture_id in seen:
+            continue
+        seen.add(capture_id)
+        unique.append(item)
+    total_matching = len(unique)
     reverse = order == "desc"
-    candidates.sort(key=lambda item: (item[0], item[1]), reverse=reverse)
-    selected = candidates[:limit]
+    unique.sort(key=lambda item: (item[0], item[1]), reverse=reverse)
+    selected = unique[:limit]
     captures = [
         _capture_group(
             connection,
@@ -414,15 +424,18 @@ def load_keyword_overview_history(
             capture,
         ) in selected
     ]
-    return {
-        "provider": HISTORY_PROVIDER,
-        "adapter_contract": HISTORY_ADAPTER,
-        "requested_keyword": requested_keyword,
-        "derivation_version_id": resolved.derivation_version_id,
-        "recipe_resolution": resolved.resolution,
-        "observation_kinds": list(kinds),
-        "captures": captures,
-    }
+    return history_list_response(
+        provider=HISTORY_PROVIDER,
+        adapter_contract=HISTORY_ADAPTER,
+        requested_keyword=requested_keyword,
+        derivation_version_id=resolved.derivation_version_id,
+        recipe_resolution=resolved.resolution,
+        observation_kinds=list(kinds),
+        captures=captures,
+        total_matching=total_matching,
+        limit=limit,
+        order=order,
+    )
 
 
 def _capture_group(

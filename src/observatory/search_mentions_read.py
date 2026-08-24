@@ -17,6 +17,7 @@ from observatory.dataforseo_ai_optimization_search_mentions import (
     SOURCE_KIND,
 )
 from observatory.evidence_store import EvidenceStore, IntegrityError
+from observatory.provider_history import history_list_response
 from observatory.provider_recipe_selection import (
     ResolvedProviderRecipe,
     resolve_provider_recipe,
@@ -424,9 +425,30 @@ def load_search_mentions_history(
         resolved.derivation_version_id,
         kinds,
     )
+    unique: list[
+        tuple[
+            str,
+            str,
+            str,
+            str,
+            int,
+            dict[str, object],
+            dict[str, object],
+            dict[str, object],
+            dict[str, object],
+        ]
+    ] = []
+    seen: set[str] = set()
+    for item in candidates:
+        capture_id = item[1]
+        if capture_id in seen:
+            continue
+        seen.add(capture_id)
+        unique.append(item)
+    total_matching = len(unique)
     reverse = order == "desc"
-    candidates.sort(key=lambda item: (item[0], item[1]), reverse=reverse)
-    selected = candidates[:limit]
+    unique.sort(key=lambda item: (item[0], item[1]), reverse=reverse)
+    selected = unique[:limit]
     captures = [
         _capture_group(
             connection,
@@ -452,15 +474,18 @@ def load_search_mentions_history(
             result_context,
         ) in selected
     ]
-    return {
-        "provider": HISTORY_PROVIDER,
-        "adapter_contract": HISTORY_ADAPTER,
-        "requested_keyword": requested_keyword,
-        "derivation_version_id": resolved.derivation_version_id,
-        "recipe_resolution": resolved.resolution,
-        "observation_kinds": list(kinds),
-        "captures": captures,
-    }
+    return history_list_response(
+        provider=HISTORY_PROVIDER,
+        adapter_contract=HISTORY_ADAPTER,
+        requested_keyword=requested_keyword,
+        derivation_version_id=resolved.derivation_version_id,
+        recipe_resolution=resolved.resolution,
+        observation_kinds=list(kinds),
+        captures=captures,
+        total_matching=total_matching,
+        limit=limit,
+        order=order,
+    )
 
 
 def _capture_group(

@@ -94,6 +94,11 @@ HISTORY_KEYS = {
     "recipe_resolution",
     "observation_kinds",
     "captures",
+    "total_matching",
+    "returned_count",
+    "limit",
+    "order",
+    "has_more",
 }
 CAPTURE_KEYS = {
     "attempt_id",
@@ -382,6 +387,57 @@ def _app(store: EvidenceStore, dsn: str) -> TestClient:
 def _history(client: TestClient, keyword: str = KEYWORD, **params: object) -> Any:
     query = {"requested_keyword": keyword, **params}
     return client.get(HISTORY + "?" + urlencode(query, doseq=True))
+
+
+def _assert_history_envelope(
+    body: dict[str, object],
+    *,
+    total_matching: int,
+    returned_count: int,
+    limit: int = 20,
+    order: str = "asc",
+) -> None:
+    assert set(body) == HISTORY_KEYS
+    assert body["total_matching"] == total_matching
+    assert body["returned_count"] == returned_count
+    assert body["limit"] == limit
+    assert body["order"] == order
+    assert body["has_more"] is (total_matching > returned_count)
+    captures = body["captures"]
+    assert isinstance(captures, list)
+    assert len(captures) == returned_count
+
+
+def _assert_history_409(response: Any) -> None:
+    assert response.status_code == 409
+    assert response.json() == {"detail": "evidence_integrity_failure"}
+
+
+def _assert_history_openapi(spec: dict[str, Any], path: str) -> None:
+    schema = spec["paths"][path]["get"]["responses"]["200"]["content"][
+        "application/json"
+    ]["schema"]
+    ref = schema.get("$ref")
+    if isinstance(ref, str):
+        schema = spec["components"]["schemas"][ref.rsplit("/", 1)[-1]]
+    assert set(schema["required"]) == HISTORY_KEYS
+    props = schema["properties"]
+    assert set(props) == HISTORY_KEYS
+    assert props["total_matching"]["type"] == "integer"
+    assert props["returned_count"]["type"] == "integer"
+    assert props["limit"]["type"] == "integer"
+    assert props["has_more"]["type"] == "boolean"
+    assert props["captures"]["type"] == "array"
+    assert props["captures"]["items"].get("type") == "object"
+    text = json.dumps(schema).lower()
+    assert "admitted" in text and "capture" in text
+    assert "request_started_at" in text and "capture_id" in text
+    assert "pagination" in text
+    assert "never measured" in text
+    assert "failed" in text
+    assert "observation envelope" in text or "observation envelopes" in text
+    capture_desc = str(props["captures"].get("description", "")).lower()
+    assert "not one universal" in capture_desc or "surface-specific" in capture_desc
 
 
 def _prepare_frozen(
@@ -808,6 +864,7 @@ def test_organic_attempt_selected_pinned_and_http_errors(
         empty_history = _history(client, "not-a-requested-keyword")
     assert missing_rows.status_code == 404
     assert empty_history.status_code == 200
+    _assert_history_envelope(empty_history.json(), total_matching=0, returned_count=0)
     assert empty_history.json()["captures"] == []
     unselected = create_store(tmp_path / "unselected")
     unselected_attempt, _cap = _commit_organic(
@@ -842,6 +899,7 @@ def test_frozen_history_shape_counts_times_and_request_context(frozen_pg: Any) -
     assert response.status_code == 200
     body = response.json()
     expected = _persisted_projection(dsn, capture_id)
+    _assert_history_envelope(body, total_matching=1, returned_count=1)
     assert set(body) == HISTORY_KEYS
     assert body["provider"] == "dataforseo"
     assert body["adapter_contract"] == ORGANIC_ADAPTER_CONTRACT
@@ -873,6 +931,7 @@ def test_frozen_history_shape_counts_times_and_request_context(frozen_pg: Any) -
         "classification": "observation_admitted",
         "observation_count": 237,
     }
+    assert body["total_matching"] != group["capture_outcome"]["observation_count"]
     context = group["result_context"]
     assert set(context) == CONTEXT_KEYS
     assert context == expected["result_context"]
@@ -884,6 +943,8 @@ def test_frozen_history_shape_counts_times_and_request_context(frozen_pg: Any) -
     assert context["provider_result_time"]["value"] != group["request_started_at"]
     assert context["provider_result_time"]["value"] != group["transport_ended_at"]
     assert context["items_count"] == 111
+    assert context["se_results_count"]["value"] != body["total_matching"]
+    assert context["se_results_count"]["value"] == 45_000_000
     assert context["item_types"] == [
         "ai_overview",
         "organic",
@@ -908,6 +969,9 @@ def test_frozen_history_shape_counts_times_and_request_context(frozen_pg: Any) -
     assert len({row["url"] for row in ranked}) == 87
     assert all(set(row) == RANKED_KEYS for row in ranked)
     assert all(row["observation_kind"] == ORGANIC_PLACEMENT_KIND for row in ranked)
+    assert isinstance(ranked[0]["url"], str)
+    assert isinstance(ranked[0]["rank_absolute"], int)
+    assert ranked[0]["url"] == expected["ranked_results"][0]["url"]
     assert all(len(str(row["within_capture_identity"])) == 64 for row in ranked)
     presence = group["ai_overview_presence"]
     assert presence == expected["ai_overview_presence"]
@@ -984,6 +1048,7 @@ def test_frozen_history_shape_counts_times_and_request_context(frozen_pg: Any) -
     assert pinned.json()["recipe_resolution"] == "pinned"
     assert spec.status_code == 200
     assert HISTORY in spec.json()["paths"]
+    _assert_history_openapi(spec.json(), HISTORY)
     assert missing.status_code == 422
     assert bad_limit.status_code == 422
     assert high_limit.status_code == 422
@@ -1049,6 +1114,7 @@ def test_admitted_empty_and_non_admitted_context_stay_distinct(
         response = _history(client, order="asc")
     assert response.status_code == 200
     captures = response.json()["captures"]
+    _assert_history_envelope(response.json(), total_matching=2, returned_count=2, order="asc")
     assert [item["capture_id"] for item in captures] == [frozen_capture, empty_capture]
     assert captures[0]["attempt_id"] == frozen_attempt
     empty = captures[1]
@@ -1159,6 +1225,12 @@ def test_second_capture_paa_block_order_limit_and_tie_break(
         tied_a_capture, tied_b_capture
     )
     assert [item["capture_id"] for item in limited.json()["captures"]] == [first_capture]
+    _assert_history_envelope(
+        limited.json(), total_matching=4, returned_count=1, limit=1
+    )
+    _assert_history_envelope(
+        descending.json(), total_matching=4, returned_count=2, limit=2, order="desc"
+    )
     assert len(limited.json()["captures"][0]["ranked_results"]) == 97
     assert {captures[2]["attempt_id"], captures[3]["attempt_id"]} == {
         tied_a_attempt,
@@ -1223,9 +1295,7 @@ def test_request_context_integrity_and_damage_409(
         )
     with _app(store, postgres_dsn) as client:
         disagreed = _history(client)
-    assert disagreed.status_code == 409
-    assert disagreed.json()["detail"] == "evidence_integrity_failure"
-    assert "captures" not in disagreed.json()
+    _assert_history_409(disagreed)
 
     with connect(postgres_dsn) as connection:
         connection.execute(
@@ -1265,10 +1335,8 @@ def test_request_context_integrity_and_damage_409(
     with _app(store, postgres_dsn) as client:
         wrong_type = _history(client)
     store.read_attempt = real_read  # type: ignore[method-assign]
-    assert missing_depth.status_code == 409
-    assert "captures" not in missing_depth.json()
-    assert wrong_type.status_code == 409
-    assert "captures" not in wrong_type.json()
+    _assert_history_409(missing_depth)
+    _assert_history_409(wrong_type)
 
     body_path = store.capture_path(later_capture) / "response.body"
     payload = bytearray(body_path.read_bytes())
@@ -1277,8 +1345,7 @@ def test_request_context_integrity_and_damage_409(
     with _app(store, postgres_dsn) as client:
         outside = _history(client, limit=1, order="asc")
         resource = client.get(f"/v1/attempts/{later_attempt}")
-    assert outside.status_code == 409
-    assert "captures" not in outside.json()
+    _assert_history_409(outside)
     assert resource.status_code == 409
     body_path.write_bytes(bytes(bytearray(payload[0] ^ 0x01) + payload[1:]))
 
@@ -1288,8 +1355,7 @@ def test_request_context_integrity_and_damage_409(
     manifest.write_bytes(bytes(raw))
     with _app(store, postgres_dsn) as client:
         damaged_capture = _history(client)
-    assert damaged_capture.status_code == 409
-    assert "captures" not in damaged_capture.json()
+    _assert_history_409(damaged_capture)
 
 
 def test_api_reads_do_not_mutate_organic_state(
@@ -1354,9 +1420,7 @@ def test_history_missing_typed_row_is_409(
     with _app(store, postgres_dsn) as client:
         missing = _history(client)
         attempt = client.get(f"/v1/attempts/{attempt_id}")
-    assert missing.status_code == 409
-    assert missing.json()["detail"] == "evidence_integrity_failure"
-    assert "captures" not in missing.json()
+    _assert_history_409(missing)
     assert attempt.status_code == 200
     assert attempt.json()["capture_outcome"]["observation_count"] == 237
     assert store.recorded_ops == before_ops
@@ -1379,8 +1443,7 @@ def test_history_wrong_organic_outcome_count_is_409(
     with _app(store, postgres_dsn) as client:
         wrong_count = _history(client)
         attempt = client.get(f"/v1/attempts/{attempt_id}")
-    assert wrong_count.status_code == 409
-    assert wrong_count.json()["detail"] == "evidence_integrity_failure"
+    _assert_history_409(wrong_count)
     assert attempt.status_code == 200
     assert attempt.json()["capture_outcome"]["observation_count"] == 238
 
@@ -1410,8 +1473,7 @@ def test_history_zero_aio_occurrences_is_409(
         )
     with _app(store, postgres_dsn) as client:
         aio = _history(client)
-    assert aio.status_code == 409
-    assert aio.json()["detail"] == "evidence_integrity_failure"
+    _assert_history_409(aio)
 
 
 def test_history_zero_paa_occurrences_is_409(
@@ -1439,8 +1501,7 @@ def test_history_zero_paa_occurrences_is_409(
         )
     with _app(store, postgres_dsn) as client:
         paa = _history(client)
-    assert paa.status_code == 409
-    assert paa.json()["detail"] == "evidence_integrity_failure"
+    _assert_history_409(paa)
 
 
 def test_history_consistency_damage_outside_limit_is_409(
@@ -1475,7 +1536,5 @@ def test_history_consistency_damage_outside_limit_is_409(
     with _app(store, postgres_dsn) as client:
         limited = _history(client, limit=1, order="asc")
         later = client.get(f"/v1/attempts/{later_attempt}")
-    assert limited.status_code == 409
-    assert limited.json()["detail"] == "evidence_integrity_failure"
-    assert "captures" not in limited.json()
+    _assert_history_409(limited)
     assert later.status_code == 200

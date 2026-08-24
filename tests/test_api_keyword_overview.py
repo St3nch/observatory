@@ -61,6 +61,21 @@ SHARED_TIMES = {
     "request_started_at": "2026-08-11T20:15:30.200000Z",
     "transport_ended_at": "2026-08-11T20:15:31.000000Z",
 }
+HISTORY = "/v1/providers/dataforseo/google/keyword-overview/history"
+HISTORY_KEYS = {
+    "provider",
+    "adapter_contract",
+    "requested_keyword",
+    "derivation_version_id",
+    "recipe_resolution",
+    "observation_kinds",
+    "captures",
+    "total_matching",
+    "returned_count",
+    "limit",
+    "order",
+    "has_more",
+}
 
 
 def _fixture_inputs() -> FixtureCaptureInputs:
@@ -85,7 +100,6 @@ KEYWORDS = (
     "generative engine optimization",
     "ai search optimization",
 )
-HISTORY = "/v1/providers/dataforseo/google/keyword-overview/history"
 INTEGRITY_SIGNAL = "evidence_integrity_failure"
 
 
@@ -239,6 +253,57 @@ def _history(
     return client.get(HISTORY + "?" + urlencode(query, doseq=True))
 
 
+def _assert_history_envelope(
+    body: dict[str, object],
+    *,
+    total_matching: int,
+    returned_count: int,
+    limit: int = 20,
+    order: str = "asc",
+) -> None:
+    assert set(body) == HISTORY_KEYS
+    assert body["total_matching"] == total_matching
+    assert body["returned_count"] == returned_count
+    assert body["limit"] == limit
+    assert body["order"] == order
+    assert body["has_more"] is (total_matching > returned_count)
+    captures = body["captures"]
+    assert isinstance(captures, list)
+    assert len(captures) == returned_count
+
+
+def _assert_history_409(response: Any) -> None:
+    assert response.status_code == 409
+    assert response.json() == {"detail": INTEGRITY_SIGNAL}
+
+
+def _assert_history_openapi(spec: dict[str, Any], path: str) -> None:
+    schema = spec["paths"][path]["get"]["responses"]["200"]["content"][
+        "application/json"
+    ]["schema"]
+    ref = schema.get("$ref")
+    if isinstance(ref, str):
+        schema = spec["components"]["schemas"][ref.rsplit("/", 1)[-1]]
+    assert set(schema["required"]) == HISTORY_KEYS
+    props = schema["properties"]
+    assert set(props) == HISTORY_KEYS
+    assert props["total_matching"]["type"] == "integer"
+    assert props["returned_count"]["type"] == "integer"
+    assert props["limit"]["type"] == "integer"
+    assert props["has_more"]["type"] == "boolean"
+    assert props["captures"]["type"] == "array"
+    assert props["captures"]["items"].get("type") == "object"
+    text = json.dumps(schema).lower()
+    assert "admitted" in text and "capture" in text
+    assert "request_started_at" in text and "capture_id" in text
+    assert "pagination" in text
+    assert "never measured" in text
+    assert "failed" in text
+    assert "observation envelope" in text or "observation envelopes" in text
+    capture_desc = str(props["captures"].get("description", "")).lower()
+    assert "not one universal" in capture_desc or "surface-specific" in capture_desc
+
+
 def _xmin_snapshot(dsn: str) -> dict[str, list[tuple[object, ...]]]:
     snapshot: dict[str, list[tuple[object, ...]]] = {}
     with connect(dsn) as connection:
@@ -349,9 +414,16 @@ def test_provider_attempt_http_errors(tmp_path: Path, postgres_dsn: str) -> None
             client, "ai search optimization", derivation_version_id=EXTENDED_RECIPE_ID
         )
     assert empty.status_code == 200
+    _assert_history_envelope(empty.json(), total_matching=0, returned_count=0)
     assert empty.json()["captures"] == []
     assert empty.json()["derivation_version_id"] == CORE_RECIPE_ID
     assert only_core.status_code == 200
+    _assert_history_envelope(
+        only_core.json(),
+        total_matching=0,
+        returned_count=0,
+        limit=20,
+    )
     assert only_core.json()["captures"] == []
     assert only_core.json()["derivation_version_id"] == EXTENDED_RECIPE_ID
     assert only_core.json()["observation_kinds"] == [
@@ -374,8 +446,11 @@ def test_history_core_and_extended_shapes(tmp_path: Path, postgres_dsn: str) -> 
             "ai search optimization",
             derivation_version_id=CORE_RECIPE_ID,
         )
+        spec = client.get("/api/v1/openapi.json")
+    assert spec.status_code == 200
     assert extended.status_code == 200
     body = extended.json()
+    _assert_history_envelope(body, total_matching=1, returned_count=1)
     assert body["provider"] == "dataforseo"
     assert body["adapter_contract"] == store_adapter()
     assert body["requested_keyword"] == "ai search optimization"
@@ -407,6 +482,9 @@ def test_history_core_and_extended_shapes(tmp_path: Path, postgres_dsn: str) -> 
     assert group["capture_outcome"]["observation_count"] != len(
         group["monthly_search_volume"]
     )
+    assert body["total_matching"] != group["capture_outcome"]["observation_count"]
+    assert body["total_matching"] != len(group["monthly_search_volume"])
+    _assert_history_openapi(spec.json(), HISTORY)
     assert group["search_volume_trend"]["observation_kind"] == TREND_KIND
     assert group["properties"]["observation_kind"] == PROPERTIES_KIND
     assert group["avg_backlinks"]["observation_kind"] == BACKLINKS_KIND
@@ -548,6 +626,12 @@ def test_historical_revision_is_visible_through_history_api(
     assert descending.json()["captures"][0]["capture_id"] == later_capture
     assert descending.json()["captures"][1]["capture_id"] == first_capture
     assert [item["capture_id"] for item in limited.json()["captures"]] == [first_capture]
+    _assert_history_envelope(
+        limited.json(), total_matching=2, returned_count=1, limit=1
+    )
+    _assert_history_envelope(
+        descending.json(), total_matching=2, returned_count=2, limit=2, order="desc"
+    )
     assert len(limited.json()["captures"][0]["monthly_search_volume"]) == 85
 
 
@@ -639,9 +723,7 @@ def test_provider_damage_returns_409(tmp_path: Path, postgres_dsn: str) -> None:
     def assert_409(client: TestClient) -> None:
         history = _history(client, "ai search optimization")
         resource = client.get(f"/v1/attempts/{attempt_id}")
-        assert history.status_code == 409
-        assert "evidence_integrity_failure" in history.text
-        assert "captures" not in history.json()
+        _assert_history_409(history)
         assert resource.status_code == 409
         assert "evidence_integrity_failure" in resource.text
         assert "capture_outcome" not in resource.json()
@@ -673,8 +755,7 @@ def test_provider_damage_returns_409(tmp_path: Path, postgres_dsn: str) -> None:
         history = _history(client, "ai search optimization")
     assert resource.status_code == 409
     assert "evidence_integrity_failure" in resource.text
-    assert history.status_code == 409
-    assert "captures" not in history.json()
+    _assert_history_409(history)
     attempt_manifest.write_bytes(bytes(bytearray(attempt_raw[0] ^ 0x01) + attempt_raw[1:]))
     committed = store.attempt_path(fingerprint, authorized_at, attempt_id) / "COMMITTED"
     committed.unlink()
@@ -683,8 +764,7 @@ def test_provider_damage_returns_409(tmp_path: Path, postgres_dsn: str) -> None:
         missing_history = _history(client, "ai search optimization")
     assert missing.status_code == 409
     assert "evidence_integrity_failure" in missing.text
-    assert missing_history.status_code == 409
-    assert "captures" not in missing_history.json()
+    _assert_history_409(missing_history)
 
 
 def test_api_reads_do_not_mutate_provider_state(
@@ -771,6 +851,7 @@ def test_history_excludes_non_admitted_sibling_and_keeps_healthy_capture(
         response = _history(client, "ai search optimization")
     assert response.status_code == 200
     captures = response.json()["captures"]
+    _assert_history_envelope(response.json(), total_matching=1, returned_count=1)
     assert [item["capture_id"] for item in captures] == [healthy_capture]
     assert captures[0]["attempt_id"] == healthy_attempt
     assert captures[0]["capture_outcome"]["classification"] == "observation_admitted"
@@ -797,9 +878,7 @@ def test_history_missing_typed_row_is_409(
     with _app(store, postgres_dsn) as client:
         missing = _history(client, "keyword research")
         attempt = client.get(f"/v1/attempts/{attempt_id}")
-    assert missing.status_code == 409
-    assert missing.json()["detail"] == INTEGRITY_SIGNAL
-    assert "captures" not in missing.json()
+    _assert_history_409(missing)
     assert attempt.status_code == 200
     assert attempt.json()["capture_outcome"]["observation_count"] == 471
     assert store.recorded_ops == before_ops
@@ -855,7 +934,5 @@ def test_history_consistency_damage_outside_limit_is_409(
     with _app(store, postgres_dsn) as client:
         limited = _history(client, "keyword research", limit=1, order="asc")
         later = client.get(f"/v1/attempts/{later_attempt}")
-    assert limited.status_code == 409
-    assert limited.json()["detail"] == INTEGRITY_SIGNAL
-    assert "captures" not in limited.json()
+    _assert_history_409(limited)
     assert later.status_code == 200

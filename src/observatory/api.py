@@ -15,11 +15,14 @@ from observatory.evidence_store import EvidenceStore, IntegrityError, open_store
 from observatory.google_organic_read import load_google_organic_history
 from observatory.keyword_overview_read import (
     HISTORY_ADAPTER,
-    HISTORY_LIMIT_DEFAULT,
-    HISTORY_LIMIT_MAX,
     ProviderAttemptNotFound,
     load_keyword_overview_history,
     load_provider_attempt,
+)
+from observatory.provider_history import (
+    HISTORY_LIMIT_DEFAULT,
+    HISTORY_LIMIT_MAX,
+    HistoryListEnvelope,
 )
 from observatory.provider_recipe_selection import (
     NOT_SELECTED_SIGNAL,
@@ -237,7 +240,7 @@ def create_app(settings: Settings | None = None, *, store: EvidenceStore | None 
         derivation_version_id: str | None = Query(default=None),
         limit: int = Query(default=HISTORY_LIMIT_DEFAULT, ge=1, le=HISTORY_LIMIT_MAX),
         order: Literal["asc", "desc"] = Query(default="asc"),
-    ) -> dict[str, object]:
+    ) -> HistoryListEnvelope:
         settings = request.app.state.settings
         if not isinstance(settings, Settings):
             raise HTTPException(status_code=503, detail="settings are not configured")
@@ -245,13 +248,15 @@ def create_app(settings: Settings | None = None, *, store: EvidenceStore | None 
         dsn = _require_dsn(settings)
         try:
             with _read_connect(dsn) as connection:
-                return load_keyword_overview_history(
-                    evidence,
-                    connection,
-                    requested_keyword=requested_keyword,
-                    pinned_version=derivation_version_id,
-                    limit=limit,
-                    order=order,
+                return HistoryListEnvelope.model_validate(
+                    load_keyword_overview_history(
+                        evidence,
+                        connection,
+                        requested_keyword=requested_keyword,
+                        pinned_version=derivation_version_id,
+                        limit=limit,
+                        order=order,
+                    )
                 )
         except IntegrityError as exc:
             raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
@@ -265,7 +270,7 @@ def create_app(settings: Settings | None = None, *, store: EvidenceStore | None 
         derivation_version_id: str | None = Query(default=None),
         limit: int = Query(default=HISTORY_LIMIT_DEFAULT, ge=1, le=HISTORY_LIMIT_MAX),
         order: Literal["asc", "desc"] = Query(default="asc"),
-    ) -> dict[str, object]:
+    ) -> HistoryListEnvelope:
         settings = request.app.state.settings
         if not isinstance(settings, Settings):
             raise HTTPException(status_code=503, detail="settings are not configured")
@@ -273,13 +278,15 @@ def create_app(settings: Settings | None = None, *, store: EvidenceStore | None 
         dsn = _require_dsn(settings)
         try:
             with _read_connect(dsn) as connection:
-                return load_google_organic_history(
-                    evidence,
-                    connection,
-                    requested_keyword=requested_keyword,
-                    pinned_version=derivation_version_id,
-                    limit=limit,
-                    order=order,
+                return HistoryListEnvelope.model_validate(
+                    load_google_organic_history(
+                        evidence,
+                        connection,
+                        requested_keyword=requested_keyword,
+                        pinned_version=derivation_version_id,
+                        limit=limit,
+                        order=order,
+                    )
                 )
         except IntegrityError as exc:
             raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
@@ -293,7 +300,7 @@ def create_app(settings: Settings | None = None, *, store: EvidenceStore | None 
         derivation_version_id: str | None = Query(default=None),
         limit: int = Query(default=HISTORY_LIMIT_DEFAULT, ge=1, le=HISTORY_LIMIT_MAX),
         order: Literal["asc", "desc"] = Query(default="asc"),
-    ) -> dict[str, object]:
+    ) -> HistoryListEnvelope:
         settings = request.app.state.settings
         if not isinstance(settings, Settings):
             raise HTTPException(status_code=503, detail="settings are not configured")
@@ -301,13 +308,15 @@ def create_app(settings: Settings | None = None, *, store: EvidenceStore | None 
         dsn = _require_dsn(settings)
         try:
             with _read_connect(dsn) as connection:
-                return load_search_mentions_history(
-                    evidence,
-                    connection,
-                    requested_keyword=requested_keyword,
-                    pinned_version=derivation_version_id,
-                    limit=limit,
-                    order=order,
+                return HistoryListEnvelope.model_validate(
+                    load_search_mentions_history(
+                        evidence,
+                        connection,
+                        requested_keyword=requested_keyword,
+                        pinned_version=derivation_version_id,
+                        limit=limit,
+                        order=order,
+                    )
                 )
         except IntegrityError as exc:
             raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc

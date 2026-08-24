@@ -1,11 +1,11 @@
 # API-01 — Shared provider-history list envelope
 
-**Status:** provisional — GROK review reconciled; implementation authorization pending  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** explicit CHAZ implementation authorization and an exact clean start commit  
-**Approved by:** [CHAZ] for ticket-review correction publication only  
+**Blocked by:** Steward review and closure  
+**Approved by:** [CHAZ] implementation authorization against the named start commit  
 **Pre-implementation review:** completed read-only against `fa8cc3cc7bfc0042a192479af8a6decaa054ecda`  
-**Implementation start:** not authorized
+**Start commit:** `4f1e706b17a448be75f6bf9a3f3b1082db9ef4b0`
 
 ## Purpose
 
@@ -537,3 +537,126 @@ Full:
 
 The five-minute full suite runs once on the final implementation/remediation commit through
 the accepted exact-HEAD operator workflow. A connector timeout is not test evidence.
+
+## Implementation report
+
+**Parent:** `4f1e706b17a448be75f6bf9a3f3b1082db9ef4b0`  
+**This commit** is the API-01 implementation child. Status `review`, never `done`.
+
+### Changed paths
+
+- `src/observatory/provider_history.py` (new)
+- `src/observatory/keyword_overview_read.py`
+- `src/observatory/google_organic_read.py`
+- `src/observatory/search_mentions_read.py`
+- `src/observatory/api.py`
+- `tests/test_provider_history.py` (new, helper invariants only)
+- `tests/test_api_keyword_overview.py`
+- `tests/test_api_google_organic.py`
+- `tests/test_api_search_mentions.py`
+- this ticket
+
+### Response and OpenAPI
+
+All three history routes keep the seven existing top-level fields and add
+`total_matching`, `returned_count`, `limit`, `order`, `has_more` (12 keys).
+`api.py` returns `HistoryListEnvelope`; OpenAPI describes the outer metadata and
+pass-through Capture mappings. Nested fact bodies are not a shared schema.
+
+### `total_matching`
+
+Each reader still selects and verifies the complete matching candidate set, then
+counts unique verified `capture_id` values before sort/limit. Integrity
+disagreement still raises before any envelope is built.
+
+### Damage outside limit
+
+Existing outside-`limit=1` 409 tests now require the exact body
+`{"detail":"evidence_integrity_failure"}` with none of the six envelope keys.
+
+### Verification
+
+Targeted:
+
+    uv run pytest -q \
+      tests/test_provider_history.py \
+      tests/test_api_keyword_overview.py \
+      tests/test_api_google_organic.py \
+      tests/test_api_search_mentions.py
+
+Result: **48 passed**.
+
+    uv run ruff check .   # All checks passed
+    uv run mypy           # Success: no issues found in 64 source files
+
+Optional helper tests were created. The five-minute full suite was **not** run
+(deferred for CHAZ exact-HEAD operator run after Steward review).
+
+### Strongest
+
+Count-after-full-verify plus 409 with no partial envelope. Outer grain is
+independent of SM 113 envelopes / 3055 `total_count` and Organic
+`se_results_count`.
+
+### Weakest
+
+Three near-duplicate unique-`capture_id` loops. Pydantic `model_validate` sits
+on the HTTP boundary; pass-through is tested but remains a coercion risk if the
+outer model is tightened later.
+
+### Possible false greens
+
+OpenAPI tests match required phrases in Field descriptions. One-Capture
+fixtures still cannot alone prove `has_more`; over-limit tests do. Helper math
+tests do not replace route 409s.
+
+### Caller-controlled influence
+
+Query `requested_keyword`, `derivation_version_id`, `limit` 1–100, `order`.
+Mutable Recipe selection. No outer cursor.
+
+### Architecture
+
+`HISTORY_LIMIT_*` moved off Keyword Overview. Shared module does not know
+surface tables. Readers still own membership, PF-14 checks, and projection.
+
+### Parser/provider traps
+
+None new. SM token still unused. Inner provider counts remain in result
+context.
+
+### Closure blockers
+
+None from this implementation. Full suite not yet run.
+
+### Deferred
+
+Outcomes, holdings, outer pagination beyond 100, nested Capture OpenAPI,
+F12/F13.
+
+### Reuse later
+
+`history_list_response` math, 12-key envelope, 409-no-partial-payload,
+verify-all-then-slice.
+
+### Remain surface-local
+
+Candidate SQL, admitted-empty, PF-14 extras, fact bodies.
+
+### Strategy-LLM usefulness
+
+The LLM can now see whether the admitted Capture **list** is truncated and how
+many matching Captures exist. It still cannot tell failed vs never-measured
+(`total_matching=0`), cannot page past 100, and must not treat inner corpus
+counts as outer history.
+
+### Data-model implication
+
+No new rebuildable index. Failure subjects remain Evidence-only. Do not invent
+coverage.
+
+### Hygiene
+
+One implementation commit, no amend, no push. Zero provider calls, network
+activity, credential access, Evidence writes, or spending. Working tree left
+clean.
