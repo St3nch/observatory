@@ -1,9 +1,10 @@
 # API-02 — Provider Measurement Outcomes
 
-**Status:** provisional — mandatory [GROK] ticket review pending  
+**Status:** ready — implementation requires explicit [CHAZ] authorization  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** read-only pre-implementation ticket review and Steward reconciliation  
+**Blocked by:** [CHAZ] implementation authorization against the final clean ticket commit  
 **Question-resolution pass:** completed against `5fa8bc17835e45795deda380276dab7b3b078004`  
+**Pre-implementation review:** completed against `00e7c754b804df88e3c33c42512668678bd3430f`  
 **Start commit:** not assigned
 
 ## Purpose
@@ -47,6 +48,30 @@ subject column to `outcomes`, changes no Outcome identity, and adds no generic
 verified Attempt Evidence. Keyword Overview's `request.keywords` is exact request
 testimony that discloses Capture-wide scope; it is not an Outcome field, coverage claim,
 or item multiplication.
+
+## Pre-implementation review reconciliation
+
+[GROK] returned `REQUIRES TICKET CORRECTION` after the mandatory read-only review of
+`00e7c754b804df88e3c33c42512668678bd3430f`. [GPT] independently verified and accepts
+the store-wide Evidence availability correction, positive admitted-count invariant,
+one-Capture lifecycle check, explicit Attempt parameter paths, closed OpenAPI enums, and
+missing test vectors.
+
+The review proposed treating a subject-matching Evidence set with no Attempt-stage rows
+under the resolved Recipe as empty 200 while treating a proper subset of missing rows as
+409. That proposal is not accepted. D14 makes Outcomes the all-classification activity
+resource and requires Evidence/rebuildable disagreement to fail closed. Every provider
+derivation writes an Attempt-stage row for every verified adapter Attempt under that
+Recipe. Therefore, once verified Evidence proves a subject-matching Attempt, a missing
+resolved-Recipe Attempt-stage row is incomplete rebuildable state and returns 409 whether
+one, some, or all such rows are missing.
+
+This deliberately differs from admitted-only history. It prevents a selected-but-not-built
+or wholly deleted Outcome projection from masquerading as no measurement activity. A
+successful empty Outcomes list is reserved for no verified subject-matching Attempt
+Evidence in the route's adapter scope.
+
+No Product question or architecture redesign remains.
 
 ## Authority and current substrate
 
@@ -187,6 +212,12 @@ The top-level `requested_keyword` echoes the filter. Keyword Overview requires e
 membership in `request.keywords`; the other routes require equality with
 `request.keyword`.
 
+Keyword Overview subjects come from `parameters.keywords`; Organic from
+`parameters.keyword`; Search Mentions subject/filter fields from
+`parameters.target[0]`. Membership is exact string equality or membership and must not
+use `normalize_keyword`. Do not emit the closed `parameters.contract` field because
+the item already discloses `adapter_contract`.
+
 These mappings preserve request scope, not provider response facts. Do not generalize
 them into one universal subject model.
 
@@ -208,8 +239,9 @@ The closed Capture-stage set is:
 - `observation_admitted_empty`.
 
 Unexpected classifications, duplicate stage rows, a non-null Capture ID at Attempt stage,
-a null Capture ID at Capture stage, or disagreement with verified lifecycle Evidence fail
-closed with HTTP 409.
+a null Capture ID at Capture stage, two verified Captures citing one Attempt, or any other
+disagreement with verified lifecycle Evidence fail closed with HTTP 409. The reader must
+not select one Capture and hide the other.
 
 `observation_admitted_empty` is valid Outcomes activity for all three derivations even
 though Keyword Overview cannot expose it as a subject-bound history document. Outcomes
@@ -219,6 +251,14 @@ must not reuse admitted-history membership.
 
 At current pre-F12 volume, use D14's accepted bridge: a bounded read-only scan of committed
 Evidence.
+
+The walk is store-wide verify-first, then adapter-filtered. Adapter, parent, and subject
+cannot be trusted until a committed bundle has verified. Any duplicate committed identity
+or `IntegrityError` while enumerating or verifying an Attempt or Capture returns HTTP
+409 with no envelope, even when the damaged event would have belonged to fixture, sandbox,
+Target Metrics, another adapter, or another provider after a successful read. Do not copy
+Derivation's skip-on-`IntegrityError` behavior. Successfully verified foreign events may
+be excluded after their provider/adapter is known.
 
 For each request:
 
@@ -232,18 +272,25 @@ For each request:
    matching Attempt.
 7. If Evidence has a Capture, require its exact Capture-stage Outcome. If it has none,
    require no Capture-stage row for that item.
-8. Verify all matching items and rebuildable state before ordering, counting, or limiting.
+8. Require at most one verified Capture for each verified Attempt.
+9. Verify all matching items and rebuildable state before ordering, counting, or limiting.
+
+Let S be the verified Attempt Evidence matching the exact route adapter and subject filter.
+If S is empty, return an empty 200. If S is non-empty, every member must have its exact
+Attempt-stage Outcome under the resolved Recipe; any missing row, including all rows
+missing, is HTTP 409. Every member with a verified Capture must likewise have its exact
+Capture-stage row. This route does not use the history convention in which an underived
+Recipe can simply have no admitted candidates.
 
 Evidence defines membership and subject identity. PostgreSQL does not nominate candidates.
 Missing required state, extra/foreign stage state for a matching Attempt, wrong parent,
-wrong adapter/provider/Recipe, or Evidence disagreement is HTTP 409 with no partial
-Outcomes envelope.
+wrong adapter/provider/Recipe, two Captures for one Attempt, duplicate committed identity,
+or any Evidence disagreement is HTTP 409 with no partial Outcomes envelope.
 
-The pre-implementation review must explicitly assess whether the current Evidence Store
-interface can implement this adapter-scoped lifecycle scan without silently skipping
-unreadable or unrelated committed events, and what availability behavior unrelated damage
-would create. If the boundary is false, [GROK] must request the smallest ticket correction
-rather than broaden implementation.
+This store-wide availability coupling is deliberate for the pre-F12 bridge. History may
+remain available when unrelated damaged Evidence is outside its PostgreSQL-nominated
+candidate set; Outcomes may not, because an unreadable event cannot safely be classified
+as foreign.
 
 ## Observation-count integrity
 
@@ -257,7 +304,8 @@ For every matching item:
   and resolved Recipe.
 - Non-admitted and `observation_admitted_empty` classifications require zero envelopes
   and count zero.
-- `observation_admitted` requires exact stored-count/envelope-cardinality equality.
+- `observation_admitted` requires `observation_count >= 1` and exact
+  stored-count/envelope-cardinality equality.
 
 Any disagreement is HTTP 409, including in a matching item outside the returned limit.
 
@@ -277,9 +325,10 @@ Use a read-only PostgreSQL transaction. Complete matching Evidence and PostgreSQ
 verification before `total_matching` or slicing.
 
 A successful empty response has `outcomes: []`, zero totals, the applied limit, echoed
-order, and `has_more: false`. It means no verified matching Attempt with complete
-matching rebuildable Outcome state is held under this route, subject, and Recipe. It does
-not mean the subject is unimportant, the provider reported absence, nothing exists under
+order, and `has_more: false`. It means no verified subject-matching Attempt Evidence is
+held under this route's exact provider/adapter scope. A matching Attempt with missing
+resolved-Recipe Outcome state is 409, not empty. Empty does not mean the subject is unimportant, the provider reported
+absence, nothing exists under
 another surface/Recipe, or Observatory intends a cadence.
 
 Keep stable meanings:
@@ -304,6 +353,9 @@ state:
 - classifications are derived, Recipe-addressed Outcome testimony;
 - `observation_count` counts Observation envelopes, not provider results/corpus;
 - request mappings are verified, surface-local Attempt testimony;
+- the Attempt-stage singleton and eight Capture-stage classifications are closed enums;
+- `observation_admitted` requires a positive envelope count;
+- unrelated unreadable committed Evidence in the same root makes the route fail 409;
 - `has_more` does not provide pagination;
 - items contain no Observation facts;
 - empty-scope and failure/absence inference limits.
@@ -360,6 +412,8 @@ implementation.
 - [ ] Unresolved, every closed non-admitted classification, admitted, and admitted-empty
       activity are representable without failure material becoming an Observation.
 - [ ] Unexpected, missing, duplicate, or lifecycle-inconsistent stage state returns 409.
+- [ ] Two verified Captures for one Attempt return 409 rather than selecting one.
+- [ ] The Attempt singleton and eight Capture classifications are closed enums.
 - [ ] No item contains Observation fact bodies.
 
 ### Counts and order
@@ -382,7 +436,13 @@ implementation.
       admitted-empty counts are zero.
 - [ ] A stale count accepted by the old Attempt audit is rejected by Outcomes while that
       existing route remains unchanged.
-- [ ] Each route exposes its exact verified surface-local request key set.
+- [ ] `observation_admitted` with zero count and zero envelopes returns 409.
+- [ ] If verified subject-matching Attempt Evidence exists but one, some, or all
+      resolved-Recipe Attempt rows are missing, the route returns 409.
+- [ ] A damaged committed Attempt or Capture for another adapter in the same root returns
+      409 rather than being skipped.
+- [ ] Each route exposes its exact verified surface-local request key set and parameter
+      paths.
 - [ ] Malformed or drifted required Attempt parameters fail closed.
 - [ ] No GET mutates Evidence, PostgreSQL, Recipe selection, or acquisition state.
 - [ ] Search Mentions continuation is never read or followed.
@@ -408,12 +468,17 @@ At minimum:
 6. zero/one/over-limit counts for every route;
 7. authorized-time/Attempt-ID ascending and descending order;
 8. matching damage outside the returned limit;
-9. missing and duplicate/wrong-stage PostgreSQL rows;
-10. wrong Capture parent/provider/adapter/Recipe;
-11. stale `observation_count` versus envelope cardinality;
-12. exact request keys and malformed parameters per surface;
-13. exact response keys and substantive OpenAPI descriptions;
-14. tripwires proving no transport, continuation, Derivation, Evidence write, or
+9. damaged foreign-adapter committed Attempt and Capture in the same root;
+10. zero, partial, and wholly missing resolved-Recipe Attempt-stage rows for nonempty S;
+11. Evidence Capture present without Capture-stage row, which must not render unresolved;
+12. two verified Captures citing one Attempt;
+13. missing and duplicate/wrong-stage PostgreSQL rows;
+14. wrong Capture parent/provider/adapter/Recipe;
+15. stale `observation_count` versus envelope cardinality;
+16. planted `observation_admitted` with zero count and zero envelopes;
+17. exact request keys, parameter paths, and malformed parameters per surface;
+18. exact closed classification enums and substantive OpenAPI descriptions;
+19. tripwires proving no transport, continuation, Derivation, Evidence write, or
     PostgreSQL mutation.
 
 Synthetic tests prove constructed branches, not that those branches occurred in live
@@ -430,6 +495,7 @@ API-02 does not provide or prove:
 - fact-body integrity beyond envelope cardinality;
 - repair or re-Derivation of missing state;
 - coordinated corruption detection preserving all checked identities/counts;
+- isolation from unrelated damaged committed Evidence during the store-wide walk;
 - a synthesized current/final status;
 - provider-corpus completeness;
 - whether unresolved activity was sent;
@@ -458,24 +524,21 @@ Missing enforcement of D14's non-null Organic `related_result` stop-before-deriv
 is separate authority/code drift. API-02 must not claim to repair it. It remains a gate
 before affected future derivation/live/F12 work.
 
-## Mandatory pre-implementation ticket review
+## Completed pre-implementation ticket review
 
-[GROK] must review this provisional ticket read-only against its exact committed parent and
-return:
+[GROK] reviewed the provisional ticket read-only against
+`00e7c754b804df88e3c33c42512668678bd3430f` and returned
+`REQUIRES TICKET CORRECTION`.
 
-- false premises or authority conflicts;
-- whether one-Attempt pairing hides any stage disagreement;
-- whether the current Evidence Store supports the stated lifecycle scan, including
-  unrelated-damage availability behavior;
-- missing checks or checks exceeding D14/PF-14;
-- request-shape, classification, or count-grain errors;
-- likely false greens;
-- helper coupling or changed-path problems;
-- OpenAPI/consumer-readiness gaps;
-- READY or REQUIRES TICKET CORRECTION.
+The review confirmed the route set, one-Attempt grain, surface request fields,
+classification set, changed-path allowlist, ordering, HTTP mappings, and no-schema
+boundary. This reconciliation incorporates the six bounded proof/contract corrections
+listed above and rejects the proposed all-missing-rows empty response for the D14
+fail-closed reason recorded above.
 
-No implementation, tests, mutation, provider call, credentials, or Evidence activity is
-authorized during review.
+The ticket is now ready for separate [CHAZ] implementation authorization against the final
+clean ticket commit. No implementation, tests, provider call, credentials, or Evidence
+activity occurred during ticket review or reconciliation.
 
 ## Implementation report requirements
 
