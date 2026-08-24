@@ -579,6 +579,39 @@ Evidence scan and a rebuildable measurement-subject index remains provisional un
 Organic and Search Mentions are reviewed. Before recurring F12-scale acquisition, any such
 inventory must have a scalable, rebuildable indexing boundary.
 
+**Google Organic reconciliation:** Google Organic confirms this split with surface-specific
+limits:
+
+- admitted-empty history is valid because a successful zero-top-level-item result still
+  writes subject-bearing `google_organic_result_context`; it means zero returned top-level
+  items, not no organic result, failure, or never measured;
+- ranked-result identity remains the accepted placement axes (page, position, rank group,
+  absolute rank, and requested keyword). Exact URL and domain remain content; matching them
+  across Captures is downstream analysis. A URL-on-SERP identity requires a separately
+  authorized new Recipe and digest;
+- snippets, AI Overview prose/markdown and source text, and expanded People Also Ask answers
+  remain Evidence-only. Serving them requires a new Recipe plus an explicit retention, terms,
+  and redistribution decision;
+- the closed Live Advanced request and interpretation limits belong in the versioned
+  route/OpenAPI contract. Runtime omission arrays are not required. Typed surface response
+  models and concise descriptions wait for the shared envelope decision after Search
+  Mentions review;
+- `group_organic_results=true` can produce non-null `related_result`, which the current
+  Recipe deliberately leaves unvalidated and Evidence-only. Any newly encountered complete
+  Capture containing non-null `related_result` may be preserved as Evidence but must stop
+  before derivation, admission, or API service until the Steward chooses explicit disclosure
+  under the current Recipe or a new Recipe. This branch must be resolved before recurring
+  F12 acquisition;
+- an Outcomes ledger that serves `observation_count` must verify committed Evidence and
+  require the stored count to equal Observation-envelope cardinality. Full typed-row and
+  subordinate-occurrence consistency remains the admitted fact-document/history boundary.
+  The current Attempt audit retains PF-14's accepted narrower behavior until a later Outcomes
+  ticket explicitly hardens it.
+
+After Search Mentions review, the intended implementation sequence is the shared history
+list envelope, then sibling Outcomes, then holdings. This reconciliation authorizes none of
+that implementation.
+
 **Why:** The first Keyword Overview consumer review found strong typed facts, field states,
 Recipe identity, time axes, and integrity behavior, but admitted-only subject lookup, silent
 list slicing, no discovery, and no failure inventory can mislead an API-only LLM about what

@@ -416,12 +416,19 @@ No coverage row may be invented for a failure or zero-envelope Capture. Before r
 F12-scale acquisition, the chosen inventory path must be scalable and rebuildable. D14
 records the full provisional decision.
 
-**Current checkpoint — 2026-08-24:** Keyword Overview is reconciled and the Google Organic
-read-only review is complete. The question-resolution gate is now required. Next resolve
-Organic's remaining technical questions about non-null `related_result`, Outcome-count
-integrity, and route/OpenAPI disclosure; then record the Steward reconciliation and run the
-Search Mentions question-resolution gate before its major review. No API/schema remediation,
-provider exchange, or AI-12 implementation is yet authorized.
+Google Organic confirms the contract with a real subject-bearing admitted-empty document,
+accepted placement identity with URL as content, and the same Evidence-only failure-subject
+gap as Keyword Overview. Its prose remains Evidence-only. Non-null `related_result` is a
+stop-before-derive trigger for any newly encountered Capture, and any future Outcomes ledger
+serving `observation_count` must prove envelope cardinality. The closed Organic request and
+interpretation limits must later be represented by typed surface/OpenAPI contracts without
+adding per-Capture omission arrays.
+
+**Current checkpoint — 2026-08-24:** Keyword Overview and Google Organic are reconciled under
+D14, and their Product/technical questions are resolved. The next action is the Search
+Mentions question-resolution gate before its major strategy-consumer review. Shared
+history-envelope, Outcomes, holdings, OpenAPI/schema remediation, provider exchange, and
+AI-12 implementation remain unauthorized.
 
 ## Dependency-based sequencing direction
 
