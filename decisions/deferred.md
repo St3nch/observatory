@@ -290,3 +290,27 @@ pressure Observatory to absorb customer-specific strategy state or an internal s
 **Related deferrals:** F1 remains the separate, unfired question of canonical shared
 query-panel ownership. If a consumer later requires HTTP-initiated capture instead of the
 service CLI, F9 separately fires.
+
+## F13 — Older transport-capability authority hardening
+
+**Deferred by:** AI-08's Target Metrics-only scope and the requirement to preserve each
+adapter's closed transport contract rather than introduce a generic capability framework.
+
+**Why not now:** AI-08 replaced caller-visible capability fields with closure-owned
+transport authority for Target Metrics. Review found that the older sandbox, Keyword
+Overview, Google Organic, and Search Mentions gates still treat capability attributes such
+as the request body, document, or used flag as transport authority. Deliberate
+same-process abuse of private seams, including `object.__setattr__`, can therefore bypass
+their intended immutability or replay checks. Remediating those four gates is outside
+AI-08 and should remain separately bounded so their published bytes, one-shot rules, and
+surface-specific transport behavior stay independently reviewable.
+
+**Trigger:** Before the next live operator invocation, substantive modification, or reuse
+of any affected gate, harden that gate with closure-owned issuance and consumption state,
+committed-Attempt revalidation immediately before send, and adversarial tests for body and
+document replacement, used-flag reset, replay, and committed-Evidence tamper. Start with
+Search Mentions when no earlier affected gate fires the trigger.
+
+**Cost of forgetting:** A same-process caller with access to private seams could change
+what an already-authorized capability sends or replay it, breaking the Attempt-before-send
+and one-exchange claims even though ordinary attribute assignment remains blocked.

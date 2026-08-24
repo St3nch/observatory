@@ -1,6 +1,6 @@
 # AI-08 — Target Metrics Live paid-probe adapter
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** AI-07 — Target Metrics activation review (`closed`)  
 **Approved by:** Project Steward  
@@ -132,33 +132,33 @@ production HTTPS target.
 
 ## Acceptance criteria
 
-- [ ] Independent test literals and `hashlib.sha256` prove exact request-body,
+- [x] Independent test literals and `hashlib.sha256` prove exact request-body,
       fingerprint, Attempt, and representative complete-Capture vectors without using the
       production constructors to derive expected values.
-- [ ] Constructors reproduce those vectors; all previously published event identities
+- [x] Constructors reproduce those vectors; all previously published event identities
       remain byte-identical.
-- [ ] Closed validator tests accept only the contract above and reject confused adapter,
+- [x] Closed validator tests accept only the contract above and reject confused adapter,
       host, path, policy, target, platform, list-limit, and unknown-field cases.
-- [ ] Exact authorization, concrete-store, commit, read-back, capability, and target gates
+- [x] Exact authorization, concrete-store, commit, read-back, capability, and target gates
       prevent all send-capable paths before a verified committed Attempt exists.
-- [ ] One-shot tests cover complete, unresolved, credential-echo, partial/over-limit, and
+- [x] One-shot tests cover complete, unresolved, credential-echo, partial/over-limit, and
       neighbor-adapter stores.
-- [ ] Forged, copied, pickled, replayed, subclassed, and cross-adapter capabilities cannot
+- [x] Forged, copied, pickled, replayed, subclassed, and cross-adapter capabilities cannot
       transport.
-- [ ] Mock and loopback tests prove one request, exact JCS body, the sent-header equation,
+- [x] Mock and loopback tests prove one request, exact JCS body, the sent-header equation,
       no redirect follow, and no extra provider exchange.
-- [ ] Complete nonempty/zero-byte/3xx/4xx/5xx, partial body failure, 8 MiB boundary,
+- [x] Complete nonempty/zero-byte/3xx/4xx/5xx, partial body failure, 8 MiB boundary,
       connect/send/header no-response, duplicate retained headers, denylist omissions, and
       credential echo follow the accepted HTTP-v2/PF-09 behavior.
-- [ ] Each committed branch reads back, satisfies D5, and leaves a clean scrub result.
-- [ ] Inspect emits exact verified bytes with no newline, write, or network and rejects
+- [x] Each committed branch reads back, satisfies D5, and leaves a clean scrub result.
+- [x] Inspect emits exact verified bytes with no newline, write, or network and rejects
       every forbidden state above.
-- [ ] Mixed fixture/sandbox/Keyword Overview/Organic/Search Mentions/Target Metrics stores
+- [x] Mixed fixture/sandbox/Keyword Overview/Organic/Search Mentions/Target Metrics stores
       scrub clean; existing fixture and provider Derivations skip the new Evidence without
       integrity failure or PostgreSQL rows citing its IDs.
-- [ ] Ordinary tests use only `httpx.MockTransport` and loopback. A test guard fails any
+- [x] Ordinary tests use only `httpx.MockTransport` and loopback. A test guard fails any
       non-loopback socket connection and removes real credential environment variables.
-- [ ] `uv run pytest -q`, `uv run ruff check .`, and `uv run mypy` pass.
+- [x] `uv run pytest -q`, `uv run ruff check .`, and `uv run mypy` pass.
 
 ## Required implementation report
 
@@ -540,3 +540,30 @@ Zero DataForSEO / sandbox / DNS / paid-host / account / public-network requests.
 Zero real credentials. Zero live Evidence. Zero credit spend.
 No other production module, `capture_event.py`, other adapter gate, authority document, or other ticket.
 No amend. No push.
+
+## Steward closure
+
+**Closed:** 2026-08-24  
+**Accepted implementation:** `78f4db32c6d492e88ef305578432563ebb90785d`  
+**Accepted remediation:** `342a86a99ebf0603dbbc0db417c174dc902a3223`
+
+Independent review accepted the closed Target Metrics adapter after the remediation moved
+transport authority and replay state into the issuer closure, revalidated the committed
+Attempt and exact request-body bytes immediately before send, and proved fail-closed
+behavior for genuine issued-capability mutation, used-flag reset, replay, and committed
+Evidence tamper.
+
+Closure evidence:
+
+- implementer full suite: **1113 passed, 1 skipped**, with the one known Starlette
+  deprecation warning;
+- independent operator targeted suite at the exact remediation commit: **68 passed**;
+- independent MCP `ruff` and `mypy` tasks passed at the exact remediation commit;
+- published event identities, mixed-store behavior, zero-derive accounting, and
+  zero-network/zero-credit boundaries remain as reported above.
+
+No live DataForSEO call, credential use, paid Evidence, Recipe, Derivation, PostgreSQL
+projection, or API surface is authorized or claimed by this closure. AI-09 remains the
+separate activation boundary. The inherited capability-authority weakness found in the
+four older transport gates is recorded as F13 with an explicit before-next-live-use or
+reuse trigger; it was not folded into this adapter's implementation.
