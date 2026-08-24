@@ -1,10 +1,10 @@
 # API-01 — Shared provider-history list envelope
 
-**Status:** provisional — mandatory GROK pre-implementation review pending  
+**Status:** provisional — GROK review reconciled; implementation authorization pending  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** GROK read-only ticket review and final Steward reconciliation  
-**Approved by:** [CHAZ] for provisional ticket publication only  
-**Review checkpoint:** exact commit carrying this draft, named by the Steward prompt  
+**Blocked by:** explicit CHAZ implementation authorization and an exact clean start commit  
+**Approved by:** [CHAZ] for ticket-review correction publication only  
+**Pre-implementation review:** completed read-only against `fa8cc3cc7bfc0042a192479af8a6decaa054ecda`  
 **Implementation start:** not authorized
 
 ## Purpose
@@ -17,9 +17,25 @@ under D14. It adds outer list metadata and a typed OpenAPI boundary without chan
 surface's fact body, candidate membership, Derivation Recipe, Observation identity,
 admitted-empty semantics, or provider acquisition behavior.
 
-API-01 is not implementation authority until GROK completes the mandatory read-only ticket
-review, GPT reconciles that review, CHAZ authorizes implementation, and the final ticket names
-an exact clean start commit.
+API-01 is not implementation authority. CHAZ must separately authorize implementation, and
+the implementation prompt must name this reconciled ticket's exact clean start commit and
+retain all changed-path, testing, zero-provider, and no-push boundaries.
+
+## Pre-implementation review reconciliation
+
+GROK completed the mandatory code-first review of the provisional ticket read-only against
+`fa8cc3cc7bfc0042a192479af8a6decaa054ecda`. The review found no false premise, authority
+contradiction, unresolved Product question, or need to redesign the accepted D14 boundary.
+
+The review confirmed that all three readers already load and verify the full matching candidate
+series before sorting and limiting. It also confirmed the surface-specific membership,
+admitted-empty, Recipe, ordering, and count-grain claims in this ticket.
+
+This reconciliation accepts five corrections: semantic rather than byte-for-byte Capture
+equivalence; complete omission of all envelope keys on HTTP 409; explicit outer-versus-inner
+count-grain tests; uncoerced nested Capture mappings under the typed outer model; and
+substantive OpenAPI-description assertions. A small shared-helper unit test is permitted only
+as additional evidence and never as a substitute for the three independent route suites.
 
 ## Authority and accepted direction
 
@@ -91,6 +107,9 @@ one resolved Recipe.
 
 The three routes keep different Capture-group/fact-body mappings. API-01 must not introduce a
 universal fact body or force their nested keys into one schema.
+The typed outer boundary must preserve each nested Capture mapping semantically. Response
+validation must not strip, coerce, normalize, or reject surface-specific nested keys or values.
+Closure of the 12 outer keys does not close or universalize the nested Capture mappings.
 
 ## Field semantics
 
@@ -257,6 +276,7 @@ Each route must expose a typed response model sufficient for OpenAPI to describe
 - the existing scope/provenance fields;
 - the five new list fields;
 - `captures` as an array of surface-specific mapping objects.
+- nested Capture mappings as pass-through values rather than one closed shared schema.
 
 The metadata fields must have concise descriptions that distinguish:
 
@@ -268,6 +288,10 @@ The metadata fields must have concise descriptions that distinguish:
 API-01 does not require full typed models for each nested Capture fact body. That remains
 surface-local later work. Do not claim the generic nested mappings are fully described merely
 because the outer envelope is typed.
+
+The typed response boundary must preserve the readers' nested mapping values without
+normalization, key stripping, scalar coercion, or response-validation rejection. Tests must
+exercise that pass-through boundary with representative surface-specific nested fields.
 
 ## Shared implementation boundary
 
@@ -313,13 +337,15 @@ Tests:
 - `tests/test_api_keyword_overview.py`
 - `tests/test_api_google_organic.py`
 - `tests/test_api_search_mentions.py`
+- `tests/test_provider_history.py` — optional shared-helper invariant tests only; never a
+  substitute for independent route tests
 
 Ticket:
 
 - `tickets/API-01-shared-provider-history-list-envelope.md`
 
-No other path is authorized by this provisional draft. GROK must flag any missing necessary
-path during pre-implementation review rather than expanding scope.
+No other path is authorized. If implementation reveals a necessary path outside this
+allowlist, GROK must stop and return it to the Steward rather than expanding scope.
 
 ## Acceptance criteria
 
@@ -327,9 +353,10 @@ path during pre-implementation review rather than expanding scope.
 
 - [ ] All three routes retain the seven existing top-level keys and add exactly the five
       approved metadata keys.
-- [ ] Existing Capture-group/fact-body mappings remain byte-for-byte equivalent for the same
-      database/Evidence state except for outer JSON serialization required by the typed
-      response boundary.
+- [ ] Existing Capture-group/fact-body mappings remain semantically equivalent for the same
+      database/Evidence state; typed outer serialization does not change field presence,
+      nesting, scalar values, arrays, or surface-specific meaning.
+- [ ] Nested Capture mappings pass through without stripping, normalization, or coercion.
 - [ ] Exact-key tests are updated intentionally; no unrelated response field changes.
 - [ ] `returned_count == len(captures)`.
 - [ ] `has_more == (total_matching > returned_count)`.
@@ -345,8 +372,12 @@ path during pre-implementation review rather than expanding scope.
       `has_more=false`.
 - [ ] Ascending and descending order retain the current request-started-at/capture-ID
       behavior before limit.
-- [ ] A Search Mentions Capture with 113 Observation envelopes still increments
-      `total_matching` and `returned_count` by one.
+- [ ] A Search Mentions Capture with 113 Observation envelopes and provider
+      `total_count=3055` still increments `total_matching` and `returned_count` by one.
+- [ ] Organic fixtures deliberately separate outer Capture count from `se_results_count`
+      and prove that provider corpus testimony does not control the outer envelope.
+- [ ] Keyword Overview fixtures deliberately separate outer Capture count from
+      `observation_count`, typed fact counts, and SQL join multiplicity.
 - [ ] Organic/Search Mentions admitted-empty Capture documents each count as one history
       document.
 - [ ] Keyword Overview does not count or manufacture a zero-envelope admitted-empty
@@ -360,7 +391,9 @@ path during pre-implementation review rather than expanding scope.
 - [ ] Damage or consistency disagreement in a matching candidate inside the returned limit
       remains 409.
 - [ ] The same damage outside `limit=1` remains 409.
-- [ ] A 409 response exposes none of the history-envelope keys or partial counts.
+- [ ] A 409 response exposes none of `captures`, `total_matching`, `returned_count`,
+      `limit`, `order`, or `has_more`, and exposes no partial count. The accepted body
+      remains `{"detail":"evidence_integrity_failure"}`.
 - [ ] Unselected Recipe, wrong pin, invalid query, and unknown/empty admitted history retain
       their exact accepted status meanings.
 - [ ] No GET mutates Evidence, PostgreSQL, Recipe selection, or acquisition state.
@@ -374,6 +407,10 @@ path during pre-implementation review rather than expanding scope.
 - [ ] Descriptions state that empty history does not distinguish failed from never measured.
 - [ ] Surface Capture bodies remain mappings and are not falsely documented as one universal
       schema.
+- [ ] OpenAPI tests assert the substantive admitted-Capture, truncation, empty-history, and
+      no-pagination meanings rather than checking property names and scalar types alone.
+- [ ] Representative nested surface mappings retain their keys and scalar types through the
+      response model.
 
 ### Architecture
 
@@ -396,11 +433,14 @@ At minimum, tests must cover:
 4. matching damage outside the returned limit still producing 409;
 5. Organic and Search Mentions admitted-empty counting;
 6. Keyword Overview no manufactured admitted-empty history;
-7. Search Mentions 113-envelope Capture counting as one outer document;
-8. pinned Recipe isolation;
-9. exact additive key sets;
-10. OpenAPI required fields/types/descriptions for all three routes;
-11. a tripwire proving no Search Mentions continuation, provider transport, Derivation, or
+7. Search Mentions 113-envelope / provider-3055 Capture counting as one outer document;
+8. Organic provider `se_results_count` remaining distinct from outer Capture count;
+9. Keyword Overview Outcome/fact/join counts remaining distinct from outer Capture count;
+10. pinned Recipe isolation;
+11. exact additive key sets;
+12. OpenAPI required fields, types, and substantive descriptions for all three routes;
+13. representative nested Capture mappings passing through without stripping or coercion;
+14. a tripwire proving no Search Mentions continuation, provider transport, Derivation, or
     mutation occurs during history GET.
 
 Synthetic fixtures prove constructed branches, not that those branches occurred in live
@@ -444,23 +484,20 @@ API-01 must not add or modify:
 - F7, F12, F13, or AI-12 work;
 - unrelated refactors.
 
-## Required pre-implementation review
+## Completed pre-implementation review
 
-Before implementation, GROK must inspect this provisional ticket against the named review
-checkpoint and return:
+GROK completed the required read-only code-first review against
+`fa8cc3cc7bfc0042a192479af8a6decaa054ecda`. It returned
+`REQUIRES TICKET CORRECTION`, not a Product or architecture redesign.
 
-- false premises;
-- missing or over-constrained acceptance criteria;
-- likely false-green tests;
-- compatibility or OpenAPI traps;
-- whether the proposed shared helper boundary is correct;
-- whether any proposed path is unnecessary or a required path is missing;
-- whether every route can count after verification without weakening integrity;
-- whether any surface-specific admitted-empty or multi-keyword behavior is misstated;
-- ready or reconcile recommendation.
+The review found no false premise in candidate membership, verify-before-limit sequencing,
+transaction posture, admitted-empty behavior, Recipe scope, or the proposed helper boundary.
 
-The review is read-only. It creates no files, commit, provider activity, Evidence, or
-credentials access.
+GPT accepted the optional `tests/test_provider_history.py` allowlist decision and reconciled
+all five required corrections into this ticket.
+
+The ticket remains provisional and implementation remains blocked until explicit, separate
+CHAZ authorization names the exact clean start commit.
 
 ## Implementation report requirements
 
@@ -489,6 +526,8 @@ Targeted:
       tests/test_api_keyword_overview.py \
       tests/test_api_google_organic.py \
       tests/test_api_search_mentions.py
+
+If `tests/test_provider_history.py` is created, include it in the targeted invocation.
 
 Full:
 
