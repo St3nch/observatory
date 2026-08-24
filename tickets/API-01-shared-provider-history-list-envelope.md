@@ -1,9 +1,10 @@
 # API-01 — Shared provider-history list envelope
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** Steward review and closure  
+**Blocked by:** none; independently reviewed and closed  
 **Approved by:** [CHAZ] implementation authorization against the named start commit  
+**Closure authorized by:** [CHAZ] after final exact-HEAD verification  
 **Pre-implementation review:** completed read-only against `fa8cc3cc7bfc0042a192479af8a6decaa054ecda`  
 **Start commit:** `4f1e706b17a448be75f6bf9a3f3b1082db9ef4b0`
 
@@ -660,3 +661,51 @@ coverage.
 One implementation commit, no amend, no push. Zero provider calls, network
 activity, credential access, Evidence writes, or spending. Working tree left
 clean.
+
+## Steward review and closure — 2026-08-24
+
+[CHAZ] explicitly authorized closure after the reconciled ticket, GROK implementation
+report, independent Steward code-and-test review, bounded technical debrief, and final
+exact-HEAD operator verification. The Steward accepts API-01 as `done`.
+
+Accepted commits:
+
+- reconciled implementation ticket:
+  `4f1e706b17a448be75f6bf9a3f3b1082db9ef4b0`;
+- implementation:
+  `3ba9c755db3342519db4b3addfe069e13d1517c8`.
+
+No remediation commit was required. The Steward inspected every changed production path,
+the shared helper, all affected route tests, the ticket report, and the exact parent/child
+comparison. The review confirmed the 12-key typed outer envelope, unique admitted-Capture
+count grain, complete verify-before-limit behavior, deterministic sort-before-slice,
+surface-local nested fact bodies, exact 409 no-partial-payload behavior, and zero Search
+Mentions continuation or provider activity.
+
+The bounded GROK debrief resolved the remaining review questions as non-blocking:
+duplicate Capture rows are unreachable under the current keys and joins; current reader
+projections contain JSON-compatible nested values that pass through the outer Pydantic
+model without coercion or stripping; and uncaught envelope-validation failures represent
+programming-invariant faults rather than valid Evidence/PostgreSQL disagreements.
+
+[CHAZ] returned final operator evidence on exact implementation HEAD
+`3ba9c755db3342519db4b3addfe069e13d1517c8`:
+
+- targeted API-01 suite: `48 passed, 1 warning`;
+- full suite: `1198 passed, 1 skipped, 1 warning`;
+- Ruff: passed;
+- mypy: passed;
+- initial and final tree: clean on the same commit.
+
+The warning is the known Starlette/`httpx` TestClient deprecation and is non-blocking.
+No provider call, credential use, spend, Evidence access or mutation, schema/Recipe change,
+outer pagination, Outcomes, holdings, F12, F13, amend, or push occurred during closure.
+
+Accepted limits remain explicit: `has_more` discloses an omitted outer tail but does not
+make it retrievable; zero admitted history does not distinguish failed from never measured;
+nested Capture bodies remain surface-specific mappings; and provider corpus counts remain
+distinct from outer admitted-Capture cardinality.
+
+This closure changes documentation and workflow authority only. No behavior-affecting
+change followed the final exact-HEAD evidence, so the suite was not repeated.
+
