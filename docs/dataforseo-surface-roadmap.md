@@ -394,9 +394,10 @@ and [GPT] locks the decisions before issuing the major prompt. Questions discove
 are resolved before remediation or closure rather than causing repeated large-prompt
 rewrites.
 
-### Provisional shared provider-consumer contract
+### Accepted shared provider-consumer contract
 
-The completed Keyword Overview review establishes this provisional boundary:
+Keyword Overview established this boundary; Google Organic and Search Mentions subsequently
+confirmed it with their surface-specific semantics:
 
 - surface-explicit Observation history contains admitted, subject-bound documents only;
 - a sibling Outcomes resource exposes all measurement classifications without pretending
@@ -410,11 +411,12 @@ The completed Keyword Overview review establishes this provisional boundary:
 - subject-indexed failure inventory is not assumed to be API-only: Keyword Overview retains
   failed subjects in verified Attempt Evidence, not current typed PostgreSQL rows.
 
-Whether failure-aware subject discovery uses a bounded Evidence scan or a rebuildable
-measurement-subject index remains open until Google Organic and Search Mentions are reviewed.
-No coverage row may be invented for a failure or zero-envelope Capture. Before recurring
-F12-scale acquisition, the chosen inventory path must be scalable and rebuildable. D14
-records the full provisional decision.
+All three reviews confirm that current PostgreSQL does not retain requested-subject identity
+for every non-admitted path. A bounded verified-Evidence scan remains a possible low-volume
+bridge, but recurring F12-scale acquisition requires a scalable rebuildable
+measurement-subject index. The exact bridge/index mechanism remains for the later
+Outcomes/holdings ticket. No coverage row may be invented for a failure or zero-envelope
+Capture, and no consumer receives direct Evidence access. D14 records the accepted decision.
 
 Google Organic confirms the contract with a real subject-bearing admitted-empty document,
 accepted placement identity with URL as content, and the same Evidence-only failure-subject
@@ -424,20 +426,22 @@ serving `observation_count` must prove envelope cardinality. The closed Organic 
 interpretation limits must later be represented by typed surface/OpenAPI contracts without
 adding per-Capture omission arrays.
 
-Search Mentions' question-resolution gate fixes one current Capture as a bounded first-page
-prefix, not a complete corpus or representative sample. Provider total/returned counts and
-the opaque continuation token remain truncation testimony and do not authorize another
-exchange. Exact Search Mentions question/answer/source text remains intentionally typed and
-API-visible; this surface-specific posture does not change Organic's Evidence-only prose.
-Its subject-bearing admitted-empty history remains valid, with result-context counts
-distinguishing an empty corpus from an empty page. The outer Capture list still needs D14's
-shared list envelope; inner corpus/paging state remains surface-specific.
+Search Mentions confirms the contract while preserving a uniquely rich returned-prefix fact
+document: exact question/answer text, structured source URLs and occurrences, current and
+monthly volume testimony, and explicit inner corpus/truncation state. The AI-03 prefix
+contains five item, sixty monthly, and forty-eight source envelopes;
+`observation_count=113` is their envelope cardinality, not provider `items_count` or corpus
+size. The database/API preserve those returned facts faithfully. The remaining defects are
+the shared silent outer Capture slice, missing Outcomes/holdings, and an untyped route/OpenAPI
+contract that does not explain the prefix, identity, count, text, and empty-state semantics.
+No Recipe, identity, text-exposure, pagination, or provider-acquisition change follows from
+the review.
 
-**Current checkpoint — 2026-08-24:** Keyword Overview and Google Organic are reconciled under
-D14. Search Mentions' Product questions and bounded technical consequences are locked; its
-major read-only strategy-consumer review is next. Shared history-envelope, Outcomes,
-holdings, OpenAPI/schema remediation, pagination or another provider exchange, F12/F13
-activity, and AI-12 implementation remain unauthorized.
+**Current checkpoint — 2026-08-24:** Keyword Overview, Google Organic, and Search Mentions
+consumer reviews are reconciled under accepted D14. The next action is the question-resolution
+gate for the shared outer history-list envelope before a provisional implementation ticket is
+drafted. Shared history-envelope, Outcomes, holdings, OpenAPI/schema remediation, pagination
+or another provider exchange, F12/F13 activity, and AI-12 implementation remain unauthorized.
 
 ## Dependency-based sequencing direction
 

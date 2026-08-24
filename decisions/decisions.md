@@ -544,9 +544,9 @@ fits the accepted substrate and all other gates.
 
 ## D14 — Provider consumer APIs separate admitted facts, measurement activity, and holdings
 
-**Status:** Provisional shared contract boundary. Google Organic is reconciled. Search
-Mentions' question-resolution gate is complete; its major review remains required before
-shared implementation is authorized.
+**Status:** Accepted shared contract boundary after Keyword Overview, Google Organic, and
+Search Mentions consumer reviews. Implementation and the exact failure-inventory mechanism
+remain separately gated.
 
 **Decision:** A future connected strategy LLM remains an ordinary API consumer under D2 and
 D3. Provider-facing APIs use surface-explicit paths and may share a lossless list envelope,
@@ -573,12 +573,13 @@ measurements, not an intentional monitoring program. Reads remain verify-on-read
 closed with no partial fact payload when Evidence or rebuildable state disagrees.
 
 Subject identity for non-admitted activity must come from verified Evidence or a rebuildable
-index derived from it, not from invented coverage. Current Keyword Overview PostgreSQL rows
-do not retain requested keywords for failed or zero-envelope activity, so subject-filtered
-Outcome and holdings APIs are not merely JSON-envelope work. The choice between a bounded
-Evidence scan and a rebuildable measurement-subject index remains provisional until Google
-Organic and Search Mentions are reviewed. Before recurring F12-scale acquisition, any such
-inventory must have a scalable, rebuildable indexing boundary.
+index derived from it, not from invented coverage. Reviews of Keyword Overview, Google
+Organic, and Search Mentions confirm that current PostgreSQL rows do not retain the requested
+subject for all failed or zero-envelope activity, so subject-filtered Outcomes and holdings
+are not merely JSON-envelope work. A bounded verified-Evidence scan remains a possible
+low-volume bridge, but before recurring F12-scale acquisition the durable path must have a
+scalable, rebuildable measurement-subject index. The exact bridge/index mechanism remains a
+later Outcomes/holdings ticket boundary; no consumer receives direct Evidence access.
 
 **Google Organic reconciliation:** Google Organic confirms this split with surface-specific
 limits:
@@ -640,9 +641,35 @@ This lock authorizes no pagination, provider call, Recipe change, API/schema rem
 F12 work, or F13-triggering acquisition-gate reuse. F13 still applies before the next live
 Search Mentions invocation, substantive gate modification, or reuse.
 
-After Search Mentions review, the intended implementation sequence is the shared history
-list envelope, then sibling Outcomes, then holdings. This reconciliation authorizes none of
-that implementation.
+**Search Mentions reconciliation:** The major review confirms the locked boundary and adds
+these implementation facts:
+
+- the typed PostgreSQL and API fact document faithfully preserves the returned AI-03 prefix:
+  five item envelopes, sixty monthly-volume envelopes, and forty-eight structured-source
+  envelopes with their occurrences. Outcome `observation_count=113` correctly counts those
+  Observation envelopes; it is not provider `items_count=5`, corpus size, or question
+  count. The required correction is typed contract disclosure, not changing either count;
+- the inner result context already preserves `total_count=3055`, `items_count=5`, offset,
+  and the opaque token. The remaining defect is that the route/OpenAPI contract does not
+  explain the bounded-prefix, identity, text, empty-state, or count semantics clearly enough
+  for an API-only LLM;
+- the outer history list still slices matching Captures at `limit` without
+  `total_matching`, `returned_count`, or `has_more`. History also cannot distinguish
+  failed activity from never measured. These confirm the shared list-envelope and separate
+  Outcomes/holdings work rather than a Search Mentions Recipe defect;
+- requested keyword remains top-level/result-context testimony and is revalidated against
+  the verified Attempt. Its deliberate omission from the nested request object is not data
+  loss. Current item/source identities, occurrence relations, and Search Mentions text
+  exposure require no remediation;
+- exact question/answer text linked to structured source URLs, occurrence testimony, distinct
+  current and monthly volumes, and explicit unknown remainder are unusually valuable
+  downstream testimony. Provider count, volume, model, clock, and source claims remain
+  attributed and must not be promoted to universal truth or cross-surface equivalence.
+
+With all three implemented provider surfaces reviewed, the intended implementation sequence
+is the shared history list envelope, then sibling Outcomes, then holdings. Search
+Mentions-local typed/OpenAPI descriptions should build on the accepted shared envelope.
+This reconciliation authorizes none of that implementation.
 
 **Why:** The first Keyword Overview consumer review found strong typed facts, field states,
 Recipe identity, time axes, and integrity behavior, but admitted-only subject lookup, silent
@@ -659,5 +686,5 @@ Outcome with provider-specific subject arrays; expose direct database or Evidenc
 encode panels, cadence, scoring, or recommendations in Observatory; or force unlike provider
 facts into one shared response body.
 
-**Implementation boundary:** This decision records the provisional contract only. It does
-not authorize API/schema work, provider calls, spending, F12 orchestration, or AI-12.
+**Implementation boundary:** This decision records the accepted consumer contract only. It
+does not authorize API/schema work, provider calls, spending, F12 orchestration, or AI-12.
