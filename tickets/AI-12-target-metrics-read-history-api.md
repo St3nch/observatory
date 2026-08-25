@@ -647,3 +647,67 @@ No schema change. Do not invent coverage rows. Do not treat `sources_domain_coun
 ### Hygiene
 
 One implementation commit, no amend, no push. Zero provider calls, credentials, spend, retry, continuation, live Evidence activity, operator PostgreSQL mutation, automatic Recipe selection, or F12/F13 work. Working tree left clean after the commit.
+
+## Remediation report addendum
+
+**Remediation start commit:** `bed50a5c9b6b040ac3aeab0cf928d9556cf1d216`  
+**This commit** is the AI-12 bounded remediation child. Status `review`, never `done`.
+
+### Changed paths
+
+- `src/observatory/target_metrics_read.py`
+- `tests/test_api_target_metrics.py`
+- `tickets/AI-12-target-metrics-read-history-api.md`
+
+No `api.py`, parser, Recipe, derivation, schema, migration, Outcomes, or Holdings changes.
+
+### Production behavior
+
+- Every selected `observation_envelopes.attempt_id` must equal the verified/context Attempt ID. A valid cross-linked 64-hex Attempt ID is HTTP 409.
+- Singleton location/language/platform `provider_array_index` must be 0. Ordered source-domain indexes must be exactly dense `0..n-1`. Disagreement is integrity failure without rerunning parse or Derivation.
+- Optional-family `count` is required and nullable, with no default. `observation_kinds` is validated as the exact ordered v1 pair. Frozen request constants, structural zeros, and singleton grouping constants are Literal/const in the typed models. Malformed projection raises `IntegrityError` rather than coercing.
+
+### Verification
+
+Targeted suite **37 passed**, 1 warning (known Starlette/`httpx` TestClient deprecation).
+
+    uv run ruff check .   # All checks passed
+    uv run mypy src       # Success: no issues found in 34 source files
+
+Full suite was **not** run.
+
+### Strongest
+
+Cross-linked envelope Attempt ID is now a first-class 409. Dense lexical indexes are checked from persisted typed rows, not re-parsed arrays. OpenAPI now requires optional-family `count`.
+
+### Weakest
+
+Missing-count and wrong-`observation_kinds` 409s use monkeypatches of projection helpers, because a legal derive cannot emit those payloads. Missing envelope is planted by deleting a typed source-domain row and its parent envelope together (typed-table FK).
+
+### Possible false greens
+
+OpenAPI `const` vs `enum` helper accepts either. Dense-index plant uses `9 -> 11` on the AI-09 ten-row set. Monkeypatched projection tests do not prove that Derivation would produce those documents.
+
+### Caller-controlled influence
+
+Unchanged: `requested_keyword`, optional v1 pin, `limit` 1–100, `order`.
+
+### Architecture
+
+No reader/API redesign. No shared writer. Frozen request Literals document the closed adapter; they do not replace Attempt parameter validation.
+
+### Parser/provider traps
+
+None new. Index density is lexical completeness of the admitted array, not rank or truncation.
+
+### Closure blockers
+
+Full suite not run. Steward review of this remediation commit is required.
+
+### Deferred
+
+Unchanged.
+
+### Hygiene
+
+One remediation commit, no amend, no push. Zero provider calls, credentials, spend, continuation, live Evidence mutation, or F12/F13. Working tree left clean after the commit.

@@ -15,6 +15,7 @@ from fastapi.testclient import TestClient
 
 from observatory.api import create_app
 from observatory.capture_event import (
+    MENTIONS_ADAPTER_CONTRACT,
     TARGET_METRICS_ADAPTER_CONTRACT,
     body_ref,
     target_metrics_http_attempt_document,
@@ -343,6 +344,39 @@ def _resolve_schema(spec: dict[str, Any], schema: dict[str, Any]) -> dict[str, A
     return schema
 
 
+def _assert_closed(schema: dict[str, Any], keys: set[str]) -> dict[str, Any]:
+    assert schema.get("additionalProperties") is False
+    assert set(schema["required"]) == keys
+    assert set(schema["properties"]) == keys
+    return schema["properties"]
+
+
+def _const(schema: dict[str, Any], expected: object) -> None:
+    if "const" in schema:
+        assert schema["const"] == expected
+        return
+    if "enum" in schema:
+        assert schema["enum"] == [expected]
+        return
+    any_of = schema.get("anyOf") or schema.get("oneOf") or []
+    for option in any_of:
+        if option.get("const") == expected or option.get("enum") == [expected]:
+            return
+    raise AssertionError(f"expected const {expected!r} in {schema!r}")
+
+
+def _nullable_int(schema: dict[str, Any]) -> None:
+    types = schema.get("type")
+    if types == ["integer", "null"] or types == ["null", "integer"]:
+        return
+    if schema.get("anyOf") or schema.get("oneOf"):
+        options = schema.get("anyOf") or schema.get("oneOf")
+        kinds = {option.get("type") for option in options}
+        assert "integer" in kinds and "null" in kinds
+        return
+    raise AssertionError(f"expected nullable integer in {schema!r}")
+
+
 def _xmin_snapshot(dsn: str) -> dict[str, list[tuple[object, ...]]]:
     snapshot: dict[str, list[tuple[object, ...]]] = {}
     with connect(dsn) as connection:
@@ -563,17 +597,22 @@ def test_frozen_ai09_projection_openapi_and_no_mutation(
         item for item in route["parameters"] if item["name"] == "requested_keyword"
     )
     assert keyword_param["required"] is True
-    keyword_schema = keyword_param.get("schema", keyword_param)
-    assert keyword_schema.get("minLength") == 1 or keyword_schema.get("schema", {}).get(
-        "minLength"
-    ) == 1
+    keyword_schema = keyword_param.get("schema") or keyword_param
+    if "$ref" in keyword_schema:
+        keyword_schema = _resolve_schema(schema, keyword_schema)
+    assert keyword_schema.get("minLength") == 1
     envelope = _resolve_schema(
         schema,
         route["responses"]["200"]["content"]["application/json"]["schema"],
     )
-    assert set(envelope["required"]) == HISTORY_KEYS
-    assert envelope.get("additionalProperties") is False
-    props = envelope["properties"]
+    props = _assert_closed(envelope, HISTORY_KEYS)
+    kinds_schema = props["observation_kinds"]
+    assert kinds_schema.get("minItems") == 2
+    assert kinds_schema.get("maxItems") == 2
+    prefix = kinds_schema.get("prefixItems")
+    assert isinstance(prefix, list) and len(prefix) == 2
+    _const(prefix[0], TOTAL_KIND)
+    _const(prefix[1], SOURCE_DOMAIN_KIND)
     text = json.dumps({"envelope": envelope, "components": schema["components"]}).lower()
     assert "admitted" in text and "capture" in text
     assert "never measured" in text
@@ -585,22 +624,70 @@ def test_frozen_ai09_projection_openapi_and_no_mutation(
     assert "provider update" in text or "data period" in text
     assert "observation_admitted_empty" in text
     capture_schema = _resolve_schema(schema, props["captures"]["items"])
-    assert set(capture_schema["required"]) == CAPTURE_KEYS
-    assert capture_schema.get("additionalProperties") is False
-    request_schema = _resolve_schema(schema, capture_schema["properties"]["request"])
-    assert set(request_schema["required"]) == REQUEST_KEYS
-    context_schema = _resolve_schema(
-        schema, capture_schema["properties"]["result_context"]
+    capture_props = _assert_closed(capture_schema, CAPTURE_KEYS)
+    request_schema = _resolve_schema(schema, capture_props["request"])
+    request_props = _assert_closed(request_schema, REQUEST_KEYS)
+    _const(request_props["match_type"], "word_match")
+    _const(request_props["search_filter"], "include")
+    _const(request_props["platform"], "google")
+    _const(request_props["location_code"], 2840)
+    _const(request_props["language_code"], "en")
+    _const(request_props["internal_list_limit"], 10)
+    scope_schema = request_props["search_scope"]
+    assert scope_schema.get("minItems") == 1
+    assert scope_schema.get("maxItems") == 1
+    context_schema = _resolve_schema(schema, capture_props["result_context"])
+    context_props = _assert_closed(context_schema, CONTEXT_KEYS)
+    _const(context_props["total_count"], 0)
+    _const(context_props["result_offset"], 0)
+    _const(context_props["items_count"], 0)
+    assert set(context_props["items_state"].get("enum", [])) == {
+        "absent",
+        "json_null",
+        "stated",
+    } or context_props["items_state"].get("anyOf")
+    location_schema = _resolve_schema(schema, context_props["location"])
+    location_props = _assert_closed(location_schema, GROUPING_KEYS)
+    _const(location_props["provider_array_index"], 0)
+    _const(location_props["row_count"], 1)
+    language_schema = _resolve_schema(schema, context_props["language"])
+    _assert_closed(language_schema, GROUPING_KEYS)
+    platform_schema = _resolve_schema(schema, context_props["platform"])
+    _assert_closed(platform_schema, GROUPING_KEYS)
+    for family_name in (
+        "search_results_domain",
+        "brand_entities_title",
+        "brand_entities_category",
+    ):
+        family_schema = _resolve_schema(schema, context_props[family_name])
+        family_props = _assert_closed(family_schema, FAMILY_KEYS)
+        _nullable_int(family_props["count"])
+    total_schema = _resolve_schema(schema, capture_props["total"])
+    _assert_closed(
+        total_schema,
+        {
+            "observation_kind",
+            "within_capture_identity",
+            "requested_keyword",
+            "mentions",
+            "ai_search_volume",
+        },
     )
-    assert set(context_schema["required"]) == CONTEXT_KEYS
-    location_schema = _resolve_schema(schema, context_schema["properties"]["location"])
-    assert set(location_schema["required"]) == GROUPING_KEYS
-    family_schema = _resolve_schema(
-        schema, context_schema["properties"]["search_results_domain"]
+    source_schema = _resolve_schema(schema, capture_props["source_domains"]["items"])
+    _assert_closed(
+        source_schema,
+        {
+            "observation_kind",
+            "within_capture_identity",
+            "requested_keyword",
+            "domain",
+            "mentions",
+            "ai_search_volume",
+            "provider_array_index",
+        },
     )
-    assert set(family_schema["required"]) == FAMILY_KEYS or set(
-        family_schema["properties"]
-    ) == FAMILY_KEYS
+    outcome_schema = _resolve_schema(schema, capture_props["capture_outcome"])
+    _assert_closed(outcome_schema, {"classification", "observation_count"})
 
 
 def test_empty_history_is_not_failure_or_never_measured(
@@ -848,3 +935,184 @@ def test_matching_evidence_damage_outside_limit_is_409(
     manifest.write_bytes(bytes(raw))
     with _app(store, postgres_dsn) as client:
         _assert_409(_history(client, limit=1, order="asc"))
+
+
+def test_cross_linked_envelope_attempt_id_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, first_attempt, first_capture = _prepare(
+        tmp_path, postgres_dsn, nonce="51" * 32, started="2026-08-24T03:09:01.100000Z"
+    )
+    second_attempt, _second_capture = _commit_complete(
+        store, _body(), "52" * 32, started="2026-08-24T03:09:02.100000Z"
+    )
+    with connect(postgres_dsn) as connection:
+        derive_target_metrics(store, connection)
+        connection.execute(
+            """
+            UPDATE observation_envelopes
+            SET attempt_id = %s
+            WHERE capture_id = %s
+            """,
+            (second_attempt, first_capture),
+        )
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client, limit=1))
+    assert first_attempt != second_attempt
+    assert len(first_attempt) == 64
+    assert len(second_attempt) == 64
+
+
+def test_non_dense_source_index_and_nonzero_grouping_index_are_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, _attempt_id, capture_id = _prepare(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE target_metrics_source_domains
+            SET provider_array_index = 11
+            WHERE capture_id = %s AND provider_array_index = 9
+            """,
+            (capture_id,),
+        )
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE target_metrics_source_domains
+            SET provider_array_index = 9
+            WHERE capture_id = %s AND provider_array_index = 11
+            """,
+            (capture_id,),
+        )
+        connection.execute(
+            """
+            UPDATE target_metrics_result_context
+            SET location_provider_array_index = 1
+            WHERE capture_id = %s
+            """,
+            (capture_id,),
+        )
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+def test_wrong_observation_count_is_409(tmp_path: Path, postgres_dsn: str) -> None:
+    store, _attempt_id, capture_id = _prepare(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET observation_count = 10
+            WHERE capture_id = %s
+            """,
+            (capture_id,),
+        )
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+def test_missing_envelope_is_409(tmp_path: Path, postgres_dsn: str) -> None:
+    store, _attempt_id, capture_id = _prepare(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        identity = connection.execute(
+            """
+            SELECT within_capture_identity
+            FROM target_metrics_source_domains
+            WHERE capture_id = %s
+            LIMIT 1
+            """,
+            (capture_id,),
+        ).fetchone()
+        assert identity is not None
+        connection.execute(
+            """
+            DELETE FROM target_metrics_source_domains
+            WHERE capture_id = %s AND within_capture_identity = %s
+            """,
+            (capture_id, identity[0]),
+        )
+        connection.execute(
+            """
+            DELETE FROM observation_envelopes
+            WHERE capture_id = %s AND within_capture_identity = %s
+            """,
+            (capture_id, identity[0]),
+        )
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+def test_unknown_kind_extra_envelope_is_409(tmp_path: Path, postgres_dsn: str) -> None:
+    store, _attempt_id, capture_id = _prepare(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            INSERT INTO observation_envelopes (
+                capture_id, attempt_id, derivation_version_id, provider,
+                adapter_contract, observation_kind, within_capture_identity
+            )
+            SELECT capture_id, attempt_id, derivation_version_id, provider,
+                   adapter_contract,
+                   'dataforseo.google.ai_optimization.target_metrics.unknown.v1',
+                   repeat('cd', 32)
+            FROM observation_envelopes
+            WHERE capture_id = %s
+            LIMIT 1
+            """,
+            (capture_id,),
+        )
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+def test_malformed_projection_missing_count_is_409(
+    tmp_path: Path, postgres_dsn: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store, _attempt_id, _capture_id = _prepare(tmp_path, postgres_dsn)
+
+    def omit_count(state: object, count: object, name: str) -> dict[str, object]:
+        return {"state": "stated"}
+
+    monkeypatch.setattr("observatory.target_metrics_read._optional_family", omit_count)
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+def test_malformed_projection_wrong_observation_kinds_is_409(
+    tmp_path: Path, postgres_dsn: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store, _attempt_id, _capture_id = _prepare(tmp_path, postgres_dsn)
+    from observatory.target_metrics_read import history_list_response as real_history
+
+    def twisted_kinds(**kwargs: Any) -> dict[str, object]:
+        payload = real_history(**kwargs)
+        payload["observation_kinds"] = [SOURCE_DOMAIN_KIND, TOTAL_KIND]
+        return payload
+
+    monkeypatch.setattr(
+        "observatory.target_metrics_read.history_list_response", twisted_kinds
+    )
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+def test_adapter_disagreement_is_409(
+    tmp_path: Path, postgres_dsn: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store, _attempt_id, _capture_id = _prepare(tmp_path, postgres_dsn)
+    real_capture = store.read_capture
+
+    def wrong_adapter(capture_id: str) -> dict[str, object] | None:
+        capture = real_capture(capture_id)
+        if capture is None:
+            return None
+        changed = dict(capture)
+        changed["adapter_contract"] = MENTIONS_ADAPTER_CONTRACT
+        return changed
+
+    store.read_capture = wrong_adapter  # type: ignore[method-assign, assignment]
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))

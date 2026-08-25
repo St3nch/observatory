@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any, Final, Literal
 
 from psycopg import Connection
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from observatory.capture_event import (
     TARGET_METRICS_ADAPTER_CONTRACT,
@@ -170,17 +170,29 @@ class TargetMetricsRequest(BaseModel):
             "normalized, or replaced by task.data echo."
         ),
     )
-    match_type: str
-    search_filter: str
-    search_scope: list[str] = Field(
-        description=(
-            "Exact ordered Attempt search_scope array. Frozen constants remain scope testimony."
-        )
+    match_type: Literal["word_match"] = Field(
+        description="Frozen closed adapter match_type. Exact Attempt testimony."
     )
-    platform: str
-    location_code: int = Field(ge=0, le=IJSON_MAX)
-    language_code: str
-    internal_list_limit: int = Field(ge=0, le=IJSON_MAX, description=_LIMIT)
+    search_filter: Literal["include"] = Field(
+        description="Frozen closed adapter search_filter. Exact Attempt testimony."
+    )
+    search_scope: list[Literal["answer"]] = Field(
+        min_length=1,
+        max_length=1,
+        description=(
+            "Frozen closed adapter search_scope exactly ['answer']. Exact ordered Attempt array."
+        ),
+    )
+    platform: Literal["google"] = Field(
+        description="Frozen closed adapter platform. Exact Attempt testimony."
+    )
+    location_code: Literal[2840] = Field(
+        description="Frozen closed adapter location_code United States 2840."
+    )
+    language_code: Literal["en"] = Field(
+        description="Frozen closed adapter language_code English en."
+    )
+    internal_list_limit: Literal[10] = Field(description=_LIMIT)
 
 
 class TargetMetricsCaptureOutcome(BaseModel):
@@ -201,7 +213,12 @@ class TargetMetricsGrouping(BaseModel):
     key: int | str
     mentions: int = Field(ge=0, le=IJSON_MAX)
     ai_search_volume: int = Field(ge=0, le=IJSON_MAX)
-    provider_array_index: int = Field(ge=0, le=IJSON_MAX, description=_INDEX)
+    provider_array_index: Literal[0] = Field(
+        description=(
+            "Singleton grouping lexical index. Admitted Recipe v1 location, language, "
+            "and platform rows have provider_array_index 0. Not rank. " + _GROUPING
+        )
+    )
     row_count: Literal[1] = Field(description=_GROUPING)
 
 
@@ -222,15 +239,15 @@ class TargetMetricsOptionalFamily(BaseModel):
             "Recipe v1, so stated count is zero. count is null when state is absent or json_null."
         )
     )
-    count: int | None = Field(ge=0, le=IJSON_MAX, default=None)
+    count: int | None = Field(ge=0, le=IJSON_MAX)
 
 
 class TargetMetricsResultContext(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    total_count: int = Field(ge=0, le=IJSON_MAX, description=_ZERO)
-    result_offset: int = Field(ge=0, le=IJSON_MAX, description=_ZERO)
-    items_count: int = Field(ge=0, le=IJSON_MAX, description=_ZERO)
+    total_count: Literal[0] = Field(description=_ZERO)
+    result_offset: Literal[0] = Field(description=_ZERO)
+    items_count: Literal[0] = Field(description=_ZERO)
     items_state: Literal["absent", "json_null", "stated"]
     location: TargetMetricsLocationGrouping
     language: TargetMetricsStringGrouping
@@ -245,7 +262,9 @@ class TargetMetricsTotal(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
     observation_kind: Literal["dataforseo.google.ai_optimization.target_metrics.total.v1"]
-    within_capture_identity: str = Field(min_length=64, max_length=64)
+    within_capture_identity: str = Field(
+        min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"
+    )
     requested_keyword: str = Field(min_length=1)
     mentions: int = Field(ge=0, le=IJSON_MAX, description=_ZERO)
     ai_search_volume: int = Field(ge=0, le=IJSON_MAX, description=_ZERO)
@@ -257,7 +276,9 @@ class TargetMetricsSourceDomain(BaseModel):
     observation_kind: Literal[
         "dataforseo.google.ai_optimization.target_metrics.source_domain.v1"
     ]
-    within_capture_identity: str = Field(min_length=64, max_length=64)
+    within_capture_identity: str = Field(
+        min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"
+    )
     requested_keyword: str = Field(min_length=1)
     domain: str = Field(
         min_length=1,
@@ -274,8 +295,15 @@ class TargetMetricsSourceDomain(BaseModel):
 class TargetMetricsCapture(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    attempt_id: str = Field(min_length=64, max_length=64, description=_GRAIN)
-    capture_id: str = Field(min_length=64, max_length=64)
+    attempt_id: str = Field(
+        min_length=64,
+        max_length=64,
+        pattern=r"^[0-9a-f]{64}$",
+        description=_GRAIN,
+    )
+    capture_id: str = Field(
+        min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"
+    )
     provider: Literal["dataforseo"]
     adapter_contract: Literal[
         "dataforseo-ai-optimization-llm-mentions-target-metrics-live-paid-probe-v1"
@@ -308,11 +336,29 @@ class TargetMetricsHistoryEnvelope(BaseModel):
     ]
     recipe_resolution: Literal["selected", "pinned"]
     observation_kinds: list[str] = Field(
+        min_length=2,
+        max_length=2,
+        json_schema_extra={
+            "minItems": 2,
+            "maxItems": 2,
+            "prefixItems": [
+                {"type": "string", "const": TOTAL_KIND},
+                {"type": "string", "const": SOURCE_DOMAIN_KIND},
+            ],
+        },
         description=(
-            "Recipe v1 Observation kinds in Recipe order: total then source_domain. "
+            "Exact ordered Recipe v1 Observation kinds: total then source_domain. "
             "They do not change the list grain. " + _COUNT_GRAIN
-        )
+        ),
     )
+
+    @field_validator("observation_kinds")
+    @classmethod
+    def require_v1_kinds(cls, value: list[str]) -> list[str]:
+        if value != [TOTAL_KIND, SOURCE_DOMAIN_KIND]:
+            raise ValueError("observation_kinds must be the exact Target Metrics v1 pair")
+        return value
+
     captures: list[TargetMetricsCapture] = Field(
         description=(
             "Whole admitted Capture documents. Fully typed Target Metrics fact bodies, "
@@ -462,6 +508,9 @@ def _grouping(
     count = _as_int(row_count, f"{name}_row_count")
     if count != 1:
         raise IntegrityError(f"{name} row_count must be 1")
+    index_value = _as_int(index, f"{name}_provider_array_index")
+    if index_value != 0:
+        raise IntegrityError(f"{name} provider_array_index must be 0")
     parsed_key: int | str = (
         _as_int(key, f"{name}_key") if integer_key else _as_text(key, f"{name}_key")
     )
@@ -469,7 +518,7 @@ def _grouping(
         "key": parsed_key,
         "mentions": _as_int(mentions, f"{name}_mentions"),
         "ai_search_volume": _as_int(volume, f"{name}_ai_search_volume"),
-        "provider_array_index": _as_int(index, f"{name}_provider_array_index"),
+        "provider_array_index": 0,
         "row_count": 1,
     }
 
@@ -543,6 +592,7 @@ def _require_request_agreement(
 def _load_typed_facts(
     connection: Connection[Any],
     capture_id: str,
+    attempt_id: str,
     keyword: str,
     observation_count: int,
     sources_domain_count: int,
@@ -561,6 +611,8 @@ def _load_typed_facts(
         kind = str(row[1])
         if kind not in V1_KINDS:
             raise IntegrityError("unknown Observation kind")
+        if str(row[2]) != attempt_id:
+            raise IntegrityError("envelope attempt_id disagrees with verified Attempt")
         if str(row[3]) != HISTORY_PROVIDER or str(row[4]) != HISTORY_ADAPTER:
             raise IntegrityError("envelope provider or adapter disagrees")
         envelope_keys.add((str(row[0]), kind))
@@ -622,6 +674,12 @@ def _load_typed_facts(
                 "provider_array_index": _as_int(row[6], "provider_array_index"),
             }
         )
+    indexes = [
+        _as_int(item["provider_array_index"], "provider_array_index")
+        for item in source_payload
+    ]
+    if indexes != list(range(len(source_payload))):
+        raise IntegrityError("source-domain provider_array_index values are not dense")
     if typed_keys != envelope_keys:
         raise IntegrityError("typed Observation keys disagree with envelopes")
     if observation_count != len(envelope_keys):
@@ -738,6 +796,7 @@ def _verify_capture(
     total, source_domains = _load_typed_facts(
         connection,
         capture_id,
+        attempt_id,
         requested_keyword,
         observation_count,
         sources_domain_count,
