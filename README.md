@@ -119,3 +119,15 @@ the implemented boundary.
 
 Use each module's `--help` for its required operator arguments. Listing a provider command
 does not authorize credentials, transport, spend, or Evidence creation.
+
+## Historical Live checkpoint
+
+AI-13 implements the closed Evidence-only DataForSEO AI Optimization LLM Mentions Historical
+Live adapter and byte-exact inspect path. No live Historical Evidence, parser, Recipe,
+Derivation, schema, or consumer API exists yet. Historical provider activation is a separate
+explicitly gated operator boundary; see `docs/dataforseo-surface-roadmap.md` and the current
+Historical activation ticket.
+
+Adapter entrypoint:
+
+    uv run python -m observatory.dataforseo_ai_optimization_llm_mentions_historical_paid_probe

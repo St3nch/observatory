@@ -477,3 +477,24 @@ families: AI Optimization; LLM Mentions; AI Keyword Data; LLM Responses; LLM Scr
 DataForSEO Labs Google; SERP Google and YouTube; Backlinks; Keywords Data; Business Data;
 Content Analysis; OnPage; and Domain Analytics. Provider capabilities are external and may
 change; exact endpoint/schema truth is always re-verified when a surface is activated.
+
+### Superseding near-term checkpoint — 2026-08-25
+
+AI-13 closed the Evidence-only LLM Mentions Historical Live adapter without a provider
+exchange or live Historical Evidence. [CHAZ] subsequently selected Historical as the next
+active workstream and approved reuse of the accepted bounded manual F6 protection path
+rather than new transport or backup machinery.
+
+The next intended boundary is a separately gated one-shot Historical Evidence activation.
+It requires a reviewed operator ticket, fresh contract/pricing recheck, an exact fresh
+Evidence root and command, separate explicit [CHAZ] authorization, at most one POST with no
+retry, local inspect/scrub, encrypted restic snapshot through the existing accepted remote,
+fresh restore, scrub, and exact Evidence equality. This checkpoint does not itself authorize
+transport or spend.
+
+If accepted live Evidence results, anticipated sequencing is strict Historical parser and
+Conformance fixture, then Recipe-addressed typed Derivation/persistence, then a
+Recipe-selected admitted-history API. Those remain separate reviewed boundaries and may
+change when the actual Evidence is inspected. Target Metrics Outcomes/Holdings, earlier
+surface nested-body typing, other LLM Mentions families, F13 hardening, and F12 recurring
+acquisition remain separately gated and are not Historical prerequisites.
