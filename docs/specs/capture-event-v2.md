@@ -1251,10 +1251,10 @@ does not authorize transport or Evidence creation.
 
 ### Current provider schema and read-surface pointer
 
-The accepted Keyword Overview, Google Organic, and Search Mentions implementations add
-rebuildable provider relations without changing the Evidence boundary. Shared relations are
-`provider_recipes`, `provider_recipe_selections`, `observation_envelopes`, and
-`derivation_diagnostics`. Keyword Overview typed details are
+The accepted Keyword Overview, Google Organic, Search Mentions, and Target Metrics
+implementations add rebuildable provider relations without changing the Evidence boundary.
+Shared relations are `provider_recipes`, `provider_recipe_selections`,
+`observation_envelopes`, and `derivation_diagnostics`. Keyword Overview typed details are
 `keyword_overview_coverage`, `keyword_overview_metrics`,
 `keyword_overview_monthly_search_volume`, `keyword_overview_search_volume_trend`,
 `keyword_overview_properties`, `keyword_overview_avg_backlinks`, and
@@ -1268,16 +1268,24 @@ rebuildable provider relations without changing the Evidence boundary. Shared re
 `search_mentions_result_context`, `search_mentions_items`,
 `search_mentions_item_occurrences`, `search_mentions_monthly_search_volume`,
 `search_mentions_monthly_occurrences`, `search_mentions_sources`, and
-`search_mentions_source_occurrences`. Their closed recipes and accepted semantics remain
-authoritative through the registered canonical recipe bytes, PF-04 through PF-15 acceptance
-records, and AI-02 through AI-06 Search Mentions acceptance records; this paragraph is a
-discovery pointer, not a duplicate schema.
+`search_mentions_source_occurrences`. Target Metrics uses `target_metrics_totals`,
+`target_metrics_source_domains`, and `target_metrics_result_context`; its Recipe selection
+and consumer read API remain unimplemented. Their closed recipes and accepted semantics
+remain authoritative through the registered canonical recipe bytes, PF-04 through PF-15
+acceptance records, and AI-02 through AI-11 acceptance records; this paragraph is a discovery
+pointer, not a duplicate schema.
 
 The canonical versioned resource namespace is `/v1`. Current provider reads are
 `GET /v1/attempts/{attempt_id}`,
-`GET /v1/providers/dataforseo/google/keyword-overview/history`, and
-`GET /v1/providers/dataforseo/google/organic/history`, and
-`GET /v1/providers/dataforseo/google/ai-optimization/search-mentions/history`.
+`GET /v1/providers/dataforseo/google/keyword-overview/history`,
+`GET /v1/providers/dataforseo/google/keyword-overview/outcomes`,
+`GET /v1/providers/dataforseo/google/keyword-overview/holdings`,
+`GET /v1/providers/dataforseo/google/organic/history`,
+`GET /v1/providers/dataforseo/google/organic/outcomes`,
+`GET /v1/providers/dataforseo/google/organic/holdings`,
+`GET /v1/providers/dataforseo/google/ai-optimization/search-mentions/history`,
+`GET /v1/providers/dataforseo/google/ai-optimization/search-mentions/outcomes`, and
+`GET /v1/providers/dataforseo/google/ai-optimization/search-mentions/holdings`.
 Development documentation is served at `/api/v1/docs` with OpenAPI at
 `/api/v1/openapi.json`; those documentation locations do not create a second `/api/v1`
 resource namespace or a compatibility mount. The API remains read-only, loopback-only, and

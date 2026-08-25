@@ -544,9 +544,10 @@ fits the accepted substrate and all other gates.
 
 ## D14 — Provider consumer APIs separate admitted facts, measurement activity, and holdings
 
-**Status:** Accepted shared contract boundary after Keyword Overview, Google Organic, and
-Search Mentions consumer reviews. Implementation and the exact failure-inventory mechanism
-remain separately gated.
+**Status:** Accepted and implemented for Keyword Overview, Google Organic, and Search
+Mentions through API-01 (shared history envelope), API-02 (Measurement Outcomes), and
+API-03 (Holdings). Later pagination, scalable indexing, Target Metrics consumer work, and
+other extensions remain separately gated.
 
 **Decision:** A future connected strategy LLM remains an ordinary API consumer under D2 and
 D3. Provider-facing APIs use surface-explicit paths and may share a lossless list envelope,
@@ -576,10 +577,10 @@ Subject identity for non-admitted activity must come from verified Evidence or a
 index derived from it, not from invented coverage. Reviews of Keyword Overview, Google
 Organic, and Search Mentions confirm that current PostgreSQL rows do not retain the requested
 subject for all failed or zero-envelope activity, so subject-filtered Outcomes and holdings
-are not merely JSON-envelope work. A bounded verified-Evidence scan remains a possible
-low-volume bridge, but before recurring F12-scale acquisition the durable path must have a
-scalable, rebuildable measurement-subject index. The exact bridge/index mechanism remains a
-later Outcomes/holdings ticket boundary; no consumer receives direct Evidence access.
+are not merely JSON-envelope work. API-02 and API-03 use the accepted bounded
+verified-Evidence scan as the current low-volume bridge. Before recurring F12-scale
+acquisition, the durable path must have a scalable, rebuildable measurement-subject index;
+no consumer receives direct Evidence access.
 
 **Google Organic reconciliation:** Google Organic confirms this split with surface-specific
 limits:

@@ -19,11 +19,12 @@ Derivation Recipes, and integrity-checked read APIs.
 The implemented provider slices are:
 
 - DataForSEO Google Keyword Overview: bounded capture, strict parser, typed derivation,
-  Recipe selection, and history API;
+  Recipe selection, and history, Measurement Outcomes, and Holdings APIs;
 - DataForSEO Google Organic: bounded capture, strict parser, typed derivation, Recipe
-  selection, and history API;
+  selection, and history, Measurement Outcomes, and Holdings APIs;
 - DataForSEO AI Optimization Search Mentions: bounded capture, strict parser, and typed
-  PostgreSQL derivation, Recipe selection, and history API;
+  PostgreSQL derivation, Recipe selection, and history, Measurement Outcomes, and Holdings
+  APIs;
 - DataForSEO AI Optimization Target Metrics: bounded capture, strict parser, and typed
   PostgreSQL derivation. Recipe selection and read/history API remain the next separate
   boundary.
@@ -38,11 +39,11 @@ Authority hierarchy for agents and humans:
 
 1. `VISION.md` — product doctrine, lifecycle, survival, v1 proof
 2. `VOCABULARY.md` — canonical terms
-3. `decisions/decisions.md` — settled decisions (including D8–D13)
+3. `decisions/decisions.md` — settled decisions (including D8–D14)
 4. `decisions/deferred.md` — deferred work with triggers
 5. `AGENTS.md` — agent hard boundaries and commands
-6. `docs/dataforseo-surface-roadmap.md` — provider direction, strategy-consumer review,
-   and current retrofit sequence
+6. `docs/dataforseo-surface-roadmap.md` — provider direction, completed D14 consumer
+   retrofit, and Target Metrics sequencing
 7. `docs/adr/0001-capture-event-evidence-boundary.md` — why the Evidence boundary is fixed
 8. `docs/specs/capture-event-v2.md` — normative capture/evidence contract
 
@@ -89,8 +90,9 @@ PostgreSQL holds rebuildable Outcomes and Observations. It is not authoritative 
 - PostgreSQL schema migration and deterministic re-derivation from verified Evidence.
 - Recipe-addressed provider Observations with typed detail, provenance, occurrence
   testimony, and complete-set checks.
-- Read-only FastAPI service with health, Attempt, Keyword Overview history, and Google
-  Organic history surfaces that fail closed on Evidence/PostgreSQL disagreement.
+- Read-only FastAPI service with health and Attempt audit resources plus history,
+  Measurement Outcomes, and Holdings for Keyword Overview, Google Organic, and Search
+  Mentions; reads fail closed on the accepted Evidence/PostgreSQL boundaries.
 
 PostgreSQL remains rebuildable state, not authoritative Evidence. Multi-process writer
 safety, routine acquisition orchestration, production API authentication/non-loopback

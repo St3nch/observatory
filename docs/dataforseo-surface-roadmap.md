@@ -414,36 +414,37 @@ confirmed it with their surface-specific semantics:
 All three reviews confirm that current PostgreSQL does not retain requested-subject identity
 for every non-admitted path. A bounded verified-Evidence scan remains a possible low-volume
 bridge, but recurring F12-scale acquisition requires a scalable rebuildable
-measurement-subject index. The exact bridge/index mechanism remains for the later
-Outcomes/holdings ticket. No coverage row may be invented for a failure or zero-envelope
+measurement-subject index. API-02 and API-03 implement that bounded scan as the current
+Outcomes/Holdings bridge. No coverage row may be invented for a failure or zero-envelope
 Capture, and no consumer receives direct Evidence access. D14 records the accepted decision.
 
 Google Organic confirms the contract with a real subject-bearing admitted-empty document,
 accepted placement identity with URL as content, and the same Evidence-only failure-subject
 gap as Keyword Overview. Its prose remains Evidence-only. Non-null `related_result` is a
-stop-before-derive trigger for any newly encountered Capture, and any future Outcomes ledger
-serving `observation_count` must prove envelope cardinality. The closed Organic request and
-interpretation limits must later be represented by typed surface/OpenAPI contracts without
-adding per-Capture omission arrays.
+stop-before-derive trigger for any newly encountered Capture. The completed Outcomes ledger
+proves Observation-envelope cardinality. The completed D14 resources type the shared outer,
+Outcomes, and Holdings contracts; full typing of nested history fact bodies remains a
+separately gated surface-local boundary.
 
 Search Mentions confirms the contract while preserving a uniquely rich returned-prefix fact
 document: exact question/answer text, structured source URLs and occurrences, current and
 monthly volume testimony, and explicit inner corpus/truncation state. The AI-03 prefix
 contains five item, sixty monthly, and forty-eight source envelopes;
 `observation_count=113` is their envelope cardinality, not provider `items_count` or corpus
-size. The database/API preserve those returned facts faithfully. The remaining defects are
-the shared silent outer Capture slice, missing Outcomes/holdings, and an untyped route/OpenAPI
-contract that does not explain the prefix, identity, count, text, and empty-state semantics.
-No Recipe, identity, text-exposure, pagination, or provider-acquisition change follows from
-the review.
+size. The database/API preserve those returned facts faithfully. API-01, API-02, and API-03
+corrected the shared silent outer Capture slice and added typed Outcomes and Holdings
+resources. Full nested history fact-body typing remains separate. No Recipe, identity,
+text-exposure, pagination, or provider-acquisition change followed from the retrofit.
 
-**Current checkpoint — 2026-08-24:** Keyword Overview, Google Organic, and Search Mentions
-consumer reviews are reconciled under accepted D14. The shared outer history-list-envelope
-question gate is resolved: the first ticket adds truthful metadata to the existing bounded
-`/v1` lists but no outer cursor, offset, unbounded response, or inner provider continuation.
-API-01 is the provisional ticket for mandatory GROK review before implementation authority.
-Shared-envelope implementation, Outcomes, holdings, further OpenAPI/schema remediation,
-pagination or another provider exchange, F12/F13 activity, and AI-12 remain unauthorized.
+**Current checkpoint — 2026-08-25:** The D14 retrofit is complete for Keyword Overview,
+Google Organic, and Search Mentions. API-01 closed the shared history-list envelope; API-02
+closed subject-filtered Measurement Outcomes; API-03 closed Evidence-backed Holdings.
+The accepted limits remain: no outer cursor/offset or retrieval beyond 100, no Holdings
+subject/scope filter or direct event link, separate history/Outcomes/Holdings meanings,
+and the bounded store-wide Evidence scan as a low-volume bridge. Target Metrics Recipe
+selection and consumer reads remain the next separate AI-12 design boundary. This checkpoint
+authorizes no AI-12 ticket or implementation, provider exchange, F12/F13 activity, strategy
+state, or further API/schema remediation.
 
 ## Dependency-based sequencing direction
 
