@@ -1,9 +1,10 @@
 # API-03 — Provider Holdings discovery
 
-**Status:** provisional — mandatory [GROK] read-only ticket review required  
+**Status:** accepted — implementation requires separate [CHAZ] authorization  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** final Steward reconciliation after the mandatory ticket review  
+**Blocked by:** [CHAZ] implementation authorization against the final ticket commit  
 **Question-resolution pass:** completed against `ed5bf39923f3872ff9ecc96962d58a89847e0bee`  
+**Pre-implementation review:** completed read-only against `5cbef17f4daf042efc2798998df765f3a698e70e`  
 **Product lock:** [CHAZ] approved subject-plus-exact-scope / Evidence-only / catalog-order Holdings  
 **Start commit:** unset — implementation is not authorized
 
@@ -22,10 +23,9 @@ It is an Evidence-backed inventory projection. It is not admitted Observation hi
 Recipe-addressed Outcome activity, provider corpus coverage, a desired panel, monitoring
 state, importance, cadence, recommendation, or strategy.
 
-API-03 is not implementation authority. [GROK] must first perform the mandatory read-only
-adversarial review of this provisional ticket. [GPT] must reconcile that review and commit
-the final accepted ticket. [CHAZ] must then separately authorize implementation against
-the named exact clean start commit.
+API-03 is not implementation authority. [GROK]'s mandatory read-only ticket review is
+complete, and [GPT] has reconciled it into this final accepted boundary. [CHAZ] must
+separately authorize implementation against the named exact clean start commit.
 
 ## Question-resolution and Product lock
 
@@ -48,6 +48,30 @@ consumer may reason from the testimony, but Observatory does not decide what is 
 sufficient, current, recommended, or worth measuring next.
 
 No Product question remains.
+
+## Pre-implementation review reconciliation
+
+[GROK] returned `REQUIRES TICKET CORRECTION` after the mandatory read-only review of
+`5cbef17f4daf042efc2798998df765f3a698e70e`. [GPT] independently verified and accepts
+three corrections:
+
+1. `EvidenceStore.read_capture()` already loads the committed parent Attempt and validates
+   full Capture/Attempt agreement, including provider and adapter, before returning. Because
+   API-02's store-wide walk calls `read_capture()` for every committed Capture, no new
+   Holdings-local relationship validator is required.
+2. After exact route-adapter match, the verified Attempt provider must equal the route
+   provider. A wrong-provider Attempt using the route adapter is integrity failure, not a
+   foreign event to skip.
+3. PostgreSQL-independence proofs must actually exercise both an unset DSN and an unreachable
+   DSN, rather than merely omitting database calls in a normally configured test app.
+
+[GPT] adds one consumer-safety correction from the review's query observation: because the
+route accepts only `limit` and `order`, any other query key—including a Recipe pin—must be
+HTTP 422. Silently ignoring `derivation_version_id`, `requested_keyword`, `offset`, or a
+cursor could falsely imply that a caller-supplied scope was applied.
+
+No Product direction, route, grain, schema, or changed-path expansion follows from these
+corrections.
 
 ## Authority and accepted boundary
 
@@ -82,6 +106,10 @@ Each route accepts only:
 
 Do not accept `requested_keyword`, `derivation_version_id`, Recipe selection, prefix,
 subject filter, scope filter, cursor, offset, continuation, or provider token.
+
+The query contract is closed. Any query key other than `limit` or `order` returns FastAPI
+HTTP 422; it must not be silently ignored. In particular, a supplied Recipe pin must never
+produce a 200 that could be mistaken for Recipe-scoped Holdings.
 
 Caller-controlled influence is limited to the bounded outer limit and exact catalog-order
 direction.
@@ -277,22 +305,22 @@ Catalog order is not recency, provider item order, importance, or strategy rank.
 Reuse API-02's `load_verified_store_events` low-volume bridge. Do not copy the Evidence
 walk or build a generic provider/subject loader.
 
-The Holdings projection must additionally verify every committed Capture's relationship to
-its verified parent Attempt across the complete store before adapter filtering:
+The reused walk already verifies, across every committed Capture before adapter filtering:
 
-- parent Attempt is committed;
-- parent has at most one Capture;
-- Capture provider equals parent Attempt provider;
-- Capture adapter equals parent Attempt adapter.
+- committed identity, bundle, body, and parent existence;
+- duplicate identity and at-most-one-Capture lifecycle;
+- Capture/parent Attempt ID, request, request fingerprint, provider, and adapter agreement.
 
-The existing shared walk verifies committed identities, bundles, bodies, parent existence,
-duplicate identities, and the one-Capture limit, but parent provider/adapter comparison is
-currently performed later by API-02 projection. API-03 must not assume the walk already
-performs that global relationship check. Add Holdings-local shared relationship validation
-without changing history or Outcomes behavior in this ticket.
+This occurs because `EvidenceStore.read_capture()` validates the Capture against its loaded
+parent Attempt. Do not add a redundant Holdings-local relationship validator, copy the walk,
+or modify `provider_outcomes.py`. The required HTTP parent/provider/adapter plants must prove
+the existing store-wide failure path through each Holdings route.
 
-Only after complete store-wide verification may successfully verified foreign providers or
-adapters be excluded. For the exact route adapter, extract and validate every Attempt's
+Only after complete store-wide verification may successfully verified foreign adapters be
+excluded. Filtering is adapter-first: when an Attempt adapter does not match the route
+adapter, exclude it after verification. When the adapter does match, its provider must equal
+the route provider; disagreement is HTTP 409, not a foreign event to skip. For the exact
+route provider/adapter, extract and validate every Attempt's
 closed surface parameters before grouping. A malformed route-adapter Attempt cannot be
 skipped.
 
@@ -332,6 +360,7 @@ Empty 200 also remains valid when:
 HTTP behavior:
 
 - invalid `limit`/`order`: FastAPI 422;
+- any unrecognized query key: FastAPI 422;
 - no configured Evidence Store: existing service-configuration 503;
 - verified empty catalog: 200;
 - Evidence or lifecycle integrity disagreement: 409
@@ -402,8 +431,7 @@ New shared `provider_holdings.py` may own:
 - explicit closed Holdings request/item/envelope Pydantic models;
 - list limit/order constants and envelope math;
 - common immutable grouping/count/time structures;
-- Holdings-wide parent provider/adapter relationship verification over already verified
-  store events;
+- common post-condition assertions over surface-grouped verified inputs;
 - common closed-item/envelope assembly from surface-verified inputs.
 
 It may reuse `load_verified_store_events` from API-02. It must not know provider fact-table
@@ -426,7 +454,7 @@ Do not refactor history or Outcomes loaders merely to remove repeated outer shel
 Production:
 
 - `src/observatory/provider_holdings.py` — new shared explicit typing, math, grouping support,
-  and Holdings relationship validation;
+  post-condition checks, and envelope assembly;
 - `src/observatory/keyword_overview_read.py`;
 - `src/observatory/google_organic_read.py`;
 - `src/observatory/search_mentions_read.py`;
@@ -457,41 +485,49 @@ audit, Evidence format, authority docs, or the roadmap during implementation.
 Helper tests may supplement but never replace independent assertions on all three routes.
 Consolidation is allowed only when the test still drives each route.
 
-1. Empty store returns exact typed 200 envelope with zero totals and no Recipe/DSN
-   requirement.
-2. All-classification presence is discoverable from Evidence: admitted, non-admitted
-   Capture, and Attempt-without-Capture subjects all appear without reading Outcomes.
-3. Same exact subject and scope across multiple Attempts groups once with exact attempt,
+1. Empty store with `database_url=None` and no selected Recipe returns the exact typed 200
+   envelope with zero totals.
+2. The closed query contract rejects `requested_keyword`, `derivation_version_id`, offset,
+   cursor, and any other undeclared query key with HTTP 422; none is silently ignored or
+   mapped to Recipe 404/503 behavior.
+3. Evidence lifecycle presence is discoverable without PostgreSQL classification: subjects
+   represented by an Attempt without Capture, an admitted-fixture Capture, and a
+   non-admitted-fixture Capture all appear while Outcome rows are absent or irrelevant.
+4. Same exact subject and scope across multiple Attempts groups once with exact attempt,
    capture, unresolved counts and first/last time ranges.
-4. Same subject with any different surface scope field produces separate Holdings items.
-5. Keyword Overview 1..5 members produce 1..5 items sharing the full ordered bundle and
+5. Same subject with any different surface scope field produces separate Holdings items.
+6. Keyword Overview 1..5 members produce 1..5 items sharing the full ordered bundle and
    factual shared inventory; they do not appear as 1..5 exchanges.
-6. Different Keyword Overview sibling bundles do not merge for a shared member.
-7. Exact nested-array catalog ordering for KO keywords and Search Mentions search scope;
+7. Different Keyword Overview sibling bundles do not merge for a shared member.
+8. Exact nested-array catalog ordering for KO keywords and Search Mentions search scope;
    asc and desc reverse the complete group key before limiting.
-8. `limit=1` exposes correct `total_matching`, `returned_count`, and `has_more`; an omitted
-   tail beyond 100 remains unavailable.
-9. Unselected/missing/drifted Recipe, missing Outcome rows, and unavailable PostgreSQL do
-   not change an otherwise valid Holdings 200.
-10. Damaged committed foreign-adapter Attempt and Capture Evidence returns 409 even when
+9. `limit=1` over at least two items exposes correct `total_matching`, `returned_count`, and
+   `has_more`; a separate catalog with more than 100 groups proves the disclosed but
+   unavailable tail beyond the maximum limit.
+10. An unselected/missing/drifted Recipe, missing Outcome rows, `database_url=None`, and an
+    unreachable DSN do not change an otherwise valid Evidence-derived Holdings 200.
+11. Damaged committed foreign-adapter Attempt and Capture Evidence returns 409 even when
     the route adapter's own Evidence is valid.
-11. Duplicate committed Attempt or Capture identity returns 409.
-12. Two verified Captures for one Attempt returns 409.
-13. Capture parent missing, or Capture provider/adapter disagreeing with its verified parent,
+12. A verified Attempt whose adapter equals the route adapter but whose provider is not the
+    route provider returns 409; it is not skipped as foreign Evidence.
+13. Duplicate committed Attempt or Capture identity returns 409.
+14. Two verified Captures for one Attempt returns 409.
+15. Capture parent missing, or Capture provider/adapter disagreeing with its verified parent,
     returns 409 before adapter filtering.
-14. Every surface independently 409s malformed/drifted route-adapter Attempt parameters,
-    including missing subject arrays/objects and scope fields.
-15. Matching or foreign Evidence damage outside `limit=1` returns 409 with no partial keys.
-16. Missing required Attempt/Capture timestamp testimony fails closed. Valid groups with no
+16. Every surface independently 409s malformed/drifted route-adapter Attempt parameters,
+    including missing keyword/target structures, nested arrays, flags, and scope fields.
+17. Matching or foreign Evidence damage outside `limit=1` returns 409 with no partial keys.
+18. Missing required Attempt/Capture timestamp testimony fails closed through verified
+    Evidence read. Valid groups with no
     Capture use null request-time boundaries.
-17. No response exposes Attempt/Capture ID lists, request fingerprint, Recipe/Outcome/fact
+19. No response exposes Attempt/Capture ID lists, request fingerprint, Recipe/Outcome/fact
     fields, provider result counts, or strategy/cadence state.
-18. Search Mentions never reads/follows `search_after_token`; request `limit`/`offset` remain
+20. Search Mentions never reads/follows `search_after_token`; request `limit`/`offset` remain
     typed Attempt testimony.
-19. OpenAPI asserts the exact route, query, closed envelope/item/request schemas, KO
+21. OpenAPI asserts the exact route, closed query, envelope/item/request schemas, KO
     non-explosion meaning, counts/times, empty semantics, catalog completeness, and strategy
     inference traps.
-20. A Holdings GET does not mutate Evidence, PostgreSQL, Recipe selection, acquisition, or
+22. A Holdings GET does not mutate Evidence, PostgreSQL, Recipe selection, acquisition, or
     provider state.
 
 For every new 409 proof, assert absence of `holdings`, `total_matching`, `returned_count`,
@@ -543,27 +579,21 @@ API-03 does not authorize:
 The future rebuildable subject index must derive from verified Evidence and must not become
 new authority or invented coverage. Its exact schema remains a separate pre-F12 boundary.
 
-## Mandatory pre-implementation ticket review
+## Pre-implementation ticket review
 
-[GROK] must review this provisional ticket read-only against its exact clean commit before
-any implementation authorization. The review must inspect current code, tests, schema,
-Evidence Store, API-01/API-02, D14, and the three surface Attempt contracts.
+[GROK] completed the mandatory read-only adversarial review against exact clean commit
+`5cbef17f4daf042efc2798998df765f3a698e70e` and returned
+`REQUIRES TICKET CORRECTION`. The review found no Product or D14 contradiction and confirmed
+that B/A/A, the eight-key envelope, nine-key item, grouping/count/time contract, PostgreSQL
+independence, changed-path allowlist, and deferred boundaries are implementable.
 
-Return:
+The false walk-gap premise, missing route-adapter/wrong-provider 409, and incomplete DSN
+proofs are reconciled above. [GPT]'s closed-query correction prevents silently ignored scope.
+No implementation, edits, tests, commit, push, provider call, credentials, Evidence or
+PostgreSQL mutation, continuation, or F12/F13/AI-12 activity occurred during the review.
 
-- `APPROVE` or `REQUIRES TICKET CORRECTION`;
-- false premises, missing proofs, overconstraints, and implementation traps;
-- whether the exact nine-key item and eight-key envelope are truthful;
-- grouping/order edge cases and KO non-explosion risks;
-- whether PostgreSQL independence is completely enforced;
-- whether shared-vs-surface ownership is implementable without a generic loader;
-- any possible false green in the required HTTP vectors;
-- any path genuinely required outside the allowlist;
-- candid architecture, consumer-readiness, strategy-inference, and data-model consequences;
-- exact HEAD/branch/tree and no-change confirmation.
-
-Do not implement, edit the ticket, run tests, commit, push, or perform provider/Evidence
-activity during that review.
+This reconciled ticket is the final accepted work boundary. A new ticket review is required
+only if the boundary changes substantively before [CHAZ] authorizes implementation.
 
 ## Implementation report requirements
 
