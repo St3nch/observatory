@@ -1,12 +1,12 @@
 # AI-14 — LLM Mentions Historical Live one-shot Evidence activation
 
-**Status:** provisional  
+**Status:** done  
 **Owner:** [CHAZ] operator / [GPT] Steward verification  
-**Blocked by:** mandatory read-only GROK ticket review and final Steward reconciliation  
+**Blocked by:** none — closed after accepted one-shot Evidence, F6 proof, and independent review  
 **Product direction:** [CHAZ] selected Historical as the next active workstream and approved reuse of the accepted manual F6 protection path on 2026-08-25  
 **Draft base:** `c6fcd7ae496a86c8a58b0dcdfc7bd3757c7ca71b`
 
-**Effective status after mandatory review:** accepted, awaiting final ticket push/synchronization and separate explicit [CHAZ] one-shot operator authorization.  
+**Effective status:** done — the one-shot authorization was consumed exactly once and the resulting Evidence is accepted and off-host protected.  
 **Review result:** GROK `RECONCILE` at `e3f98cd12712a19d7714452f314777d70c48d1d5`; Steward reconciliation is recorded in the final section below and supersedes the provisional operator wording above.  
 
 ## Purpose
@@ -293,3 +293,128 @@ after live IDs exist, as in AI-09; an unknown future snapshot ID cannot be froze
 Routine R2/F6 automation, parser, Conformance fixture promotion, Recipe, schema, Derivation,
 API, Outcomes/Holdings, F12 orchestration, F13 hardening of older gates, and any other LLM
 Mentions surface remain outside AI-14.
+
+## Steward live Evidence and closure — 2026-08-25
+
+[CHAZ] explicitly authorized exactly one AI-14 Historical Live operator invocation from
+clean synchronized `main` at
+`abe383a9128514ad4350096c39cf716fa4cfcbb3`. The authorization was durably recorded before
+the run and was consumed by the single capture-process invocation. No retry, replacement
+root, continuation, polling, follow-up, or second Historical provider exchange occurred or
+is authorized.
+
+Committed live Evidence:
+
+- Attempt `4d0981e2df7476935c4603c2569ea732cd523dee763263c483352ed4563c864c`;
+- Capture `218d5cf475bb0b3b8861b0dc83b8c763b36252ee4065f72900e17a937763b18b`;
+- `authorized_at=2026-08-25T18:32:02.569133Z`;
+- `request_started_at=2026-08-25T18:32:02.696652Z`;
+- `transport_ended_at=2026-08-25T18:32:03.893652Z`;
+- transport state `response_complete`;
+- exact inspected body `5246` bytes;
+- body SHA-256
+  `4419daf0b7076625129ab18c6bf3c83905b998c3b3332f2ba6d42c8879b50781`;
+- source Evidence status `format-2 ok` and source scrub clean;
+- repository remained clean at the accepted operator HEAD.
+
+The independently recorded source inventory contains exactly that Attempt and Capture and
+has SHA-256
+`86be371907404b4903ad5bb73ce70e71ffdaf1328d60d645e5638e6486c3d07e`.
+
+### Accepted bounded F6 proof
+
+The existing encrypted restic repository `52a88583` through `vedaops-drive:` created
+snapshot
+`9d7201573cd80bf446a0bc05719290305fa9811583c441d7fe77beb474d6653f`,
+tagged `observatory-evidence-store` and `f6-paid-ai14`. A fresh restore into
+`/tmp/ai14-historical-restore-9d720157` opened as format 2 and scrubbed clean.
+
+Source inventory, snapshot-restored inventory, and independently recomputed restored
+inventory were byte-identical and all had the same SHA-256 above. The restored Capture
+inspected successfully as exactly `5246` bytes with the same body SHA-256 as the source.
+The source and restored body files were byte-identical.
+
+Non-secret receipt files were copied to the accepted off-host `receipts/` and
+`restore-proofs/` folders and downloaded again to fresh local files. Each remote round trip
+was byte-identical:
+
+- `ai14-historical-backup-9d720157.ok.json` SHA-256
+  `0424e3784163fe1c115e7730bf270db55ab086d9499f5f8ee11bac3980fc1622`;
+- `ai14-historical-restore-9d720157.ok.json` SHA-256
+  `cdae83a6e36bab6f5a6ddbf15e878444bb59021f60492f35082fdc25861951d4`.
+
+This satisfies the accepted bounded manual F6 protection requirement for this AI-14 paid
+Evidence root. It does not complete routine F6 automation.
+
+### Verified Historical payload findings
+
+The provider envelope and task both report `status_code=20000`, `status_message="Ok."`, and
+cost `0.101`; top-level time is `0.8682 sec.` and task time is `0.7831 sec.`. The task ID is
+`08251832-1463-0662-0000-194ae8326094`, `result_count=1`, and the provider path is the array
+`["v3", "ai_optimization", "llm_mentions", "historical", "live"]`.
+
+The provider request echo exactly agrees with the frozen AI-13 request: API
+`ai_optimization`, function `historical`, `date_from=2025-08-01`,
+`date_to=2026-07-31`, `language_code=en`, `location_code=2840`, platform `google`, and one
+included `generative engine optimization` keyword target with `word_match` and
+`search_scope=["answer"]`.
+
+The result object has exactly `items_count` and `items`. `items_count=12` and `items` is a
+nonempty twelve-row array. Every row has exactly `year`, `month`, and `metrics`; every
+`metrics` object has exactly `mentions` and `ai_search_volume`. No returned row is null,
+zero-valued, duplicated, outside the requested window, or missing from the twelve requested
+calendar months. Returned order in this Capture is newest-first:
+
+| Data Period | Mentions | AI search volume |
+|---|---:|---:|
+| 2026-07 | 1353 | 428820 |
+| 2026-06 | 481 | 358010 |
+| 2026-05 | 1449 | 1086150 |
+| 2026-04 | 576 | 122950 |
+| 2026-03 | 1019 | 1114570 |
+| 2026-02 | 418 | 178650 |
+| 2026-01 | 224 | 471440 |
+| 2025-12 | 350 | 312600 |
+| 2025-11 | 202 | 43360 |
+| 2025-10 | 122 | 51700 |
+| 2025-09 | 114 | 27770 |
+| 2025-08 | 75 | 23150 |
+
+The Capture confirms existence of the requested monthly shape and inclusive twelve-month
+window for this request only. It does not prove newest-first ordering as an invariant,
+missing/empty/null/zero behavior, duplicate handling, current-month partiality, omitted-date
+defaults, alternate platform behavior, provider error envelopes, stable future fields, or a
+general billing-row formula. The reported `0.101` cost is testimony for this request, not a
+Recipe invariant.
+
+Capture/acquisition time remains distinct from Data Period `(year, month)`. Provider Update
+Time is unstated in this Evidence and must not be invented from Capture time. Historical
+`mentions` and `ai_search_volume` are surface-local monthly provider testimony; they must not
+be collapsed into Target Metrics aggregates, Search Mentions per-question monthly search
+volume, Keyword Overview search volume, or a universal event time/score.
+
+The exact body is accepted as strong primary Conformance-fixture material for a later strict
+Historical parser. Unobserved branches belong in synthetic adversarial tests; they do not
+justify another provider call.
+
+### Independent review and closure decision
+
+[GROK] independently inspected the exact protected body, live Evidence, source/restored
+inventories, and leftover fresh restore without provider/network activity. The review found
+the live Evidence request-faithful, complete, internally coherent, suitable as the primary
+Historical Conformance fixture, and sufficient for AI-14 technical acceptance. It raised no
+remaining Product question and recommended no recapture.
+
+The Steward independently reconciles that review against D12, the AI-13 adapter boundary,
+the accepted F6 proof, and the actual Evidence and accepts AI-14 as `done`.
+
+No `src/` or `tests/` behavior changed during this closure, so the full test suite, Ruff,
+and mypy were not repeated for the documentation-only Steward closure.
+
+## Next boundary after AI-14
+
+The next bounded work, if [CHAZ] continues the Historical slice, is a separately reviewed
+strict Historical parser plus frozen Conformance fixture derived from these exact verified
+bytes, with synthetic adversarial mutations for the unproven states above. Parser work must
+not silently define the later Recipe, Observation identity, PostgreSQL schema, admitted-empty
+semantics, Outcomes/Holdings, F12 cadence, or another provider exchange.
