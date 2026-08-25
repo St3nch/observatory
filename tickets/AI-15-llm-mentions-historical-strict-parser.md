@@ -1,10 +1,11 @@
 # AI-15 — LLM Mentions Historical strict parser and AI-14 Conformance fixture
 
-**Status:** provisional  
+**Status:** accepted — implementation blocked pending [CHAZ] authorization  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** mandatory read-only GROK review of this provisional ticket and final Steward reconciliation  
+**Blocked by:** explicit [CHAZ] implementation authorization at the exact final ticket commit  
 **Product direction:** [CHAZ] continues the Historical slice after AI-14 accepted one-shot live Evidence  
 **Draft base:** `9d6941859b649c232e46eb68a8b489fb4acb2875`  
+**Pre-implementation review:** GROK `RECONCILE` at `c5c08e26ff12e12a5543fffe5c8499196ef3845d`; accepted corrections are incorporated below.  
 **Implementation start commit:** not yet authorized  
 
 ## Purpose
@@ -20,9 +21,10 @@ PostgreSQL schema or rows, derive command, recipe selection, history API, Outcom
 recurring acquisition, F12/F13 work, strategy state, or another provider exchange. Those
 remain separate later boundaries.
 
-This provisional ticket is not implementation authority. GROK must review it read-only,
-GPT must reconcile that review, and [CHAZ] must later authorize implementation from the
-exact final clean commit.
+GROK completed the mandatory read-only review and returned `RECONCILE`. GPT independently
+verified and incorporated the accepted corrections. This final accepted ticket is still not
+implementation authority until [CHAZ] separately authorizes implementation from its exact
+clean committed HEAD. No second ticket review is required.
 
 ## Authority and accepted foundation
 
@@ -32,8 +34,9 @@ exact final clean commit.
   identity restraint.
 - D12 — claimed contract, bounded real Evidence, Conformance fixture, parser, and Recipe
   remain distinct; one Capture proves existence, not invariance.
-- D14 — parser classifications are not repository Measurement Outcomes and this ticket does
-  not add consumer resources.
+- D14 consumer resources remain outside this parser boundary. As in AI-10, parser
+  `ParseClassification` values are parser-only and must not be treated as repository
+  Measurement Outcomes.
 - `docs/specs/capture-event-v2.md` provider interpretation and verified-body rules.
 - AI-13 closed the one-shot Historical Live Evidence-only adapter.
 - AI-14 closed the single authorized live exchange, exact inspection, bounded encrypted F6
@@ -52,7 +55,7 @@ GROK completed the required code-first question phase against clean synchronized
 `9d6941859b649c232e46eb68a8b489fb4acb2875`. GPT independently checked the actual parser
 precedents and D11/D12 boundaries. No Product question remains.
 
-The following technical decisions are locked for this provisional ticket:
+The following technical decisions are locked for this final ticket:
 
 1. Verified Attempt parameters are request authority. Provider task echo is separately
    typed and preserved. A well-typed echo disagreement does **not** override Attempt context
@@ -66,11 +69,18 @@ The following technical decisions are locked for this provisional ticket:
    and `result_count` must equal one. A successful empty result is malformed parser input,
    not a provider-error classification.
 5. Consistent provider non-success status yields parser classification
-   `ParseClassification.PROVIDER_ERROR` without parsing Historical item testimony.
+   `ParseClassification.PROVIDER_ERROR` without parsing Historical item testimony. The
+   provider echo is still structurally parsed and retained when well-typed; `result_count`
+   remains required and nonnegative on the provider-error branch; successful-result fields
+   such as `items_count` and monthly points are `None`/uninterpreted and the result array is
+   not read. Missing or malformed echo/result-count structure still fails parsing.
    Inconsistent top-level/task success is a parser failure.
-6. Root, task, task data, target, result, item, and metrics objects are closed for this v1
-   strict parser. Unknown members fail deterministically. This does not assert the provider
-   can never add fields; later accepted interpretation changes remain versioned work.
+6. The verified Attempt parameter object is closed to exactly `contract`, `date_from`,
+   `date_to`, `language_code`, `location_code`, `platform`, and `target`; its one target is
+   closed to exactly `keyword`, `match_type`, `search_filter`, and `search_scope`. Root,
+   task, task data, echoed target, result, item, and metrics objects are likewise closed for
+   this v1 strict parser. Unknown members fail deterministically. This does not assert the
+   provider can never add fields; later accepted interpretation changes remain versioned work.
 7. `year`, `month`, `mentions`, `ai_search_volume`, and structural counts are JSON integers;
    booleans, decimal numbers, and strings are rejected. Metrics are nonnegative; stated zero
    parses as zero testimony. Negative metrics fail.
@@ -110,6 +120,19 @@ read-only Historical inspector. No provider request is permitted.
 Required fixture path:
 
 `tests/fixtures/dataforseo_ai_optimization_llm_mentions_historical_ai14.json`
+
+The one-time fixture promotion command is frozen to the verified inspector, not a `/tmp`
+copy:
+
+```bash
+test ! -e tests/fixtures/dataforseo_ai_optimization_llm_mentions_historical_ai14.json
+uv run python -m observatory.dataforseo_ai_optimization_llm_mentions_historical_paid_probe inspect \
+  --evidence-root "$HOME/.local/share/observatory/ai14-historical-generative-engine-optimization-2026-08-25" \
+  --capture-id 218d5cf475bb0b3b8861b0dc83b8c763b36252ee4065f72900e17a937763b18b \
+  > tests/fixtures/dataforseo_ai_optimization_llm_mentions_historical_ai14.json
+wc -c tests/fixtures/dataforseo_ai_optimization_llm_mentions_historical_ai14.json
+sha256sum tests/fixtures/dataforseo_ai_optimization_llm_mentions_historical_ai14.json
+```
 
 The committed fixture must be byte-identical to verified inspector stdout. The real body is
 pretty-printed UTF-8 JSON with no BOM and no trailing newline; that formatting is retained
@@ -196,6 +219,11 @@ Successful result IR retains:
 - `items_count`;
 - immutable tuple of Historical monthly points.
 
+Provider-error IR retains the typed request, typed provider echo, envelope/task testimony,
+and nonnegative `result_count`, but has no interpreted Historical `items_count` or monthly
+points. The provider-error branch does not read the result array. Parser classification here
+is not a repository Outcome.
+
 Each Historical monthly point retains:
 
 - `year: int`;
@@ -218,6 +246,9 @@ The parser must:
 - reject booleans anywhere an integer is required;
 - require all successful known fields and exact container types;
 - parse known objects closed and fail on unknown keys;
+- close verified Attempt parameters to exactly `contract`, `date_from`, `date_to`,
+  `language_code`, `location_code`, `platform`, and `target`, with the target closed to
+  `keyword`, `match_type`, `search_filter`, and `search_scope`;
 - preserve provider duration strings as strings, never timestamps;
 - require and type the verified Attempt parameter object for this exact adapter contract;
 - preserve well-typed provider echo even when it disagrees with Attempt context;
@@ -228,7 +259,10 @@ The parser must:
 - `tasks_count` must equal the task-array length and exactly one task is required.
 - `tasks_error` must equal the number of non-success tasks in that one-task envelope.
 - A consistent non-success provider status returns `PROVIDER_ERROR` parser IR and does not
-  interpret a Historical result as admitted testimony.
+  interpret a Historical result as admitted testimony. The provider echo is still parsed and
+  retained when structurally valid, and `result_count` is still required as a nonnegative
+  JSON integer. Malformed echo/result-count structure fails. `items_count` and monthly points
+  remain uninterpreted/`None`, and the result array is not read.
 - Top-level/task success disagreement fails deterministically.
 - On the successful branch, `result_count` must equal the result-array length and both must
   equal one.
@@ -268,6 +302,15 @@ At minimum prove from the exact AI-14 fixture:
 - zero-based provider indexes;
 - parser outcome `ADMITTED` is explicitly parser-only, not a repository Outcome;
 - ordinary test code contains no operator Evidence-root dependency after fixture promotion.
+- existing provider Conformance fixtures remain byte-identical, including at minimum:
+  Target Metrics AI-09
+  `7b6974704f73cff9687986a83ab14ba8ec942ccdbfde359ec7e8fde6bea8eee2`,
+  Search Mentions AI-03
+  `8b3cd0fb0c9fa23c102696bfe6b7212396c0f7c110e9ca8ca5b8ee5af182e80a`,
+  Keyword Overview PF-03
+  `d91fdc7ab8acf429f0ff9c00bd7cdb725be1ba9585481af35d14f7c4e79a6d1c`,
+  and Google Organic PF-10
+  `7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f`.
 
 ## Required synthetic adversarial proofs
 
@@ -278,6 +321,9 @@ At minimum mutate decoded copies or dedicated synthetic JSON; never edit the fro
 - UTF-8 BOM, invalid UTF-8, trailing junk, invalid JSON, duplicate object members,
   `NaN`/`Infinity`;
 - Decimal integer/fraction/exponent/high-precision cost forms without float round-trip;
+- mutation helpers must decode provider decimals as `Decimal` and re-encode `Decimal`
+  lexically without routing fixture cost through binary float, following the accepted
+  AI-10 test-helper pattern;
 - bool/string/decimal forms where counts, year/month, mentions, or volume require integers;
 - negative counts and negative metrics.
 
@@ -285,7 +331,10 @@ At minimum mutate decoded copies or dedicated synthetic JSON; never edit the fro
 
 - wrong `tasks_count`; two tasks; wrong `tasks_error` on success and failure;
 - top-level success with task failure and the inverse;
-- consistent provider error returns parser `PROVIDER_ERROR` without item admission;
+- consistent provider error with valid echo returns parser `PROVIDER_ERROR`, preserves echo
+  and nonnegative `result_count`, and leaves `items_count`/monthly points unparsed;
+- negative, boolean, float, or otherwise malformed `result_count` fails on the provider-error
+  branch as well as on success;
 - wrong `result_count`; empty/two-result successful topology;
 - unknown keys at root, task, data, target, result, item, and metrics layers.
 
@@ -298,9 +347,12 @@ At minimum mutate decoded copies or dedicated synthetic JSON; never edit the fro
 - zero mentions and zero AI search volume parse distinctly;
 - duplicate period fails;
 - month `0`, `13`, negative month, year `0`, year `10000` fail;
-- shuffled order parses without sorting and recomputes only provider indexes;
-- dropped in-window month still parses;
-- added valid out-of-window month still parses;
+- shuffled order parses without sorting; exact point tuples remain unchanged and only
+  zero-based `provider_array_index` follows the new array order;
+- dropped in-window month still parses, the remaining exact tuples are retained, and the
+  verified request context still records the full frozen `date_from`/`date_to` window;
+- added valid out-of-window month still parses as an additional typed point, the verified
+  request context remains unchanged, and indexes follow the expanded provider array;
 - unexpected member at every closed object layer fails.
 
 ### Request/echo isolation
@@ -308,7 +360,8 @@ At minimum mutate decoded copies or dedicated synthetic JSON; never edit the fro
 - well-typed echoed keyword/platform/dates disagreement remains visible and does not replace
   Attempt request context;
 - missing/wrong-typed echo fields fail structural parsing;
-- missing/wrong adapter Attempt parameters fail before successful parse;
+- missing/wrong adapter Attempt parameters and any extra unknown Attempt parameter key fail
+  before successful parse;
 - parser signature remains only body + parameters;
 - no credentials, sockets, provider hosts, DNS, restic, or rclone are used.
 
@@ -325,11 +378,11 @@ may modify exactly:
 Do not modify AI-13/AI-14, capture transport, other provider parsers, migrations, derive
 code, APIs, decisions, roadmap, or unrelated tests in AI-15.
 
-## Mandatory GROK provisional-ticket review
+## Completed GROK provisional-ticket review
 
-Before this ticket can become implementation authority, GROK reviews this exact provisional
-ticket read-only against current authority, the AI-13/AI-14 Evidence boundary, the real
-parser precedents, and actual code/tests.
+GROK reviewed the provisional ticket read-only against current authority, the AI-13/AI-14
+Evidence boundary, the real parser precedents, and actual code/tests at exact HEAD
+`c5c08e26ff12e12a5543fffe5c8499196ef3845d`.
 
 Challenge especially:
 
@@ -345,6 +398,15 @@ Challenge especially:
 
 Return `READY`, `RECONCILE`, or `NOT_READY`. Do not edit files, copy the fixture, call the
 provider, access credentials, mutate Evidence/PostgreSQL, commit, amend, or push.
+
+GROK returned `RECONCILE`. GPT independently verified the material findings and accepts the
+four corrections now incorporated into this final ticket: close the Attempt parameter keys;
+make provider-error IR/echo/result-count behavior explicit and Target-Metrics-like without
+parsing Historical items; freeze fixture promotion to the verified inspector; and strengthen
+the false-green/isolation tests, including Decimal-safe mutation encoding. GROK also
+confirmed the D11 boundary that extra/missing periods remain parser-visible testimony for
+later Recipe reconciliation. No Product question remains, and no second ticket review is
+required.
 
 ## Implementation verification after later authorization
 
@@ -370,6 +432,5 @@ current workflow.
 
 ## Stop point
 
-AI-15 remains provisional until GROK's ticket review is reconciled and the final ticket is
-committed. Even then implementation remains blocked until [CHAZ] explicitly authorizes GROK
-from that exact clean start commit.
+AI-15 is final and accepted after this reconciliation commit. Implementation remains blocked
+until [CHAZ] explicitly authorizes GROK from that exact clean start commit.
