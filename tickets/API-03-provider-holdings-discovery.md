@@ -766,3 +766,114 @@ No `outcomes` subject column. No invented coverage rows. Do not treat
 One implementation commit, no amend, no push. Zero provider calls, credentials, spend,
 continuation, live Evidence mutation, or F12/F13 activity. Working tree left clean after
 the commit.
+
+## Steward implementation review — remediation required
+
+Reviewed implementation commit:
+`f7b0863782c1139bcb341fbd7b2513c2fb01e53d`
+
+Verdict: **REMEDIATION REQUIRED**.
+
+The production data path is directionally correct and the Product boundary remains
+locked. The three routes are Evidence-only, do not consult PostgreSQL or Recipe state,
+verify the store before filtering, preserve surface-local scope identity, expand one
+Keyword Overview Attempt by exact member keyword, sort the full catalog before limiting,
+and expose no strategy, cadence, recommendation, score, or continuation state.
+
+The remaining work is proof and typed-contract hardening. It does not authorize a reader
+or API redesign, a schema or migration, a holdings index, Recipe work, provider activity,
+history/Outcomes changes, or any deferred boundary.
+
+### R1 — make count and time invariants visible in the typed contract
+
+In `src/observatory/provider_holdings.py`, constrain and describe the existing
+semantics rather than changing them:
+
+- `attempt_count >= 1`;
+- `capture_count >= 0`, `unresolved_count >= 0`,
+  `total_matching >= 0`, and `returned_count >= 0`;
+- applied `limit` remains 1–100;
+- `attempt_count == capture_count + unresolved_count`;
+- `first_authorized_at` and `last_authorized_at` are respectively the minimum and
+  maximum verified Attempt authorization times in the exact group;
+- `first_request_started_at` and `last_request_started_at` are respectively the
+  minimum and maximum verified Capture request-start times in the exact group, and both
+  are null exactly when `capture_count == 0`;
+- `attempt_count` and `capture_count` describe Evidence Attempt/Capture cardinality,
+  not provider fact, rank, mention, result, or observation counts.
+
+These are schema-visible bounds and descriptions for already-enforced behavior. Do not
+add inferred state or a new resource field.
+
+### R2 — eliminate OpenAPI and query-contract false greens
+
+For each Holdings route:
+
+- assert the declared query-parameter names are exactly `{"limit", "order"}`, not a
+  subset check that can pass when a parameter disappears;
+- resolve that route's response-schema reference and inspect only its Holdings envelope,
+  item, and surface request schemas; do not search the stringified whole OpenAPI document,
+  where unrelated history or Outcomes prose can satisfy a Holdings assertion;
+- prove the exact eight outer keys and exact nine item keys;
+- prove the R1 numeric bounds and semantic descriptions, surface-specific request shape,
+  Keyword Overview non-explosion wording, empty/limit/`has_more` meaning, unresolved
+  meaning, Search Mentions request `limit`/`offset` and token warnings, and the
+  prohibition on strategy/cadence/recommendation state against the relevant schema;
+- prove invalid `order` and out-of-range `limit` fail with HTTP 422.
+
+Tests may consolidate repeated schema traversal, but each route must be tied to its own
+response schema.
+
+### R3 — prove the named Evidence integrity failures specifically
+
+The existing XOR-damaged Capture tests prove generic byte-integrity rejection, not the
+ticket's Capture-to-parent agreement requirement. Add bounded HTTP proofs that:
+
+- a damaged foreign-adapter Capture anywhere in the same Evidence root makes each
+  Holdings surface fail HTTP 409 with no partial Holdings envelope;
+- a schema/JCS/digest-valid committed Capture that disagrees with its cited parent
+  Attempt is rejected specifically by the parent-agreement check, including the
+  provider/adapter relationship required by the ticket;
+- the test establishes the direct store-read failure cause before asserting the route's
+  exact HTTP 409 and absence of Holdings envelope keys.
+
+Use valid Evidence construction and the public Evidence Store behavior. Do not weaken
+validation or add a Holdings-only substitute for Evidence verification. Consolidation is
+allowed when one planted store-wide defect is exercised through all three routes.
+
+### R4 — prove Search Mentions token non-use with token-bearing Evidence
+
+Use a committed, valid Search Mentions Capture whose provider response actually contains
+`search_after_token`. Through the Holdings route prove that the token is not returned or
+followed, no continuation or provider transport occurs, no new Evidence is created, and
+PostgreSQL remains irrelevant. An Attempt-only/no-response plant without a token does not
+prove this requirement.
+
+### R5 — complete surface-scope fail-closed proofs
+
+Keep subject and request extraction surface-local. Add or consolidate HTTP 409 proofs for
+malformed or missing scope fields that materially define grouping, including Organic
+scope fields and Search Mentions `search_scope` as well as the subject field. Empty
+keyword/target coverage alone is insufficient.
+
+### Remediation boundary
+
+Allowed paths:
+
+- `src/observatory/provider_holdings.py`
+- `tests/test_provider_holdings.py`
+- `tests/test_api_keyword_overview.py`
+- `tests/test_api_google_organic.py`
+- `tests/test_api_search_mentions.py`
+- `tickets/API-03-provider-holdings-discovery.md`
+
+`src/observatory/api.py`, all three readers, provider Outcomes/history code, migrations,
+Recipe code, provider code, and unrelated authority are outside this remediation. If a
+direct production defect makes an outside path necessary, stop and report it rather than
+expanding the patch.
+
+Run the API-03 targeted suite plus Ruff and mypy. Do not run the full suite; reserve that
+for CHAZ's exact-HEAD operator gate after Steward review settles. Commit one remediation
+commit without amend or push, keep the ticket at `review`, and append an implementation
+report addendum with the exact start/implementation commits, changed paths, verification,
+and candid assessment required by this ticket.
