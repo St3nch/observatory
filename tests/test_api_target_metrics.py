@@ -130,6 +130,25 @@ GROUPING_KEYS = {
     "row_count",
 }
 FAMILY_KEYS = {"state", "count"}
+FIELD_STATES = {"absent", "json_null", "stated"}
+IJSON_MAX = 9007199254740991
+HEX64_PATTERN = r"^[0-9a-f]{64}$"
+TOTAL_FACT_KEYS = {
+    "observation_kind",
+    "within_capture_identity",
+    "requested_keyword",
+    "mentions",
+    "ai_search_volume",
+}
+SOURCE_FACT_KEYS = {
+    "observation_kind",
+    "within_capture_identity",
+    "requested_keyword",
+    "domain",
+    "mentions",
+    "ai_search_volume",
+    "provider_array_index",
+}
 READONLY_TABLES = (
     "outcomes",
     "observation_envelopes",
@@ -338,10 +357,29 @@ def _assert_409(response: Any) -> None:
 
 
 def _resolve_schema(spec: dict[str, Any], schema: dict[str, Any]) -> dict[str, Any]:
-    ref = schema.get("$ref")
-    if isinstance(ref, str):
-        return spec["components"]["schemas"][ref.rsplit("/", 1)[-1]]
-    return schema
+    current = schema
+    seen: set[str] = set()
+    while True:
+        ref = current.get("$ref")
+        if not isinstance(ref, str):
+            return current
+        assert ref not in seen
+        seen.add(ref)
+        current = spec["components"]["schemas"][ref.rsplit("/", 1)[-1]]
+
+
+def _options(spec: dict[str, Any], schema: dict[str, Any]) -> list[dict[str, Any]]:
+    resolved = _resolve_schema(spec, schema)
+    grouped = resolved.get("anyOf") or resolved.get("oneOf")
+    if grouped:
+        return [_resolve_schema(spec, option) for option in grouped]
+    return [resolved]
+
+
+def _nonnull(spec: dict[str, Any], schema: dict[str, Any]) -> list[dict[str, Any]]:
+    options = [option for option in _options(spec, schema) if option.get("type") != "null"]
+    assert options, schema
+    return options
 
 
 def _assert_closed(schema: dict[str, Any], keys: set[str]) -> dict[str, Any]:
@@ -351,30 +389,217 @@ def _assert_closed(schema: dict[str, Any], keys: set[str]) -> dict[str, Any]:
     return schema["properties"]
 
 
-def _const(schema: dict[str, Any], expected: object) -> None:
-    if "const" in schema:
-        assert schema["const"] == expected
-        return
-    if "enum" in schema:
-        assert schema["enum"] == [expected]
-        return
-    any_of = schema.get("anyOf") or schema.get("oneOf") or []
-    for option in any_of:
+def _assert_const(spec: dict[str, Any], schema: dict[str, Any], expected: object) -> None:
+    for option in _nonnull(spec, schema):
         if option.get("const") == expected or option.get("enum") == [expected]:
             return
     raise AssertionError(f"expected const {expected!r} in {schema!r}")
 
 
-def _nullable_int(schema: dict[str, Any]) -> None:
-    types = schema.get("type")
-    if types == ["integer", "null"] or types == ["null", "integer"]:
-        return
-    if schema.get("anyOf") or schema.get("oneOf"):
-        options = schema.get("anyOf") or schema.get("oneOf")
-        kinds = {option.get("type") for option in options}
-        assert "integer" in kinds and "null" in kinds
-        return
-    raise AssertionError(f"expected nullable integer in {schema!r}")
+def _assert_enum(spec: dict[str, Any], schema: dict[str, Any], expected: set[object]) -> None:
+    found: set[object] = set()
+    for option in _nonnull(spec, schema):
+        if "enum" in option:
+            found.update(option["enum"])
+        if "const" in option:
+            found.add(option["const"])
+    assert found == expected, (found, schema)
+
+
+def _assert_int(
+    spec: dict[str, Any],
+    schema: dict[str, Any],
+    *,
+    minimum: int,
+    maximum: int | None = None,
+) -> None:
+    ints = [option for option in _nonnull(spec, schema) if option.get("type") == "integer"]
+    assert ints, schema
+    for option in ints:
+        assert option.get("minimum") == minimum, option
+        if maximum is not None:
+            assert option.get("maximum") == maximum, option
+
+
+def _assert_nullable_int(
+    spec: dict[str, Any],
+    schema: dict[str, Any],
+    *,
+    minimum: int,
+    maximum: int,
+) -> None:
+    options = _options(spec, schema)
+    types = {option.get("type") for option in options}
+    assert "null" in types, schema
+    ints = [option for option in options if option.get("type") == "integer"]
+    assert ints, schema
+    for option in ints:
+        assert option.get("minimum") == minimum, option
+        assert option.get("maximum") == maximum, option
+
+
+def _assert_string(
+    spec: dict[str, Any],
+    schema: dict[str, Any],
+    *,
+    min_length: int | None = None,
+    max_length: int | None = None,
+    pattern: str | None = None,
+) -> None:
+    strings = [option for option in _nonnull(spec, schema) if option.get("type") == "string"]
+    assert strings, schema
+    for option in strings:
+        if min_length is not None:
+            assert option.get("minLength") == min_length, option
+        if max_length is not None:
+            assert option.get("maxLength") == max_length, option
+        if pattern is not None:
+            assert option.get("pattern") == pattern, option
+
+
+def _param_schema(spec: dict[str, Any], parameter: dict[str, Any]) -> dict[str, Any]:
+    return _resolve_schema(spec, parameter.get("schema") or parameter)
+
+
+def _hex64(spec: dict[str, Any], schema: dict[str, Any]) -> None:
+    _assert_string(spec, schema, min_length=64, max_length=64, pattern=HEX64_PATTERN)
+
+
+def _assert_history_openapi(spec: dict[str, Any]) -> None:
+    paths = spec["paths"]
+    assert HISTORY in paths
+    assert OUTCOMES not in paths
+    assert HOLDINGS not in paths
+    route = paths[HISTORY]["get"]
+    params = {item["name"]: item for item in route["parameters"]}
+    assert set(params) == {"requested_keyword", "derivation_version_id", "limit", "order"}
+    keyword = params["requested_keyword"]
+    assert keyword.get("required") is True
+    _assert_string(spec, _param_schema(spec, keyword), min_length=1)
+    pin = params["derivation_version_id"]
+    assert pin.get("required") in {None, False}
+    limit = params["limit"]
+    assert limit.get("required") in {None, False}
+    limit_schema = _param_schema(spec, limit)
+    assert (limit_schema.get("default") or limit.get("default")) == 20
+    assert limit_schema.get("minimum") == 1
+    assert limit_schema.get("maximum") == 100
+    order = params["order"]
+    assert order.get("required") in {None, False}
+    order_schema = _param_schema(spec, order)
+    assert (order_schema.get("default") or order.get("default")) == "asc"
+    _assert_enum(spec, order_schema, {"asc", "desc"})
+
+    envelope = _resolve_schema(
+        spec,
+        route["responses"]["200"]["content"]["application/json"]["schema"],
+    )
+    props = _assert_closed(envelope, HISTORY_KEYS)
+    _assert_const(spec, props["provider"], "dataforseo")
+    _assert_const(spec, props["adapter_contract"], TARGET_METRICS_ADAPTER_CONTRACT)
+    _assert_const(spec, props["derivation_version_id"], TARGET_METRICS_RECIPE_ID)
+    _assert_enum(spec, props["recipe_resolution"], {"selected", "pinned"})
+    _assert_int(spec, props["total_matching"], minimum=0)
+    _assert_int(spec, props["returned_count"], minimum=0)
+    _assert_int(spec, props["limit"], minimum=1, maximum=100)
+    _assert_enum(spec, props["order"], {"asc", "desc"})
+    kinds_schema = props["observation_kinds"]
+    assert kinds_schema.get("minItems") == 2
+    assert kinds_schema.get("maxItems") == 2
+    prefix = kinds_schema.get("prefixItems")
+    assert isinstance(prefix, list) and len(prefix) == 2
+    _assert_const(spec, prefix[0], TOTAL_KIND)
+    _assert_const(spec, prefix[1], SOURCE_DOMAIN_KIND)
+    text = json.dumps({"envelope": envelope, "components": spec["components"]}).lower()
+    assert "admitted" in text and "capture" in text
+    assert "never measured" in text
+    assert "failed" in text
+    assert "observation envelope" in text or "observation envelopes" in text
+    assert "pagination" in text
+    assert "truncation" in text or "truncated" in text
+    assert "integrity" in text
+    assert "provider update" in text or "data period" in text
+    assert "observation_admitted_empty" in text
+
+    capture_schema = _resolve_schema(spec, props["captures"]["items"])
+    capture_props = _assert_closed(capture_schema, CAPTURE_KEYS)
+    _assert_const(spec, capture_props["provider"], "dataforseo")
+    _assert_const(spec, capture_props["adapter_contract"], TARGET_METRICS_ADAPTER_CONTRACT)
+    _assert_const(spec, capture_props["derivation_version_id"], TARGET_METRICS_RECIPE_ID)
+    _hex64(spec, capture_props["attempt_id"])
+    _hex64(spec, capture_props["capture_id"])
+    outcome_schema = _resolve_schema(spec, capture_props["capture_outcome"])
+    outcome_props = _assert_closed(outcome_schema, {"classification", "observation_count"})
+    _assert_const(spec, outcome_props["classification"], "observation_admitted")
+    _assert_int(spec, outcome_props["observation_count"], minimum=1, maximum=IJSON_MAX)
+
+    request_schema = _resolve_schema(spec, capture_props["request"])
+    request_props = _assert_closed(request_schema, REQUEST_KEYS)
+    _assert_string(spec, request_props["keyword"], min_length=1)
+    for name, value in (
+        ("match_type", "word_match"),
+        ("search_filter", "include"),
+        ("platform", "google"),
+        ("location_code", 2840),
+        ("language_code", "en"),
+        ("internal_list_limit", 10),
+    ):
+        _assert_const(spec, request_props[name], value)
+    scope_schema = request_props["search_scope"]
+    assert scope_schema.get("minItems") == 1
+    assert scope_schema.get("maxItems") == 1
+    items = scope_schema.get("items")
+    if items is None:
+        prefix_items = scope_schema.get("prefixItems")
+        assert isinstance(prefix_items, list) and prefix_items
+        items = prefix_items[0]
+    _assert_const(spec, items, "answer")
+
+    context_schema = _resolve_schema(spec, capture_props["result_context"])
+    context_props = _assert_closed(context_schema, CONTEXT_KEYS)
+    for zero_name in ("total_count", "result_offset", "items_count"):
+        _assert_const(spec, context_props[zero_name], 0)
+    _assert_enum(spec, context_props["items_state"], FIELD_STATES)
+    _assert_int(spec, context_props["sources_domain_count"], minimum=0, maximum=IJSON_MAX)
+    location_schema = _resolve_schema(spec, context_props["location"])
+    location_props = _assert_closed(location_schema, GROUPING_KEYS)
+    _assert_int(spec, location_props["key"], minimum=0, maximum=IJSON_MAX)
+    for grouping_name in ("location", "language", "platform"):
+        grouping = _resolve_schema(spec, context_props[grouping_name])
+        grouping_props = _assert_closed(grouping, GROUPING_KEYS)
+        _assert_const(spec, grouping_props["provider_array_index"], 0)
+        _assert_const(spec, grouping_props["row_count"], 1)
+        _assert_int(spec, grouping_props["mentions"], minimum=0, maximum=IJSON_MAX)
+        _assert_int(spec, grouping_props["ai_search_volume"], minimum=0, maximum=IJSON_MAX)
+    for name in ("language", "platform"):
+        grouping = _resolve_schema(spec, context_props[name])
+        _assert_string(spec, grouping["properties"]["key"], min_length=1)
+    for family_name in (
+        "search_results_domain",
+        "brand_entities_title",
+        "brand_entities_category",
+    ):
+        family_schema = _resolve_schema(spec, context_props[family_name])
+        family_props = _assert_closed(family_schema, FAMILY_KEYS)
+        _assert_enum(spec, family_props["state"], FIELD_STATES)
+        _assert_nullable_int(spec, family_props["count"], minimum=0, maximum=IJSON_MAX)
+
+    total_schema = _resolve_schema(spec, capture_props["total"])
+    total_props = _assert_closed(total_schema, TOTAL_FACT_KEYS)
+    _assert_const(spec, total_props["observation_kind"], TOTAL_KIND)
+    _hex64(spec, total_props["within_capture_identity"])
+    _assert_string(spec, total_props["requested_keyword"], min_length=1)
+    for metric in ("mentions", "ai_search_volume"):
+        _assert_int(spec, total_props[metric], minimum=0, maximum=IJSON_MAX)
+    source_schema = _resolve_schema(spec, capture_props["source_domains"]["items"])
+    source_props = _assert_closed(source_schema, SOURCE_FACT_KEYS)
+    _assert_const(spec, source_props["observation_kind"], SOURCE_DOMAIN_KIND)
+    _hex64(spec, source_props["within_capture_identity"])
+    _assert_string(spec, source_props["requested_keyword"], min_length=1)
+    _assert_string(spec, source_props["domain"], min_length=1)
+    for metric in ("mentions", "ai_search_volume", "provider_array_index"):
+        _assert_int(spec, source_props[metric], minimum=0, maximum=IJSON_MAX)
+
 
 
 def _xmin_snapshot(dsn: str) -> dict[str, list[tuple[object, ...]]]:
@@ -586,108 +811,7 @@ def test_frozen_ai09_projection_openapi_and_no_mutation(
     assert "source_domains" not in attempt.json()
     schema = spec.json()
     assert spec.status_code == 200
-    paths = schema["paths"]
-    assert HISTORY in paths
-    assert OUTCOMES not in paths
-    assert HOLDINGS not in paths
-    route = paths[HISTORY]["get"]
-    params = {item["name"] for item in route["parameters"]}
-    assert params == {"requested_keyword", "derivation_version_id", "limit", "order"}
-    keyword_param = next(
-        item for item in route["parameters"] if item["name"] == "requested_keyword"
-    )
-    assert keyword_param["required"] is True
-    keyword_schema = keyword_param.get("schema") or keyword_param
-    if "$ref" in keyword_schema:
-        keyword_schema = _resolve_schema(schema, keyword_schema)
-    assert keyword_schema.get("minLength") == 1
-    envelope = _resolve_schema(
-        schema,
-        route["responses"]["200"]["content"]["application/json"]["schema"],
-    )
-    props = _assert_closed(envelope, HISTORY_KEYS)
-    kinds_schema = props["observation_kinds"]
-    assert kinds_schema.get("minItems") == 2
-    assert kinds_schema.get("maxItems") == 2
-    prefix = kinds_schema.get("prefixItems")
-    assert isinstance(prefix, list) and len(prefix) == 2
-    _const(prefix[0], TOTAL_KIND)
-    _const(prefix[1], SOURCE_DOMAIN_KIND)
-    text = json.dumps({"envelope": envelope, "components": schema["components"]}).lower()
-    assert "admitted" in text and "capture" in text
-    assert "never measured" in text
-    assert "failed" in text
-    assert "observation envelope" in text or "observation envelopes" in text
-    assert "pagination" in text
-    assert "truncation" in text or "truncated" in text
-    assert "integrity" in text
-    assert "provider update" in text or "data period" in text
-    assert "observation_admitted_empty" in text
-    capture_schema = _resolve_schema(schema, props["captures"]["items"])
-    capture_props = _assert_closed(capture_schema, CAPTURE_KEYS)
-    request_schema = _resolve_schema(schema, capture_props["request"])
-    request_props = _assert_closed(request_schema, REQUEST_KEYS)
-    _const(request_props["match_type"], "word_match")
-    _const(request_props["search_filter"], "include")
-    _const(request_props["platform"], "google")
-    _const(request_props["location_code"], 2840)
-    _const(request_props["language_code"], "en")
-    _const(request_props["internal_list_limit"], 10)
-    scope_schema = request_props["search_scope"]
-    assert scope_schema.get("minItems") == 1
-    assert scope_schema.get("maxItems") == 1
-    context_schema = _resolve_schema(schema, capture_props["result_context"])
-    context_props = _assert_closed(context_schema, CONTEXT_KEYS)
-    _const(context_props["total_count"], 0)
-    _const(context_props["result_offset"], 0)
-    _const(context_props["items_count"], 0)
-    assert set(context_props["items_state"].get("enum", [])) == {
-        "absent",
-        "json_null",
-        "stated",
-    } or context_props["items_state"].get("anyOf")
-    location_schema = _resolve_schema(schema, context_props["location"])
-    location_props = _assert_closed(location_schema, GROUPING_KEYS)
-    _const(location_props["provider_array_index"], 0)
-    _const(location_props["row_count"], 1)
-    language_schema = _resolve_schema(schema, context_props["language"])
-    _assert_closed(language_schema, GROUPING_KEYS)
-    platform_schema = _resolve_schema(schema, context_props["platform"])
-    _assert_closed(platform_schema, GROUPING_KEYS)
-    for family_name in (
-        "search_results_domain",
-        "brand_entities_title",
-        "brand_entities_category",
-    ):
-        family_schema = _resolve_schema(schema, context_props[family_name])
-        family_props = _assert_closed(family_schema, FAMILY_KEYS)
-        _nullable_int(family_props["count"])
-    total_schema = _resolve_schema(schema, capture_props["total"])
-    _assert_closed(
-        total_schema,
-        {
-            "observation_kind",
-            "within_capture_identity",
-            "requested_keyword",
-            "mentions",
-            "ai_search_volume",
-        },
-    )
-    source_schema = _resolve_schema(schema, capture_props["source_domains"]["items"])
-    _assert_closed(
-        source_schema,
-        {
-            "observation_kind",
-            "within_capture_identity",
-            "requested_keyword",
-            "domain",
-            "mentions",
-            "ai_search_volume",
-            "provider_array_index",
-        },
-    )
-    outcome_schema = _resolve_schema(schema, capture_props["capture_outcome"])
-    _assert_closed(outcome_schema, {"classification", "observation_count"})
+    _assert_history_openapi(schema)
 
 
 def test_empty_history_is_not_failure_or_never_measured(
@@ -1114,5 +1238,31 @@ def test_adapter_disagreement_is_409(
         return changed
 
     store.read_capture = wrong_adapter  # type: ignore[method-assign, assignment]
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+@pytest.mark.parametrize(
+    ("statement", "value"),
+    (
+        (
+            "UPDATE observation_envelopes SET provider = %s WHERE capture_id = %s",
+            "other-provider",
+        ),
+        (
+            "UPDATE observation_envelopes SET adapter_contract = %s WHERE capture_id = %s",
+            MENTIONS_ADAPTER_CONTRACT,
+        ),
+    ),
+)
+def test_envelope_provider_adapter_disagreement_is_409(
+    tmp_path: Path,
+    postgres_dsn: str,
+    statement: str,
+    value: str,
+) -> None:
+    store, _attempt_id, capture_id = _prepare(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        connection.execute(statement, (value, capture_id))
     with _app(store, postgres_dsn) as client:
         _assert_409(_history(client))

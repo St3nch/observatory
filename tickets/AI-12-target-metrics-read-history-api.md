@@ -711,3 +711,50 @@ Unchanged.
 ### Hygiene
 
 One remediation commit, no amend, no push. Zero provider calls, credentials, spend, continuation, live Evidence mutation, or F12/F13. Working tree left clean after the commit.
+
+## Final tests-only proof correction
+
+**Parent:** `919cf37f7f549dc9932b3118c0aed18b2c76ef6b`  
+**This commit** is the AI-12 tests/ticket-only child. Status `review`, never `done`.
+
+### Changed paths
+
+- `tests/test_api_target_metrics.py`
+- `tickets/AI-12-target-metrics-read-history-api.md`
+
+No production, `api.py`, schema, Recipe, Derivation, Outcomes, or Holdings changes.
+
+### Proofs added
+
+OpenAPI now walks anyOf/oneOf leaves and asserts:
+
+- query contract: required `requested_keyword` minLength 1; optional pin; limit default 20 min 1 max 100; order default `asc` enum `asc`/`desc`;
+- outer provenance constants, `recipe_resolution` enum, count minima, limit 1–100, order enum;
+- Capture/Observation hex-64 identity pattern and string bounds;
+- `capture_outcome` classification constant and `observation_count` 1..IJSON_MAX;
+- `search_scope` item const `"answer"`;
+- exact `items_state` and optional-family state enums;
+- required nullable family `count` with integer 0..IJSON_MAX bounds on the integer branch;
+- metric and variable `provider_array_index` bounds;
+- total/source `observation_kind` constants plus structural-zero and singleton constants.
+
+Parameterized PostgreSQL UPDATEs of `observation_envelopes.provider` and `adapter_contract` each return exact HTTP 409 with no history-envelope keys. The Evidence `read_capture` monkeypatch remains as a second, non-relational proof.
+
+### Verification
+
+Targeted suite **39 passed**, 1 warning (known Starlette/`httpx` TestClient deprecation).
+
+    uv run ruff check .   # All checks passed
+    uv run mypy src       # Success: no issues found in 34 source files
+
+Full suite was **not** run.
+
+### Candid notes
+
+Strongest: envelope provider/adapter 409 is now a real PostgreSQL plant, not only a monkeypatch. OpenAPI enum/const/bounds checks inspect branch values.
+
+Weakest: OpenAPI helpers still accept either `const` or single-value `enum` because FastAPI emits both. Outer `total_matching`/`returned_count` assert minimum 0 only; the models do not declare an IJSON maximum.
+
+Possible false greens: the parameterized SQL plants every envelope row for the Capture; one disagreeing row is enough for 409. Query-parameter `required` absence is treated as optional.
+
+No production change. No amend. No push. Zero provider/Evidence/F12/F13 activity.
