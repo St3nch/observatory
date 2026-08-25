@@ -1,8 +1,8 @@
 # API-02 — Provider Measurement Outcomes
 
-**Status:** review  
+**Status:** review — remediation required  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** none; [CHAZ] authorized implementation against the named start commit  
+**Blocked by:** [CHAZ] remediation authorization after this ticket-only reconciliation  
 **Question-resolution pass:** completed against `5fa8bc17835e45795deda380276dab7b3b078004`  
 **Pre-implementation review:** completed against `00e7c754b804df88e3c33c42512668678bd3430f`  
 **Start commit:** `6c59da885d97f423be4453ae5bae67f350bc7933`
@@ -364,16 +364,105 @@ A generic untyped request mapping or universal provider request schema is insuff
 
 ## Shared and surface-local implementation boundary
 
-A small `src/observatory/provider_outcomes.py` may own only limit constants, shared
-classification/Outcome-view typing, common item fields, and outer metadata/invariant math.
+`src/observatory/provider_outcomes.py` may own surface-neutral integrity machinery that
+must remain identical across all three routes:
 
-Each surface reader retains adapter/Recipe inputs, verified subject membership, exact
-request mapping, lifecycle validation, PostgreSQL queries/count verification, and item
-projection.
+- limit constants, shared classification/Outcome-view typing, common item fields, and
+  outer metadata/invariant math;
+- the store-wide verify-first Evidence walk and Attempt/Capture lifecycle index;
+- validated Recipe-material loading and Recipe identity/metadata agreement checks;
+- resolved-Recipe Outcome-stage queries and strict Attempt/Capture pairing;
+- Observation-envelope provenance/cardinality checks;
+- common item projection from already verified Evidence, Recipe, and stage state.
+
+This shared machinery must receive the route's exact expected provider and adapter where
+needed. It must not know Keyword Overview, Google Organic, or Search Mentions fact-table
+names, request shapes, subject fields, membership rules, provider continuation, or
+surface-specific admitted-history behavior.
+
+Each surface reader retains its exact provider/adapter/Recipe inputs, verified subject
+membership, exact request mapping, surface-specific parameter validation, deterministic
+ordering, limiting, and outer-response assembly.
 
 Reuse API-01 envelope mathematics and limits where practical, but do not call this history,
-reuse `HistoryListEnvelope`, build a generic provider loader, create a universal
+reuse `HistoryListEnvelope`, build a generic subject/provider loader, create a universal
 request/subject model, or use PostgreSQL-first candidate selection.
+
+## Post-implementation Steward review reconciliation
+
+[GROK] completed the required strictly read-only post-implementation question pass against
+clean `1b4477632dae2979ea2bce2c67df9e3812787d58`. [GPT] independently inspected the
+committed ticket, parent/child diff, production code, tests, Evidence Store, Recipe
+selection/validation, and PostgreSQL schema through LinuxVedaOpsMCP. No Product question
+remains. API-02 is not closure-ready until the following bounded remediation is committed
+and independently reviewed.
+
+The implementation correctly centralized the store-wide Evidence walk and stage pairing,
+but this exceeded the earlier narrow shared-module sentence. The corrected boundary above
+accepts that surface-neutral centralization because triplicating verify-or-409 and pairing
+would increase cross-surface drift risk. It does not authorize a generic subject loader or
+move any request shape, membership rule, provider fact table, or continuation behavior
+out of its surface reader.
+
+### Required Recipe identity remediation
+
+For the resolved Recipe used by each route, the reader must verify before any successful
+empty or non-empty response:
+
+- resolved provider equals the route's exact provider;
+- resolved adapter equals the route's exact adapter;
+- `recipe_canonical_bytes` decode as UTF-8 JSON and validate as the closed Recipe
+  document;
+- validated Recipe bytes are exact canonical JCS;
+- SHA-256 of those exact bytes equals `derivation_version_id`;
+- Recipe-document provider/adapter, `provider_recipes` provider/adapter columns,
+  resolved provider/adapter, and route provider/adapter all agree.
+
+Decode, schema, canonicalization, digest, or metadata disagreement is integrity failure:
+HTTP 409 `{"detail":"evidence_integrity_failure"}`, with no Outcomes envelope. A
+wrong-provider Recipe registered for the route adapter must not produce an incorrectly
+labelled empty 200. Do not modify Recipe registration, selection, schema, or Derivation.
+
+### Required Observation-envelope provenance remediation
+
+Cardinality alone is insufficient. For every matching Capture and resolved Recipe, load
+the exact `observation_envelopes` rows used for the count and require every row to agree
+with:
+
+- the verified Evidence `attempt_id`;
+- the route/Recipe provider;
+- the route/Recipe adapter;
+- an `observation_kind` declared by the validated Recipe.
+
+Continue to require exact row cardinality equality, positive cardinality for
+`observation_admitted`, and zero rows/count for every non-admitted or admitted-empty
+classification. Do not import history's typed fact-row equality, subordinate-occurrence
+checks, or provider-specific table knowledge.
+
+### Required remediation proofs
+
+Add independent Outcomes HTTP tests proving at least:
+
+1. identical `authorized_at` values are tie-broken by `attempt_id` in ascending and
+   descending order before limiting;
+2. damaged committed foreign-adapter Attempt Evidence returns 409, complementing the
+   existing foreign-Capture proof;
+3. unexpected/wrong-stage or extra Capture-stage PostgreSQL state returns 409;
+4. wrong Capture/Recipe relationship returns 409;
+5. malformed or drifted committed Attempt Evidence for every surface returns 409 before
+   its request testimony can be served;
+6. wrong-provider Recipe metadata for the correct adapter returns 409 even when the
+   subject-matching Evidence set is empty;
+7. invalid UTF-8/JSON, non-canonical, digest-disagreeing, or document/column-disagreeing
+   Recipe bytes return 409 rather than 200 or 500;
+8. cardinality-preserving `observation_envelopes` drift in `attempt_id`, provider,
+   adapter, or observation kind returns 409;
+9. every new 409 response exposes no Outcomes envelope or partial count.
+
+Tests may consolidate equivalent plants where one exact vector proves multiple listed
+invariants, but must not claim that a schema/helper inference is an independent HTTP proof.
+No full suite is authorized during remediation; use the existing targeted API-02 command,
+Ruff, and mypy.
 
 ## Proposed changed-path allowlist
 
