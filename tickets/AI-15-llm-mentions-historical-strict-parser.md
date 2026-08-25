@@ -1,12 +1,13 @@
 # AI-15 — LLM Mentions Historical strict parser and AI-14 Conformance fixture
 
-**Status:** accepted — implementation blocked pending [CHAZ] authorization  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** explicit [CHAZ] implementation authorization at the exact final ticket commit  
 **Product direction:** [CHAZ] continues the Historical slice after AI-14 accepted one-shot live Evidence  
 **Draft base:** `9d6941859b649c232e46eb68a8b489fb4acb2875`  
 **Pre-implementation review:** GROK `RECONCILE` at `c5c08e26ff12e12a5543fffe5c8499196ef3845d`; accepted corrections are incorporated below.  
-**Implementation start commit:** not yet authorized  
+**Start commit:** `fb6ef9d75fc9e4f3aa765a38b0f569b7c7a06212`  
+**Implementation start commit:** `fb6ef9d75fc9e4f3aa765a38b0f569b7c7a06212`  
 
 ## Purpose
 
@@ -434,3 +435,127 @@ current workflow.
 
 AI-15 is final and accepted after this reconciliation commit. Implementation remains blocked
 until [CHAZ] explicitly authorizes GROK from that exact clean start commit.
+
+## Implementation report
+
+**Parent:** `fb6ef9d75fc9e4f3aa765a38b0f569b7c7a06212`  
+**Child:** this implementation commit  
+**Status:** `review`  
+**AI-15 only:** yes. Nothing pushed. No amend.
+
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+Branch `main`, working tree clean after this commit. Started from the authorized HEAD.
+
+### Changed-path allowlist
+
+- `src/observatory/dataforseo_ai_optimization_llm_mentions_historical.py` (new)
+- `tests/test_dataforseo_ai_optimization_llm_mentions_historical.py` (new)
+- `tests/fixtures/dataforseo_ai_optimization_llm_mentions_historical_ai14.json` (new)
+- this ticket (Start commit, Status, Implementation report)
+
+### Fixture promotion
+
+Copied once through the frozen inspector (not `/tmp`):
+
+```bash
+uv run python -m observatory.dataforseo_ai_optimization_llm_mentions_historical_paid_probe inspect \
+  --evidence-root "$HOME/.local/share/observatory/ai14-historical-generative-engine-optimization-2026-08-25" \
+  --capture-id 218d5cf475bb0b3b8861b0dc83b8c763b36252ee4065f72900e17a937763b18b \
+  > tests/fixtures/dataforseo_ai_optimization_llm_mentions_historical_ai14.json
+```
+
+Result: **5246** bytes, SHA-256
+`4419daf0b7076625129ab18c6bf3c83905b998c3b3332f2ba6d42c8879b50781`,
+no BOM, no trailing newline. Pretty-printed provider JSON retained byte-for-byte.
+Ordinary tests read only the committed fixture path.
+
+### Public interface
+
+`parse_historical(body: bytes, parameters: Mapping[str, object]) -> HistoricalIR`
+
+Attempt parameters are closed request authority. Echo is independently typed. Well-typed
+echo disagreement does not replace Attempt context and does not fail parse. Parser
+`ParseClassification.ADMITTED` / `PROVIDER_ERROR` is parser-only.
+
+### Command evidence
+
+```
+uv run pytest -q tests/test_dataforseo_ai_optimization_llm_mentions_historical.py
+```
+
+exit 0, **49 passed**.
+
+```
+uv run ruff check .
+```
+
+exit 0, all checks passed.
+
+```
+uv run mypy src
+```
+
+exit 0, no issues in 36 source files.
+
+### Strongest / weakest
+
+Strongest: golden fixture SHA/length plus exact twelve-point IR; Decimal-safe mutation
+encoder; extra/missing/shuffle assertions that keep Attempt `date_from`/`date_to`
+unchanged; provider-error IR retains echo/`result_count` and leaves items unparsed;
+closed Attempt parameter keys including rejection of TM `internal_list_limit`.
+
+Weakest: synthetic `_encode` compact-JSON mutations are not pretty-printed like the
+fixture; they prove semantics, not provider whitespace. Top-level success with task
+failure follows Target Metrics (`PROVIDER_ERROR`) rather than treating both
+inconsistency directions as hard parse failures.
+
+### Possible false greens
+
+- Compact `_encode` could hide pretty-print-only fixture bugs; golden tests use raw
+  fixture bytes.
+- Hash-isolation of other fixtures proves those files are unchanged, not that their
+  parsers still run.
+- `Decimal("0.1010") == Decimal("0.101")` is numeric equality, not lexical identity.
+
+### Remaining caller-controlled influence
+
+The public function takes caller-supplied `parameters`. Closed-key validation rejects
+unknown keys and wrong contract before body success. Body bytes are caller-supplied
+test/derive input; they are not live Evidence.
+
+### Architecture drift / coupling
+
+Historical parser is a new module. It imports `HISTORICAL_ADAPTER_CONTRACT` and
+`ParseClassification` only. It does not import TM/SM/Organic parse functions or the
+paid-probe module. JSON/int/Decimal helpers are deliberately duplicated.
+
+### Parser / provider traps
+
+Pretty-printed `0.101` must not go through binary float. Month is unpadded JSON
+integer. Result has no `total_count`/`offset`. Extra/out-of-window months parse.
+Duplicates fail. No Provider Update Time and no `YYYY-MM` construction.
+
+### Deferred work
+
+Recipe, Observation identity, completeness vs requested window, derive, schema, API,
+Outcomes/Holdings, F12/F13, other platforms. No recapture.
+
+### Reuse vs remain duplicated
+
+Reuse later: closed-object + Decimal decode pattern, Attempt-vs-echo split,
+parser-only `ParseClassification`. Remain duplicated: Historical field table, monthly
+point IR (`mentions` + `ai_search_volume`, not SM `search_volume`), window strings
+on request context.
+
+### Confirmation
+
+Zero provider, DNS, credential, account, pricing, restic, rclone, or public-network
+calls other than reading the already protected local Evidence Store through the
+read-only inspector. Zero Evidence mutation. Zero PostgreSQL mutation. No Recipe,
+schema, API, or other-parser edits. No amend. No push.

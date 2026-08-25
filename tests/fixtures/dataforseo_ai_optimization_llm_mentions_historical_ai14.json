@@ -1,0 +1,148 @@
+{
+    "version": "0.1.20260806",
+    "status_code": 20000,
+    "status_message": "Ok.",
+    "time": "0.8682 sec.",
+    "cost": 0.101,
+    "tasks_count": 1,
+    "tasks_error": 0,
+    "tasks": [
+        {
+            "id": "08251832-1463-0662-0000-194ae8326094",
+            "status_code": 20000,
+            "status_message": "Ok.",
+            "time": "0.7831 sec.",
+            "cost": 0.101,
+            "result_count": 1,
+            "path": [
+                "v3",
+                "ai_optimization",
+                "llm_mentions",
+                "historical",
+                "live"
+            ],
+            "data": {
+                "api": "ai_optimization",
+                "function": "historical",
+                "date_from": "2025-08-01",
+                "date_to": "2026-07-31",
+                "language_code": "en",
+                "location_code": 2840,
+                "platform": "google",
+                "target": [
+                    {
+                        "keyword": "generative engine optimization",
+                        "match_type": "word_match",
+                        "search_filter": "include",
+                        "search_scope": [
+                            "answer"
+                        ]
+                    }
+                ]
+            },
+            "result": [
+                {
+                    "items_count": 12,
+                    "items": [
+                        {
+                            "year": 2026,
+                            "month": 7,
+                            "metrics": {
+                                "mentions": 1353,
+                                "ai_search_volume": 428820
+                            }
+                        },
+                        {
+                            "year": 2026,
+                            "month": 6,
+                            "metrics": {
+                                "mentions": 481,
+                                "ai_search_volume": 358010
+                            }
+                        },
+                        {
+                            "year": 2026,
+                            "month": 5,
+                            "metrics": {
+                                "mentions": 1449,
+                                "ai_search_volume": 1086150
+                            }
+                        },
+                        {
+                            "year": 2026,
+                            "month": 4,
+                            "metrics": {
+                                "mentions": 576,
+                                "ai_search_volume": 122950
+                            }
+                        },
+                        {
+                            "year": 2026,
+                            "month": 3,
+                            "metrics": {
+                                "mentions": 1019,
+                                "ai_search_volume": 1114570
+                            }
+                        },
+                        {
+                            "year": 2026,
+                            "month": 2,
+                            "metrics": {
+                                "mentions": 418,
+                                "ai_search_volume": 178650
+                            }
+                        },
+                        {
+                            "year": 2026,
+                            "month": 1,
+                            "metrics": {
+                                "mentions": 224,
+                                "ai_search_volume": 471440
+                            }
+                        },
+                        {
+                            "year": 2025,
+                            "month": 12,
+                            "metrics": {
+                                "mentions": 350,
+                                "ai_search_volume": 312600
+                            }
+                        },
+                        {
+                            "year": 2025,
+                            "month": 11,
+                            "metrics": {
+                                "mentions": 202,
+                                "ai_search_volume": 43360
+                            }
+                        },
+                        {
+                            "year": 2025,
+                            "month": 10,
+                            "metrics": {
+                                "mentions": 122,
+                                "ai_search_volume": 51700
+                            }
+                        },
+                        {
+                            "year": 2025,
+                            "month": 9,
+                            "metrics": {
+                                "mentions": 114,
+                                "ai_search_volume": 27770
+                            }
+                        },
+                        {
+                            "year": 2025,
+                            "month": 8,
+                            "metrics": {
+                                "mentions": 75,
+                                "ai_search_volume": 23150
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
