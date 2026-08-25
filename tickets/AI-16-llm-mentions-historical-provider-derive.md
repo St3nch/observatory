@@ -24,9 +24,11 @@ This ticket does **not** add Recipe selection, an admitted-history API, Measurem
 Holdings, recurring acquisition, provider calls, F12/F13 work, strategy/scoring, or a generic
 Mentions schema/writer. Those remain separate boundaries.
 
-This provisional ticket is not implementation authority. GROK must review it read-only,
-GPT must reconcile that review, and [CHAZ] must later authorize implementation from the
-exact final accepted clean commit.
+GROK reviewed the provisional ticket read-only and returned `RECONCILE`. GPT independently
+verified the material findings and incorporated the technical locks below. No Product
+question remains and no second major ticket review is required. This final accepted ticket
+is still not implementation authority until [CHAZ] separately authorizes GROK from the
+exact clean reconciliation commit.
 
 ## Authority and accepted foundation
 
