@@ -499,8 +499,6 @@ that operator block over SSH when the governed runner is unavailable or unreliab
 - Only GROK writes `src/` and `tests/`.
 - No amend or push without [CHAZ] authorization.
 
-## Stop point
-
 ## Final Steward reconciliation lock
 
 This section is normative and supersedes any earlier less-specific wording in this ticket.
