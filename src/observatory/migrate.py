@@ -1314,6 +1314,91 @@ CREATE TABLE IF NOT EXISTS target_metrics_result_context (
 )
 """
 
+HISTORICAL_MONTHLY_KIND: Final[str] = (
+    "dataforseo.google.ai_optimization.llm_mentions_historical.monthly.v1"
+)
+
+LLM_MENTIONS_HISTORICAL_MONTHLY_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS llm_mentions_historical_monthly (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL
+        CHECK (char_length(requested_keyword) >= 1),
+    year BIGINT NOT NULL
+        CHECK (year >= 1 AND year <= 9999),
+    month BIGINT NOT NULL
+        CHECK (month >= 1 AND month <= 12),
+    mentions BIGINT NOT NULL
+        CHECK (mentions >= 0 AND mentions <= {_IJSON_MAX}),
+    ai_search_volume BIGINT NOT NULL
+        CHECK (ai_search_volume >= 0 AND ai_search_volume <= {_IJSON_MAX}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT llm_mentions_historical_monthly_kind
+        CHECK (observation_kind = '{HISTORICAL_MONTHLY_KIND}'),
+    CONSTRAINT llm_mentions_historical_monthly_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    CONSTRAINT llm_mentions_historical_monthly_period
+        UNIQUE (capture_id, derivation_version_id, year, month),
+    {_ENVELOPE_FK}
+)
+"""
+
+LLM_MENTIONS_HISTORICAL_CONTEXT_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS llm_mentions_historical_result_context (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL
+        REFERENCES provider_recipes (derivation_version_id),
+    attempt_id TEXT NOT NULL
+        CHECK (attempt_id ~ '{_HEX64}'),
+    requested_keyword TEXT NOT NULL
+        CHECK (char_length(requested_keyword) >= 1),
+    match_type TEXT NOT NULL,
+    search_filter TEXT NOT NULL,
+    search_scope TEXT[] NOT NULL,
+    platform TEXT NOT NULL,
+    location_code BIGINT NOT NULL
+        CHECK (location_code >= 0 AND location_code <= {_IJSON_MAX}),
+    language_code TEXT NOT NULL,
+    date_from TEXT NOT NULL,
+    date_to TEXT NOT NULL,
+    items_count BIGINT NOT NULL
+        CHECK (items_count >= 0 AND items_count <= {_IJSON_MAX}),
+    PRIMARY KEY (capture_id, derivation_version_id),
+    CONSTRAINT llm_mentions_historical_result_context_outcome
+        FOREIGN KEY (derivation_version_id, attempt_id, capture_id)
+        REFERENCES outcomes (derivation_version_id, attempt_id, capture_id)
+)
+"""
+
+LLM_MENTIONS_HISTORICAL_UNRETURNED_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS llm_mentions_historical_unreturned_requested_periods (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    year BIGINT NOT NULL,
+    month BIGINT NOT NULL,
+    CONSTRAINT hist_unret_pk
+        PRIMARY KEY (capture_id, derivation_version_id, year, month),
+    CONSTRAINT hist_unret_year_ck
+        CHECK (year >= 1 AND year <= 9999),
+    CONSTRAINT hist_unret_month_ck
+        CHECK (month >= 1 AND month <= 12),
+    CONSTRAINT hist_unret_context_fk
+        FOREIGN KEY (capture_id, derivation_version_id)
+        REFERENCES llm_mentions_historical_result_context (
+            capture_id, derivation_version_id
+        )
+)
+"""
+
 PRE_PF12_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     DERIVATION_VERSIONS_SQL,
     OUTCOMES_SQL,
@@ -1357,10 +1442,16 @@ PRE_AI11_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_AI05_SCHEMA_STATEMENTS 
     SEARCH_MENTIONS_CONTEXT_SQL,
 )
 
-SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_AI11_SCHEMA_STATEMENTS + (
+PRE_AI16_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_AI11_SCHEMA_STATEMENTS + (
     TARGET_METRICS_TOTALS_SQL,
     TARGET_METRICS_SOURCE_DOMAINS_SQL,
     TARGET_METRICS_CONTEXT_SQL,
+)
+
+SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_AI16_SCHEMA_STATEMENTS + (
+    LLM_MENTIONS_HISTORICAL_MONTHLY_SQL,
+    LLM_MENTIONS_HISTORICAL_CONTEXT_SQL,
+    LLM_MENTIONS_HISTORICAL_UNRETURNED_SQL,
 )
 
 WIDEN_IJSON_COLUMNS: Final[tuple[tuple[str, str], ...]] = (

@@ -47,6 +47,7 @@ from observatory.evidence_store import EvidenceStore, create_store
 from observatory.migrate import (
     PRE_AI05_SCHEMA_STATEMENTS,
     PRE_AI11_SCHEMA_STATEMENTS,
+    PRE_AI16_SCHEMA_STATEMENTS,
     PRE_PF12_SCHEMA_STATEMENTS,
     SCHEMA_STATEMENTS,
     WIDEN_IJSON_COLUMNS_SQL,
@@ -1598,14 +1599,21 @@ def test_populated_current_schema_then_target_metrics_derive(
     assert "google_organic_result_context" in joined_pre
     assert "keyword_overview_coverage" in joined_pre
     assert "target_metrics_" not in joined_pre
+    assert "llm_mentions_historical_" not in "\n".join(PRE_AI16_SCHEMA_STATEMENTS)
     tm_statements = [
         statement
-        for statement in SCHEMA_STATEMENTS
+        for statement in PRE_AI16_SCHEMA_STATEMENTS
         if statement not in PRE_AI11_SCHEMA_STATEMENTS
     ]
     assert len(tm_statements) == 3
     assert any("target_metrics_totals" in item for item in tm_statements)
     assert any("target_metrics_result_context" in item for item in tm_statements)
+    historical_statements = [
+        statement
+        for statement in SCHEMA_STATEMENTS
+        if statement not in PRE_AI16_SCHEMA_STATEMENTS
+    ]
+    assert len(historical_statements) == 3
     assert len(PRE_AI11_SCHEMA_STATEMENTS) - len(PRE_AI05_SCHEMA_STATEMENTS) == 7
     assert len(PRE_AI05_SCHEMA_STATEMENTS) - len(PRE_PF12_SCHEMA_STATEMENTS) == 10
 

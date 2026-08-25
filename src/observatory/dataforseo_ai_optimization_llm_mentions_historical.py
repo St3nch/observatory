@@ -14,6 +14,13 @@ from observatory.dataforseo_keyword_overview import ParseClassification
 SUCCESS_STATUS: Final[int] = 20000
 YEAR_MIN: Final[int] = 1
 YEAR_MAX: Final[int] = 9999
+PROVIDER: Final[str] = "dataforseo"
+PARSER_CONTRACT: Final[str] = (
+    "dataforseo-ai-optimization-llm-mentions-historical-live-parser-v1"
+)
+MONTHLY_KIND: Final[str] = (
+    "dataforseo.google.ai_optimization.llm_mentions_historical.monthly.v1"
+)
 
 _ROOT_KEYS: Final[frozenset[str]] = frozenset(
     {

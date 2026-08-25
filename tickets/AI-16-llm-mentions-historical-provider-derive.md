@@ -1,12 +1,12 @@
 # AI-16 — LLM Mentions Historical provider Derivation and typed persistence
 
-**Status:** accepted  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** explicit [CHAZ] implementation authorization from the exact final accepted ticket commit  
 **Product direction:** [CHAZ] selected admission of syntactically valid extra/out-of-window returned months as normal monthly Observations; requested-window completeness remains separate context  
 **Draft base:** `826c7c3e82eeac94a56fb81c669aee4a23a802cb`  
 **Pre-implementation review:** GROK `RECONCILE`, completed read-only at `1b3471bfec16f82fde335f6cc26a82a8ca45441b`  
-**Implementation start commit:** not yet authorized  
+**Implementation start commit:** `83682ac7ecf4d24dd9f0f73fd87958e22a2826c1`  
 
 ## Purpose
 
@@ -622,3 +622,114 @@ AI-16 is final and accepted after the Steward reconciliation commit containing t
 Implementation remains blocked until [CHAZ] separately authorizes GROK from that exact clean
 final-ticket commit. No provider, Evidence mutation, PostgreSQL mutation, source/test edit,
 implementation, amend, or push is authorized merely by accepting this ticket.
+
+## Implementation report
+
+**Parent:** `83682ac7ecf4d24dd9f0f73fd87958e22a2826c1`  
+**Child:** this implementation commit  
+**Status:** `review`  
+**AI-16 only:** yes. Nothing pushed. No amend.
+
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### Changed paths
+
+- `src/observatory/dataforseo_ai_optimization_llm_mentions_historical.py` (`PROVIDER`, `PARSER_CONTRACT`, `MONTHLY_KIND` only)
+- `src/observatory/llm_mentions_historical_derive.py` (new)
+- `src/observatory/migrate.py` (`PRE_AI16_SCHEMA_STATEMENTS` plus three Historical relations)
+- `tests/test_dataforseo_ai_optimization_llm_mentions_historical_derive.py` (new)
+- `tests/test_dataforseo_ai_optimization_target_metrics_derive.py` (`PRE_AI16 - PRE_AI11` TM layer arithmetic)
+- this ticket (Start commit, Status, Implementation report)
+
+No parser-admission change. No `provider_recipe` import in the parser module. No Recipe selection, API, F12/F13, shared writer, or other-surface derive edit.
+
+### Recipe and fixture identities
+
+Historical Recipe:
+
+- byte length `1489`
+- `derivation_version_id`
+  `fe3e105f3f90c667df0294a2af12e5a27492bfe6eb63a0664b5326619f62d385`
+
+Independent recomputation is
+`hashlib.sha256(HISTORICAL_RECIPE_BYTES).hexdigest()` and
+`recipe_derivation_version_id(historical_recipe())`.
+
+Frozen AI-14 fixture unchanged:
+
+- path `tests/fixtures/dataforseo_ai_optimization_llm_mentions_historical_ai14.json`
+- bytes `5246`
+- SHA-256 `4419daf0b7076625129ab18c6bf3c83905b998c3b3332f2ba6d42c8879b50781`
+
+Kind:
+
+- `dataforseo.google.ai_optimization.llm_mentions_historical.monthly.v1`
+
+Relations:
+
+- `llm_mentions_historical_monthly`
+- `llm_mentions_historical_result_context`
+- `llm_mentions_historical_unreturned_requested_periods`
+
+Frozen Capture cardinality: **12** monthly envelopes/rows, one context, **0** unreturned periods, `observation_count=12` computed from planned envelopes.
+
+### Validation
+
+Targeted:
+
+```
+uv run pytest -q tests/test_dataforseo_ai_optimization_llm_mentions_historical_derive.py
+```
+
+exit 0, **21 passed**.
+
+Closed parser suite (unchanged):
+
+```
+uv run pytest -q tests/test_dataforseo_ai_optimization_llm_mentions_historical.py
+```
+
+exit 0, **51 passed** (combined with derive: 72 passed).
+
+Bounded TM migration tests:
+
+```
+uv run pytest -q tests/test_dataforseo_ai_optimization_target_metrics_derive.py::test_populated_current_schema_then_target_metrics_derive tests/test_dataforseo_ai_optimization_target_metrics_derive.py::test_fresh_and_upgraded_target_metrics_catalog_match
+```
+
+exit 0.
+
+```
+uv run ruff check .
+```
+
+exit 0, all checks passed.
+
+```
+uv run mypy src
+```
+
+exit 0, no issues in 37 source files.
+
+Full suite not run.
+
+### Strongest / weakest
+
+Strongest: mixed extra+dropped mutation (extra 2026-08 admitted, only 2025-08 unreturned); complete-set `(year, month)` set equality rejecting a count-preserving swapped unreturned period; production validator integrity failure for changed/empty keyword with zero Capture-stage rows; AI-11 cited-Attempt exclusive control.
+
+Weakest: complete-set typed monthly compare is identity-set plus `_write_closed_row` content equality (same TM shape). Two-database snapshot selects every new column rather than `SELECT *`. Compact `_encode` mutations are not pretty-printed like the fixture; golden tests use raw fixture bytes.
+
+### Possible false greens
+
+- Neighbor fixture hashes prove those files unchanged, not that their parsers still run.
+- Socket `create_connection` guard is a bounded regression guard, not a universal network-absence proof.
+- `reconciliation_failed` remains in the closed taxonomy with no ordinary v1 emission path, as required.
+
+### Confirmation
+
+Zero provider, DNS, credential, account, pricing, restic, rclone, or public-network calls. Zero Evidence mutation. Zero operator PostgreSQL mutation. Ordinary tests used committed fixture/synthetic Evidence and isolated pytest PostgreSQL. No Recipe selection/API/F12/F13/shared-writer work. No amend. No push.
