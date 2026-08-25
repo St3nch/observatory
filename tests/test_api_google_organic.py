@@ -2109,6 +2109,37 @@ def test_google_organic_outcomes_remediation_409s(
     _assert_outcomes_409(drifted)
 
 
+def _resolve_openapi_schema(spec: dict[str, Any], schema: dict[str, Any]) -> dict[str, Any]:
+    ref = schema.get("$ref")
+    if isinstance(ref, str):
+        resolved = spec["components"]["schemas"][ref.rsplit("/", 1)[-1]]
+        assert isinstance(resolved, dict)
+        return resolved
+    return schema
+
+
+def _holdings_route_schemas(
+    spec: dict[str, Any], path: str
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    operation = spec["paths"][path]["get"]
+    names: set[str] = set()
+    for item in operation.get("parameters") or []:
+        parameter = item
+        ref = item.get("$ref") if isinstance(item, dict) else None
+        if isinstance(ref, str):
+            parameter = spec["components"]["parameters"][ref.rsplit("/", 1)[-1]]
+        if isinstance(parameter, dict) and parameter.get("in") == "query":
+            names.add(str(parameter["name"]))
+    assert names == {"limit", "order"}
+    response = operation["responses"]["200"]["content"]["application/json"]["schema"]
+    envelope = _resolve_openapi_schema(spec, response)
+    assert set(envelope["required"]) == HOLDINGS_KEYS
+    item_schema = _resolve_openapi_schema(spec, envelope["properties"]["holdings"]["items"])
+    assert set(item_schema["required"]) == HOLDINGS_ITEM_KEYS
+    request_schema = _resolve_openapi_schema(spec, item_schema["properties"]["request"])
+    return envelope, item_schema, request_schema
+
+
 def test_google_organic_holdings_empty_closed_query_and_openapi(tmp_path: Path) -> None:
     store = create_store(tmp_path / "empty")
     with _holdings_app(store) as client:
@@ -2117,26 +2148,44 @@ def test_google_organic_holdings_empty_closed_query_and_openapi(tmp_path: Path) 
         pin = _holdings(client, derivation_version_id="ab" * 32)
         extra_offset = _holdings(client, offset=0)
         extra_cursor = _holdings(client, cursor="next")
+        bad_limit = _holdings(client, limit=0)
+        high_limit = _holdings(client, limit=101)
+        bad_order = _holdings(client, order="sideways")
         spec = client.get("/api/v1/openapi.json").json()
     assert empty.status_code == 200
     _assert_holdings_envelope(empty.json(), total_matching=0, returned_count=0)
-    assert extra.status_code == 422
-    assert pin.status_code == 422
-    assert extra_offset.status_code == 422
-    assert extra_cursor.status_code == 422
-    schema = spec["paths"][HOLDINGS]["get"]
-    parameters = schema.get("parameters") or []
-    names = {
-        item.get("name")
-        for item in parameters
-        if isinstance(item, dict) and item.get("in") == "query"
-    }
-    assert names <= {"limit", "order"}
-    text = json.dumps(spec).lower()
-    assert "pagination" in text
-    assert "not definitely unsent" in text
-    request_schema = spec["components"]["schemas"]["GoogleOrganicHoldingsRequest"]
+    for response in (extra, pin, extra_offset, extra_cursor, bad_limit, high_limit, bad_order):
+        assert response.status_code == 422
+        assert "holdings" not in response.json()
+    envelope, item_schema, request_schema = _holdings_route_schemas(spec, HOLDINGS)
+    env_props = envelope["properties"]
+    item_props = item_schema["properties"]
+    assert env_props["total_matching"]["minimum"] == 0
+    assert env_props["returned_count"]["minimum"] == 0
+    assert env_props["limit"]["minimum"] == 1
+    assert env_props["limit"]["maximum"] == 100
+    assert item_props["attempt_count"]["minimum"] == 1
+    assert item_props["capture_count"]["minimum"] == 0
+    assert item_props["unresolved_count"]["minimum"] == 0
+    attempt_text = str(item_props["attempt_count"].get("description", "")).lower()
+    assert "observation" in attempt_text or "rank" in attempt_text
+    assert "minimum" in str(item_props["first_authorized_at"].get("description", "")).lower()
+    assert "maximum" in str(item_props["last_authorized_at"].get("description", "")).lower()
+    started = str(item_props["first_request_started_at"].get("description", "")).lower()
+    assert "null" in started and "capture_count" in started
+    unresolved = str(item_props["unresolved_count"].get("description", "")).lower()
+    assert "not definitely unsent" in unresolved
+    empty = str(env_props["total_matching"].get("description", "")).lower()
+    assert "unselected" in empty or "recipe" in empty
+    has_more = str(env_props["has_more"].get("description", "")).lower()
+    assert "pagination" in has_more or "unavailable" in has_more
+    scoped = json.dumps(
+        {"envelope": envelope, "item": item_schema, "request": request_schema}
+    ).lower()
+    assert "strategy" in scoped and "cadence" in scoped
     assert set(request_schema["required"]) == ORGANIC_HOLDINGS_REQUEST_KEYS
+    request_text = json.dumps(request_schema).lower()
+    assert "location" in request_text and "device" in request_text and "depth" in request_text
 
 
 def test_google_organic_holdings_grouping_order_and_independence(
@@ -2303,3 +2352,35 @@ def test_google_organic_holdings_integrity_vectors(tmp_path: Path) -> None:
     path.write_bytes(bytes(raw))
     with _holdings_app(parent_store) as client:
         _assert_holdings_409(_holdings(client, limit=1))
+
+
+@pytest.mark.parametrize(
+    "field",
+    (
+        "depth",
+        "device",
+        "os",
+        "group_organic_results",
+        "load_async_ai_overview",
+        "location_code",
+        "language_code",
+    ),
+)
+def test_google_organic_holdings_missing_scope_field_is_409(
+    tmp_path: Path, field: str
+) -> None:
+    store = create_store(tmp_path / "scope")
+    _commit_organic_attempt_only(
+        store, "c1" * 32, authorized_at="2026-08-18T17:37:00.000000Z"
+    )
+
+    def _drop_field(document: dict[str, object], _id: str) -> dict[str, object]:
+        raw = document["parameters"]
+        assert isinstance(raw, Mapping)
+        parameters = dict(raw)
+        del parameters[field]
+        return {**document, "parameters": parameters}
+
+    wrapped = _OverrideAttemptStore(store, _drop_field)
+    with _holdings_app(wrapped) as client:
+        _assert_holdings_409(_holdings(client))

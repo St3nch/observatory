@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from observatory.evidence_store import IntegrityError
 from observatory.provider_history import HISTORY_LIMIT_DEFAULT, HISTORY_LIMIT_MAX
@@ -45,7 +45,8 @@ ITEM_KEYS: Final[frozenset[str]] = frozenset(
 _GRAIN: Final[str] = (
     "Evidence-backed Holdings catalog item: one exact requested subject plus the "
     "complete surface-local request scope. Not one Attempt, Capture, Observation, "
-    "provider item, Outcome classification, or desired measurement."
+    "provider item, Outcome classification, or desired measurement. Not strategy, "
+    "recommendation, cadence, or monitoring state."
 )
 _EMPTY_DESCRIPTION: Final[str] = (
     "Empty Holdings (total_matching 0, holdings empty) means no verified Attempt "
@@ -54,17 +55,38 @@ _EMPTY_DESCRIPTION: Final[str] = (
     "unimportance, an unselected Recipe, admitted-history absence, or corpus emptiness."
 )
 _COUNT_DESCRIPTION: Final[str] = (
-    "Evidence inventory for this exact subject-plus-request group. Not Observation "
-    "counts, admitted counts, ranks, mentions, volume, provider corpus/item counts, "
-    "panels, or cadence."
+    "Evidence Attempt/Capture cardinality for this exact subject-plus-request group. "
+    "Not provider fact, rank, mention, result, or observation counts, and not panels "
+    "or cadence. attempt_count equals capture_count plus unresolved_count."
+)
+_ATTEMPT_COUNT_DESCRIPTION: Final[str] = (
+    "Number of unique verified Attempts in this group, at least 1. "
+    + _COUNT_DESCRIPTION
+)
+_CAPTURE_COUNT_DESCRIPTION: Final[str] = (
+    "Number of those Attempts that have exactly one verified Capture. "
+    + _COUNT_DESCRIPTION
+    + " Multiple Captures prove multiple historical measurements, not a monitoring program."
 )
 _UNRESOLVED_DESCRIPTION: Final[str] = (
     "Number of verified Attempts in this group with no Capture. Authorized/unresolved "
     "lifecycle vocabulary only. Not definitely unsent, queued, retryable, or current status."
 )
-_TIME_DESCRIPTION: Final[str] = (
-    "Canonical Evidence timestamps. last_authorized_at is the maximum Attempt "
-    "authorized_at in this group, not last monitored, a cadence, or current status."
+_FIRST_AUTHORIZED_DESCRIPTION: Final[str] = (
+    "Minimum verified Attempt authorized_at in this exact group. Canonical Evidence "
+    "authorization time, not last monitored, a cadence, or current status."
+)
+_LAST_AUTHORIZED_DESCRIPTION: Final[str] = (
+    "Maximum verified Attempt authorized_at in this exact group. Canonical Evidence "
+    "authorization time, not last monitored, a cadence, or current status."
+)
+_FIRST_STARTED_DESCRIPTION: Final[str] = (
+    "Minimum verified Capture request_started_at in this exact group. Null exactly "
+    "when capture_count is 0. Canonical Evidence time, not cadence or current status."
+)
+_LAST_STARTED_DESCRIPTION: Final[str] = (
+    "Maximum verified Capture request_started_at in this exact group. Null exactly "
+    "when capture_count is 0. Canonical Evidence time, not cadence or current status."
 )
 _HAS_MORE_DESCRIPTION: Final[str] = (
     "True when total_matching exceeds returned_count. Discloses an omitted Holdings "
@@ -140,19 +162,29 @@ class _HoldingsItemBase(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     requested_keyword: str = Field(description=_GRAIN)
-    attempt_count: int = Field(description=_COUNT_DESCRIPTION)
-    capture_count: int = Field(
-        description=(
-            _COUNT_DESCRIPTION
-            + " Multiple Captures prove multiple historical measurements, not a "
-            "monitoring program."
-        )
-    )
-    unresolved_count: int = Field(description=_UNRESOLVED_DESCRIPTION)
-    first_authorized_at: str = Field(description=_TIME_DESCRIPTION)
-    last_authorized_at: str = Field(description=_TIME_DESCRIPTION)
-    first_request_started_at: str | None = Field(description=_TIME_DESCRIPTION)
-    last_request_started_at: str | None = Field(description=_TIME_DESCRIPTION)
+    attempt_count: int = Field(ge=1, description=_ATTEMPT_COUNT_DESCRIPTION)
+    capture_count: int = Field(ge=0, description=_CAPTURE_COUNT_DESCRIPTION)
+    unresolved_count: int = Field(ge=0, description=_UNRESOLVED_DESCRIPTION)
+    first_authorized_at: str = Field(description=_FIRST_AUTHORIZED_DESCRIPTION)
+    last_authorized_at: str = Field(description=_LAST_AUTHORIZED_DESCRIPTION)
+    first_request_started_at: str | None = Field(description=_FIRST_STARTED_DESCRIPTION)
+    last_request_started_at: str | None = Field(description=_LAST_STARTED_DESCRIPTION)
+
+    @model_validator(mode="after")
+    def _count_and_time_invariants(self) -> _HoldingsItemBase:
+        if self.attempt_count != self.capture_count + self.unresolved_count:
+            raise ValueError("attempt_count must equal capture_count plus unresolved_count")
+        if self.capture_count == 0:
+            if (
+                self.first_request_started_at is not None
+                or self.last_request_started_at is not None
+            ):
+                raise ValueError("request times must be null when capture_count is 0")
+        elif (
+            self.first_request_started_at is None or self.last_request_started_at is None
+        ):
+            raise ValueError("request times must be present when capture_count is positive")
+        return self
 
 
 class KeywordOverviewHoldingsItem(_HoldingsItemBase):
@@ -178,19 +210,25 @@ class _HoldingsEnvelopeBase(BaseModel):
     provider: str = Field(description=_GRAIN + " " + _EMPTY_DESCRIPTION)
     adapter_contract: str
     total_matching: int = Field(
+        ge=0,
         description=(
             "Unique subject-plus-exact-request groups after store-wide Evidence "
             "verification and before the output limit. Not Attempts, Captures, Outcome "
             "rows, Observation envelopes, facts, provider result items, corpus totals, "
             "or independent Keyword Overview exchanges. "
             + _EMPTY_DESCRIPTION
-        )
+        ),
     )
     returned_count: int = Field(
-        description="Number of Holdings items in holdings. Equals len(holdings)."
+        ge=0,
+        description="Number of Holdings items in holdings. Equals len(holdings).",
     )
     limit: int = Field(
-        description="Validated applied outer Holdings limit. Maximum 100. Not a provider page size."
+        ge=1,
+        le=100,
+        description=(
+            "Validated applied outer Holdings limit. Maximum 100. Not a provider page size."
+        ),
     )
     order: Literal["asc", "desc"] = Field(description=_ORDER_DESCRIPTION)
     has_more: bool = Field(description=_HAS_MORE_DESCRIPTION)

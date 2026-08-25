@@ -20,8 +20,11 @@ from observatory.api import create_app
 from observatory.capture import FixtureCaptureInputs, capture_fixture
 from observatory.capture_event import (
     body_ref,
+    canonical_json,
+    content_digest,
     paid_http_attempt_document,
     paid_http_capture_document,
+    validate_capture,
 )
 from observatory.dataforseo_keyword_overview import (
     BACKLINKS_KIND,
@@ -38,7 +41,7 @@ from observatory.dataforseo_keyword_overview import (
 )
 from observatory.dataforseo_paid_probe import closed_paid_parameters, paid_request_body_bytes
 from observatory.derive import DEFAULT_VERSION, derive
-from observatory.evidence_store import EvidenceStore, create_store
+from observatory.evidence_store import EvidenceStore, IntegrityError, create_store
 from observatory.keyword_overview_derive import (
     derive_keyword_overview,
     derive_keyword_overview_extended,
@@ -68,6 +71,10 @@ SHARED_TIMES = {
 HISTORY = "/v1/providers/dataforseo/google/keyword-overview/history"
 OUTCOMES = "/v1/providers/dataforseo/google/keyword-overview/outcomes"
 HOLDINGS = "/v1/providers/dataforseo/google/keyword-overview/holdings"
+ORGANIC_HOLDINGS = "/v1/providers/dataforseo/google/organic/holdings"
+MENTIONS_HOLDINGS = (
+    "/v1/providers/dataforseo/google/ai-optimization/search-mentions/holdings"
+)
 HOLDINGS_KEYS = {
     "provider",
     "adapter_contract",
@@ -445,6 +452,23 @@ class _OverrideAttemptStore(EvidenceStore):
 
     def list_committed_ids(self, kind: Literal["attempts", "captures"]) -> list[str]:
         return self._store.list_committed_ids(kind)
+
+
+def _plant_retargeted_capture(
+    store: EvidenceStore, capture_id: str, attempt_id: str
+) -> str:
+    original = store.read_capture(capture_id)
+    assert original is not None
+    mutated = dict(original)
+    mutated["attempt_id"] = attempt_id
+    raw = canonical_json(validate_capture(mutated))
+    planted_id = content_digest(raw)
+    src = store.capture_path(capture_id)
+    dst = store.capture_path(planted_id)
+    shutil.copytree(src, dst)
+    (dst / "capture.json").write_bytes(raw)
+    (dst / "COMMITTED").write_bytes(f"{planted_id}\n".encode())
+    return planted_id
 
 
 def _commit_paid_attempt_only(
@@ -1774,6 +1798,68 @@ def test_keyword_overview_outcomes_recipe_identity_and_envelope_provenance(
     _assert_outcomes_409(drifted)
 
 
+def _resolve_openapi_schema(spec: dict[str, Any], schema: dict[str, Any]) -> dict[str, Any]:
+    ref = schema.get("$ref")
+    if isinstance(ref, str):
+        resolved = spec["components"]["schemas"][ref.rsplit("/", 1)[-1]]
+        assert isinstance(resolved, dict)
+        return resolved
+    return schema
+
+
+def _holdings_route_schemas(
+    spec: dict[str, Any], path: str
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    operation = spec["paths"][path]["get"]
+    names: set[str] = set()
+    for item in operation.get("parameters") or []:
+        parameter = item
+        ref = item.get("$ref") if isinstance(item, dict) else None
+        if isinstance(ref, str):
+            parameter = spec["components"]["parameters"][ref.rsplit("/", 1)[-1]]
+        if isinstance(parameter, dict) and parameter.get("in") == "query":
+            names.add(str(parameter["name"]))
+    assert names == {"limit", "order"}
+    response = operation["responses"]["200"]["content"]["application/json"]["schema"]
+    envelope = _resolve_openapi_schema(spec, response)
+    assert set(envelope["required"]) == HOLDINGS_KEYS
+    item_schema = _resolve_openapi_schema(spec, envelope["properties"]["holdings"]["items"])
+    assert set(item_schema["required"]) == HOLDINGS_ITEM_KEYS
+    request_schema = _resolve_openapi_schema(spec, item_schema["properties"]["request"])
+    return envelope, item_schema, request_schema
+
+
+def _assert_holdings_count_time_schema(
+    envelope: dict[str, Any], item_schema: dict[str, Any]
+) -> None:
+    env_props = envelope["properties"]
+    assert env_props["total_matching"]["minimum"] == 0
+    assert env_props["returned_count"]["minimum"] == 0
+    assert env_props["limit"]["minimum"] == 1
+    assert env_props["limit"]["maximum"] == 100
+    item_props = item_schema["properties"]
+    assert item_props["attempt_count"]["minimum"] == 1
+    assert item_props["capture_count"]["minimum"] == 0
+    assert item_props["unresolved_count"]["minimum"] == 0
+    attempt_text = str(item_props["attempt_count"].get("description", "")).lower()
+    capture_text = str(item_props["capture_count"].get("description", "")).lower()
+    assert "attempt" in attempt_text and "capture" in attempt_text
+    assert "observation" in attempt_text or "observation" in capture_text
+    assert "rank" in attempt_text or "mention" in attempt_text or "rank" in capture_text
+    assert "minimum" in str(item_props["first_authorized_at"].get("description", "")).lower()
+    assert "maximum" in str(item_props["last_authorized_at"].get("description", "")).lower()
+    started = str(item_props["first_request_started_at"].get("description", "")).lower()
+    assert "null" in started and "capture_count" in started
+    unresolved = str(item_props["unresolved_count"].get("description", "")).lower()
+    assert "not definitely unsent" in unresolved
+    empty = str(env_props["total_matching"].get("description", "")).lower()
+    assert "unselected" in empty or "recipe" in empty
+    has_more = str(env_props["has_more"].get("description", "")).lower()
+    assert "pagination" in has_more or "unavailable" in has_more
+    strategy = json.dumps({"envelope": envelope, "item": item_schema}).lower()
+    assert "recommendation" in strategy or "cadence" in strategy or "strategy" in strategy
+
+
 def test_keyword_overview_holdings_empty_closed_query_and_openapi(
     tmp_path: Path,
 ) -> None:
@@ -1785,31 +1871,34 @@ def test_keyword_overview_holdings_empty_closed_query_and_openapi(
         extra_offset = _holdings(client, offset=0)
         extra_cursor = _holdings(client, cursor="next")
         bad_limit = _holdings(client, limit=0)
+        high_limit = _holdings(client, limit=101)
+        bad_order = _holdings(client, order="sideways")
         spec = client.get("/api/v1/openapi.json").json()
     assert empty.status_code == 200
     _assert_holdings_envelope(empty.json(), total_matching=0, returned_count=0)
     assert empty.json()["holdings"] == []
-    for response in (extra_keyword, extra_pin, extra_offset, extra_cursor, bad_limit):
+    for response in (
+        extra_keyword,
+        extra_pin,
+        extra_offset,
+        extra_cursor,
+        bad_limit,
+        high_limit,
+        bad_order,
+    ):
         assert response.status_code == 422
         assert "holdings" not in response.json()
-    schema = spec["paths"][HOLDINGS]["get"]
-    parameters = schema.get("parameters") or []
-    names = {
-        item.get("name")
-        for item in parameters
-        if isinstance(item, dict) and item.get("in") == "query"
-    }
-    assert names <= {"limit", "order"}
-    text = json.dumps(spec).lower()
-    assert "not one attempt" in text or "subject-plus" in text or "exact requested subject" in text
-    assert "not definitely unsent" in text
-    assert "pagination" in text
-    assert "five" in text or "1..5" in text or "independent exchanges" in text
-    assert "unselected" in text or "recipe" in text
-    item_schema = spec["components"]["schemas"]["KeywordOverviewHoldingsItem"]
-    assert set(item_schema["required"]) == HOLDINGS_ITEM_KEYS
-    request_schema = spec["components"]["schemas"]["KeywordOverviewHoldingsRequest"]
+    envelope, item_schema, request_schema = _holdings_route_schemas(spec, HOLDINGS)
+    _assert_holdings_count_time_schema(envelope, item_schema)
     assert set(request_schema["required"]) == KO_REQUEST_KEYS
+    expansion = json.dumps({"item": item_schema, "request": request_schema}).lower()
+    assert "independent exchanges" in expansion or "n measurements" in expansion
+    grain = str(item_schema["properties"]["requested_keyword"].get("description", "")).lower()
+    assert (
+        "exact requested subject" in grain
+        or "subject-plus" in grain
+        or "not one attempt" in grain
+    )
 
 
 def test_keyword_overview_holdings_inventory_grouping_and_expansion(
@@ -2101,3 +2190,36 @@ def test_keyword_overview_holdings_integrity_vectors(tmp_path: Path) -> None:
     with _holdings_app(missing_parent) as client:
         _assert_holdings_409(_holdings(client, limit=1))
     assert missing_capture
+
+
+def test_holdings_foreign_capture_and_parent_agreement_on_all_routes(
+    tmp_path: Path,
+) -> None:
+    damaged = create_store(tmp_path / "foreign")
+    _commit_paid_attempt_only(
+        damaged, "f1" * 32, authorized_at="2026-08-16T21:37:00.000000Z", keywords=("seo api",)
+    )
+    fixture = capture_fixture(damaged, _fixture_inputs())
+    capture_path = damaged.capture_path(fixture.capture_id) / "capture.json"
+    payload = bytearray(capture_path.read_bytes())
+    payload[0] ^= 0x01
+    capture_path.write_bytes(bytes(payload))
+    with pytest.raises(IntegrityError):
+        damaged.read_capture(fixture.capture_id)
+    with _holdings_app(damaged) as client:
+        for path in (HOLDINGS, ORGANIC_HOLDINGS, MENTIONS_HOLDINGS):
+            _assert_holdings_409(client.get(path))
+
+    parented = create_store(tmp_path / "parent-disagree")
+    ko_attempt = _commit_paid_attempt_only(
+        parented, "f2" * 32, authorized_at="2026-08-16T21:37:00.000000Z", keywords=("seo api",)
+    )
+    fixture_ok = capture_fixture(parented, _fixture_inputs())
+    planted_id = _plant_retargeted_capture(
+        parented, fixture_ok.capture_id, ko_attempt
+    )
+    with pytest.raises(IntegrityError, match="does not agree with its parent Attempt"):
+        parented.read_capture(planted_id)
+    with _holdings_app(parented) as client:
+        for path in (HOLDINGS, ORGANIC_HOLDINGS, MENTIONS_HOLDINGS):
+            _assert_holdings_409(client.get(path))

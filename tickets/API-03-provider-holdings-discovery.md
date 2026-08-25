@@ -877,3 +877,117 @@ for CHAZ's exact-HEAD operator gate after Steward review settles. Commit one rem
 commit without amend or push, keep the ticket at `review`, and append an implementation
 report addendum with the exact start/implementation commits, changed paths, verification,
 and candid assessment required by this ticket.
+
+## Remediation report addendum
+
+**Remediation start commit:** `6dc18360147f11e870d307acef087d7248c967bc`  
+**This commit** is the API-03 R1–R5 remediation child. Status `review`, never `done`.
+
+### Changed paths
+
+- `src/observatory/provider_holdings.py`
+- `tests/test_provider_holdings.py`
+- `tests/test_api_keyword_overview.py`
+- `tests/test_api_google_organic.py`
+- `tests/test_api_search_mentions.py`
+- `tickets/API-03-provider-holdings-discovery.md`
+
+No `api.py`, reader, Outcomes, history, schema, Recipe, or roadmap changes.
+
+### R1–R5 behavior
+
+R1: typed `ge`/`le` bounds, count equality validator, and min/max/null-when-zero time
+descriptions on the existing Holdings models. No new fields.
+
+R2: each route asserts query names `== {"limit", "order"}`, resolves its own 200 schema,
+checks eight envelope keys, nine item keys, R1 minima, and surface request shape. Invalid
+`order` and `limit` 0/101 are HTTP 422. Assertions use the route schema, not the whole
+OpenAPI dump.
+
+R3: XOR-damaged foreign-adapter Capture is store-read `IntegrityError` then 409 on all
+three Holdings routes. A schema/JCS/digest-valid Capture retargeted onto a different
+parent Attempt fails `read_capture` with `does not agree with its parent Attempt`, then
+the same 409 with no envelope keys.
+
+R4: committed Search Mentions Capture from the token-bearing AI-03 fixture. Holdings
+response omits `search_after_token`; `recorded_ops` unchanged; no PostgreSQL.
+
+R5: Organic missing `depth`/`device`/`os`/flags/location/language and Search Mentions
+missing `search_scope` return HTTP 409.
+
+### Verification
+
+Targeted suite **92 passed**, 1 warning (known Starlette/`httpx` TestClient deprecation).
+
+    uv run ruff check .   # All checks passed
+    uv run mypy           # Success: no issues found in 68 source files
+
+Full suite was **not** run.
+
+### Strongest
+
+Parent-agreement is proven on the public `read_capture` path, not XOR. OpenAPI proofs
+bind each Holdings route's own schema.
+
+### Weakest
+
+R5 still uses post-verify Attempt overrides because closed HTTP-v2 probes freeze those
+fields. R3 parent plant writes a new Capture bundle on disk (commit_capture would
+refuse); identity is still content-addressed and verified by `read_capture`.
+
+### Possible false greens
+
+OpenAPI substring checks can still pass if descriptions later move to a nested `$ref`
+the helper does not follow. Override-store R5 plants are not committed drifted bytes.
+Token proof checks the JSON key, not that Holdings parsed the body.
+
+### Caller-controlled influence
+
+Unchanged: `limit` and `order` only.
+
+### Architecture
+
+No reader/API redesign. Shared OpenAPI helpers remain triplicated in the three route
+suites so each route binds its own schema.
+
+### Parser/provider traps
+
+None new. SM token remains result-context testimony, not a Holdings field.
+
+### Closure blockers
+
+Full suite not run. Steward review of this remediation commit is required.
+
+### Deferred
+
+Unchanged: holdings index, pagination past 100, Outcomes/history scope filters, AI-12,
+F12/F13, Organic `related_result`.
+
+### Reuse later
+
+Typed count/time bounds, per-route OpenAPI binding, parent-agreement plant via
+`validate_capture` plus content digest.
+
+### Remain surface-local
+
+Subject extraction and grouping keys stay in the three readers (untouched).
+
+### Evidence vs contract vs synthetic
+
+R3/R4 use committed Evidence plus one retargeted Capture bundle. R5 is a synthetic
+post-verify parameter drop.
+
+### Strategy-LLM
+
+Unchanged: Holdings is inventory, not cadence, recommendation, or monitoring.
+
+### Data-model
+
+No schema change. Do not treat the retargeted Capture plant as a legal Capture write
+path.
+
+### Hygiene
+
+One remediation commit, no amend, no push. Zero provider calls, credentials, spend,
+continuation, live Evidence mutation, or F12/F13. Working tree left clean after the
+commit.

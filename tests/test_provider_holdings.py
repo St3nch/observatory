@@ -147,3 +147,63 @@ def test_holdings_envelope_model_forbids_recipe_and_outcome_keys() -> None:
                 "derivation_version_id": "ab" * 32,
             }
         )
+
+
+def test_holdings_models_enforce_count_and_time_bounds() -> None:
+    empty = {
+        "provider": "dataforseo",
+        "adapter_contract": "adapter",
+        "total_matching": 0,
+        "returned_count": 0,
+        "limit": 20,
+        "order": "asc",
+        "has_more": False,
+        "holdings": [],
+    }
+    KeywordOverviewHoldingsEnvelope.model_validate(empty)
+    with pytest.raises(ValidationError):
+        KeywordOverviewHoldingsEnvelope.model_validate({**empty, "limit": 0})
+    with pytest.raises(ValidationError):
+        KeywordOverviewHoldingsEnvelope.model_validate({**empty, "limit": 101})
+    with pytest.raises(ValidationError):
+        KeywordOverviewHoldingsEnvelope.model_validate({**empty, "total_matching": -1})
+
+    item = {
+        "requested_keyword": "kw",
+        "request": {
+            "keywords": ["kw"],
+            "location_code": 2840,
+            "language_code": "en",
+            "include_serp_info": False,
+            "include_clickstream_data": False,
+        },
+        "attempt_count": 1,
+        "capture_count": 0,
+        "unresolved_count": 1,
+        "first_authorized_at": "2026-08-16T21:37:00.000000Z",
+        "last_authorized_at": "2026-08-16T21:37:00.000000Z",
+        "first_request_started_at": None,
+        "last_request_started_at": None,
+    }
+    KeywordOverviewHoldingsEnvelope.model_validate({**empty, "holdings": [item]})
+    with pytest.raises(ValidationError):
+        KeywordOverviewHoldingsEnvelope.model_validate(
+            {**empty, "holdings": [{**item, "attempt_count": 0}]}
+        )
+    with pytest.raises(ValidationError):
+        KeywordOverviewHoldingsEnvelope.model_validate(
+            {**empty, "holdings": [{**item, "attempt_count": 2, "unresolved_count": 0}]}
+        )
+    with pytest.raises(ValidationError):
+        KeywordOverviewHoldingsEnvelope.model_validate(
+            {
+                **empty,
+                "holdings": [
+                    {
+                        **item,
+                        "first_request_started_at": "2026-08-16T21:37:01.100000Z",
+                        "last_request_started_at": "2026-08-16T21:37:01.100000Z",
+                    }
+                ],
+            }
+        )
