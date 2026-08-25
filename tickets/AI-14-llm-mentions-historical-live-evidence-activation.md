@@ -185,3 +185,108 @@ If accepted Evidence exists, the anticipated next boundaries are: strict Histori
 and Conformance fixture; then Recipe-addressed typed Derivation/persistence; then a
 Recipe-selected admitted-history API. Those are separate future tickets and may change
 after the real body is inspected.
+
+## Steward reconciliation — supersedes provisional operator details above
+
+GROK completed the mandatory read-only review at
+`e3f98cd12712a19d7714452f314777d70c48d1d5` and returned **RECONCILE**. GPT independently
+verified the material findings against the closed AI-13 implementation, AI-09 activation
+precedent, current authority, and the current official Historical Live claimed contract and
+pricing. No Product question remains. This section is the final operator boundary and
+supersedes any less-specific provisional wording above.
+
+### Frozen operator record
+
+- Evidence root:
+  `$HOME/.local/share/observatory/ai14-historical-generative-engine-optimization-2026-08-25`;
+- adapter:
+  `dataforseo-ai-optimization-llm-mentions-historical-live-paid-probe-v1`;
+- authorization acknowledgement: exact integer `200000` micro-USD;
+- rclone remote: `vedaops-drive:`;
+- restic password file: `$HOME/.config/restic/observatory-password`;
+- snapshot tags: `observatory-evidence-store` and `f6-paid-ai14`;
+- source inspect file: `/tmp/ai14-historical-response.body`;
+- no retry, replacement Evidence root, continuation, polling, follow-up, or second provider
+  exchange is authorized.
+
+Exact capture command, valid only after a later durable [CHAZ] one-shot authorization record
+is committed on clean synchronized `main`:
+
+```bash
+cd /home/chaz/projects/vedaops/observatory
+uv run python -m observatory.dataforseo_ai_optimization_llm_mentions_historical_paid_probe capture \
+  --evidence-root "$HOME/.local/share/observatory/ai14-historical-generative-engine-optimization-2026-08-25" \
+  --authorize-max-micro-usd 200000
+```
+
+The public capture CLI has only those two caller arguments. The frozen keyword, dates,
+platform, location, language, target, endpoint, timeout, and response ceiling remain inside
+the closed AI-13 adapter.
+
+Exact inspect template after a Capture ID exists:
+
+```bash
+uv run python -m observatory.dataforseo_ai_optimization_llm_mentions_historical_paid_probe inspect \
+  --evidence-root "$HOME/.local/share/observatory/ai14-historical-generative-engine-optimization-2026-08-25" \
+  --capture-id "<CAPTURE_ID>" \
+  > /tmp/ai14-historical-response.body
+wc -c /tmp/ai14-historical-response.body
+sha256sum /tmp/ai14-historical-response.body
+```
+
+The inspect file is exact raw provider bytes. Do not pretty-print, normalize, edit, paste
+unredacted unexpected prose/personal data into the ticket, or add the file to Git.
+
+### Corrected activation semantics
+
+- Capture CLI exit `0` means a Capture document was committed; it does **not** prove
+  `response_complete`. Successful byte-exact inspect is the completeness witness because the
+  inspector verifies the Capture is this adapter, HTTP event version 2,
+  `transport_state=response_complete`, response completeness `complete`, and a nonempty body.
+- `observatory.evidence status` proves the format-2 store opens; it does not report
+  `transport_state` and is not a completeness witness.
+- The CLI opens or creates the Evidence root before loading DataForSEO credentials. Therefore
+  credential presence is a load-bearing preflight. If the capture process starts and exits
+  for missing credentials, a FORMAT-only root may remain. The one-shot provider Attempt is
+  not necessarily committed, but the human one-shot authorization is consumed; do not delete
+  the root and retry without a new Steward/[CHAZ] decision.
+- Do not interrupt a started process. The accepted adapter read timeout is 120 seconds;
+  process death after Attempt commit can leave honest authorized/unresolved Evidence and still
+  consumes the one-shot authorization.
+- Provider error testimony is not permission to skip protection. If any paid Historical
+  Attempt was committed, protect that Evidence through the bounded F6 path even when the
+  Capture is partial/no-response, inspect refuses, or the complete body contains a provider
+  error. Such a result may block fixture-quality activation closure, but it never authorizes
+  another provider exchange.
+
+### Exact preflight facts to prove before later authorization/run
+
+Before the paid command: branch `main`; exact later authorized HEAD; clean tree; synchronized
+`origin/main`; exact root absent; no competing pytest/capture/restic/rclone writer; no
+`observatory-ce05-*` container; `observatory-postgres-1` does not need to be stopped; both
+`OBSERVATORY_DATAFORSEO_LOGIN` and `OBSERVATORY_DATAFORSEO_PASSWORD` are nonempty in the same
+shell that will execute capture without printing their values; the restic password file
+exists; and local rclone configuration exposes exactly the accepted `vedaops-drive:` remote.
+No caller-supplied endpoint, body, timeout, response ceiling, keyword/date/platform/location/
+language/target option, retry, continuation, or alternate spend value is permitted.
+
+A failed preflight before capture-process start consumes no authorization. First invocation
+of the capture process consumes the later explicit one-shot authorization regardless of exit
+code or transport/provider result.
+
+### F6 reuse lock
+
+Reuse the AI-09 manual procedure, not new code: quiesce; write sorted exact committed Attempt
+and Capture ID sets to an inventory outside the source root and hash that inventory; snapshot
+the complete root plus inventory into the accepted encrypted restic repository via
+`vedaops-drive:` with tags `observatory-evidence-store` and `f6-paid-ai14`; record the
+snapshot ID and non-secret receipt; restore into a fresh local directory; open and scrub the
+restore; independently recompute committed ID sets and require exact equality; when a
+complete body exists, inspect the restored Capture and require byte count and SHA-256 equality
+with the raw source inspect file; preserve the accepted non-secret receipt/restore-proof
+artifacts and verify uploaded bytes. Exact snapshot/restore command lines are issued only
+after live IDs exist, as in AI-09; an unknown future snapshot ID cannot be frozen in advance.
+
+Routine R2/F6 automation, parser, Conformance fixture promotion, Recipe, schema, Derivation,
+API, Outcomes/Holdings, F12 orchestration, F13 hardening of older gates, and any other LLM
+Mentions surface remain outside AI-14.
