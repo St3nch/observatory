@@ -26,8 +26,8 @@ The implemented provider slices are:
   PostgreSQL derivation, Recipe selection, and history, Measurement Outcomes, and Holdings
   APIs;
 - DataForSEO AI Optimization Target Metrics: bounded capture, strict parser, and typed
-  PostgreSQL derivation. Recipe selection and read/history API remain the next separate
-  boundary.
+  PostgreSQL derivation, Recipe selection, and a fully typed admitted-history API;
+  Measurement Outcomes and Holdings remain separately gated.
 
 The fixture path remains supported for conformance and regression proofs. Provider transport
 is adapter-specific and gated; there is no generic paid runner or recurring acquisition
@@ -43,7 +43,7 @@ Authority hierarchy for agents and humans:
 4. `decisions/deferred.md` — deferred work with triggers
 5. `AGENTS.md` — agent hard boundaries and commands
 6. `docs/dataforseo-surface-roadmap.md` — provider direction, completed D14 consumer
-   retrofit, and Target Metrics sequencing
+   retrofit, and post-AI-12 sequencing
 7. `docs/adr/0001-capture-event-evidence-boundary.md` — why the Evidence boundary is fixed
 8. `docs/specs/capture-event-v2.md` — normative capture/evidence contract
 
@@ -92,11 +92,13 @@ PostgreSQL holds rebuildable Outcomes and Observations. It is not authoritative 
   testimony, and complete-set checks.
 - Read-only FastAPI service with health and Attempt audit resources plus history,
   Measurement Outcomes, and Holdings for Keyword Overview, Google Organic, and Search
-  Mentions; reads fail closed on the accepted Evidence/PostgreSQL boundaries.
+  Mentions, plus Recipe-selected admitted history for Target Metrics; reads fail closed on
+  the accepted Evidence/PostgreSQL boundaries.
 
 PostgreSQL remains rebuildable state, not authoritative Evidence. Multi-process writer
 safety, routine acquisition orchestration, production API authentication/non-loopback
-exposure, and Target Metrics read/history remain outside the implemented boundary.
+exposure, outer pagination, and Target Metrics Measurement Outcomes/Holdings remain outside
+the implemented boundary.
 
 ## Commands
 

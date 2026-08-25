@@ -183,9 +183,10 @@ search exposure without Observatory itself deciding what action to take.
 
 ### 3. AI Optimization — LLM Mentions
 
-**Current bounded surfaces:** Search Mentions is implemented through Recipe selection and
-read/history API. Target Metrics is implemented through typed Derivation; Recipe selection
-and read/history remain the next separate boundary. Multi-Target Metrics, top-mentioned,
+**Current bounded surfaces:** Search Mentions is implemented through Recipe selection,
+history, Measurement Outcomes, and Holdings. Target Metrics is implemented through typed
+Derivation, Recipe selection, and its admitted-history API; Target Metrics Measurement
+Outcomes and Holdings remain separately gated. Multi-Target Metrics, top-mentioned,
 Historical, Timeseries, and other family members remain future direction under separate
 activation.
 
@@ -376,8 +377,8 @@ been inspected. The sequence is:
    different fact grains and provider semantics;
 5. after explicit [CHAZ] selection, implement shared API corrections in one bounded ticket
    where behavior is truly shared and use separate tickets for surface-local changes;
-6. review Target Metrics and design AI-12 from the accepted contract rather than copying the
-   current history shape;
+6. complete the Target Metrics code-first review and AI-12 admitted-history design from the
+   accepted contract rather than copying another surface;
 7. review future provider capability families when they approach bounded activation, then
    select individual adapters rather than treating this roadmap as implementation order.
 
@@ -441,10 +442,12 @@ Google Organic, and Search Mentions. API-01 closed the shared history-list envel
 closed subject-filtered Measurement Outcomes; API-03 closed Evidence-backed Holdings.
 The accepted limits remain: no outer cursor/offset or retrieval beyond 100, no Holdings
 subject/scope filter or direct event link, separate history/Outcomes/Holdings meanings,
-and the bounded store-wide Evidence scan as a low-volume bridge. Target Metrics Recipe
-selection and consumer reads remain the next separate AI-12 design boundary. This checkpoint
-authorizes no AI-12 ticket or implementation, provider exchange, F12/F13 activity, strategy
-state, or further API/schema remediation.
+and the bounded store-wide Evidence scan as a low-volume bridge. AI-12 separately closed
+Target Metrics Recipe selection and its fully typed admitted-history API; Target Metrics
+Measurement Outcomes and Holdings remain separately gated. There is no active next
+implementation ticket: future provider capability families require read-only review and
+explicit selection under D12. This checkpoint authorizes no provider exchange, F12/F13
+activity, strategy state, or further API/schema remediation.
 
 ## Dependency-based sequencing direction
 

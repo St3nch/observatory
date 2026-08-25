@@ -546,8 +546,9 @@ fits the accepted substrate and all other gates.
 
 **Status:** Accepted and implemented for Keyword Overview, Google Organic, and Search
 Mentions through API-01 (shared history envelope), API-02 (Measurement Outcomes), and
-API-03 (Holdings). Later pagination, scalable indexing, Target Metrics consumer work, and
-other extensions remain separately gated.
+API-03 (Holdings). AI-12 separately implements Target Metrics Recipe selection and admitted
+history without adding Measurement Outcomes or Holdings. Later pagination, scalable
+indexing, Target Metrics Outcomes/Holdings, and other extensions remain separately gated.
 
 **Decision:** A future connected strategy LLM remains an ordinary API consumer under D2 and
 D3. Provider-facing APIs use surface-explicit paths and may share a lossless list envelope,
