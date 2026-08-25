@@ -1,6 +1,6 @@
 # AI-15 — LLM Mentions Historical strict parser and AI-14 Conformance fixture
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** explicit [CHAZ] implementation authorization at the exact final ticket commit  
 **Product direction:** [CHAZ] continues the Historical slice after AI-14 accepted one-shot live Evidence  
@@ -585,3 +585,46 @@ unchanged (`5246` /
 
 No provider, DNS, credential, Evidence, or PostgreSQL activity. No fixture recopy.
 No amend of `eea893d`. No push.
+
+## Steward review and closure — 2026-08-25
+
+The Steward accepts AI-15 as `done` after independent review of the implementation and
+bounded remediation against the final accepted ticket.
+
+Accepted commits:
+
+- final accepted ticket / implementation start:
+  `fb6ef9d75fc9e4f3aa765a38b0f569b7c7a06212`;
+- implementation:
+  `eea893d97c93feeadd49581aace59a7588e0daef`;
+- bounded remediation:
+  `2baefef55fb0f5baef14ce31fb0a7647c25f493a`.
+
+The exact implementation comparison changed only the four AI-15 allowlisted paths. The
+exact remediation comparison changed only the Historical parser, its tests, and this ticket.
+The remediation corrected the two Steward findings: mixed root/task success now fails in
+both directions, and provider-error tests prove that malformed result content is not read.
+
+The frozen AI-14 Conformance fixture remained byte-identical at closure:
+
+- `5246` bytes;
+- SHA-256
+  `4419daf0b7076625129ab18c6bf3c83905b998c3b3332f2ba6d42c8879b50781`;
+- no BOM and no trailing newline.
+
+[CHAZ] returned exact-HEAD operator validation on remediation commit
+`2baefef55fb0f5baef14ce31fb0a7647c25f493a`:
+
+- full suite: `1387 passed, 1 skipped, 1 warning` in `416.74s`;
+- Ruff: `uv run ruff check .` passed;
+- ticket-required type check: `uv run mypy src` passed with no issues in 36 source files;
+- final tree: clean on the same commit.
+
+The single warning is the existing Starlette `httpx` TestClient deprecation. A broader
+repo-wide `uv run mypy` was also attempted during Steward validation and reported unrelated
+test-file typing debt outside the AI-15 changed paths; AI-15's accepted validation contract
+is `uv run mypy src`, which passed on the exact closure commit.
+
+No provider call, credential use, spend, Evidence mutation, PostgreSQL mutation, fixture
+recopy, Recipe/schema/API work, amend, or push occurred during implementation, remediation,
+or Steward closure. Historical Recipe/Derivation remains the next separate boundary.
