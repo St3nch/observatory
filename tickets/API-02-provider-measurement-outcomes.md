@@ -1,8 +1,8 @@
 # API-02 — Provider Measurement Outcomes
 
-**Status:** review — remediation required  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** [CHAZ] remediation authorization after this ticket-only reconciliation  
+**Blocked by:** [GPT] Steward review of committed remediation  
 **Question-resolution pass:** completed against `5fa8bc17835e45795deda380276dab7b3b078004`  
 **Pre-implementation review:** completed against `00e7c754b804df88e3c33c42512668678bd3430f`  
 **Start commit:** `6c59da885d97f423be4453ae5bae67f350bc7933`
@@ -776,3 +776,144 @@ No `outcomes` column or subject index. Failure subjects remain Evidence-derived.
 ### Hygiene
 
 One implementation commit, no amend, no push. Zero provider calls, credentials, spend, retained Evidence access, or continuation. Working tree left clean after the commit.
+
+## Remediation report
+
+**Remediation start commit:** `9634f95c648328b2d62afbb0aebbb2d496e1db67`  
+**This commit** is the API-02 remediation child. Status `review`, never `done`.
+
+### Changed paths
+
+Production:
+
+- `src/observatory/provider_outcomes.py`
+- `src/observatory/keyword_overview_read.py`
+- `src/observatory/google_organic_read.py`
+- `src/observatory/search_mentions_read.py`
+
+Tests:
+
+- `tests/test_api_keyword_overview.py`
+- `tests/test_api_google_organic.py`
+- `tests/test_api_search_mentions.py`
+
+Ticket: this file.
+
+`src/observatory/api.py` unchanged: existing `IntegrityError` → HTTP 409 mapping already covers the new raises. `tests/test_provider_outcomes.py` unchanged (helper math only).
+
+### Recipe identity
+
+`load_validated_outcomes_recipe` runs after Recipe selection and before any empty or non-empty Outcomes 200. It requires:
+
+- resolved provider/adapter equal the route expected pair;
+- `provider_recipes` columns including `recipe_canonical_bytes`;
+- UTF-8 JSON decode;
+- public `validate_recipe`;
+- `canonical_json(validated)` exact-equals stored bytes;
+- `content_digest(stored_bytes)` equals `derivation_version_id`;
+- document, PostgreSQL columns, resolved metadata, and route expectations agree.
+
+Decode, JSON, Recipe-document, JCS, digest, and metadata disagreement become `IntegrityError` → HTTP 409 `{"detail":"evidence_integrity_failure"}`. No Outcomes envelope is returned. `provider_recipe.py` was not modified.
+
+### Envelope provenance and cardinality
+
+`assert_capture_envelopes` loads `observation_envelopes` rows for the exact Capture and Recipe. `len(rows)` is cardinality. Every row must match verified Attempt `attempt_id`, validated Recipe provider/adapter, and a declared `observation_kind`.
+
+Still required:
+
+- `observation_admitted`: count ≥ 1 and count == `len(rows)`;
+- every non-admitted classification: count == 0 and no rows;
+- `observation_admitted_empty`: count == 0 and no rows.
+
+Typed fact tables and subordinate occurrence tables are not read.
+
+### Shared vs surface-local
+
+Shared in `provider_outcomes.py`: store-wide verify-first walk, validated Recipe loading, stage queries and pairing, envelope provenance/cardinality, common item projection. Helpers take exact expected provider/adapter.
+
+Surface-local: subject membership, request mapping, route constants, ordering/limiting, outer-response assembly. No generic subject/provider loader. Shared code still knows no KO/Organic/Search Mentions fact-table names, request shapes, or continuation.
+
+### New HTTP vectors
+
+1. Equal `authorized_at` tie-broken by `attempt_id` in asc and desc-before-limit on all three routes.
+2. Damaged committed foreign-adapter Attempt Evidence → 409 (KO fixture Attempt, complements existing foreign-Capture).
+3. Extra Capture-stage Outcome row → 409.
+4. One-row Capture-stage `capture_id` disagrees with Evidence Capture (no_response plant, FK-safe) → 409.
+5. Xor-damaged committed Attempt Evidence on each surface → 409.
+6. Wrong-provider Recipe column for the correct adapter with empty subject scope on all three routes → 409, not empty 200.
+7. Invalid JSON, invalid UTF-8, non-canonical JCS, CORE bytes under EXTENDED id (digest), and document/column provider disagreement → 409, not 500.
+8. Cardinality-preserving envelope `attempt_id` / provider / adapter drift, plus extra undeclared `observation_kind` with matching bumped count → 409. In-place undeclared-kind UPDATE is blocked by typed-table FKs; the extra-row plant is the HTTP proof.
+9. Every new 409 asserts no `outcomes`, `total_matching`, `returned_count`, or `has_more` keys.
+
+### Verification
+
+Targeted:
+
+    uv run pytest -q \
+      tests/test_provider_outcomes.py \
+      tests/test_api_keyword_overview.py \
+      tests/test_api_google_organic.py \
+      tests/test_api_search_mentions.py
+
+Result: **69 passed**, 1 warning (known Starlette/`httpx` TestClient deprecation).
+
+    uv run ruff check .   # All checks passed
+    uv run mypy           # Success: no issues found in 66 source files
+
+Full suite was **not** run. No push, provider call, credentials, spend, continuation, or live Evidence activity.
+
+### Strongest
+
+Recipe identity runs before empty 200, so a drifted selected Recipe cannot masquerade as no activity. Envelope provenance is row-level, so count-only agreement no longer hides attempt/provider/adapter/kind drift.
+
+### Weakest
+
+The three loaders still copy resolve/filter/sort/envelope assembly. Ticket forbids a generic subject loader. Envelope kind drift uses an extra undeclared-kind row plus bumped count because child typed-table FKs reject `UPDATE observation_kind`.
+
+### Possible false greens
+
+Helper envelope math in `tests/test_provider_outcomes.py` does not prove these 409s. Synthetic Recipe-byte and envelope UPDATE plants prove constructed branches, not live provider Recipe or envelope corruption. Tie-break tests use unresolved Attempts; they do not prove Capture-time ordering (forbidden). Extra undeclared-kind INSERT is not an in-place kind UPDATE.
+
+### Caller-controlled influence
+
+Unchanged: `requested_keyword`, optional Recipe pin, `limit` 1–100, `order`. Mutable Recipe selection. No cursor.
+
+### Architecture
+
+No schema, Recipe write path, Derivation, history, Attempt-audit, parser, provider, or continuation change. Shared Recipe/envelope checks use public `validate_recipe`, `canonical_json`, and `content_digest`.
+
+### Parser/provider traps
+
+None new. Search Mentions still does not read `search_after_token`. `request.limit`/`offset` remain Attempt fields.
+
+### Closure blockers
+
+Full suite not run. Steward independent review of this remediation commit is still required. Ticket remains `review`.
+
+### Deferred
+
+Unchanged: holdings/index, pagination past 100, Attempt-audit count hardening, AI-12, F12/F13, Organic `related_result` stop-before-derive.
+
+### Reuse later
+
+Validated Recipe loading and envelope provenance/cardinality belong in later Outcomes-like readers. Do not reuse for history membership.
+
+### Remain surface-local
+
+Subject membership, request mapping, ordering/limiting, outer assembly.
+
+### Evidence vs contract vs synthetic
+
+Evidence remains Attempt/Capture bytes. Recipe bytes are the classification contract, now verified as JCS identity before any Outcomes 200. Envelope rows are rebuildable PostgreSQL, not Evidence. Tests are synthetic plants.
+
+### Strategy-LLM
+
+Useful: do not treat empty Outcomes as “no measurement” unless Recipe identity also verified. Unsafe: `observation_count` as provider result/corpus counts; envelope kind extra-row plants as live provider shape.
+
+### Data-model
+
+No `outcomes` or envelope schema change. Do not infer a subject index from the store-wide walk.
+
+### Hygiene
+
+One remediation commit, no amend, no push. Zero provider calls, credentials, spend, continuation, or live Evidence mutation outside isolated tests. Working tree left clean after the commit.

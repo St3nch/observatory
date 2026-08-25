@@ -48,6 +48,7 @@ from observatory.provider_recipe import (
     TEST_RECIPE,
     TEST_RECIPE_ID,
     observation_identity,
+    recipe_bytes,
     register_provider_recipe,
 )
 from observatory.provider_recipe_selection import (
@@ -324,6 +325,7 @@ def _assert_outcomes_409(response: Any) -> None:
     payload = response.json()
     assert "outcomes" not in payload
     assert "total_matching" not in payload
+    assert "returned_count" not in payload
     assert "has_more" not in payload
 
 
@@ -1399,3 +1401,255 @@ def test_keyword_overview_outcomes_does_not_mutate(
         assert _history(client, "seo api").status_code == 200
     assert store.recorded_ops == before_ops
     assert _xmin_snapshot(postgres_dsn) == before_pg
+
+
+def _damage_attempt_manifest(store: EvidenceStore, attempt_id: str) -> None:
+    attempt = store.read_attempt(attempt_id)
+    assert attempt is not None
+    fingerprint = attempt["request_fingerprint"]
+    authorized_at = attempt["authorized_at"]
+    assert isinstance(fingerprint, str)
+    assert isinstance(authorized_at, str)
+    path = store.attempt_path(fingerprint, authorized_at, attempt_id) / "attempt.json"
+    raw = bytearray(path.read_bytes())
+    raw[0] ^= 0x01
+    path.write_bytes(bytes(raw))
+
+
+def test_keyword_overview_outcomes_tie_break_and_remediation_409s(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "tie")
+    authorized = "2026-08-16T21:37:00.000000Z"
+    first = _commit_paid_attempt_only(store, "aa" * 32, authorized_at=authorized)
+    second = _commit_paid_attempt_only(store, "bb" * 32, authorized_at=authorized)
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_keyword_overview_extended(store, connection)
+        select_provider_recipe(connection, store_adapter(), EXTENDED_RECIPE_ID)
+    expected = sorted((first, second))
+    with _app(store, postgres_dsn) as client:
+        ascending = _outcomes(client, "seo api", order="asc")
+        descending = _outcomes(client, "seo api", order="desc", limit=1)
+    assert ascending.status_code == 200
+    assert [item["attempt_id"] for item in ascending.json()["outcomes"]] == expected
+    assert descending.status_code == 200
+    _assert_outcomes_envelope(
+        descending.json(), total_matching=2, returned_count=1, limit=1, order="desc"
+    )
+    assert descending.json()["outcomes"][0]["attempt_id"] == expected[-1]
+
+    fixture = capture_fixture(store, _fixture_inputs())
+    with connect(postgres_dsn) as connection:
+        derive(store, connection, DEFAULT_VERSION)
+    _damage_attempt_manifest(store, fixture.attempt_id)
+    with _app(store, postgres_dsn) as client:
+        foreign_attempt = _outcomes(client, "seo api")
+    _assert_outcomes_409(foreign_attempt)
+
+
+def test_keyword_overview_outcomes_recipe_identity_and_envelope_provenance(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, attempt_id, capture_id = _prepare_pf03(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        stored = connection.execute(
+            """
+            SELECT recipe_canonical_bytes
+            FROM provider_recipes
+            WHERE derivation_version_id = %s
+            """,
+            (EXTENDED_RECIPE_ID,),
+        ).fetchone()
+        assert stored is not None
+        original = bytes(stored[0])
+        connection.execute(
+            """
+            UPDATE provider_recipes
+            SET provider = 'acme'
+            WHERE derivation_version_id = %s
+            """,
+            (EXTENDED_RECIPE_ID,),
+        )
+    with _app(store, postgres_dsn) as client:
+        wrong_provider = _outcomes(client, "not-a-member")
+    _assert_outcomes_409(wrong_provider)
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE provider_recipes
+            SET provider = 'dataforseo', recipe_canonical_bytes = %s
+            WHERE derivation_version_id = %s
+            """,
+            (b"{", EXTENDED_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        bad_json = _outcomes(client, "not-a-member")
+    _assert_outcomes_409(bad_json)
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE provider_recipes
+            SET recipe_canonical_bytes = %s
+            WHERE derivation_version_id = %s
+            """,
+            (b"\xff\xfe", EXTENDED_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        bad_utf8 = _outcomes(client, "not-a-member")
+    _assert_outcomes_409(bad_utf8)
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE provider_recipes
+            SET recipe_canonical_bytes = %s
+            WHERE derivation_version_id = %s
+            """,
+            (original[:1] + b" " + original[1:], EXTENDED_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        non_jcs = _outcomes(client, "not-a-member")
+    _assert_outcomes_409(non_jcs)
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE provider_recipes
+            SET recipe_canonical_bytes = %s
+            WHERE derivation_version_id = %s
+            """,
+            (recipe_bytes(CORE_RECIPE), EXTENDED_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        digest = _outcomes(client, "not-a-member")
+    _assert_outcomes_409(digest)
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE provider_recipes
+            SET recipe_canonical_bytes = %s
+            WHERE derivation_version_id = %s
+            """,
+            (original, EXTENDED_RECIPE_ID),
+        )
+        connection.execute(
+            """
+            INSERT INTO outcomes (
+                attempt_id, capture_id, derivation_version_id,
+                classification, observation_count
+            )
+            VALUES (%s, %s, %s, 'no_response', 0)
+            """,
+            (attempt_id, "ab" * 32, EXTENDED_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        extra_stage = _outcomes(client, "seo api")
+    _assert_outcomes_409(extra_stage)
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            DELETE FROM outcomes
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            ("ab" * 32, EXTENDED_RECIPE_ID),
+        )
+    store_rel = create_store(tmp_path / "wrong-capture")
+    _rel_attempt, rel_capture = _commit_paid_no_response(
+        store_rel,
+        "e1" * 32,
+        started="2026-08-16T21:39:01.100000Z",
+        authorized_at="2026-08-16T21:39:00.000000Z",
+    )
+    with connect(postgres_dsn) as connection:
+        derive_keyword_overview_extended(store_rel, connection)
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET capture_id = %s
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            ("dd" * 32, rel_capture, EXTENDED_RECIPE_ID),
+        )
+    with _app(store_rel, postgres_dsn) as client:
+        wrong_capture = _outcomes(client, "seo api")
+    _assert_outcomes_409(wrong_capture)
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE observation_envelopes
+            SET attempt_id = %s
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            ("aa" * 32, capture_id, EXTENDED_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        envelope_attempt = _outcomes(client, "seo api")
+    _assert_outcomes_409(envelope_attempt)
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE observation_envelopes
+            SET attempt_id = %s, provider = 'acme'
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (attempt_id, capture_id, EXTENDED_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        envelope_provider = _outcomes(client, "seo api")
+    _assert_outcomes_409(envelope_provider)
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE observation_envelopes
+            SET provider = 'dataforseo', adapter_contract = 'other-adapter-v1'
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (capture_id, EXTENDED_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        envelope_adapter = _outcomes(client, "seo api")
+    _assert_outcomes_409(envelope_adapter)
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE observation_envelopes
+            SET adapter_contract = %s
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (store_adapter(), capture_id, EXTENDED_RECIPE_ID),
+        )
+        connection.execute(
+            """
+            INSERT INTO observation_envelopes (
+                capture_id, attempt_id, derivation_version_id, provider,
+                adapter_contract, observation_kind, within_capture_identity
+            )
+            VALUES (%s, %s, %s, 'dataforseo', %s, 'not.a.declared.kind.v1', %s)
+            """,
+            (capture_id, attempt_id, EXTENDED_RECIPE_ID, store_adapter(), "cc" * 32),
+        )
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET observation_count = observation_count + 1
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (capture_id, EXTENDED_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        envelope_kind = _outcomes(client, "seo api")
+    _assert_outcomes_409(envelope_kind)
+
+    _damage_attempt_manifest(store, attempt_id)
+    with _app(store, postgres_dsn) as client:
+        drifted = _outcomes(client, "seo api")
+    _assert_outcomes_409(drifted)

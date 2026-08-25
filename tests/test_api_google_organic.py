@@ -433,6 +433,8 @@ def _assert_outcomes_409(response: Any) -> None:
     assert response.json() == {"detail": "evidence_integrity_failure"}
     assert "outcomes" not in response.json()
     assert "total_matching" not in response.json()
+    assert "returned_count" not in response.json()
+    assert "has_more" not in response.json()
 
 
 def _commit_organic_attempt_only(
@@ -1886,3 +1888,102 @@ def test_google_organic_outcomes_does_not_mutate(
         assert _history(client).status_code == 200
     assert store.recorded_ops == before_ops
     assert _xmin_snapshot(postgres_dsn) == before_pg
+
+
+def _damage_attempt_manifest(store: EvidenceStore, attempt_id: str) -> None:
+    attempt = store.read_attempt(attempt_id)
+    assert attempt is not None
+    fingerprint = attempt["request_fingerprint"]
+    authorized_at = attempt["authorized_at"]
+    assert isinstance(fingerprint, str)
+    assert isinstance(authorized_at, str)
+    path = store.attempt_path(fingerprint, authorized_at, attempt_id) / "attempt.json"
+    raw = bytearray(path.read_bytes())
+    raw[0] ^= 0x01
+    path.write_bytes(bytes(raw))
+
+
+def test_google_organic_outcomes_tie_break(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "tie")
+    authorized = "2026-08-18T17:37:00.000000Z"
+    first = _commit_organic_attempt_only(store, "aa" * 32, authorized_at=authorized)
+    second = _commit_organic_attempt_only(store, "bb" * 32, authorized_at=authorized)
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic(store, connection)
+        select_provider_recipe(
+            connection, ORGANIC_ADAPTER_CONTRACT, GOOGLE_ORGANIC_RECIPE_ID
+        )
+    expected = sorted((first, second))
+    with _app(store, postgres_dsn) as client:
+        ascending = _outcomes(client, order="asc")
+        descending = _outcomes(client, order="desc", limit=1)
+    assert ascending.status_code == 200
+    assert [item["attempt_id"] for item in ascending.json()["outcomes"]] == expected
+    assert descending.status_code == 200
+    _assert_outcomes_envelope(
+        descending.json(), total_matching=2, returned_count=1, limit=1, order="desc"
+    )
+    assert descending.json()["outcomes"][0]["attempt_id"] == expected[-1]
+
+
+def test_google_organic_outcomes_remediation_409s(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, attempt_id, capture_id = _prepare_frozen(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE provider_recipes
+            SET provider = 'acme'
+            WHERE derivation_version_id = %s
+            """,
+            (GOOGLE_ORGANIC_RECIPE_ID,),
+        )
+    with _app(store, postgres_dsn) as client:
+        wrong_provider = _outcomes(client, "not-measured")
+    _assert_outcomes_409(wrong_provider)
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE provider_recipes
+            SET provider = 'dataforseo'
+            WHERE derivation_version_id = %s
+            """,
+            (GOOGLE_ORGANIC_RECIPE_ID,),
+        )
+        connection.execute(
+            """
+            INSERT INTO observation_envelopes (
+                capture_id, attempt_id, derivation_version_id, provider,
+                adapter_contract, observation_kind, within_capture_identity
+            )
+            VALUES (%s, %s, %s, 'dataforseo', %s, 'not.a.declared.kind.v1', %s)
+            """,
+            (
+                capture_id,
+                attempt_id,
+                GOOGLE_ORGANIC_RECIPE_ID,
+                ORGANIC_ADAPTER_CONTRACT,
+                "cc" * 32,
+            ),
+        )
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET observation_count = observation_count + 1
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (capture_id, GOOGLE_ORGANIC_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        envelope_kind = _outcomes(client)
+    _assert_outcomes_409(envelope_kind)
+
+    _damage_attempt_manifest(store, attempt_id)
+    with _app(store, postgres_dsn) as client:
+        drifted = _outcomes(client)
+    _assert_outcomes_409(drifted)

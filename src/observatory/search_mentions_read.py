@@ -19,10 +19,10 @@ from observatory.dataforseo_ai_optimization_search_mentions import (
 from observatory.evidence_store import EvidenceStore, IntegrityError
 from observatory.provider_history import history_list_response
 from observatory.provider_outcomes import (
+    load_validated_outcomes_recipe,
     load_verified_store_events,
     outcomes_list_response,
     project_matched_attempt,
-    recipe_observation_kinds,
 )
 from observatory.provider_recipe_selection import (
     ResolvedProviderRecipe,
@@ -735,7 +735,14 @@ def load_search_mentions_outcomes(
     """Assemble subject-filtered Search Mentions Measurement Outcomes."""
 
     resolved = resolve_provider_recipe(connection, HISTORY_ADAPTER, pinned_version)
-    kinds = recipe_observation_kinds(connection, resolved.derivation_version_id)
+    recipe = load_validated_outcomes_recipe(
+        connection,
+        derivation_version_id=resolved.derivation_version_id,
+        resolved_provider=resolved.provider,
+        resolved_adapter=resolved.adapter_contract,
+        expected_provider=HISTORY_PROVIDER,
+        expected_adapter=HISTORY_ADAPTER,
+    )
     events = load_verified_store_events(store)
     matched: list[tuple[str, dict[str, object], dict[str, object]]] = []
     for attempt_id, attempt in events.attempts.items():
@@ -752,9 +759,9 @@ def load_search_mentions_outcomes(
             provider=HISTORY_PROVIDER,
             adapter_contract=HISTORY_ADAPTER,
             requested_keyword=requested_keyword,
-            derivation_version_id=resolved.derivation_version_id,
+            derivation_version_id=recipe.derivation_version_id,
             recipe_resolution=resolved.resolution,
-            observation_kinds=list(kinds),
+            observation_kinds=list(recipe.observation_kinds),
             outcomes=(),
             total_matching=0,
             limit=limit,
@@ -771,7 +778,7 @@ def load_search_mentions_outcomes(
                     events,
                     attempt_id=attempt_id,
                     attempt=attempt,
-                    derivation_version_id=resolved.derivation_version_id,
+                    recipe=recipe,
                     request=request,
                 ),
             )
@@ -783,9 +790,9 @@ def load_search_mentions_outcomes(
         provider=HISTORY_PROVIDER,
         adapter_contract=HISTORY_ADAPTER,
         requested_keyword=requested_keyword,
-        derivation_version_id=resolved.derivation_version_id,
+        derivation_version_id=recipe.derivation_version_id,
         recipe_resolution=resolved.resolution,
-        observation_kinds=list(kinds),
+        observation_kinds=list(recipe.observation_kinds),
         outcomes=[item[2] for item in selected],
         total_matching=len(projected),
         limit=limit,

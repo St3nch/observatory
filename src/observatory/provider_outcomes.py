@@ -10,8 +10,10 @@ from typing import Any, Final, Literal
 from psycopg import Connection
 from pydantic import BaseModel, ConfigDict, Field
 
+from observatory.capture_event import DocumentError, canonical_json, content_digest
 from observatory.evidence_store import EvidenceStore, IntegrityError
 from observatory.provider_history import HISTORY_LIMIT_DEFAULT, HISTORY_LIMIT_MAX
+from observatory.provider_recipe import validate_recipe
 
 OUTCOMES_LIMIT_DEFAULT: Final[int] = HISTORY_LIMIT_DEFAULT
 OUTCOMES_LIMIT_MAX: Final[int] = HISTORY_LIMIT_MAX
@@ -286,6 +288,14 @@ class StageOutcome:
     capture_id: str | None
 
 
+@dataclass(frozen=True)
+class ValidatedOutcomesRecipe:
+    derivation_version_id: str
+    provider: str
+    adapter_contract: str
+    observation_kinds: tuple[str, ...]
+
+
 def _as_int(value: object, name: str) -> int:
     if isinstance(value, bool) or not isinstance(value, int):
         raise TypeError(f"{name} must be an integer")
@@ -339,12 +349,22 @@ def load_verified_store_events(store: EvidenceStore) -> VerifiedStoreEvents:
     )
 
 
-def recipe_observation_kinds(
-    connection: Connection[Any], derivation_version_id: str
-) -> tuple[str, ...]:
+def load_validated_outcomes_recipe(
+    connection: Connection[Any],
+    *,
+    derivation_version_id: str,
+    resolved_provider: str,
+    resolved_adapter: str,
+    expected_provider: str,
+    expected_adapter: str,
+) -> ValidatedOutcomesRecipe:
+    """Load and verify Recipe identity before any Outcomes success envelope."""
+
+    if resolved_provider != expected_provider or resolved_adapter != expected_adapter:
+        raise IntegrityError("resolved Recipe does not match this route")
     row = connection.execute(
         """
-        SELECT recipe_canonical_bytes
+        SELECT provider, adapter_contract, recipe_canonical_bytes
         FROM provider_recipes
         WHERE derivation_version_id = %s
         """,
@@ -352,11 +372,41 @@ def recipe_observation_kinds(
     ).fetchone()
     if row is None:
         raise IntegrityError("resolved recipe is not registered")
-    document = json.loads(bytes(row[0]).decode("utf-8"))
-    kinds = document.get("observation_kinds")
+    column_provider = str(row[0])
+    column_adapter = str(row[1])
+    raw = bytes(row[2])
+    try:
+        parsed: object = json.loads(raw.decode("utf-8"))
+        validated = validate_recipe(parsed)
+        canonical = canonical_json(validated)
+        digest = content_digest(raw)
+    except (
+        UnicodeDecodeError,
+        json.JSONDecodeError,
+        DocumentError,
+        TypeError,
+        ValueError,
+    ) as exc:
+        raise IntegrityError("resolved Recipe bytes are not a closed Recipe") from exc
+    if canonical != raw:
+        raise IntegrityError("resolved Recipe bytes are not exact JCS")
+    if digest != derivation_version_id:
+        raise IntegrityError("Recipe digest disagrees with derivation_version_id")
+    document_provider = str(validated["provider"])
+    document_adapter = str(validated["adapter_contract"])
+    if len({expected_provider, resolved_provider, column_provider, document_provider}) != 1:
+        raise IntegrityError("Recipe provider metadata disagrees")
+    if len({expected_adapter, resolved_adapter, column_adapter, document_adapter}) != 1:
+        raise IntegrityError("Recipe adapter metadata disagrees")
+    kinds = validated["observation_kinds"]
     if not isinstance(kinds, list) or not all(isinstance(item, str) for item in kinds):
         raise IntegrityError("resolved recipe has no observation kinds")
-    return tuple(kinds)
+    return ValidatedOutcomesRecipe(
+        derivation_version_id=derivation_version_id,
+        provider=document_provider,
+        adapter_contract=document_adapter,
+        observation_kinds=tuple(kinds),
+    )
 
 
 def load_stage_outcome_rows(
@@ -430,38 +480,52 @@ def pair_stage_outcomes(
     return attempt_stage, capture_stage
 
 
-def observation_envelope_cardinality(
+def load_observation_envelope_rows(
     connection: Connection[Any],
     *,
     capture_id: str,
     derivation_version_id: str,
-) -> int:
-    row = connection.execute(
-        """
-        SELECT count(*)
-        FROM observation_envelopes
-        WHERE capture_id = %s AND derivation_version_id = %s
-        """,
-        (capture_id, derivation_version_id),
-    ).fetchone()
-    if row is None:
-        raise IntegrityError("envelope cardinality query returned no row")
-    return _as_int(row[0], "envelope cardinality")
+) -> list[tuple[object, ...]]:
+    return list(
+        connection.execute(
+            """
+            SELECT attempt_id, provider, adapter_contract, observation_kind
+            FROM observation_envelopes
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (capture_id, derivation_version_id),
+        ).fetchall()
+    )
 
 
-def assert_capture_observation_count(
+def assert_capture_envelopes(
     connection: Connection[Any],
     capture_stage: StageOutcome,
     *,
+    attempt_id: str,
     derivation_version_id: str,
+    expected_provider: str,
+    expected_adapter: str,
+    observation_kinds: Sequence[str],
 ) -> None:
     if capture_stage.capture_id is None:
         raise IntegrityError("Capture-stage Outcome has a null Capture ID")
-    cardinality = observation_envelope_cardinality(
+    rows = load_observation_envelope_rows(
         connection,
         capture_id=capture_stage.capture_id,
         derivation_version_id=derivation_version_id,
     )
+    declared = set(observation_kinds)
+    for row in rows:
+        if str(row[0]) != attempt_id:
+            raise IntegrityError("envelope attempt_id disagrees with Evidence")
+        if str(row[1]) != expected_provider:
+            raise IntegrityError("envelope provider disagrees with Recipe")
+        if str(row[2]) != expected_adapter:
+            raise IntegrityError("envelope adapter disagrees with Recipe")
+        if str(row[3]) not in declared:
+            raise IntegrityError("envelope observation_kind is not declared by Recipe")
+    cardinality = len(rows)
     if capture_stage.classification == "observation_admitted":
         if capture_stage.observation_count < 1 or capture_stage.observation_count != cardinality:
             raise IntegrityError("admitted observation_count disagrees with envelopes")
@@ -489,7 +553,7 @@ def project_matched_attempt(
     *,
     attempt_id: str,
     attempt: Mapping[str, object],
-    derivation_version_id: str,
+    recipe: ValidatedOutcomesRecipe,
     request: Mapping[str, object],
 ) -> dict[str, object]:
     capture_ids = events.capture_ids_by_attempt.get(attempt_id, ())
@@ -500,7 +564,7 @@ def project_matched_attempt(
     rows = load_stage_outcome_rows(
         connection,
         attempt_id=attempt_id,
-        derivation_version_id=derivation_version_id,
+        derivation_version_id=recipe.derivation_version_id,
     )
     attempt_stage, capture_stage = pair_stage_outcomes(
         rows,
@@ -508,17 +572,21 @@ def project_matched_attempt(
         evidence_capture_id=evidence_capture_id,
     )
     if capture_stage is not None:
-        assert_capture_observation_count(
+        assert_capture_envelopes(
             connection,
             capture_stage,
-            derivation_version_id=derivation_version_id,
+            attempt_id=attempt_id,
+            derivation_version_id=recipe.derivation_version_id,
+            expected_provider=recipe.provider,
+            expected_adapter=recipe.adapter_contract,
+            observation_kinds=recipe.observation_kinds,
         )
     return outcome_item(
         attempt_id=attempt_id,
         attempt=attempt,
         capture_id=evidence_capture_id,
         capture=capture,
-        derivation_version_id=derivation_version_id,
+        derivation_version_id=recipe.derivation_version_id,
         request=request,
         attempt_stage=attempt_stage,
         capture_stage=capture_stage,
