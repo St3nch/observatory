@@ -10,7 +10,11 @@ from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from observatory import __version__
-from observatory.capture_event import MENTIONS_ADAPTER_CONTRACT, ORGANIC_ADAPTER_CONTRACT
+from observatory.capture_event import (
+    MENTIONS_ADAPTER_CONTRACT,
+    ORGANIC_ADAPTER_CONTRACT,
+    TARGET_METRICS_ADAPTER_CONTRACT,
+)
 from observatory.evidence_store import EvidenceStore, IntegrityError, open_store
 from observatory.google_organic_read import (
     load_google_organic_history,
@@ -52,10 +56,19 @@ from observatory.search_mentions_read import (
     load_search_mentions_outcomes,
 )
 from observatory.settings import Settings, get_settings
+from observatory.target_metrics_read import (
+    TargetMetricsHistoryEnvelope,
+    load_target_metrics_history,
+)
 
 _HEX64: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
 _PROVIDER_ATTEMPT_ADAPTERS: Final[frozenset[str]] = frozenset(
-    {HISTORY_ADAPTER, ORGANIC_ADAPTER_CONTRACT, MENTIONS_ADAPTER_CONTRACT}
+    {
+        HISTORY_ADAPTER,
+        ORGANIC_ADAPTER_CONTRACT,
+        MENTIONS_ADAPTER_CONTRACT,
+        TARGET_METRICS_ADAPTER_CONTRACT,
+    }
 )
 _FIXTURE_ADAPTER: Final[str] = "fixture-panel-v1"
 _FIXTURE_PROVIDER: Final[str] = "fixture"
@@ -347,6 +360,36 @@ def create_app(settings: Settings | None = None, *, store: EvidenceStore | None 
             with _read_connect(dsn) as connection:
                 return HistoryListEnvelope.model_validate(
                     load_search_mentions_history(
+                        evidence,
+                        connection,
+                        requested_keyword=requested_keyword,
+                        pinned_version=derivation_version_id,
+                        limit=limit,
+                        order=order,
+                    )
+                )
+        except IntegrityError as exc:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
+        except ProviderRecipeSelectionError as exc:
+            raise _recipe_http_error(exc) from exc
+
+    @v1.get("/providers/dataforseo/google/ai-optimization/target-metrics/history")
+    async def get_target_metrics_history(
+        request: Request,
+        requested_keyword: str = Query(min_length=1),
+        derivation_version_id: str | None = Query(default=None),
+        limit: int = Query(default=HISTORY_LIMIT_DEFAULT, ge=1, le=HISTORY_LIMIT_MAX),
+        order: Literal["asc", "desc"] = Query(default="asc"),
+    ) -> TargetMetricsHistoryEnvelope:
+        settings = request.app.state.settings
+        if not isinstance(settings, Settings):
+            raise HTTPException(status_code=503, detail="settings are not configured")
+        evidence = _require_store(request)
+        dsn = _require_dsn(settings)
+        try:
+            with _read_connect(dsn) as connection:
+                return TargetMetricsHistoryEnvelope.model_validate(
+                    load_target_metrics_history(
                         evidence,
                         connection,
                         requested_keyword=requested_keyword,

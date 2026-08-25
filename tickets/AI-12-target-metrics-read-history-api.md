@@ -1,11 +1,12 @@
 # AI-12 — Target Metrics Recipe selection and admitted-history API
 
-**Status:** accepted — implementation not authorized  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** CHAZ implementation authorization at the final-ticket commit  
-**Authorized by:** [CHAZ] provisional drafting / [GPT] Steward reconciliation  
+**Blocked by:** Steward implementation review  
+**Authorized by:** [CHAZ] implementation authorization at the named start commit  
 **Pre-implementation review:** GROK RECONCILE, completed read-only at f7e243c8c180eedd2cce277c2e39db4b80a8128f  
 **Review base:** f7e243c8c180eedd2cce277c2e39db4b80a8128f  
+**Start commit:** `2297aa2c464a8b851e01c70b6ed75cebb21e204a`  
 
 ## Purpose
 
@@ -522,3 +523,127 @@ authorization, and GPT ticket-only closure commit. Do not repeat the suite after
 - shared writer/reader extraction
 - strategy, scoring, recommendations, importance, cadence, or desired coverage
 - F12 and F13
+
+## Implementation report
+
+**Start commit:** `2297aa2c464a8b851e01c70b6ed75cebb21e204a`  
+**This commit** is the AI-12 implementation child. Status `review`, never `done`.  
+**AI-12 only:** yes. Nothing amended. Nothing pushed.
+
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+
+### Changed paths
+
+Production:
+
+- `src/observatory/target_metrics_read.py` (new)
+- `src/observatory/api.py`
+
+Tests:
+
+- `tests/test_api_target_metrics.py` (new)
+- `tests/test_api_attempts.py` (bounded Target Metrics Attempt routing only)
+- `tests/test_provider_recipe_selection.py` (bounded Target Metrics selection only)
+
+Ticket: this file.
+
+No parser, Recipe, derivation, schema, migration, or `provider_history.py` changes.
+
+### Route and contract
+
+Added `GET /v1/providers/dataforseo/google/ai-optimization/target-metrics/history`.
+
+Query: required `requested_keyword` with FastAPI `min_length=1`; optional Recipe pin; `limit` 1–100 default 20; `order` asc/desc.
+
+Dedicated `TargetMetricsHistoryEnvelope` with `extra="forbid"` and `strict=True` on every nested model. 12-key outer envelope via `history_list_response`. Nested Capture has the accepted 13 keys including `provider`, `adapter_contract`, and Recipe v1 `derivation_version_id`.
+
+Recipe resolution: `resolve_provider_recipe` then v1-only identity
+`b6addc49c60eff18de7aaf5dc6c35ebffa93e242649d5e2ddd009822b12e5104`. Other resolved identities are HTTP 404. Tampered/non-canonical v1 bytes are HTTP 409. Unselected without pin is HTTP 503. Pin of v1 does not require selection.
+
+Membership loads `target_metrics_result_context` for the exact keyword and v1 Recipe **before** classification filtering. Missing or non-`observation_admitted` Capture Outcome is HTTP 409. Admitted Capture documents are verified against Evidence, Attempt parameters, singleton grouping context, envelope/typed completeness, and
+
+`observation_count == 1 + len(source_domains) == 1 + sources_domain_count`
+
+before sort/limit. Matching damage outside `limit=1` is 409 with no envelope keys.
+
+`GET /v1/attempts/{attempt_id}` now routes Target Metrics Attempts through the existing generic provider reader.
+
+### Verification
+
+Targeted:
+
+```
+uv run pytest -q \
+  tests/test_api_target_metrics.py \
+  tests/test_api_attempts.py \
+  tests/test_provider_recipe_selection.py
+```
+
+Result: **29 passed**, 1 warning (known Starlette/`httpx` TestClient deprecation).
+
+```
+uv run ruff check .   # All checks passed
+uv run mypy src       # Success: no issues found in 34 source files
+```
+
+Full suite was **not** run.
+
+### Strongest
+
+Recipe v1 freeze plus LEFT JOIN context-before-classification. Empty history cannot hide a planted `provider_error` context row. Cardinality equality is an integrity check, not a truncation story. Nested models are closed and strict, so `HistoryListEnvelope` pass-through cannot strip TM fields.
+
+### Weakest
+
+Context-without-Outcome remains mostly schema-blocked by the result-context FK; the LEFT JOIN is still there, but the HTTP proof is non-admitted classification rather than a true missing-row plant. Extra-envelope 409 uses a synthetic INSERT. OpenAPI assertions search component schemas for required phrases.
+
+### Possible false greens
+
+Helper envelope math is inside the route tests, not a substitute. Frozen AI-09 projection is real derived fixture bytes. Variant bodies (zero metrics, empty/below/above source lists, Unicode domain, grouping disagreement, field states) are synthetic mutations, not additional live Evidence. XOR-damaged Capture JSON proves verify-before-limit, not a legal Capture write path.
+
+### Caller-controlled influence
+
+Query `requested_keyword`, optional v1 pin, `limit` 1–100, `order`. Mutable Recipe selection in isolated test PostgreSQL only. No cursor, scope filter, or automatic selection.
+
+### Architecture
+
+Shared `history_list_response` and `resolve_provider_recipe` only. Recipe identity validation is local to the TM reader (not `load_validated_outcomes_recipe`) so history does not import Outcomes machinery. No generic history loader. Request mapping uses `validate_target_metrics_http_parameters` on verified Attempt parameters.
+
+### Parser/provider traps
+
+Structural `total_count`/`items_count` zeros are required on admitted documents and 409 if planted otherwise. Source-domain overlap is visible (mention sum 4415 ≠ total 3061) without a partition field. `internal_list_limit=10` with 3, 10, or 11 domains has no truncation flag. `provider_array_index` is lexical. Grouping metrics may disagree with total. No `observation_admitted_empty`.
+
+### Closure blockers
+
+Full suite not run. Steward independent review of this commit is required.
+
+### Deferred
+
+Unchanged: TM Outcomes and Holdings; pagination past 100; subject index; nonempty optional families; ChatGPT/other platforms; shared writer/reader extraction; F12/F13; Attempt-audit count hardening.
+
+### Later reuse
+
+v1-only resolved-Recipe identity check; context-before-classification 409; closed strict nested history envelope; cardinality equality as integrity, not completeness.
+
+### Remain Target Metrics-local
+
+Candidate SQL, request tuple (`internal_list_limit`, not Search Mentions limit/offset), grouping-as-context, two-kind projection, v1 classification set without admitted-empty.
+
+### Evidence vs claimed contract vs synthetic
+
+Evidence: AI-09 fixture 1775-byte Google Capture, 11 envelopes, 10 unique domains. Claimed contract: official Target Metrics aggregate shape (not re-fetched here). Recipe is the interpretation contract. Tests add synthetic zero/empty/limit/state/disagreement bodies and PostgreSQL plants.
+
+### Strategy-LLM
+
+Useful: keyword-level AI mention and AI-search-volume history for this closed Google request; exact domain strings in the returned histogram; change of those attributed numbers across Captures. Unsafe: empty history as never-measured or failed; structural zeros as corpus emptiness; domain index as rank; domain metrics as shares; list-limit saturation as completeness; grouping context as independent location/language/platform families; Attempt-audit as a fact document.
+
+### Data-model
+
+No schema change. Do not invent coverage rows. Do not treat `sources_domain_count != len(source_domains)` as a successful collapsed-duplicate document. Later Outcomes/Holdings should reuse Evidence subject extraction, not PostgreSQL context, for non-admitted activity.
+
+### Hygiene
+
+One implementation commit, no amend, no push. Zero provider calls, credentials, spend, retry, continuation, live Evidence activity, operator PostgreSQL mutation, automatic Recipe selection, or F12/F13 work. Working tree left clean after the commit.

@@ -9,9 +9,16 @@ from psycopg.errors import ForeignKeyViolation
 
 from observatory.capture_event import (
     PAID_ADAPTER_CONTRACT,
+    TARGET_METRICS_ADAPTER_CONTRACT,
     body_ref,
     paid_http_attempt_document,
     paid_http_capture_document,
+    target_metrics_http_attempt_document,
+    target_metrics_http_capture_document,
+)
+from observatory.dataforseo_ai_optimization_target_metrics_paid_probe import (
+    closed_target_metrics_parameters,
+    target_metrics_request_body_bytes,
 )
 from observatory.dataforseo_keyword_overview import (
     CORE_RECIPE,
@@ -41,6 +48,11 @@ from observatory.provider_recipe_selection import (
     main,
     resolve_provider_recipe,
     select_provider_recipe,
+)
+from observatory.target_metrics_derive import (
+    TARGET_METRICS_RECIPE,
+    TARGET_METRICS_RECIPE_ID,
+    derive_target_metrics,
 )
 
 FIXTURE = (
@@ -264,3 +276,85 @@ def test_selection_cli_sets_and_replaces(postgres_dsn: str) -> None:
     assert second == 0
     assert refused == 1
     assert current.derivation_version_id == CORE_RECIPE_ID
+
+
+def test_target_metrics_derive_does_not_select_and_selection_resolves(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    fixture = (
+        Path(__file__).resolve().parent
+        / "fixtures"
+        / "dataforseo_ai_optimization_target_metrics_ai09.json"
+    )
+    body = fixture.read_bytes()
+    parameters = closed_target_metrics_parameters(keyword="generative engine optimization")
+    attempt = target_metrics_http_attempt_document(
+        parameters=parameters,
+        attempt_nonce="11" * 32,
+        authorized_at="2026-08-24T03:09:00.000000Z",
+        observatory_version="ai12-selection-v1",
+    )
+    store.commit_attempt(attempt, request_body=target_metrics_request_body_bytes(parameters))
+    store.commit_capture(
+        target_metrics_http_capture_document(
+            attempt=attempt,
+            request_started_at="2026-08-24T03:09:01.100000Z",
+            transport_ended_at="2026-08-24T03:09:01.400000Z",
+            transport_state="response_complete",
+            response={
+                "status": 200,
+                "http_version": "HTTP/1.1",
+                "header_policy": "http-headers-v1",
+                "headers": [["content-type", "application/json"]],
+                "omitted_headers": [],
+                "body": {"state": "present_nonempty", "body": body_ref(body)},
+                "completeness": "complete",
+            },
+            transport_failure=None,
+            response_headers_at="2026-08-24T03:09:01.200000Z",
+            response_body_ended_at="2026-08-24T03:09:01.300000Z",
+        ),
+        response_body=body,
+    )
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_target_metrics(store, connection)
+        rows = connection.execute(
+            """
+            SELECT adapter_contract FROM provider_recipe_selections
+            WHERE adapter_contract = %s
+            """,
+            (TARGET_METRICS_ADAPTER_CONTRACT,),
+        ).fetchall()
+        with pytest.raises(ProviderRecipeNotSelected):
+            resolve_provider_recipe(connection, TARGET_METRICS_ADAPTER_CONTRACT)
+        registered = connection.execute(
+            """
+            SELECT derivation_version_id FROM provider_recipes
+            WHERE adapter_contract = %s
+            """,
+            (TARGET_METRICS_ADAPTER_CONTRACT,),
+        ).fetchone()
+        register_provider_recipe(connection, CORE_RECIPE)
+        select_provider_recipe(
+            connection, TARGET_METRICS_ADAPTER_CONTRACT, TARGET_METRICS_RECIPE_ID
+        )
+        resolved = resolve_provider_recipe(connection, TARGET_METRICS_ADAPTER_CONTRACT)
+        pinned = resolve_provider_recipe(
+            connection,
+            TARGET_METRICS_ADAPTER_CONTRACT,
+            pinned_version=TARGET_METRICS_RECIPE_ID,
+        )
+        with pytest.raises(WrongAdapterRecipe):
+            resolve_provider_recipe(
+                connection,
+                TARGET_METRICS_ADAPTER_CONTRACT,
+                pinned_version=CORE_RECIPE_ID,
+            )
+    assert rows == []
+    assert registered == (TARGET_METRICS_RECIPE_ID,)
+    assert resolved.derivation_version_id == TARGET_METRICS_RECIPE_ID
+    assert resolved.resolution == "selected"
+    assert pinned.resolution == "pinned"
+    assert TARGET_METRICS_RECIPE["adapter_contract"] == TARGET_METRICS_ADAPTER_CONTRACT
