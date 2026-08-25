@@ -6,6 +6,9 @@
 **Product direction:** [CHAZ] selected Historical as the next active workstream and approved reuse of the accepted manual F6 protection path on 2026-08-25  
 **Draft base:** `c6fcd7ae496a86c8a58b0dcdfc7bd3757c7ca71b`
 
+**Effective status after mandatory review:** accepted, awaiting final ticket push/synchronization and separate explicit [CHAZ] one-shot operator authorization.  
+**Review result:** GROK `RECONCILE` at `e3f98cd12712a19d7714452f314777d70c48d1d5`; Steward reconciliation is recorded in the final section below and supersedes the provisional operator wording above.  
+
 ## Purpose
 
 Exercise the closed AI-13 Historical Live adapter exactly once, preserve the resulting
