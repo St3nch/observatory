@@ -5,11 +5,13 @@ from __future__ import annotations
 import copy
 import json
 import secrets
+import shutil
 import socket
 import uuid
+from collections.abc import Callable, Mapping
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlencode
 
 import psycopg
@@ -83,6 +85,39 @@ ORGANIC_FIXTURE = (
 KEYWORD = "generative engine optimization"
 HISTORY = "/v1/providers/dataforseo/google/ai-optimization/search-mentions/history"
 OUTCOMES = "/v1/providers/dataforseo/google/ai-optimization/search-mentions/outcomes"
+HOLDINGS = "/v1/providers/dataforseo/google/ai-optimization/search-mentions/holdings"
+HOLDINGS_KEYS = {
+    "provider",
+    "adapter_contract",
+    "total_matching",
+    "returned_count",
+    "limit",
+    "order",
+    "has_more",
+    "holdings",
+}
+HOLDINGS_ITEM_KEYS = {
+    "requested_keyword",
+    "request",
+    "attempt_count",
+    "capture_count",
+    "unresolved_count",
+    "first_authorized_at",
+    "last_authorized_at",
+    "first_request_started_at",
+    "last_request_started_at",
+}
+MENTIONS_HOLDINGS_REQUEST_KEYS = {
+    "keyword",
+    "match_type",
+    "search_filter",
+    "search_scope",
+    "platform",
+    "location_code",
+    "language_code",
+    "limit",
+    "offset",
+}
 KO_HISTORY = "/v1/providers/dataforseo/google/keyword-overview/history"
 ORGANIC_HISTORY = "/v1/providers/dataforseo/google/organic/history"
 INTEGRITY_SIGNAL = "evidence_integrity_failure"
@@ -481,6 +516,92 @@ def _assert_outcomes_409(response: Any) -> None:
     assert "total_matching" not in response.json()
     assert "returned_count" not in response.json()
     assert "has_more" not in response.json()
+
+
+def _holdings(client: TestClient, **params: object) -> Any:
+    if params:
+        return client.get(HOLDINGS + "?" + urlencode(params, doseq=True))
+    return client.get(HOLDINGS)
+
+
+def _holdings_app(store: EvidenceStore, dsn: str | None = None) -> TestClient:
+    settings = Settings(
+        environment="test",
+        database_url=dsn,
+        evidence_root=store.root,
+        derivation_version_id=DEFAULT_VERSION,
+    )
+    return TestClient(create_app(settings, store=store))
+
+
+def _assert_holdings_envelope(
+    body: dict[str, object],
+    *,
+    total_matching: int,
+    returned_count: int,
+    limit: int = 20,
+    order: str = "asc",
+) -> None:
+    assert set(body) == HOLDINGS_KEYS
+    assert body["provider"] == "dataforseo"
+    assert body["adapter_contract"] == MENTIONS_ADAPTER_CONTRACT
+    assert body["total_matching"] == total_matching
+    assert body["returned_count"] == returned_count
+    assert body["limit"] == limit
+    assert body["order"] == order
+    assert body["has_more"] is (total_matching > returned_count)
+    items = body["holdings"]
+    assert isinstance(items, list)
+    assert len(items) == returned_count
+
+
+def _assert_holdings_409(response: Any) -> None:
+    assert response.status_code == 409
+    assert response.json() == {"detail": INTEGRITY_SIGNAL}
+    payload = response.json()
+    assert "holdings" not in payload
+    assert "total_matching" not in payload
+    assert "returned_count" not in payload
+    assert "has_more" not in payload
+
+
+class _OverrideAttemptStore(EvidenceStore):
+    def __init__(
+        self,
+        store: EvidenceStore,
+        override: Callable[[dict[str, object], str], dict[str, object]],
+    ) -> None:
+        super().__init__(store.root)
+        self._store = store
+        self._override = override
+        self.recorded_ops = store.recorded_ops
+
+    def read_attempt(self, attempt_id: str) -> dict[str, object] | None:
+        document = self._store.read_attempt(attempt_id)
+        if document is None:
+            return None
+        return self._override(dict(document), attempt_id)
+
+    def read_capture(self, capture_id: str) -> dict[str, object] | None:
+        return self._store.read_capture(capture_id)
+
+    def list_committed_ids(self, kind: Literal["attempts", "captures"]) -> list[str]:
+        return self._store.list_committed_ids(kind)
+
+
+def _commit_mentions_keyword(
+    store: EvidenceStore, nonce: str, *, keyword: str, authorized_at: str
+) -> str:
+    parameters = closed_mentions_parameters(keyword=keyword)
+    attempt = mentions_http_attempt_document(
+        parameters=parameters,
+        attempt_nonce=nonce,
+        authorized_at=authorized_at,
+        observatory_version="ai06-test-v1",
+    )
+    return store.commit_attempt(
+        attempt, request_body=mentions_request_body_bytes(parameters)
+    )
 
 
 def _commit_mentions_attempt_only(
@@ -2479,3 +2600,201 @@ def test_search_mentions_outcomes_remediation_409s(
     with _app(store, postgres_dsn) as client:
         drifted = _outcomes(client)
     _assert_outcomes_409(drifted)
+
+
+def test_search_mentions_holdings_empty_closed_query_and_openapi(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "empty")
+    with _holdings_app(store) as client:
+        empty = _holdings(client)
+        extra = _holdings(client, requested_keyword=KEYWORD)
+        pin = _holdings(client, derivation_version_id="ab" * 32)
+        extra_offset = _holdings(client, offset=0)
+        extra_cursor = _holdings(client, cursor="next")
+        spec = client.get("/api/v1/openapi.json").json()
+    assert empty.status_code == 200
+    _assert_holdings_envelope(empty.json(), total_matching=0, returned_count=0)
+    assert extra.status_code == 422
+    assert pin.status_code == 422
+    assert extra_offset.status_code == 422
+    assert extra_cursor.status_code == 422
+    schema = spec["paths"][HOLDINGS]["get"]
+    parameters = schema.get("parameters") or []
+    names = {
+        item.get("name")
+        for item in parameters
+        if isinstance(item, dict) and item.get("in") == "query"
+    }
+    assert names <= {"limit", "order"}
+    text = json.dumps(spec).lower()
+    assert "pagination" in text
+    assert "search_after_token" in text
+    request_schema = spec["components"]["schemas"]["SearchMentionsHoldingsRequest"]
+    assert set(request_schema["required"]) == MENTIONS_HOLDINGS_REQUEST_KEYS
+    item_schema = spec["components"]["schemas"]["SearchMentionsHoldingsItem"]
+    assert set(item_schema["required"]) == HOLDINGS_ITEM_KEYS
+
+
+def test_search_mentions_holdings_grouping_scope_order_and_token(
+    tmp_path: Path,
+) -> None:
+    store = create_store(tmp_path / "inventory")
+    first = _commit_mentions_keyword(
+        store, "a1" * 32, keyword=KEYWORD, authorized_at="2026-08-20T17:36:00.000000Z"
+    )
+    _commit_mentions_no_response(
+        store,
+        "a2" * 32,
+        started="2026-08-20T17:37:01.100000Z",
+        authorized_at="2026-08-20T17:37:00.000000Z",
+    )
+    later = _commit_mentions_keyword(
+        store, "a3" * 32, keyword="alpha mention", authorized_at="2026-08-20T17:38:00.000000Z"
+    )
+    assert first
+    assert later
+    with _holdings_app(store) as client:
+        response = _holdings(client, order="asc")
+        limited = _holdings(client, limit=1, order="desc")
+    assert response.status_code == 200
+    body = response.json()
+    items = body["holdings"]
+    assert isinstance(items, list)
+    assert [item["requested_keyword"] for item in items] == ["alpha mention", KEYWORD]
+    grouped = items[1]
+    assert grouped["request"]["keyword"] == KEYWORD
+    assert grouped["request"]["limit"] == 5
+    assert grouped["request"]["offset"] == 0
+    assert grouped["request"]["search_scope"] == ["answer"]
+    assert set(grouped["request"]) == MENTIONS_HOLDINGS_REQUEST_KEYS
+    assert grouped["attempt_count"] == 2
+    assert grouped["capture_count"] == 1
+    assert grouped["unresolved_count"] == 1
+    assert "search_after_token" not in grouped
+    _assert_holdings_envelope(body, total_matching=2, returned_count=2)
+    _assert_holdings_envelope(
+        limited.json(), total_matching=2, returned_count=1, limit=1, order="desc"
+    )
+
+    def _split_scope(document: dict[str, object], attempt_id: str) -> dict[str, object]:
+        raw = document["parameters"]
+        assert isinstance(raw, Mapping)
+        parameters = dict(raw)
+        targets = parameters["target"]
+        assert isinstance(targets, list)
+        first_target = targets[0]
+        assert isinstance(first_target, Mapping)
+        target = dict(first_target)
+        target["search_scope"] = ["answer"] if attempt_id == first else ["question"]
+        parameters["target"] = [target]
+        return {**document, "parameters": parameters}
+
+    scoped = _OverrideAttemptStore(store, _split_scope)
+    with _holdings_app(scoped) as client:
+        ordered = _holdings(client, order="asc")
+        reversed_page = _holdings(client, order="desc", limit=1)
+    assert ordered.status_code == 200
+    scopes = [
+        tuple(item["request"]["search_scope"])
+        for item in ordered.json()["holdings"]
+        if item["requested_keyword"] == KEYWORD
+    ]
+    assert scopes == [("answer",), ("question",)]
+    assert reversed_page.json()["holdings"][0]["request"]["search_scope"] == ["question"]
+
+
+def test_search_mentions_holdings_integrity_and_dsn(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "integrity")
+    _commit_mentions_attempt_only(
+        store, "b1" * 32, authorized_at="2026-08-20T17:36:00.000000Z"
+    )
+    sandbox = _commit_sandbox(store)
+    _damage_attempt_manifest(store, sandbox)
+    with _holdings_app(store) as client:
+        _assert_holdings_409(_holdings(client, limit=1))
+
+    clean = create_store(tmp_path / "clean")
+    attempt_id = _commit_mentions_attempt_only(
+        clean, "b2" * 32, authorized_at="2026-08-20T17:36:00.000000Z"
+    )
+    with _holdings_app(clean, "postgresql://127.0.0.1:1/observatory_holdings_missing") as down:
+        healthy = _holdings(down)
+    assert healthy.status_code == 200
+    assert healthy.json()["total_matching"] == 1
+    wrong = _OverrideAttemptStore(
+        clean, lambda document, _id: {**document, "provider": "acme"}
+    )
+    with _holdings_app(wrong) as client:
+        _assert_holdings_409(_holdings(client))
+    def _empty_target(document: dict[str, object], _id: str) -> dict[str, object]:
+        raw = document["parameters"]
+        assert isinstance(raw, Mapping)
+        return {**document, "parameters": {**dict(raw), "target": []}}
+
+    malformed = _OverrideAttemptStore(clean, _empty_target)
+    with _holdings_app(malformed) as client:
+        _assert_holdings_409(_holdings(client))
+    stored = clean.read_attempt(attempt_id)
+    assert stored is not None
+    copied = clean.attempt_path(
+        str(stored["request_fingerprint"]),
+        "2026-08-20T17:36:00.000000Z",
+        attempt_id,
+    )
+    shutil.copytree(
+        copied,
+        clean.root
+        / "attempts"
+        / "v1"
+        / "ff"
+        / "ff"
+        / ("ff" * 32)
+        / "2026"
+        / "08"
+        / "20"
+        / attempt_id,
+    )
+    with _holdings_app(clean) as client:
+        _assert_holdings_409(_holdings(client, limit=1))
+
+    two = create_store(tmp_path / "two")
+    two_attempt, two_capture = _commit_mentions_no_response(
+        two,
+        "c1" * 32,
+        started="2026-08-20T17:36:01.100000Z",
+        authorized_at="2026-08-20T17:36:00.000000Z",
+    )
+    committed = two.capture_path(two_capture) / "COMMITTED"
+    hidden = committed.with_name("COMMITTED.hidden")
+    committed.rename(hidden)
+    parent = two.read_attempt(two_attempt)
+    assert parent is not None
+    two.commit_capture(
+        mentions_http_capture_document(
+            attempt=parent,
+            request_started_at="2026-08-20T17:36:02.100000Z",
+            transport_ended_at="2026-08-20T17:36:02.400000Z",
+            transport_state="no_response",
+            response=None,
+            transport_failure={"phase": "connect", "code": "timeout"},
+            response_headers_at=None,
+            response_body_ended_at=None,
+        ),
+        response_body=None,
+    )
+    hidden.rename(committed)
+    with _holdings_app(two) as client:
+        _assert_holdings_409(_holdings(client, limit=1))
+
+    parent_store = create_store(tmp_path / "parent")
+    _parent_attempt, parent_capture = _commit_mentions_no_response(
+        parent_store,
+        "d1" * 32,
+        started="2026-08-20T17:36:01.100000Z",
+        authorized_at="2026-08-20T17:36:00.000000Z",
+    )
+    path = parent_store.capture_path(parent_capture) / "capture.json"
+    raw = bytearray(path.read_bytes())
+    raw[0] ^= 0x01
+    path.write_bytes(bytes(raw))
+    with _holdings_app(parent_store) as client:
+        _assert_holdings_409(_holdings(client, limit=1))

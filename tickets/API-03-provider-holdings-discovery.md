@@ -1,12 +1,12 @@
 # API-03 — Provider Holdings discovery
 
-**Status:** accepted — implementation requires separate [CHAZ] authorization  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** [CHAZ] implementation authorization against the final ticket commit  
+**Blocked by:** [GPT] Steward review of committed implementation  
 **Question-resolution pass:** completed against `ed5bf39923f3872ff9ecc96962d58a89847e0bee`  
 **Pre-implementation review:** completed read-only against `5cbef17f4daf042efc2798998df765f3a698e70e`  
 **Product lock:** [CHAZ] approved subject-plus-exact-scope / Evidence-only / catalog-order Holdings  
-**Start commit:** unset — implementation is not authorized
+**Start commit:** `762f50a33f640471e76665854a996ba99949bccb`
 
 ## Purpose
 
@@ -618,3 +618,151 @@ If [CHAZ] later authorizes implementation, [GROK]'s committed report must includ
 
 Status must remain `review`, never `done`. Only [GPT] closes the ticket after [CHAZ]
 explicitly authorizes closure.
+
+## Implementation report
+
+**Start commit:** `762f50a33f640471e76665854a996ba99949bccb`  
+**This commit** is the API-03 implementation child. Status `review`, never `done`.
+
+### Changed paths
+
+Production:
+
+- `src/observatory/provider_holdings.py` (new)
+- `src/observatory/keyword_overview_read.py`
+- `src/observatory/google_organic_read.py`
+- `src/observatory/search_mentions_read.py`
+- `src/observatory/api.py`
+
+Tests:
+
+- `tests/test_provider_holdings.py` (new, helper invariants only)
+- `tests/test_api_keyword_overview.py`
+- `tests/test_api_google_organic.py`
+- `tests/test_api_search_mentions.py`
+
+Ticket: this file.
+
+### Routes and contracts
+
+Added:
+
+- `GET /v1/providers/dataforseo/google/keyword-overview/holdings`
+- `GET /v1/providers/dataforseo/google/organic/holdings`
+- `GET /v1/providers/dataforseo/google/ai-optimization/search-mentions/holdings`
+
+Eight-key envelope: `provider`, `adapter_contract`, `total_matching`, `returned_count`,
+`limit`, `order`, `has_more`, `holdings`. Nine-key item including surface `request`.
+Closed query: only `limit` and `order`; any other key is HTTP 422.
+
+### Grouping, counts, order, KO expansion
+
+Grouping identity is `(requested_keyword, exact request tuple)`. Duplicate group
+identities fail closed. Catalog sort is that complete tuple; descending reverses it in
+the three readers, then slices. No `min_attempt_id`.
+
+Counts and first/last times come from verified Attempt/Capture Evidence.
+`attempt_count == capture_count + unresolved_count`. Request times are null iff
+`capture_count == 0`.
+
+Keyword Overview: N keywords → N items sharing the full `keywords` bundle and the same
+inventory counts/timestamps.
+
+### Integrity and independence
+
+Reuse `load_verified_store_events`. No copied walk. No Holdings-local parent validator.
+`read_capture()` still fail-closes parent missing/disagreement before adapter filter.
+After adapter match, wrong route provider is 409, not skip.
+
+Routes do not call `_require_dsn`, Recipe selection, or PostgreSQL. Empty/valid 200 with
+`database_url=None` and an unreachable DSN.
+
+### Verification
+
+Targeted:
+
+    uv run pytest -q \
+      tests/test_provider_holdings.py \
+      tests/test_api_keyword_overview.py \
+      tests/test_api_google_organic.py \
+      tests/test_api_search_mentions.py
+
+Result: **81 passed**, 1 warning (known Starlette/`httpx` TestClient deprecation).
+
+    uv run ruff check .   # All checks passed
+    uv run mypy           # Success: no issues found in 68 source files
+
+Full suite was **not** run.
+
+### Strongest
+
+Evidence-only discovery that history/Outcomes cannot answer. Closed 422 query prevents a
+silent Recipe pin. Store-wide verify-first plus adapter-then-provider 409 matches D14
+fail-closed without touching Outcomes.
+
+### Weakest
+
+The three loaders still copy filter/group/sort/slice. Closed HTTP-v2 probes freeze most
+scope fields, so some same-subject/different-scope and SM `search_scope` order proofs use
+post-verify Attempt overrides rather than schema-valid committed bytes.
+
+### Possible false greens
+
+Helper math tests do not replace route 409s. Override stores prove extraction/provider
+branches, not that those states exist in committed HTTP-v2 Evidence. XOR Capture plants
+fail `read_capture` generally. 101-group tail is proven on KO and Organic.
+
+### Caller-controlled influence
+
+`limit` 1–100 and `order` only.
+
+### Architecture
+
+`HISTORY_LIMIT_*` reused for query bounds. Shared module has no fact-table names and does
+no PostgreSQL/Recipe work. Readers own extraction, KO expansion, group keys, and sort.
+`provider_outcomes.py` unchanged.
+
+### Parser/provider traps
+
+Exact strings; no normalization. SM `request.limit`/`offset` are Attempt fields.
+`search_after_token` is not read. KO expansion is not N exchanges.
+
+### Closure blockers
+
+Full suite not run. Steward independent review of this commit is required.
+
+### Deferred
+
+Holdings index, pagination past 100, Outcomes/history scope filters, AI-12, F12/F13,
+Organic `related_result`.
+
+### Reuse later
+
+Store-wide verify-or-409 walk, subject-plus-request grouping identity, 409-no-partial
+payload, closed query, Evidence-only empty meaning.
+
+### Remain surface-local
+
+Subject paths, request field sets, KO member explosion, catalog field order.
+
+### Evidence vs contract vs synthetic
+
+Evidence is Attempt/Capture bytes. Holdings is a rebuildable projection. Tests include
+synthetic unresolved/no_response plants and post-verify overrides.
+
+### Strategy-LLM
+
+Useful: surface S holds subject X at exact scope Y, including unresolved/failed presence.
+Unsafe: empty as provider-zero or unselected Recipe; KO N items as N exchanges;
+`last_authorized_at` as cadence; same subject as other-scope coverage; unresolved as unsent.
+
+### Data-model
+
+No `outcomes` subject column. No invented coverage rows. Do not treat
+`request_fingerprint` as Holdings identity. Later index must derive from Evidence.
+
+### Hygiene
+
+One implementation commit, no amend, no push. Zero provider calls, credentials, spend,
+continuation, live Evidence mutation, or F12/F13 activity. Working tree left clean after
+the commit.

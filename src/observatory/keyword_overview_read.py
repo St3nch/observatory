@@ -22,6 +22,12 @@ from observatory.dataforseo_keyword_overview import (
 )
 from observatory.evidence_store import EvidenceStore, IntegrityError
 from observatory.provider_history import history_list_response
+from observatory.provider_holdings import (
+    HoldingsAttempt,
+    assert_unique_holdings_groups,
+    holdings_item,
+    holdings_list_response,
+)
 from observatory.provider_outcomes import (
     load_validated_outcomes_recipe,
     load_verified_store_events,
@@ -781,6 +787,83 @@ def load_keyword_overview_outcomes(
         observation_kinds=list(recipe.observation_kinds),
         outcomes=[item[2] for item in selected],
         total_matching=len(projected),
+        limit=limit,
+        order=order,
+    )
+
+
+def load_keyword_overview_holdings(
+    store: EvidenceStore,
+    *,
+    limit: int,
+    order: Literal["asc", "desc"],
+) -> dict[str, object]:
+    """Assemble Recipe-independent Keyword Overview Holdings from verified Evidence."""
+
+    events = load_verified_store_events(store)
+    groups: dict[tuple[object, ...], dict[str, HoldingsAttempt]] = {}
+    for attempt_id, attempt in events.attempts.items():
+        if attempt.get("adapter_contract") != HISTORY_ADAPTER:
+            continue
+        if attempt.get("provider") != HISTORY_PROVIDER:
+            raise IntegrityError("verified Evidence is not Keyword Overview")
+        request = _outcomes_request(attempt)
+        keywords = request["keywords"]
+        if not isinstance(keywords, list):
+            raise IntegrityError("verified Attempt keywords are missing")
+        capture_ids = events.capture_ids_by_attempt.get(attempt_id, ())
+        started = None
+        if capture_ids:
+            started = _require_text(events.captures[capture_ids[0]], "request_started_at")
+        member = HoldingsAttempt(
+            attempt_id=attempt_id,
+            authorized_at=_require_text(attempt, "authorized_at"),
+            request_started_at=started,
+        )
+        for keyword in keywords:
+            if not isinstance(keyword, str) or keyword == "":
+                raise IntegrityError("verified Attempt keywords are missing")
+            identity = (
+                keyword,
+                tuple(keywords),
+                request["location_code"],
+                request["language_code"],
+                request["include_serp_info"],
+                request["include_clickstream_data"],
+            )
+            bucket = groups.setdefault(identity, {})
+            if attempt_id in bucket:
+                raise IntegrityError("duplicate Attempt in Holdings group")
+            bucket[attempt_id] = member
+    catalog: list[tuple[tuple[object, ...], dict[str, object]]] = []
+    for group_key, members in groups.items():
+        bundle = group_key[1]
+        if not isinstance(bundle, tuple):
+            raise IntegrityError("Holdings keyword bundle is missing")
+        catalog.append(
+            (
+                group_key,
+                holdings_item(
+                    requested_keyword=str(group_key[0]),
+                    request={
+                        "keywords": [str(item) for item in bundle],
+                        "location_code": group_key[2],
+                        "language_code": group_key[3],
+                        "include_serp_info": group_key[4],
+                        "include_clickstream_data": group_key[5],
+                    },
+                    members=tuple(members.values()),
+                ),
+            )
+        )
+    assert_unique_holdings_groups(catalog)
+    catalog.sort(key=lambda item: item[0], reverse=order == "desc")
+    ordered = [item[1] for item in catalog]
+    return holdings_list_response(
+        provider=HISTORY_PROVIDER,
+        adapter_contract=HISTORY_ADAPTER,
+        holdings=ordered[:limit],
+        total_matching=len(ordered),
         limit=limit,
         order=order,
     )

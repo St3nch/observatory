@@ -5,10 +5,12 @@ from __future__ import annotations
 import copy
 import json
 import secrets
+import shutil
 import socket
+from collections.abc import Callable, Mapping
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlencode
 
 import pytest
@@ -65,6 +67,28 @@ SHARED_TIMES = {
 }
 HISTORY = "/v1/providers/dataforseo/google/keyword-overview/history"
 OUTCOMES = "/v1/providers/dataforseo/google/keyword-overview/outcomes"
+HOLDINGS = "/v1/providers/dataforseo/google/keyword-overview/holdings"
+HOLDINGS_KEYS = {
+    "provider",
+    "adapter_contract",
+    "total_matching",
+    "returned_count",
+    "limit",
+    "order",
+    "has_more",
+    "holdings",
+}
+HOLDINGS_ITEM_KEYS = {
+    "requested_keyword",
+    "request",
+    "attempt_count",
+    "capture_count",
+    "unresolved_count",
+    "first_authorized_at",
+    "last_authorized_at",
+    "first_request_started_at",
+    "last_request_started_at",
+}
 HISTORY_KEYS = {
     "provider",
     "adapter_contract",
@@ -329,6 +353,100 @@ def _assert_outcomes_409(response: Any) -> None:
     assert "has_more" not in payload
 
 
+def _holdings(client: TestClient, **params: object) -> Any:
+    if params:
+        return client.get(HOLDINGS + "?" + urlencode(params, doseq=True))
+    return client.get(HOLDINGS)
+
+
+def _holdings_app(store: EvidenceStore, dsn: str | None = None) -> TestClient:
+    settings = Settings(
+        environment="test",
+        database_url=dsn,
+        evidence_root=store.root,
+        derivation_version_id=DEFAULT_VERSION,
+    )
+    return TestClient(create_app(settings, store=store))
+
+
+def _assert_holdings_envelope(
+    body: dict[str, object],
+    *,
+    total_matching: int,
+    returned_count: int,
+    limit: int = 20,
+    order: str = "asc",
+) -> None:
+    assert set(body) == HOLDINGS_KEYS
+    assert body["provider"] == "dataforseo"
+    assert body["adapter_contract"] == store_adapter()
+    assert body["total_matching"] == total_matching
+    assert body["returned_count"] == returned_count
+    assert body["limit"] == limit
+    assert body["order"] == order
+    assert body["has_more"] is (total_matching > returned_count)
+    items = body["holdings"]
+    assert isinstance(items, list)
+    assert len(items) == returned_count
+    assert "requested_keyword" not in body
+    assert "derivation_version_id" not in body
+    assert "recipe_resolution" not in body
+    assert "observation_kinds" not in body
+
+
+def _assert_holdings_409(response: Any) -> None:
+    assert response.status_code == 409
+    assert response.json() == {"detail": INTEGRITY_SIGNAL}
+    payload = response.json()
+    assert "holdings" not in payload
+    assert "total_matching" not in payload
+    assert "returned_count" not in payload
+    assert "has_more" not in payload
+
+
+def _assert_holdings_item(item: dict[str, object]) -> None:
+    assert set(item) == HOLDINGS_ITEM_KEYS
+    assert "attempt_id" not in item
+    assert "capture_id" not in item
+    assert "request_fingerprint" not in item
+    assert "derivation_version_id" not in item
+    request = item["request"]
+    assert isinstance(request, dict)
+    assert set(request) == KO_REQUEST_KEYS
+    assert "contract" not in request
+    attempt_count = item["attempt_count"]
+    capture_count = item["capture_count"]
+    unresolved_count = item["unresolved_count"]
+    assert isinstance(attempt_count, int)
+    assert isinstance(capture_count, int)
+    assert isinstance(unresolved_count, int)
+    assert attempt_count == capture_count + unresolved_count
+
+
+class _OverrideAttemptStore(EvidenceStore):
+    def __init__(
+        self,
+        store: EvidenceStore,
+        override: Callable[[dict[str, object], str], dict[str, object]],
+    ) -> None:
+        super().__init__(store.root)
+        self._store = store
+        self._override = override
+        self.recorded_ops = store.recorded_ops
+
+    def read_attempt(self, attempt_id: str) -> dict[str, object] | None:
+        document = self._store.read_attempt(attempt_id)
+        if document is None:
+            return None
+        return self._override(dict(document), attempt_id)
+
+    def read_capture(self, capture_id: str) -> dict[str, object] | None:
+        return self._store.read_capture(capture_id)
+
+    def list_committed_ids(self, kind: Literal["attempts", "captures"]) -> list[str]:
+        return self._store.list_committed_ids(kind)
+
+
 def _commit_paid_attempt_only(
     store: EvidenceStore,
     nonce: str,
@@ -352,8 +470,9 @@ def _commit_paid_no_response(
     *,
     started: str,
     authorized_at: str,
+    keywords: tuple[str, ...] = KEYWORDS,
 ) -> tuple[str, str]:
-    parameters = closed_paid_parameters(keywords=list(KEYWORDS))
+    parameters = closed_paid_parameters(keywords=list(keywords))
     attempt = paid_http_attempt_document(
         parameters=parameters,
         attempt_nonce=nonce,
@@ -1653,3 +1772,332 @@ def test_keyword_overview_outcomes_recipe_identity_and_envelope_provenance(
     with _app(store, postgres_dsn) as client:
         drifted = _outcomes(client, "seo api")
     _assert_outcomes_409(drifted)
+
+
+def test_keyword_overview_holdings_empty_closed_query_and_openapi(
+    tmp_path: Path,
+) -> None:
+    store = create_store(tmp_path / "empty")
+    with _holdings_app(store) as client:
+        empty = _holdings(client)
+        extra_keyword = _holdings(client, requested_keyword="seo api")
+        extra_pin = _holdings(client, derivation_version_id="ab" * 32)
+        extra_offset = _holdings(client, offset=0)
+        extra_cursor = _holdings(client, cursor="next")
+        bad_limit = _holdings(client, limit=0)
+        spec = client.get("/api/v1/openapi.json").json()
+    assert empty.status_code == 200
+    _assert_holdings_envelope(empty.json(), total_matching=0, returned_count=0)
+    assert empty.json()["holdings"] == []
+    for response in (extra_keyword, extra_pin, extra_offset, extra_cursor, bad_limit):
+        assert response.status_code == 422
+        assert "holdings" not in response.json()
+    schema = spec["paths"][HOLDINGS]["get"]
+    parameters = schema.get("parameters") or []
+    names = {
+        item.get("name")
+        for item in parameters
+        if isinstance(item, dict) and item.get("in") == "query"
+    }
+    assert names <= {"limit", "order"}
+    text = json.dumps(spec).lower()
+    assert "not one attempt" in text or "subject-plus" in text or "exact requested subject" in text
+    assert "not definitely unsent" in text
+    assert "pagination" in text
+    assert "five" in text or "1..5" in text or "independent exchanges" in text
+    assert "unselected" in text or "recipe" in text
+    item_schema = spec["components"]["schemas"]["KeywordOverviewHoldingsItem"]
+    assert set(item_schema["required"]) == HOLDINGS_ITEM_KEYS
+    request_schema = spec["components"]["schemas"]["KeywordOverviewHoldingsRequest"]
+    assert set(request_schema["required"]) == KO_REQUEST_KEYS
+
+
+def test_keyword_overview_holdings_inventory_grouping_and_expansion(
+    tmp_path: Path,
+) -> None:
+    store = create_store(tmp_path / "inventory")
+    unresolved = _commit_paid_attempt_only(
+        store, "a1" * 32, authorized_at="2026-08-16T21:36:00.000000Z", keywords=("seo api",)
+    )
+    captured_id, _capture_id = _commit_paid_no_response(
+        store,
+        "a2" * 32,
+        started="2026-08-16T21:37:01.100000Z",
+        authorized_at="2026-08-16T21:37:00.000000Z",
+        keywords=("seo api",),
+    )
+    later = _commit_paid_attempt_only(
+        store, "a3" * 32, authorized_at="2026-08-16T21:38:00.000000Z", keywords=("seo api",)
+    )
+    five = _commit_paid_attempt_only(
+        store, "a4" * 32, authorized_at="2026-08-16T21:39:00.000000Z", keywords=KEYWORDS
+    )
+    solo = _commit_paid_attempt_only(
+        store,
+        "a5" * 32,
+        authorized_at="2026-08-16T21:40:00.000000Z",
+        keywords=("apple one", "banana two"),
+    )
+    later_solo = _commit_paid_attempt_only(
+        store,
+        "a6" * 32,
+        authorized_at="2026-08-16T21:41:00.000000Z",
+        keywords=("apple one", "cherry three"),
+    )
+    assert unresolved
+    assert captured_id
+    assert later
+    assert five
+    assert solo
+    assert later_solo
+    with _holdings_app(store) as client:
+        response = _holdings(client, order="asc")
+        limited = _holdings(client, limit=1, order="desc")
+    assert response.status_code == 200
+    body = response.json()
+    items = body["holdings"]
+    assert isinstance(items, list)
+    by_subject = {item["requested_keyword"]: item for item in items}
+    seo = [item for item in items if item["requested_keyword"] == "seo api"]
+    assert len(seo) == 2
+    grouped = next(item for item in seo if item["request"]["keywords"] == ["seo api"])
+    expanded = next(item for item in seo if item["request"]["keywords"] == list(KEYWORDS))
+    _assert_holdings_item(grouped)
+    _assert_holdings_item(expanded)
+    assert grouped["attempt_count"] == 3
+    assert grouped["capture_count"] == 1
+    assert grouped["unresolved_count"] == 2
+    assert grouped["first_authorized_at"] == "2026-08-16T21:36:00.000000Z"
+    assert grouped["last_authorized_at"] == "2026-08-16T21:38:00.000000Z"
+    assert grouped["first_request_started_at"] == "2026-08-16T21:37:01.100000Z"
+    assert grouped["last_request_started_at"] == "2026-08-16T21:37:01.100000Z"
+    members = [item for item in items if item["request"]["keywords"] == list(KEYWORDS)]
+    assert len(members) == 5
+    assert {item["requested_keyword"] for item in members} == set(KEYWORDS)
+    for item in members:
+        _assert_holdings_item(item)
+        assert item["request"]["keywords"] == list(KEYWORDS)
+        assert item["attempt_count"] == 1
+        assert item["capture_count"] == 0
+        assert item["unresolved_count"] == 1
+        assert item["first_authorized_at"] == "2026-08-16T21:39:00.000000Z"
+        assert item["last_authorized_at"] == "2026-08-16T21:39:00.000000Z"
+        assert item["first_request_started_at"] is None
+        assert item["last_request_started_at"] is None
+    apple = [
+        item
+        for item in items
+        if item["requested_keyword"] == "apple one"
+    ]
+    assert [item["request"]["keywords"] for item in apple] == [
+        ["apple one", "banana two"],
+        ["apple one", "cherry three"],
+    ]
+    keys = [
+        (
+            item["requested_keyword"],
+            tuple(item["request"]["keywords"]),
+            item["request"]["location_code"],
+            item["request"]["language_code"],
+            item["request"]["include_serp_info"],
+            item["request"]["include_clickstream_data"],
+        )
+        for item in items
+    ]
+    assert keys == sorted(keys)
+    _assert_holdings_envelope(
+        body, total_matching=len(items), returned_count=len(items)
+    )
+    assert limited.status_code == 200
+    _assert_holdings_envelope(
+        limited.json(),
+        total_matching=len(items),
+        returned_count=1,
+        limit=1,
+        order="desc",
+    )
+    assert limited.json()["holdings"][0]["requested_keyword"] == items[-1]["requested_keyword"]
+    assert limited.json()["holdings"][0]["request"]["keywords"] == items[-1]["request"]["keywords"]
+    assert by_subject
+
+
+def test_keyword_overview_holdings_tail_beyond_100_and_dsn_independence(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "tail")
+    for index in range(101):
+        _commit_paid_attempt_only(
+            store,
+            format(index, "x").zfill(64),
+            authorized_at="2026-08-16T21:37:00.000000Z",
+            keywords=(f"hold{index:03d}",),
+        )
+    apply_migrations(postgres_dsn)
+    with _holdings_app(store) as unset:
+        capped = _holdings(unset, limit=100)
+    assert capped.status_code == 200
+    _assert_holdings_envelope(
+        capped.json(), total_matching=101, returned_count=100, limit=100
+    )
+    assert capped.json()["has_more"] is True
+    unreachable = "postgresql://127.0.0.1:1/observatory_holdings_missing"
+    with _holdings_app(store, unreachable) as down:
+        still = _holdings(down, limit=100)
+    assert still.status_code == 200
+    assert still.json()["total_matching"] == 101
+    store_pf03, _attempt_id, _capture_id = _prepare_pf03(tmp_path / "pf03", postgres_dsn)
+    before_ops = list(store_pf03.recorded_ops)
+    before_pg = _xmin_snapshot(postgres_dsn)
+    with _holdings_app(store_pf03) as client:
+        derived = _holdings(client)
+        extra_pin = _holdings(client, derivation_version_id=EXTENDED_RECIPE_ID)
+    assert derived.status_code == 200
+    assert extra_pin.status_code == 422
+    assert derived.json()["total_matching"] == 5
+    assert store_pf03.recorded_ops == before_ops
+    assert _xmin_snapshot(postgres_dsn) == before_pg
+
+
+def test_keyword_overview_holdings_integrity_vectors(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "integrity")
+    _commit_paid_attempt_only(
+        store, "b1" * 32, authorized_at="2026-08-16T21:37:00.000000Z", keywords=("seo api",)
+    )
+    fixture = capture_fixture(store, _fixture_inputs())
+    _damage_attempt_manifest(store, fixture.attempt_id)
+    with _holdings_app(store) as client:
+        foreign = _holdings(client, limit=1)
+    _assert_holdings_409(foreign)
+
+    store_ok = create_store(tmp_path / "ok")
+    attempt_id = _commit_paid_attempt_only(
+        store_ok, "b2" * 32, authorized_at="2026-08-16T21:37:00.000000Z", keywords=("seo api",)
+    )
+    wrong = _OverrideAttemptStore(
+        store_ok, lambda document, _id: {**document, "provider": "acme"}
+    )
+    with _holdings_app(wrong) as client:
+        wrong_provider = _holdings(client)
+    _assert_holdings_409(wrong_provider)
+
+    def _empty_keywords(document: dict[str, object], _id: str) -> dict[str, object]:
+        raw = document["parameters"]
+        assert isinstance(raw, Mapping)
+        return {**document, "parameters": {**dict(raw), "keywords": []}}
+
+    malformed = _OverrideAttemptStore(store_ok, _empty_keywords)
+    with _holdings_app(malformed) as client:
+        bad_params = _holdings(client)
+    _assert_holdings_409(bad_params)
+
+    def _drop_flag(document: dict[str, object], _id: str) -> dict[str, object]:
+        raw = document["parameters"]
+        assert isinstance(raw, Mapping)
+        parameters = dict(raw)
+        del parameters["include_serp_info"]
+        return {**document, "parameters": parameters}
+
+    missing_flag = _OverrideAttemptStore(store_ok, _drop_flag)
+    with _holdings_app(missing_flag) as client:
+        _assert_holdings_409(_holdings(client))
+
+    missing_time = _OverrideAttemptStore(
+        store_ok, lambda document, _id: {**document, "authorized_at": ""}
+    )
+    with _holdings_app(missing_time) as client:
+        no_time = _holdings(client)
+    _assert_holdings_409(no_time)
+
+    stored = store_ok.read_attempt(attempt_id)
+    assert stored is not None
+    copied = store_ok.attempt_path(
+        str(stored["request_fingerprint"]),
+        "2026-08-16T21:37:00.000000Z",
+        attempt_id,
+    )
+    shutil.copytree(
+        copied,
+        store_ok.root
+        / "attempts"
+        / "v1"
+        / "ff"
+        / "ff"
+        / ("ff" * 32)
+        / "2026"
+        / "08"
+        / "16"
+        / attempt_id,
+    )
+    with _holdings_app(store_ok) as client:
+        duplicate = _holdings(client, limit=1)
+    _assert_holdings_409(duplicate)
+
+    two = create_store(tmp_path / "two")
+    two_attempt, two_capture = _commit_paid_no_response(
+        two,
+        "c1" * 32,
+        started="2026-08-16T21:37:01.100000Z",
+        authorized_at="2026-08-16T21:37:00.000000Z",
+        keywords=("seo api",),
+    )
+    committed = two.capture_path(two_capture) / "COMMITTED"
+    hidden = committed.with_name("COMMITTED.hidden")
+    committed.rename(hidden)
+    parent = two.read_attempt(two_attempt)
+    assert parent is not None
+    two.commit_capture(
+        paid_http_capture_document(
+            attempt=parent,
+            request_started_at="2026-08-16T21:37:02.100000Z",
+            transport_ended_at="2026-08-16T21:37:02.400000Z",
+            transport_state="no_response",
+            response=None,
+            transport_failure={"phase": "connect", "code": "timeout"},
+            response_headers_at=None,
+            response_body_ended_at=None,
+        ),
+        response_body=None,
+    )
+    hidden.rename(committed)
+    with _holdings_app(two) as client:
+        two_caps = _holdings(client, limit=1)
+    _assert_holdings_409(two_caps)
+
+    parent_store = create_store(tmp_path / "parent")
+    _parent_attempt, parent_capture = _commit_paid_no_response(
+        parent_store,
+        "d1" * 32,
+        started="2026-08-16T21:37:01.100000Z",
+        authorized_at="2026-08-16T21:37:00.000000Z",
+        keywords=("seo api",),
+    )
+    capture_manifest = parent_store.capture_path(parent_capture) / "capture.json"
+    raw = bytearray(capture_manifest.read_bytes())
+    raw[0] ^= 0x01
+    capture_manifest.write_bytes(bytes(raw))
+    with _holdings_app(parent_store) as client:
+        parent_damage = _holdings(client, limit=1)
+    _assert_holdings_409(parent_damage)
+
+    missing_parent = create_store(tmp_path / "missing-parent")
+    missing_attempt, missing_capture = _commit_paid_no_response(
+        missing_parent,
+        "e1" * 32,
+        started="2026-08-16T21:37:01.100000Z",
+        authorized_at="2026-08-16T21:37:00.000000Z",
+        keywords=("seo api",),
+    )
+    parent_doc = missing_parent.read_attempt(missing_attempt)
+    assert parent_doc is not None
+    committed_attempt = (
+        missing_parent.attempt_path(
+            str(parent_doc["request_fingerprint"]),
+            "2026-08-16T21:37:00.000000Z",
+            missing_attempt,
+        )
+        / "COMMITTED"
+    )
+    committed_attempt.rename(committed_attempt.with_name("COMMITTED.hidden"))
+    with _holdings_app(missing_parent) as client:
+        _assert_holdings_409(_holdings(client, limit=1))
+    assert missing_capture

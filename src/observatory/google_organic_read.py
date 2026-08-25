@@ -21,6 +21,12 @@ from observatory.dataforseo_google_organic import (
 )
 from observatory.evidence_store import EvidenceStore, IntegrityError
 from observatory.provider_history import history_list_response
+from observatory.provider_holdings import (
+    HoldingsAttempt,
+    assert_unique_holdings_groups,
+    holdings_item,
+    holdings_list_response,
+)
 from observatory.provider_outcomes import (
     load_validated_outcomes_recipe,
     load_verified_store_events,
@@ -777,6 +783,82 @@ def load_google_organic_outcomes(
         observation_kinds=list(recipe.observation_kinds),
         outcomes=[item[2] for item in selected],
         total_matching=len(projected),
+        limit=limit,
+        order=order,
+    )
+
+
+def load_google_organic_holdings(
+    store: EvidenceStore,
+    *,
+    limit: int,
+    order: Literal["asc", "desc"],
+) -> dict[str, object]:
+    """Assemble Recipe-independent Google Organic Holdings from verified Evidence."""
+
+    events = load_verified_store_events(store)
+    groups: dict[tuple[object, ...], dict[str, HoldingsAttempt]] = {}
+    for attempt_id, attempt in events.attempts.items():
+        if attempt.get("adapter_contract") != HISTORY_ADAPTER:
+            continue
+        if attempt.get("provider") != HISTORY_PROVIDER:
+            raise IntegrityError("verified Evidence is not Google Organic")
+        request = _outcomes_request(attempt)
+        keyword = request["keyword"]
+        if not isinstance(keyword, str) or keyword == "":
+            raise IntegrityError("verified Attempt keyword is missing")
+        capture_ids = events.capture_ids_by_attempt.get(attempt_id, ())
+        started = None
+        if capture_ids:
+            started = _require_text(events.captures[capture_ids[0]], "request_started_at")
+        identity = (
+            keyword,
+            keyword,
+            request["location_code"],
+            request["language_code"],
+            request["depth"],
+            request["device"],
+            request["os"],
+            request["group_organic_results"],
+            request["load_async_ai_overview"],
+        )
+        bucket = groups.setdefault(identity, {})
+        if attempt_id in bucket:
+            raise IntegrityError("duplicate Attempt in Holdings group")
+        bucket[attempt_id] = HoldingsAttempt(
+            attempt_id=attempt_id,
+            authorized_at=_require_text(attempt, "authorized_at"),
+            request_started_at=started,
+        )
+    catalog: list[tuple[tuple[object, ...], dict[str, object]]] = []
+    for group_key, members in groups.items():
+        catalog.append(
+            (
+                group_key,
+                holdings_item(
+                    requested_keyword=str(group_key[0]),
+                    request={
+                        "keyword": group_key[1],
+                        "location_code": group_key[2],
+                        "language_code": group_key[3],
+                        "depth": group_key[4],
+                        "device": group_key[5],
+                        "os": group_key[6],
+                        "group_organic_results": group_key[7],
+                        "load_async_ai_overview": group_key[8],
+                    },
+                    members=tuple(members.values()),
+                ),
+            )
+        )
+    assert_unique_holdings_groups(catalog)
+    catalog.sort(key=lambda item: item[0], reverse=order == "desc")
+    ordered = [item[1] for item in catalog]
+    return holdings_list_response(
+        provider=HISTORY_PROVIDER,
+        adapter_contract=HISTORY_ADAPTER,
+        holdings=ordered[:limit],
+        total_matching=len(ordered),
         limit=limit,
         order=order,
     )

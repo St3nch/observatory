@@ -6,7 +6,7 @@ import re
 from typing import Any, Final, Literal
 
 import psycopg
-from fastapi import APIRouter, FastAPI, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from observatory import __version__
@@ -14,12 +14,14 @@ from observatory.capture_event import MENTIONS_ADAPTER_CONTRACT, ORGANIC_ADAPTER
 from observatory.evidence_store import EvidenceStore, IntegrityError, open_store
 from observatory.google_organic_read import (
     load_google_organic_history,
+    load_google_organic_holdings,
     load_google_organic_outcomes,
 )
 from observatory.keyword_overview_read import (
     HISTORY_ADAPTER,
     ProviderAttemptNotFound,
     load_keyword_overview_history,
+    load_keyword_overview_holdings,
     load_keyword_overview_outcomes,
     load_provider_attempt,
 )
@@ -27,6 +29,12 @@ from observatory.provider_history import (
     HISTORY_LIMIT_DEFAULT,
     HISTORY_LIMIT_MAX,
     HistoryListEnvelope,
+)
+from observatory.provider_holdings import (
+    HOLDINGS_QUERY_KEYS,
+    GoogleOrganicHoldingsEnvelope,
+    KeywordOverviewHoldingsEnvelope,
+    SearchMentionsHoldingsEnvelope,
 )
 from observatory.provider_outcomes import (
     GoogleOrganicOutcomesEnvelope,
@@ -40,6 +48,7 @@ from observatory.provider_recipe_selection import (
 )
 from observatory.search_mentions_read import (
     load_search_mentions_history,
+    load_search_mentions_holdings,
     load_search_mentions_outcomes,
 )
 from observatory.settings import Settings, get_settings
@@ -137,6 +146,22 @@ def _require_dsn(settings: Settings) -> str:
     if settings.database_url is None:
         raise HTTPException(status_code=503, detail="database URL is not configured")
     return settings.database_url
+
+
+def _reject_undeclared_holdings_query(request: Request) -> None:
+    extras = [key for key in request.query_params if key not in HOLDINGS_QUERY_KEYS]
+    if extras:
+        raise HTTPException(
+            status_code=422,
+            detail=[
+                {
+                    "type": "extra_forbidden",
+                    "loc": ["query", extras[0]],
+                    "msg": "Query keys other than limit and order are not permitted",
+                    "input": request.query_params.get(extras[0]),
+                }
+            ],
+        )
 
 
 def _recipe_http_error(exc: ProviderRecipeSelectionError) -> HTTPException:
@@ -426,6 +451,62 @@ def create_app(settings: Settings | None = None, *, store: EvidenceStore | None 
             raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
         except ProviderRecipeSelectionError as exc:
             raise _recipe_http_error(exc) from exc
+
+    @v1.get("/providers/dataforseo/google/keyword-overview/holdings")
+    async def get_keyword_overview_holdings(
+        request: Request,
+        limit: int = Query(default=HISTORY_LIMIT_DEFAULT, ge=1, le=HISTORY_LIMIT_MAX),
+        order: Literal["asc", "desc"] = Query(default="asc"),
+        _: None = Depends(_reject_undeclared_holdings_query),
+    ) -> KeywordOverviewHoldingsEnvelope:
+        settings = request.app.state.settings
+        if not isinstance(settings, Settings):
+            raise HTTPException(status_code=503, detail="settings are not configured")
+        evidence = _require_store(request)
+        try:
+            return KeywordOverviewHoldingsEnvelope.model_validate(
+                load_keyword_overview_holdings(evidence, limit=limit, order=order)
+            )
+        except IntegrityError as exc:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
+
+    @v1.get("/providers/dataforseo/google/organic/holdings")
+    async def get_google_organic_holdings(
+        request: Request,
+        limit: int = Query(default=HISTORY_LIMIT_DEFAULT, ge=1, le=HISTORY_LIMIT_MAX),
+        order: Literal["asc", "desc"] = Query(default="asc"),
+        _: None = Depends(_reject_undeclared_holdings_query),
+    ) -> GoogleOrganicHoldingsEnvelope:
+        settings = request.app.state.settings
+        if not isinstance(settings, Settings):
+            raise HTTPException(status_code=503, detail="settings are not configured")
+        evidence = _require_store(request)
+        try:
+            return GoogleOrganicHoldingsEnvelope.model_validate(
+                load_google_organic_holdings(evidence, limit=limit, order=order)
+            )
+        except IntegrityError as exc:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
+
+    @v1.get(
+        "/providers/dataforseo/google/ai-optimization/search-mentions/holdings"
+    )
+    async def get_search_mentions_holdings(
+        request: Request,
+        limit: int = Query(default=HISTORY_LIMIT_DEFAULT, ge=1, le=HISTORY_LIMIT_MAX),
+        order: Literal["asc", "desc"] = Query(default="asc"),
+        _: None = Depends(_reject_undeclared_holdings_query),
+    ) -> SearchMentionsHoldingsEnvelope:
+        settings = request.app.state.settings
+        if not isinstance(settings, Settings):
+            raise HTTPException(status_code=503, detail="settings are not configured")
+        evidence = _require_store(request)
+        try:
+            return SearchMentionsHoldingsEnvelope.model_validate(
+                load_search_mentions_holdings(evidence, limit=limit, order=order)
+            )
+        except IntegrityError as exc:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
 
     application.include_router(v1, prefix="/v1")
     return application
