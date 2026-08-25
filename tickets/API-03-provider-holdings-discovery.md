@@ -1033,3 +1033,45 @@ Do not modify production code. Run the same API-03 targeted suite, Ruff, and myp
 run the full suite. Commit one child without amend or push, leave status `review`, and
 append a concise report addendum. If the existing production OpenAPI does not satisfy
 these assertions, stop and report rather than changing production under this boundary.
+
+## Final proof-correction addendum
+
+**Start commit:** `92616fe1ccb4c346551ca1da9c675109cf7a0a2c`  
+**This commit** is the tests-only OpenAPI proof child. Status `review`, never `done`.
+
+### Changed paths
+
+- `tests/test_api_keyword_overview.py`
+- `tests/test_api_google_organic.py`
+- `tests/test_api_search_mentions.py`
+- `tickets/API-03-provider-holdings-discovery.md`
+
+No production paths.
+
+### Correction
+
+Each Holdings route now asserts exact `properties` and `required` key sets for envelope,
+item, and request schemas; `additionalProperties is false`; applied-limit vs provider
+page size; first/last request-start min/max and null/`capture_count` wording; and
+strategy, cadence, and recommendation prohibitions on the relevant Holdings schemas.
+Existing production OpenAPI already satisfied these assertions, so no production change
+was required.
+
+### Verification
+
+Targeted suite **92 passed**, 1 warning (known Starlette/`httpx` TestClient deprecation).
+
+    uv run ruff check .   # All checks passed
+    uv run mypy           # Success: no issues found in 68 source files
+
+Full suite was **not** run.
+
+### False greens
+
+The previous `required`-only check is gone. Remaining residual: description substring
+checks still depend on current Field prose remaining on the resolved schema objects.
+
+### Hygiene
+
+One child commit, no amend, no push. Zero provider calls, credentials, spend,
+continuation, live Evidence activity, or F12/F13. Working tree left clean.

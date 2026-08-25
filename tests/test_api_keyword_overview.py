@@ -1807,8 +1807,14 @@ def _resolve_openapi_schema(spec: dict[str, Any], schema: dict[str, Any]) -> dic
     return schema
 
 
+def _assert_closed_schema(schema: dict[str, Any], keys: set[str]) -> None:
+    assert set(schema["required"]) == keys
+    assert set(schema["properties"]) == keys
+    assert schema.get("additionalProperties") is False
+
+
 def _holdings_route_schemas(
-    spec: dict[str, Any], path: str
+    spec: dict[str, Any], path: str, request_keys: set[str]
 ) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     operation = spec["paths"][path]["get"]
     names: set[str] = set()
@@ -1822,10 +1828,11 @@ def _holdings_route_schemas(
     assert names == {"limit", "order"}
     response = operation["responses"]["200"]["content"]["application/json"]["schema"]
     envelope = _resolve_openapi_schema(spec, response)
-    assert set(envelope["required"]) == HOLDINGS_KEYS
+    _assert_closed_schema(envelope, HOLDINGS_KEYS)
     item_schema = _resolve_openapi_schema(spec, envelope["properties"]["holdings"]["items"])
-    assert set(item_schema["required"]) == HOLDINGS_ITEM_KEYS
+    _assert_closed_schema(item_schema, HOLDINGS_ITEM_KEYS)
     request_schema = _resolve_openapi_schema(spec, item_schema["properties"]["request"])
+    _assert_closed_schema(request_schema, request_keys)
     return envelope, item_schema, request_schema
 
 
@@ -1848,16 +1855,24 @@ def _assert_holdings_count_time_schema(
     assert "rank" in attempt_text or "mention" in attempt_text or "rank" in capture_text
     assert "minimum" in str(item_props["first_authorized_at"].get("description", "")).lower()
     assert "maximum" in str(item_props["last_authorized_at"].get("description", "")).lower()
-    started = str(item_props["first_request_started_at"].get("description", "")).lower()
-    assert "null" in started and "capture_count" in started
+    limit = str(env_props["limit"].get("description", "")).lower()
+    assert "provider page size" in limit
+    first_started = str(item_props["first_request_started_at"].get("description", "")).lower()
+    last_started = str(item_props["last_request_started_at"].get("description", "")).lower()
+    assert "minimum" in first_started and "null" in first_started
+    assert "capture_count" in first_started
+    assert "maximum" in last_started and "null" in last_started
+    assert "capture_count" in last_started
     unresolved = str(item_props["unresolved_count"].get("description", "")).lower()
     assert "not definitely unsent" in unresolved
     empty = str(env_props["total_matching"].get("description", "")).lower()
     assert "unselected" in empty or "recipe" in empty
     has_more = str(env_props["has_more"].get("description", "")).lower()
     assert "pagination" in has_more or "unavailable" in has_more
-    strategy = json.dumps({"envelope": envelope, "item": item_schema}).lower()
-    assert "recommendation" in strategy or "cadence" in strategy or "strategy" in strategy
+    relevant = json.dumps({"envelope": envelope, "item": item_schema}).lower()
+    assert "strategy" in relevant
+    assert "cadence" in relevant
+    assert "recommendation" in relevant
 
 
 def test_keyword_overview_holdings_empty_closed_query_and_openapi(
@@ -1888,9 +1903,10 @@ def test_keyword_overview_holdings_empty_closed_query_and_openapi(
     ):
         assert response.status_code == 422
         assert "holdings" not in response.json()
-    envelope, item_schema, request_schema = _holdings_route_schemas(spec, HOLDINGS)
+    envelope, item_schema, request_schema = _holdings_route_schemas(
+        spec, HOLDINGS, KO_REQUEST_KEYS
+    )
     _assert_holdings_count_time_schema(envelope, item_schema)
-    assert set(request_schema["required"]) == KO_REQUEST_KEYS
     expansion = json.dumps({"item": item_schema, "request": request_schema}).lower()
     assert "independent exchanges" in expansion or "n measurements" in expansion
     grain = str(item_schema["properties"]["requested_keyword"].get("description", "")).lower()
