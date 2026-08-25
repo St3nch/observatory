@@ -1,8 +1,8 @@
 # API-03 — Provider Holdings discovery
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** [GPT] Steward review of committed implementation  
+**Blocked by:** none — [CHAZ] authorized closure after exact-HEAD verification  
 **Question-resolution pass:** completed against `ed5bf39923f3872ff9ecc96962d58a89847e0bee`  
 **Pre-implementation review:** completed read-only against `5cbef17f4daf042efc2798998df765f3a698e70e`  
 **Product lock:** [CHAZ] approved subject-plus-exact-scope / Evidence-only / catalog-order Holdings  
@@ -1075,3 +1075,49 @@ checks still depend on current Field prose remaining on the resolved schema obje
 
 One child commit, no amend, no push. Zero provider calls, credentials, spend,
 continuation, live Evidence activity, or F12/F13. Working tree left clean.
+
+## Steward closure
+
+[GPT] independently reviewed the committed implementation, remediation, and final
+proof-correction child through LinuxVedaOpsMCP, including the exact ticket, parent/child
+diffs, production Holdings typing and assembly, all three surface readers and routes,
+Evidence Store verification and Capture-parent behavior, the changed tests, OpenAPI
+schemas, and Grok's candid implementation assessments. Grok's reports were treated as
+coworker input, not independent verification.
+
+[CHAZ] authorized closure after running the final operator block against exact clean
+implementation HEAD `37b3dd5a6294d0601644c67a8eab0d244688766e`.
+
+Accepted exact-HEAD evidence:
+
+- targeted API-03 suite:
+
+      uv run pytest -q \
+        tests/test_provider_holdings.py \
+        tests/test_api_keyword_overview.py \
+        tests/test_api_google_organic.py \
+        tests/test_api_search_mentions.py
+
+  Result: **92 passed**, 1 warning in 194.25 seconds.
+- full suite, run once after review and remediation settled:
+  **1248 passed, 1 skipped, 1 warning** in 388.34 seconds;
+- `uv run ruff check .`: all checks passed;
+- `uv run mypy`: success, no issues in 68 source files;
+- initial and final HEAD checks: exact
+  `37b3dd5a6294d0601644c67a8eab0d244688766e`;
+- initial and final working-tree checks: clean.
+
+The warning is the known Starlette/`httpx` TestClient deprecation and is accepted as
+non-blocking.
+
+Closure accepts the documented API-03 limits. Holdings remains an Evidence-backed,
+surface-explicit inventory of exact subject-plus-request groups—not history, Outcomes,
+provider-zero testimony, current status, cadence, monitoring intent, recommendation, or
+strategy. Its bounded tail remains unavailable beyond 100; it exposes no subject/scope
+filter, cursor, direct event identifiers, Recipe state, provider facts, or continuation.
+The store-wide Evidence walk remains the accepted low-volume bridge. A rebuildable
+holdings index, scope-filtered follow-up, AI-12, F12/F13, and Organic `related_result`
+remain separate work.
+
+This closure changes only the API-03 ticket. The suites, Ruff, and mypy are not repeated
+after this ticket-only commit. Agents do not push; [CHAZ] owns any push.
