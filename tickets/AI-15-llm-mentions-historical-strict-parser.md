@@ -559,3 +559,29 @@ Zero provider, DNS, credential, account, pricing, restic, rclone, or public-netw
 calls other than reading the already protected local Evidence Store through the
 read-only inspector. Zero Evidence mutation. Zero PostgreSQL mutation. No Recipe,
 schema, API, or other-parser edits. No amend. No push.
+
+## Remediation report
+
+**Parent:** `eea893d97c93feeadd49581aace59a7588e0daef`  
+**Child:** this remediation commit  
+**Status:** `review`
+
+Two Steward findings only:
+
+1. Mixed root/task success now fails with `HistoricalParseError("inconsistent_status")`
+   in both directions. Only both-non-20000 returns parser `PROVIDER_ERROR`.
+   `tasks_error` is still reconciled from task status before that check.
+2. Consistent provider-error tests now plant success-path-invalid `result` content
+   (unknown member, `items=null`, `items_count` mismatch). Parse still returns
+   `PROVIDER_ERROR` with echo and `result_count` retained and `items`/`items_count`
+   `None`.
+
+Targeted suite: **51 passed**. `uv run ruff check .` passed. `uv run mypy src` passed
+(36 files).
+
+Changed paths: parser module, parser tests, this ticket. Fixture bytes/SHA-256
+unchanged (`5246` /
+`4419daf0b7076625129ab18c6bf3c83905b998c3b3332f2ba6d42c8879b50781`).
+
+No provider, DNS, credential, Evidence, or PostgreSQL activity. No fixture recopy.
+No amend of `eea893d`. No push.

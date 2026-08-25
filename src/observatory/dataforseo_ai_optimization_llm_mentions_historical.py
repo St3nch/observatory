@@ -184,26 +184,7 @@ def parse_historical(body: bytes, parameters: Mapping[str, object]) -> Historica
             "/tasks_error",
             "tasks_error does not match the number of non-success tasks",
         )
-    if status == SUCCESS_STATUS and task_status != SUCCESS_STATUS:
-        return _error_ir(
-            request=request,
-            echo=echo,
-            version=version,
-            status=status,
-            status_message=status_message,
-            duration=duration,
-            cost=cost,
-            tasks_count=tasks_count,
-            tasks_error=tasks_error,
-            task_id=task_id,
-            task_status=task_status,
-            task_message=task_message,
-            task_duration=task_duration,
-            task_cost=task_cost,
-            task_path=path,
-            result_count=result_count,
-        )
-    if status != SUCCESS_STATUS and task_status == SUCCESS_STATUS:
+    if (status == SUCCESS_STATUS) != (task_status == SUCCESS_STATUS):
         raise HistoricalParseError(
             "inconsistent_status",
             "/status_code",

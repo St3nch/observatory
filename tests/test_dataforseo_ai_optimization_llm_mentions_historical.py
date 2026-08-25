@@ -535,17 +535,35 @@ def test_provider_error_preserves_echo_and_result_count() -> None:
     assert error.echo.function == "historical"
     assert error.request.keyword == KEYWORD
     assert error.tasks_error == 1
+
+
+def test_mixed_root_task_success_fails_deterministically() -> None:
     document = _decoded()
     document["tasks"][0]["status_code"] = 40100
     document["tasks_error"] = 1
-    mismatch = _parse(_encode(document))
-    assert mismatch.outcome is ParseClassification.PROVIDER_ERROR
-    assert mismatch.items is None
-    assert mismatch.echo is not None
+    with pytest.raises(HistoricalParseError, match="inconsistent_status"):
+        _parse(_encode(document))
     document = _decoded()
     document["status_code"] = 40100
     with pytest.raises(HistoricalParseError, match="inconsistent_status"):
         _parse(_encode(document))
+
+
+def test_provider_error_does_not_read_result_array() -> None:
+    document = _decoded()
+    document["status_code"] = 40100
+    document["tasks"][0]["status_code"] = 40100
+    document["tasks_error"] = 1
+    _result(document)["unexpected"] = 1
+    _result(document)["items"] = None
+    _result(document)["items_count"] = 99
+    error = _parse(_encode(document))
+    assert error.outcome is ParseClassification.PROVIDER_ERROR
+    assert error.echo is not None
+    assert error.echo.function == "historical"
+    assert error.result_count == 1
+    assert error.items_count is None
+    assert error.items is None
 
 
 def test_wrong_tasks_error_fails_on_success_and_provider_error() -> None:
