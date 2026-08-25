@@ -1,10 +1,11 @@
 # AI-17 — LLM Mentions Historical Recipe selection and admitted-history API
 
-**Status:** provisional  
+**Status:** accepted  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** mandatory read-only GROK review of this provisional ticket and final Steward reconciliation  
+**Blocked by:** explicit [CHAZ] implementation authorization from the exact final accepted ticket commit  
 **Authorized workstream:** [CHAZ] approved the next Historical boundary after pushed AI-16 closure  
 **Draft base:** `817dd4c5b8bcb57bbd0125f3816816a254a1c1ba`  
+**Pre-implementation review:** GROK `RECONCILE`, completed read-only at `4e4a737ffd7c2f03335d071c3b7c0e56f9343249`  
 **Implementation start commit:** not yet authorized  
 
 ## Purpose
