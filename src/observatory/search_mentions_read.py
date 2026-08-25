@@ -18,6 +18,12 @@ from observatory.dataforseo_ai_optimization_search_mentions import (
 )
 from observatory.evidence_store import EvidenceStore, IntegrityError
 from observatory.provider_history import history_list_response
+from observatory.provider_outcomes import (
+    load_verified_store_events,
+    outcomes_list_response,
+    project_matched_attempt,
+    recipe_observation_kinds,
+)
 from observatory.provider_recipe_selection import (
     ResolvedProviderRecipe,
     resolve_provider_recipe,
@@ -673,3 +679,115 @@ def _sources(
         }
         for row in rows
     ]
+
+
+def _outcomes_request(attempt: Mapping[str, object]) -> dict[str, object]:
+    parameters = _parameters(attempt)
+    target = _target(parameters)
+    keyword = target.get("keyword")
+    match_type = target.get("match_type")
+    search_filter = target.get("search_filter")
+    search_scope = target.get("search_scope")
+    platform = parameters.get("platform")
+    location = parameters.get("location_code")
+    language = parameters.get("language_code")
+    limit = parameters.get("limit")
+    offset = parameters.get("offset")
+    if not isinstance(keyword, str) or keyword == "":
+        raise IntegrityError("verified Attempt keyword is missing")
+    if not isinstance(match_type, str) or match_type == "":
+        raise IntegrityError("verified Attempt match_type is missing")
+    if not isinstance(search_filter, str) or search_filter == "":
+        raise IntegrityError("verified Attempt search_filter is missing")
+    scope = _as_str_list(search_scope, "Attempt search_scope")
+    if not isinstance(platform, str) or platform == "":
+        raise IntegrityError("verified Attempt platform is missing")
+    if type(location) is not int:
+        raise IntegrityError("verified Attempt location_code is missing")
+    if not isinstance(language, str) or language == "":
+        raise IntegrityError("verified Attempt language_code is missing")
+    if type(limit) is not int:
+        raise IntegrityError("verified Attempt limit is missing")
+    if type(offset) is not int:
+        raise IntegrityError("verified Attempt offset is missing")
+    return {
+        "keyword": keyword,
+        "match_type": match_type,
+        "search_filter": search_filter,
+        "search_scope": scope,
+        "platform": platform,
+        "location_code": location,
+        "language_code": language,
+        "limit": limit,
+        "offset": offset,
+    }
+
+
+def load_search_mentions_outcomes(
+    store: EvidenceStore,
+    connection: Connection[Any],
+    *,
+    requested_keyword: str,
+    pinned_version: str | None,
+    limit: int,
+    order: Literal["asc", "desc"],
+) -> dict[str, object]:
+    """Assemble subject-filtered Search Mentions Measurement Outcomes."""
+
+    resolved = resolve_provider_recipe(connection, HISTORY_ADAPTER, pinned_version)
+    kinds = recipe_observation_kinds(connection, resolved.derivation_version_id)
+    events = load_verified_store_events(store)
+    matched: list[tuple[str, dict[str, object], dict[str, object]]] = []
+    for attempt_id, attempt in events.attempts.items():
+        if attempt.get("adapter_contract") != HISTORY_ADAPTER:
+            continue
+        if attempt.get("provider") != HISTORY_PROVIDER:
+            raise IntegrityError("derived Evidence is not Search Mentions")
+        request = _outcomes_request(attempt)
+        if request["keyword"] != requested_keyword:
+            continue
+        matched.append((attempt_id, attempt, request))
+    if not matched:
+        return outcomes_list_response(
+            provider=HISTORY_PROVIDER,
+            adapter_contract=HISTORY_ADAPTER,
+            requested_keyword=requested_keyword,
+            derivation_version_id=resolved.derivation_version_id,
+            recipe_resolution=resolved.resolution,
+            observation_kinds=list(kinds),
+            outcomes=(),
+            total_matching=0,
+            limit=limit,
+            order=order,
+        )
+    projected: list[tuple[str, str, dict[str, object]]] = []
+    for attempt_id, attempt, request in matched:
+        projected.append(
+            (
+                _require_text(attempt, "authorized_at"),
+                attempt_id,
+                project_matched_attempt(
+                    connection,
+                    events,
+                    attempt_id=attempt_id,
+                    attempt=attempt,
+                    derivation_version_id=resolved.derivation_version_id,
+                    request=request,
+                ),
+            )
+        )
+    reverse = order == "desc"
+    projected.sort(key=lambda item: (item[0], item[1]), reverse=reverse)
+    selected = projected[:limit]
+    return outcomes_list_response(
+        provider=HISTORY_PROVIDER,
+        adapter_contract=HISTORY_ADAPTER,
+        requested_keyword=requested_keyword,
+        derivation_version_id=resolved.derivation_version_id,
+        recipe_resolution=resolved.resolution,
+        observation_kinds=list(kinds),
+        outcomes=[item[2] for item in selected],
+        total_matching=len(projected),
+        limit=limit,
+        order=order,
+    )

@@ -22,6 +22,12 @@ from observatory.dataforseo_keyword_overview import (
 )
 from observatory.evidence_store import EvidenceStore, IntegrityError
 from observatory.provider_history import history_list_response
+from observatory.provider_outcomes import (
+    load_verified_store_events,
+    outcomes_list_response,
+    project_matched_attempt,
+    recipe_observation_kinds,
+)
 from observatory.provider_recipe_selection import (
     ResolvedProviderRecipe,
     resolve_provider_recipe,
@@ -674,3 +680,100 @@ def _intent_json(row: tuple[object, ...]) -> dict[str, object]:
         "foreign_intent": _json_field(row[4], _as_list(foreign)),
         "provider_update_time": _json_field(row[6], row[5]),
     }
+
+
+def _outcomes_request(attempt: Mapping[str, object]) -> dict[str, object]:
+    parameters = _parameters(attempt)
+    keywords = parameters.get("keywords")
+    location = parameters.get("location_code")
+    language = parameters.get("language_code")
+    serp = parameters.get("include_serp_info")
+    clickstream = parameters.get("include_clickstream_data")
+    if not isinstance(keywords, list) or not 1 <= len(keywords) <= 5:
+        raise IntegrityError("verified Attempt keywords are missing")
+    if not all(isinstance(item, str) and item != "" for item in keywords):
+        raise IntegrityError("verified Attempt keywords are missing")
+    if type(location) is not int:
+        raise IntegrityError("verified Attempt location_code is missing")
+    if not isinstance(language, str) or language == "":
+        raise IntegrityError("verified Attempt language_code is missing")
+    if type(serp) is not bool or type(clickstream) is not bool:
+        raise IntegrityError("verified Attempt enrichment flags are missing")
+    return {
+        "keywords": list(keywords),
+        "location_code": location,
+        "language_code": language,
+        "include_serp_info": serp,
+        "include_clickstream_data": clickstream,
+    }
+
+
+def load_keyword_overview_outcomes(
+    store: EvidenceStore,
+    connection: Connection[Any],
+    *,
+    requested_keyword: str,
+    pinned_version: str | None,
+    limit: int,
+    order: Literal["asc", "desc"],
+) -> dict[str, object]:
+    """Assemble subject-filtered Keyword Overview Measurement Outcomes."""
+
+    resolved = resolve_provider_recipe(connection, HISTORY_ADAPTER, pinned_version)
+    kinds = recipe_observation_kinds(connection, resolved.derivation_version_id)
+    events = load_verified_store_events(store)
+    matched: list[tuple[str, dict[str, object], dict[str, object]]] = []
+    for attempt_id, attempt in events.attempts.items():
+        if attempt.get("adapter_contract") != HISTORY_ADAPTER:
+            continue
+        if attempt.get("provider") != HISTORY_PROVIDER:
+            raise IntegrityError("derived Evidence is not Keyword Overview")
+        request = _outcomes_request(attempt)
+        keywords = request["keywords"]
+        if not isinstance(keywords, list) or requested_keyword not in keywords:
+            continue
+        matched.append((attempt_id, attempt, request))
+    if not matched:
+        return outcomes_list_response(
+            provider=HISTORY_PROVIDER,
+            adapter_contract=HISTORY_ADAPTER,
+            requested_keyword=requested_keyword,
+            derivation_version_id=resolved.derivation_version_id,
+            recipe_resolution=resolved.resolution,
+            observation_kinds=list(kinds),
+            outcomes=(),
+            total_matching=0,
+            limit=limit,
+            order=order,
+        )
+    projected: list[tuple[str, str, dict[str, object]]] = []
+    for attempt_id, attempt, request in matched:
+        projected.append(
+            (
+                _require_text(attempt, "authorized_at"),
+                attempt_id,
+                project_matched_attempt(
+                    connection,
+                    events,
+                    attempt_id=attempt_id,
+                    attempt=attempt,
+                    derivation_version_id=resolved.derivation_version_id,
+                    request=request,
+                ),
+            )
+        )
+    reverse = order == "desc"
+    projected.sort(key=lambda item: (item[0], item[1]), reverse=reverse)
+    selected = projected[:limit]
+    return outcomes_list_response(
+        provider=HISTORY_PROVIDER,
+        adapter_contract=HISTORY_ADAPTER,
+        requested_keyword=requested_keyword,
+        derivation_version_id=resolved.derivation_version_id,
+        recipe_resolution=resolved.resolution,
+        observation_kinds=list(kinds),
+        outcomes=[item[2] for item in selected],
+        total_matching=len(projected),
+        limit=limit,
+        order=order,
+    )

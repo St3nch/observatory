@@ -21,6 +21,12 @@ from observatory.dataforseo_google_organic import (
 )
 from observatory.evidence_store import EvidenceStore, IntegrityError
 from observatory.provider_history import history_list_response
+from observatory.provider_outcomes import (
+    load_verified_store_events,
+    outcomes_list_response,
+    project_matched_attempt,
+    recipe_observation_kinds,
+)
 from observatory.provider_recipe_selection import (
     ResolvedProviderRecipe,
     resolve_provider_recipe,
@@ -661,3 +667,109 @@ def _related_queries(
         }
         for row in rows
     ]
+
+
+def _outcomes_request(attempt: Mapping[str, object]) -> dict[str, object]:
+    parameters = _parameters(attempt)
+    keyword = parameters.get("keyword")
+    location = parameters.get("location_code")
+    language = parameters.get("language_code")
+    depth = parameters.get("depth")
+    device = parameters.get("device")
+    operating_system = parameters.get("os")
+    group = parameters.get("group_organic_results")
+    load_async = parameters.get("load_async_ai_overview")
+    if not isinstance(keyword, str) or keyword == "":
+        raise IntegrityError("verified Attempt keyword is missing")
+    if type(location) is not int:
+        raise IntegrityError("verified Attempt location_code is missing")
+    if not isinstance(language, str) or language == "":
+        raise IntegrityError("verified Attempt language_code is missing")
+    if type(depth) is not int:
+        raise IntegrityError("verified Attempt depth is missing")
+    if not isinstance(device, str) or device == "":
+        raise IntegrityError("verified Attempt device is missing")
+    if not isinstance(operating_system, str) or operating_system == "":
+        raise IntegrityError("verified Attempt os is missing")
+    if type(group) is not bool or type(load_async) is not bool:
+        raise IntegrityError("verified Attempt organic flags are missing")
+    return {
+        "keyword": keyword,
+        "location_code": location,
+        "language_code": language,
+        "depth": depth,
+        "device": device,
+        "os": operating_system,
+        "group_organic_results": group,
+        "load_async_ai_overview": load_async,
+    }
+
+
+def load_google_organic_outcomes(
+    store: EvidenceStore,
+    connection: Connection[Any],
+    *,
+    requested_keyword: str,
+    pinned_version: str | None,
+    limit: int,
+    order: Literal["asc", "desc"],
+) -> dict[str, object]:
+    """Assemble subject-filtered Google Organic Measurement Outcomes."""
+
+    resolved = resolve_provider_recipe(connection, HISTORY_ADAPTER, pinned_version)
+    kinds = recipe_observation_kinds(connection, resolved.derivation_version_id)
+    events = load_verified_store_events(store)
+    matched: list[tuple[str, dict[str, object], dict[str, object]]] = []
+    for attempt_id, attempt in events.attempts.items():
+        if attempt.get("adapter_contract") != HISTORY_ADAPTER:
+            continue
+        if attempt.get("provider") != HISTORY_PROVIDER:
+            raise IntegrityError("derived Evidence is not Google Organic")
+        request = _outcomes_request(attempt)
+        if request["keyword"] != requested_keyword:
+            continue
+        matched.append((attempt_id, attempt, request))
+    if not matched:
+        return outcomes_list_response(
+            provider=HISTORY_PROVIDER,
+            adapter_contract=HISTORY_ADAPTER,
+            requested_keyword=requested_keyword,
+            derivation_version_id=resolved.derivation_version_id,
+            recipe_resolution=resolved.resolution,
+            observation_kinds=list(kinds),
+            outcomes=(),
+            total_matching=0,
+            limit=limit,
+            order=order,
+        )
+    projected: list[tuple[str, str, dict[str, object]]] = []
+    for attempt_id, attempt, request in matched:
+        projected.append(
+            (
+                _require_text(attempt, "authorized_at"),
+                attempt_id,
+                project_matched_attempt(
+                    connection,
+                    events,
+                    attempt_id=attempt_id,
+                    attempt=attempt,
+                    derivation_version_id=resolved.derivation_version_id,
+                    request=request,
+                ),
+            )
+        )
+    reverse = order == "desc"
+    projected.sort(key=lambda item: (item[0], item[1]), reverse=reverse)
+    selected = projected[:limit]
+    return outcomes_list_response(
+        provider=HISTORY_PROVIDER,
+        adapter_contract=HISTORY_ADAPTER,
+        requested_keyword=requested_keyword,
+        derivation_version_id=resolved.derivation_version_id,
+        recipe_resolution=resolved.resolution,
+        observation_kinds=list(kinds),
+        outcomes=[item[2] for item in selected],
+        total_matching=len(projected),
+        limit=limit,
+        order=order,
+    )

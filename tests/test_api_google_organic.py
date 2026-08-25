@@ -34,6 +34,7 @@ from observatory.dataforseo_google_organic import (
     AIO_PRESENCE_KIND,
     AIO_SOURCE_KIND,
     FEATURE_PRESENCE_KIND,
+    GOOGLE_ORGANIC_RECIPE,
     GOOGLE_ORGANIC_RECIPE_ID,
     ORGANIC_PLACEMENT_KIND,
     RELATED_QUERY_KIND,
@@ -69,6 +70,7 @@ KO_FIXTURE = (
 )
 KEYWORD = "conspiracy theories"
 HISTORY = "/v1/providers/dataforseo/google/organic/history"
+OUTCOMES = "/v1/providers/dataforseo/google/organic/outcomes"
 RELATED_QUERIES = (
     "List of conspiracy theories PDF",
     "Conspiracy theories to talk about with friends",
@@ -387,6 +389,98 @@ def _app(store: EvidenceStore, dsn: str) -> TestClient:
 def _history(client: TestClient, keyword: str = KEYWORD, **params: object) -> Any:
     query = {"requested_keyword": keyword, **params}
     return client.get(HISTORY + "?" + urlencode(query, doseq=True))
+
+
+def _outcomes(client: TestClient, keyword: str = KEYWORD, **params: object) -> Any:
+    query = {"requested_keyword": keyword, **params}
+    return client.get(OUTCOMES + "?" + urlencode(query, doseq=True))
+
+
+def _assert_outcomes_envelope(
+    body: dict[str, object],
+    *,
+    total_matching: int,
+    returned_count: int,
+    limit: int = 20,
+    order: str = "asc",
+) -> None:
+    assert set(body) == {
+        "provider",
+        "adapter_contract",
+        "requested_keyword",
+        "derivation_version_id",
+        "recipe_resolution",
+        "observation_kinds",
+        "total_matching",
+        "returned_count",
+        "limit",
+        "order",
+        "has_more",
+        "outcomes",
+    }
+    assert body["total_matching"] == total_matching
+    assert body["returned_count"] == returned_count
+    assert body["limit"] == limit
+    assert body["order"] == order
+    assert body["has_more"] is (total_matching > returned_count)
+    items = body["outcomes"]
+    assert isinstance(items, list)
+    assert len(items) == returned_count
+
+
+def _assert_outcomes_409(response: Any) -> None:
+    assert response.status_code == 409
+    assert response.json() == {"detail": "evidence_integrity_failure"}
+    assert "outcomes" not in response.json()
+    assert "total_matching" not in response.json()
+
+
+def _commit_organic_attempt_only(
+    store: EvidenceStore, nonce: str, *, authorized_at: str
+) -> str:
+    parameters = _parameters()
+    attempt = organic_http_attempt_document(
+        parameters=parameters,
+        attempt_nonce=nonce,
+        authorized_at=authorized_at,
+        observatory_version="pf13-test-v1",
+    )
+    return store.commit_attempt(
+        attempt, request_body=organic_request_body_bytes(parameters)
+    )
+
+
+def _commit_organic_no_response(
+    store: EvidenceStore,
+    nonce: str,
+    *,
+    started: str,
+    authorized_at: str,
+) -> tuple[str, str]:
+    parameters = _parameters()
+    attempt = organic_http_attempt_document(
+        parameters=parameters,
+        attempt_nonce=nonce,
+        authorized_at=authorized_at,
+        observatory_version="pf13-test-v1",
+    )
+    attempt_id = store.commit_attempt(
+        attempt, request_body=organic_request_body_bytes(parameters)
+    )
+    capture_id = store.commit_capture(
+        organic_http_capture_document(
+            attempt=attempt,
+            request_started_at=started,
+            transport_ended_at=started.replace(".100000Z", ".400000Z"),
+            transport_state="no_response",
+            response=None,
+            transport_failure={"phase": "connect", "code": "timeout"},
+            response_headers_at=None,
+            response_body_ended_at=None,
+        ),
+        response_body=None,
+    )
+    return attempt_id, capture_id
 
 
 def _assert_history_envelope(
@@ -1538,3 +1632,257 @@ def test_history_consistency_damage_outside_limit_is_409(
         later = client.get(f"/v1/attempts/{later_attempt}")
     _assert_history_409(limited)
     assert later.status_code == 200
+
+
+def test_google_organic_outcomes_admitted_empty_unresolved_and_openapi(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, attempt_id, capture_id = _prepare_frozen(tmp_path, postgres_dsn)
+    with _app(store, postgres_dsn) as client:
+        empty = _outcomes(client, "not-measured")
+        admitted = _outcomes(client)
+        spec = client.get("/api/v1/openapi.json").json()
+    assert empty.status_code == 200
+    _assert_outcomes_envelope(empty.json(), total_matching=0, returned_count=0)
+    assert admitted.status_code == 200
+    body = admitted.json()
+    _assert_outcomes_envelope(body, total_matching=1, returned_count=1)
+    item = body["outcomes"][0]
+    assert item["attempt_id"] == attempt_id
+    assert item["capture_id"] == capture_id
+    assert set(item["request"]) == {
+        "keyword",
+        "location_code",
+        "language_code",
+        "depth",
+        "device",
+        "os",
+        "group_organic_results",
+        "load_async_ai_overview",
+    }
+    assert item["request"]["keyword"] == KEYWORD
+    assert "contract" not in item["request"]
+    assert item["attempt_outcome"]["classification"] == "authorized_unresolved"
+    assert item["capture_outcome"] == {
+        "classification": "observation_admitted",
+        "observation_count": 237,
+    }
+    schema = spec["paths"][OUTCOMES]["get"]["responses"]["200"]["content"][
+        "application/json"
+    ]["schema"]
+    ref = schema.get("$ref")
+    if isinstance(ref, str):
+        schema = spec["components"]["schemas"][ref.rsplit("/", 1)[-1]]
+    text = json.dumps(spec).lower()
+    assert "authorized_unresolved" in text
+    assert "not definitely unsent" in text
+    assert "pagination" in text
+    request_schema = spec["components"]["schemas"]["GoogleOrganicOutcomeRequest"]
+    assert set(request_schema["required"]) == {
+        "keyword",
+        "location_code",
+        "language_code",
+        "depth",
+        "device",
+        "os",
+        "group_organic_results",
+        "load_async_ai_overview",
+    }
+
+
+def test_google_organic_outcomes_unresolved_no_response_limit_and_empty_class(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    unresolved = _commit_organic_attempt_only(
+        store, "e1" * 32, authorized_at="2026-08-18T17:36:00.000000Z"
+    )
+    failed_id, failed_capture = _commit_organic_no_response(
+        store,
+        "e2" * 32,
+        started="2026-08-18T17:37:01.100000Z",
+        authorized_at="2026-08-18T17:37:00.000000Z",
+    )
+    admitted_id, admitted_capture = _commit_organic(
+        store,
+        _body(),
+        "e3" * 32,
+        started="2026-08-18T17:38:01.100000Z",
+        authorized_at="2026-08-18T17:38:00.000000Z",
+    )
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic(store, connection)
+        select_provider_recipe(
+            connection, ORGANIC_ADAPTER_CONTRACT, GOOGLE_ORGANIC_RECIPE_ID
+        )
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET classification = 'observation_admitted_empty', observation_count = 0
+            WHERE capture_id = %s
+            """,
+            (failed_capture,),
+        )
+    with _app(store, postgres_dsn) as client:
+        limited = _outcomes(client, limit=1, order="asc")
+        full = _outcomes(client, order="desc")
+    assert limited.status_code == 200
+    _assert_outcomes_envelope(limited.json(), total_matching=3, returned_count=1, limit=1)
+    assert limited.json()["outcomes"][0]["attempt_id"] == unresolved
+    assert limited.json()["outcomes"][0]["capture_outcome"] is None
+    ids = [item["attempt_id"] for item in full.json()["outcomes"]]
+    assert ids == [admitted_id, failed_id, unresolved]
+    assert full.json()["outcomes"][0]["capture_outcome"]["classification"] == (
+        "observation_admitted"
+    )
+    assert full.json()["outcomes"][1]["capture_outcome"]["classification"] == (
+        "observation_admitted_empty"
+    )
+
+
+def test_google_organic_outcomes_integrity_vectors(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, attempt_id, capture_id = _prepare_frozen(tmp_path, postgres_dsn)
+    ko_attempt, ko_capture = _commit_ko(
+        store, "51" * 32, started="2026-08-16T21:37:01.100000Z"
+    )
+    with connect(postgres_dsn) as connection:
+        derive_keyword_overview_extended(store, connection)
+    with _app(store, postgres_dsn) as client:
+        healthy = _outcomes(client)
+    assert healthy.status_code == 200
+
+    damaged = bytearray((store.capture_path(ko_capture) / "capture.json").read_bytes())
+    damaged[0] ^= 0x01
+    (store.capture_path(ko_capture) / "capture.json").write_bytes(bytes(damaged))
+    with _app(store, postgres_dsn) as client:
+        foreign = _outcomes(client)
+        history = _history(client)
+    _assert_outcomes_409(foreign)
+    assert history.status_code == 200
+    (store.capture_path(ko_capture) / "capture.json").write_bytes(
+        bytes(bytearray(damaged[0] ^ 0x01) + damaged[1:])
+    )
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET observation_count = observation_count + 1
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (capture_id, GOOGLE_ORGANIC_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        stale = _outcomes(client)
+        audit = client.get(f"/v1/attempts/{attempt_id}")
+    _assert_outcomes_409(stale)
+    assert audit.status_code == 200
+    assert audit.json()["capture_outcome"]["observation_count"] == 238
+
+    store_missing = create_store(tmp_path / "underived")
+    _commit_organic(
+        store_missing, _body(), "f1" * 32, started="2026-08-18T17:37:01.100000Z"
+    )
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        register_provider_recipe(connection, GOOGLE_ORGANIC_RECIPE)
+        select_provider_recipe(
+            connection, ORGANIC_ADAPTER_CONTRACT, GOOGLE_ORGANIC_RECIPE_ID
+        )
+    with _app(store_missing, postgres_dsn) as client:
+        missing = _outcomes(client)
+    _assert_outcomes_409(missing)
+
+    store_two = create_store(tmp_path / "two")
+    two_attempt, two_capture = _commit_organic(
+        store_two, _body(), "f2" * 32, started="2026-08-18T17:37:01.100000Z"
+    )
+    committed = store_two.capture_path(two_capture) / "COMMITTED"
+    hidden = committed.with_name("COMMITTED.hidden")
+    committed.rename(hidden)
+    parent = store_two.read_attempt(two_attempt)
+    assert parent is not None
+    store_two.commit_capture(
+        organic_http_capture_document(
+            attempt=parent,
+            request_started_at="2026-08-18T17:37:02.100000Z",
+            transport_ended_at="2026-08-18T17:37:02.400000Z",
+            transport_state="no_response",
+            response=None,
+            transport_failure={"phase": "connect", "code": "timeout"},
+            response_headers_at=None,
+            response_body_ended_at=None,
+        ),
+        response_body=None,
+    )
+    hidden.rename(committed)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic(store_two, connection)
+        select_provider_recipe(
+            connection, ORGANIC_ADAPTER_CONTRACT, GOOGLE_ORGANIC_RECIPE_ID
+        )
+    with _app(store_two, postgres_dsn) as client:
+        two = _outcomes(client)
+    _assert_outcomes_409(two)
+
+    zero_store = create_store(tmp_path / "zero")
+    _zero_attempt, zero_capture = _commit_organic_no_response(
+        zero_store,
+        "f3" * 32,
+        started="2026-08-18T17:39:01.100000Z",
+        authorized_at="2026-08-18T17:39:00.000000Z",
+    )
+    with connect(postgres_dsn) as connection:
+        derive_google_organic(zero_store, connection)
+        select_provider_recipe(
+            connection, ORGANIC_ADAPTER_CONTRACT, GOOGLE_ORGANIC_RECIPE_ID
+        )
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET classification = 'observation_admitted', observation_count = 0
+            WHERE capture_id = %s
+            """,
+            (zero_capture,),
+        )
+    with _app(zero_store, postgres_dsn) as client:
+        zero_admitted = _outcomes(client)
+    _assert_outcomes_409(zero_admitted)
+    orphan = create_store(tmp_path / "orphan")
+    orphan_attempt, _orphan_capture = _commit_organic(
+        orphan,
+        _body(),
+        "f4" * 32,
+        started="2026-08-18T17:40:01.100000Z",
+        authorized_at="2026-08-18T17:40:00.000000Z",
+    )
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            INSERT INTO outcomes (
+                attempt_id, capture_id, derivation_version_id,
+                classification, observation_count
+            )
+            VALUES (%s, NULL, %s, 'authorized_unresolved', 0)
+            """,
+            (orphan_attempt, GOOGLE_ORGANIC_RECIPE_ID),
+        )
+    with _app(orphan, postgres_dsn) as client:
+        missing_capture = _outcomes(client)
+    _assert_outcomes_409(missing_capture)
+
+
+def test_google_organic_outcomes_does_not_mutate(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, _attempt_id, _capture_id = _prepare_frozen(tmp_path, postgres_dsn)
+    before_ops = list(store.recorded_ops)
+    before_pg = _xmin_snapshot(postgres_dsn)
+    with _app(store, postgres_dsn) as client:
+        assert _outcomes(client).status_code == 200
+        assert _history(client).status_code == 200
+    assert store.recorded_ops == before_ops
+    assert _xmin_snapshot(postgres_dsn) == before_pg

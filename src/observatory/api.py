@@ -12,11 +12,15 @@ from pydantic import BaseModel
 from observatory import __version__
 from observatory.capture_event import MENTIONS_ADAPTER_CONTRACT, ORGANIC_ADAPTER_CONTRACT
 from observatory.evidence_store import EvidenceStore, IntegrityError, open_store
-from observatory.google_organic_read import load_google_organic_history
+from observatory.google_organic_read import (
+    load_google_organic_history,
+    load_google_organic_outcomes,
+)
 from observatory.keyword_overview_read import (
     HISTORY_ADAPTER,
     ProviderAttemptNotFound,
     load_keyword_overview_history,
+    load_keyword_overview_outcomes,
     load_provider_attempt,
 )
 from observatory.provider_history import (
@@ -24,12 +28,20 @@ from observatory.provider_history import (
     HISTORY_LIMIT_MAX,
     HistoryListEnvelope,
 )
+from observatory.provider_outcomes import (
+    GoogleOrganicOutcomesEnvelope,
+    KeywordOverviewOutcomesEnvelope,
+    SearchMentionsOutcomesEnvelope,
+)
 from observatory.provider_recipe_selection import (
     NOT_SELECTED_SIGNAL,
     ProviderRecipeNotSelected,
     ProviderRecipeSelectionError,
 )
-from observatory.search_mentions_read import load_search_mentions_history
+from observatory.search_mentions_read import (
+    load_search_mentions_history,
+    load_search_mentions_outcomes,
+)
 from observatory.settings import Settings, get_settings
 
 _HEX64: Final[re.Pattern[str]] = re.compile(r"^[0-9a-f]{64}$")
@@ -310,6 +322,98 @@ def create_app(settings: Settings | None = None, *, store: EvidenceStore | None 
             with _read_connect(dsn) as connection:
                 return HistoryListEnvelope.model_validate(
                     load_search_mentions_history(
+                        evidence,
+                        connection,
+                        requested_keyword=requested_keyword,
+                        pinned_version=derivation_version_id,
+                        limit=limit,
+                        order=order,
+                    )
+                )
+        except IntegrityError as exc:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
+        except ProviderRecipeSelectionError as exc:
+            raise _recipe_http_error(exc) from exc
+
+    @v1.get("/providers/dataforseo/google/keyword-overview/outcomes")
+    async def get_keyword_overview_outcomes(
+        request: Request,
+        requested_keyword: str = Query(),
+        derivation_version_id: str | None = Query(default=None),
+        limit: int = Query(default=HISTORY_LIMIT_DEFAULT, ge=1, le=HISTORY_LIMIT_MAX),
+        order: Literal["asc", "desc"] = Query(default="asc"),
+    ) -> KeywordOverviewOutcomesEnvelope:
+        settings = request.app.state.settings
+        if not isinstance(settings, Settings):
+            raise HTTPException(status_code=503, detail="settings are not configured")
+        evidence = _require_store(request)
+        dsn = _require_dsn(settings)
+        try:
+            with _read_connect(dsn) as connection:
+                return KeywordOverviewOutcomesEnvelope.model_validate(
+                    load_keyword_overview_outcomes(
+                        evidence,
+                        connection,
+                        requested_keyword=requested_keyword,
+                        pinned_version=derivation_version_id,
+                        limit=limit,
+                        order=order,
+                    )
+                )
+        except IntegrityError as exc:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
+        except ProviderRecipeSelectionError as exc:
+            raise _recipe_http_error(exc) from exc
+
+    @v1.get("/providers/dataforseo/google/organic/outcomes")
+    async def get_google_organic_outcomes(
+        request: Request,
+        requested_keyword: str = Query(),
+        derivation_version_id: str | None = Query(default=None),
+        limit: int = Query(default=HISTORY_LIMIT_DEFAULT, ge=1, le=HISTORY_LIMIT_MAX),
+        order: Literal["asc", "desc"] = Query(default="asc"),
+    ) -> GoogleOrganicOutcomesEnvelope:
+        settings = request.app.state.settings
+        if not isinstance(settings, Settings):
+            raise HTTPException(status_code=503, detail="settings are not configured")
+        evidence = _require_store(request)
+        dsn = _require_dsn(settings)
+        try:
+            with _read_connect(dsn) as connection:
+                return GoogleOrganicOutcomesEnvelope.model_validate(
+                    load_google_organic_outcomes(
+                        evidence,
+                        connection,
+                        requested_keyword=requested_keyword,
+                        pinned_version=derivation_version_id,
+                        limit=limit,
+                        order=order,
+                    )
+                )
+        except IntegrityError as exc:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
+        except ProviderRecipeSelectionError as exc:
+            raise _recipe_http_error(exc) from exc
+
+    @v1.get(
+        "/providers/dataforseo/google/ai-optimization/search-mentions/outcomes"
+    )
+    async def get_search_mentions_outcomes(
+        request: Request,
+        requested_keyword: str = Query(),
+        derivation_version_id: str | None = Query(default=None),
+        limit: int = Query(default=HISTORY_LIMIT_DEFAULT, ge=1, le=HISTORY_LIMIT_MAX),
+        order: Literal["asc", "desc"] = Query(default="asc"),
+    ) -> SearchMentionsOutcomesEnvelope:
+        settings = request.app.state.settings
+        if not isinstance(settings, Settings):
+            raise HTTPException(status_code=503, detail="settings are not configured")
+        evidence = _require_store(request)
+        dsn = _require_dsn(settings)
+        try:
+            with _read_connect(dsn) as connection:
+                return SearchMentionsOutcomesEnvelope.model_validate(
+                    load_search_mentions_outcomes(
                         evidence,
                         connection,
                         requested_keyword=requested_keyword,

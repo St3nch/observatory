@@ -82,6 +82,7 @@ ORGANIC_FIXTURE = (
 )
 KEYWORD = "generative engine optimization"
 HISTORY = "/v1/providers/dataforseo/google/ai-optimization/search-mentions/history"
+OUTCOMES = "/v1/providers/dataforseo/google/ai-optimization/search-mentions/outcomes"
 KO_HISTORY = "/v1/providers/dataforseo/google/keyword-overview/history"
 ORGANIC_HISTORY = "/v1/providers/dataforseo/google/organic/history"
 INTEGRITY_SIGNAL = "evidence_integrity_failure"
@@ -434,6 +435,98 @@ def _app(store: EvidenceStore, dsn: str) -> TestClient:
 def _history(client: TestClient, keyword: str = KEYWORD, **params: object) -> Any:
     query = {"requested_keyword": keyword, **params}
     return client.get(HISTORY + "?" + urlencode(query, doseq=True))
+
+
+def _outcomes(client: TestClient, keyword: str = KEYWORD, **params: object) -> Any:
+    query = {"requested_keyword": keyword, **params}
+    return client.get(OUTCOMES + "?" + urlencode(query, doseq=True))
+
+
+def _assert_outcomes_envelope(
+    body: dict[str, object],
+    *,
+    total_matching: int,
+    returned_count: int,
+    limit: int = 20,
+    order: str = "asc",
+) -> None:
+    assert set(body) == {
+        "provider",
+        "adapter_contract",
+        "requested_keyword",
+        "derivation_version_id",
+        "recipe_resolution",
+        "observation_kinds",
+        "total_matching",
+        "returned_count",
+        "limit",
+        "order",
+        "has_more",
+        "outcomes",
+    }
+    assert body["total_matching"] == total_matching
+    assert body["returned_count"] == returned_count
+    assert body["limit"] == limit
+    assert body["order"] == order
+    assert body["has_more"] is (total_matching > returned_count)
+    items = body["outcomes"]
+    assert isinstance(items, list)
+    assert len(items) == returned_count
+
+
+def _assert_outcomes_409(response: Any) -> None:
+    assert response.status_code == 409
+    assert response.json() == {"detail": INTEGRITY_SIGNAL}
+    assert "outcomes" not in response.json()
+    assert "total_matching" not in response.json()
+
+
+def _commit_mentions_attempt_only(
+    store: EvidenceStore, nonce: str, *, authorized_at: str
+) -> str:
+    parameters = _parameters()
+    attempt = mentions_http_attempt_document(
+        parameters=parameters,
+        attempt_nonce=nonce,
+        authorized_at=authorized_at,
+        observatory_version="ai06-test-v1",
+    )
+    return store.commit_attempt(
+        attempt, request_body=mentions_request_body_bytes(parameters)
+    )
+
+
+def _commit_mentions_no_response(
+    store: EvidenceStore,
+    nonce: str,
+    *,
+    started: str,
+    authorized_at: str,
+) -> tuple[str, str]:
+    parameters = _parameters()
+    attempt = mentions_http_attempt_document(
+        parameters=parameters,
+        attempt_nonce=nonce,
+        authorized_at=authorized_at,
+        observatory_version="ai06-test-v1",
+    )
+    attempt_id = store.commit_attempt(
+        attempt, request_body=mentions_request_body_bytes(parameters)
+    )
+    capture_id = store.commit_capture(
+        mentions_http_capture_document(
+            attempt=attempt,
+            request_started_at=started,
+            transport_ended_at=started.replace(".100000Z", ".400000Z"),
+            transport_state="no_response",
+            response=None,
+            transport_failure={"phase": "connect", "code": "timeout"},
+            response_headers_at=None,
+            response_body_ended_at=None,
+        ),
+        response_body=None,
+    )
+    return attempt_id, capture_id
 
 
 def _assert_history_envelope(
@@ -2063,3 +2156,241 @@ def test_history_consistency_damage_outside_limit_is_409(
     _assert_history_409(limited)
     assert later.status_code == 200
     assert later.json()["capture_outcome"]["observation_count"] == 113
+
+
+def test_search_mentions_outcomes_admitted_request_and_no_continuation(
+    tmp_path: Path, postgres_dsn: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store, attempt_id, capture_id = _prepare_frozen(tmp_path, postgres_dsn)
+
+    def boom(*_args: Any, **_kwargs: Any) -> None:
+        raise AssertionError("continuation, capture, or derive action is forbidden")
+
+    monkeypatch.setattr("observatory.search_mentions_derive.derive_search_mentions", boom)
+    monkeypatch.setattr(
+        "observatory.dataforseo_ai_optimization_search_mentions_paid_probe"
+        ".capture_dataforseo_ai_optimization_search_mentions_paid_probe",
+        boom,
+    )
+    monkeypatch.setattr(
+        "observatory.http_single_exchange.perform_bounded_http_exchange", boom
+    )
+    with _app(store, postgres_dsn) as client:
+        empty = _outcomes(client, "not-measured")
+        admitted = _outcomes(client)
+        spec = client.get("/api/v1/openapi.json").json()
+    assert empty.status_code == 200
+    _assert_outcomes_envelope(empty.json(), total_matching=0, returned_count=0)
+    assert admitted.status_code == 200
+    body = admitted.json()
+    _assert_outcomes_envelope(body, total_matching=1, returned_count=1)
+    item = body["outcomes"][0]
+    assert item["attempt_id"] == attempt_id
+    assert item["capture_id"] == capture_id
+    assert item["request"]["keyword"] == KEYWORD
+    assert item["request"]["limit"] == 5
+    assert item["request"]["offset"] == 0
+    assert "search_after_token" not in item
+    assert "search_after_token" not in item["request"]
+    assert item["capture_outcome"] == {
+        "classification": "observation_admitted",
+        "observation_count": 113,
+    }
+    request_schema = spec["components"]["schemas"]["SearchMentionsOutcomeRequest"]
+    assert "keyword" in request_schema["required"]
+    assert "offset" in request_schema["required"]
+    text = json.dumps(request_schema).lower()
+    assert "continuation" in text or "not an outcomes cursor" in text
+
+
+def test_search_mentions_outcomes_unresolved_no_response_and_admitted_empty(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    unresolved = _commit_mentions_attempt_only(
+        store, "a1" * 32, authorized_at="2026-08-20T17:35:00.000000Z"
+    )
+    failed_id, failed_capture = _commit_mentions_no_response(
+        store,
+        "a2" * 32,
+        started="2026-08-20T17:36:01.100000Z",
+        authorized_at="2026-08-20T17:36:00.000000Z",
+    )
+    admitted_id, admitted_capture = _commit_mentions(
+        store,
+        _body(),
+        "a3" * 32,
+        started="2026-08-20T17:37:01.100000Z",
+        authorized_at="2026-08-20T17:37:00.000000Z",
+    )
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_search_mentions(store, connection)
+        select_provider_recipe(
+            connection, MENTIONS_ADAPTER_CONTRACT, SEARCH_MENTIONS_RECIPE_ID
+        )
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET classification = 'observation_admitted_empty', observation_count = 0
+            WHERE capture_id = %s
+            """,
+            (failed_capture,),
+        )
+    with _app(store, postgres_dsn) as client:
+        limited = _outcomes(client, limit=1, order="asc")
+        full = _outcomes(client, order="desc")
+    _assert_outcomes_envelope(limited.json(), total_matching=3, returned_count=1, limit=1)
+    assert limited.json()["outcomes"][0]["attempt_id"] == unresolved
+    assert [item["attempt_id"] for item in full.json()["outcomes"]] == [
+        admitted_id,
+        failed_id,
+        unresolved,
+    ]
+    assert full.json()["outcomes"][0]["capture_outcome"]["classification"] == (
+        "observation_admitted"
+    )
+    assert full.json()["outcomes"][1]["capture_outcome"]["classification"] == (
+        "observation_admitted_empty"
+    )
+
+
+def test_search_mentions_outcomes_integrity_vectors(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, attempt_id, capture_id = _prepare_frozen(tmp_path, postgres_dsn)
+    _ko_attempt, ko_capture = _commit_ko(
+        store, "51" * 32, started="2026-08-16T21:37:01.100000Z"
+    )
+    with connect(postgres_dsn) as connection:
+        derive_keyword_overview_extended(store, connection)
+    payload = bytearray((store.capture_path(ko_capture) / "capture.json").read_bytes())
+    payload[0] ^= 0x01
+    (store.capture_path(ko_capture) / "capture.json").write_bytes(bytes(payload))
+    with _app(store, postgres_dsn) as client:
+        foreign = _outcomes(client)
+        history = _history(client)
+    _assert_outcomes_409(foreign)
+    assert history.status_code == 200
+    (store.capture_path(ko_capture) / "capture.json").write_bytes(
+        bytes(bytearray(payload[0] ^ 0x01) + payload[1:])
+    )
+
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET observation_count = observation_count + 1
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """,
+            (capture_id, SEARCH_MENTIONS_RECIPE_ID),
+        )
+    with _app(store, postgres_dsn) as client:
+        stale = _outcomes(client)
+        audit = client.get(f"/v1/attempts/{attempt_id}")
+    _assert_outcomes_409(stale)
+    assert audit.status_code == 200
+    assert audit.json()["capture_outcome"]["observation_count"] == 114
+
+    store_missing = create_store(tmp_path / "underived")
+    _commit_mentions_attempt_only(
+        store_missing, "b1" * 32, authorized_at="2026-08-20T18:00:00.000000Z"
+    )
+    with connect(postgres_dsn) as connection:
+        register_provider_recipe(connection, SEARCH_MENTIONS_RECIPE)
+        select_provider_recipe(
+            connection, MENTIONS_ADAPTER_CONTRACT, SEARCH_MENTIONS_RECIPE_ID
+        )
+    with _app(store_missing, postgres_dsn) as client:
+        missing = _outcomes(client)
+    _assert_outcomes_409(missing)
+
+    zero_store = create_store(tmp_path / "zero")
+    _zero_attempt, zero_capture = _commit_mentions_no_response(
+        zero_store,
+        "b2" * 32,
+        started="2026-08-20T18:01:01.100000Z",
+        authorized_at="2026-08-20T18:01:00.000000Z",
+    )
+    with connect(postgres_dsn) as connection:
+        derive_search_mentions(zero_store, connection)
+        connection.execute(
+            """
+            UPDATE outcomes
+            SET classification = 'observation_admitted', observation_count = 0
+            WHERE capture_id = %s
+            """,
+            (zero_capture,),
+        )
+    with _app(zero_store, postgres_dsn) as client:
+        zero_admitted = _outcomes(client)
+    _assert_outcomes_409(zero_admitted)
+
+    store_two = create_store(tmp_path / "two")
+    two_attempt, two_capture = _commit_mentions(
+        store_two, _body(), "c2" * 32, started="2026-08-20T17:36:01.100000Z"
+    )
+    committed = store_two.capture_path(two_capture) / "COMMITTED"
+    hidden = committed.with_name("COMMITTED.hidden")
+    committed.rename(hidden)
+    parent = store_two.read_attempt(two_attempt)
+    assert parent is not None
+    store_two.commit_capture(
+        mentions_http_capture_document(
+            attempt=parent,
+            request_started_at="2026-08-20T17:36:02.100000Z",
+            transport_ended_at="2026-08-20T17:36:02.400000Z",
+            transport_state="no_response",
+            response=None,
+            transport_failure={"phase": "connect", "code": "timeout"},
+            response_headers_at=None,
+            response_body_ended_at=None,
+        ),
+        response_body=None,
+    )
+    hidden.rename(committed)
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_search_mentions(store_two, connection)
+        select_provider_recipe(
+            connection, MENTIONS_ADAPTER_CONTRACT, SEARCH_MENTIONS_RECIPE_ID
+        )
+    with _app(store_two, postgres_dsn) as client:
+        two = _outcomes(client)
+    _assert_outcomes_409(two)
+
+    orphan = create_store(tmp_path / "orphan")
+    orphan_attempt, _orphan_capture = _commit_mentions(
+        orphan,
+        _body(),
+        "c3" * 32,
+        started="2026-08-20T18:02:01.100000Z",
+        authorized_at="2026-08-20T18:02:00.000000Z",
+    )
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            INSERT INTO outcomes (
+                attempt_id, capture_id, derivation_version_id,
+                classification, observation_count
+            )
+            VALUES (%s, NULL, %s, 'authorized_unresolved', 0)
+            """,
+            (orphan_attempt, SEARCH_MENTIONS_RECIPE_ID),
+        )
+    with _app(orphan, postgres_dsn) as client:
+        missing_capture = _outcomes(client)
+    _assert_outcomes_409(missing_capture)
+
+
+def test_search_mentions_outcomes_does_not_mutate(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, _attempt_id, _capture_id = _prepare_frozen(tmp_path, postgres_dsn)
+    before_ops = list(store.recorded_ops)
+    before_pg = _xmin_snapshot(postgres_dsn)
+    with _app(store, postgres_dsn) as client:
+        assert _outcomes(client).status_code == 200
+        assert _history(client).status_code == 200
+    assert store.recorded_ops == before_ops
+    assert _xmin_snapshot(postgres_dsn) == before_pg

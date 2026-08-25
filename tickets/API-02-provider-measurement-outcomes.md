@@ -1,11 +1,11 @@
 # API-02 — Provider Measurement Outcomes
 
-**Status:** ready — implementation requires explicit [CHAZ] authorization  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** [CHAZ] implementation authorization against the final clean ticket commit  
+**Blocked by:** none; [CHAZ] authorized implementation against the named start commit  
 **Question-resolution pass:** completed against `5fa8bc17835e45795deda380276dab7b3b078004`  
 **Pre-implementation review:** completed against `00e7c754b804df88e3c33c42512668678bd3430f`  
-**Start commit:** not assigned
+**Start commit:** `6c59da885d97f423be4453ae5bae67f350bc7933`
 
 ## Purpose
 
@@ -567,4 +567,123 @@ The full suite is reserved for the final exact-HEAD operator block after review/
 
 ## Implementation report
 
-Not started. Implementation is unauthorized.
+**Parent / start commit:** `6c59da885d97f423be4453ae5bae67f350bc7933`  
+**This commit** is the API-02 implementation child. Status `review`, never `done`.
+
+### Changed paths
+
+Production:
+
+- `src/observatory/provider_outcomes.py` (new)
+- `src/observatory/keyword_overview_read.py`
+- `src/observatory/google_organic_read.py`
+- `src/observatory/search_mentions_read.py`
+- `src/observatory/api.py`
+
+Tests:
+
+- `tests/test_provider_outcomes.py` (new, helper invariants only)
+- `tests/test_api_keyword_overview.py`
+- `tests/test_api_google_organic.py`
+- `tests/test_api_search_mentions.py`
+
+Ticket: this file.
+
+### Routes and OpenAPI
+
+Added:
+
+- `GET /v1/providers/dataforseo/google/keyword-overview/outcomes`
+- `GET /v1/providers/dataforseo/google/organic/outcomes`
+- `GET /v1/providers/dataforseo/google/ai-optimization/search-mentions/outcomes`
+
+Typed envelopes `KeywordOverviewOutcomesEnvelope`, `GoogleOrganicOutcomesEnvelope`, and `SearchMentionsOutcomesEnvelope` with closed Attempt/Capture classification enums and surface-specific `request` models. History routes and `GET /v1/attempts/{attempt_id}` are unchanged.
+
+### Integrity proofs
+
+Store-wide verify-or-409: damaged foreign-adapter Capture in the same root 409s Outcomes while admitted history of the route adapter can still 200.
+
+Nonempty S with one, some, or all missing Recipe Attempt-stage rows is 409, including selected-but-not-derived Evidence.
+
+Evidence Capture without Capture-stage Outcome is 409 (does not render unresolved).
+
+Two verified Captures for one Attempt is 409.
+
+`observation_admitted` requires count ≥ 1 and envelope cardinality equality; non-admitted and admitted-empty require count 0 and zero envelopes. Attempt audit may still 200 a stale count.
+
+Verify-before-limit: matching damage outside `limit=1` is 409 with no envelope keys.
+
+Keyword Overview five-keyword Attempt is one item; member queries hit it once; non-members empty 200.
+
+### Verification
+
+Targeted:
+
+    uv run pytest -q \
+      tests/test_provider_outcomes.py \
+      tests/test_api_keyword_overview.py \
+      tests/test_api_google_organic.py \
+      tests/test_api_search_mentions.py
+
+Result: **63 passed**, 1 warning (known Starlette/`httpx` TestClient deprecation).
+
+    uv run ruff check .   # All checks passed
+    uv run mypy           # Success: no issues found in 66 source files
+
+Full suite was **not** run (reserved for CHAZ exact-HEAD operator block).
+
+### Strongest
+
+Store-wide verify-first then adapter filter; Capture presence from Evidence; nonempty-S missing Attempt-stage is 409; envelope-cardinality hardening that the Attempt audit still lacks.
+
+### Weakest
+
+The three loaders repeat the resolve/filter/sort/envelope shell. Shared `provider_outcomes.py` owns the Evidence walk and pairing so skip-on-`IntegrityError` cannot appear in one surface only. That is slightly broader than the ticket's "math/types only" sentence, but it has no surface tables or request shapes.
+
+### Possible false greens
+
+Helper math tests do not replace route 409s. Synthetic no_response → reclassified admitted-empty/zero-admitted plants prove Recipe branches, not live PF-03/PF-10/AI-03 (those are admitted non-empty). Closed Attempt schema already enforces KO 1..5 keywords; the reader also fail-closes if that ever drifted.
+
+### Caller-controlled influence
+
+Query `requested_keyword`, optional Recipe pin, `limit` 1–100, `order`. Mutable Recipe selection. No cursor.
+
+### Architecture
+
+`HISTORY_LIMIT_*` reused. Shared module does not know KO/Organic/SM table names. Readers own subject membership and request mapping. History membership SQL is unused.
+
+### Parser/provider traps
+
+None new. SM `request.limit`/`offset` are Attempt fields, not Outcomes pagination. Token is not read. KO classification remains Capture-wide.
+
+### Closure blockers
+
+None from this implementation. Full suite not yet run.
+
+### Deferred
+
+Holdings/index, outer pagination past 100, Attempt-audit count hardening, AI-12, F12/F13, `related_result` stop-before-derive.
+
+### Reuse later
+
+Store-wide verify-or-409 walk, pair grain, envelope math, 409-no-partial-payload, Recipe pin/select HTTP map.
+
+### Remain surface-local
+
+Subject extraction, request mapping, admitted-empty eligibility as classification (not history membership).
+
+### Evidence vs contract vs synthetic
+
+Evidence is Attempt/Capture bytes. Recipe is the classification contract. Ordinary tests prove synthetic unresolved/transport/empty/zero-count plants.
+
+### Strategy-LLM
+
+Useful: for keyword X on surface S under Recipe R, derived measurement events including unresolved and failures. Unsafe: `authorized_unresolved` as unsent/current status; `observation_count` as ranks/mentions; five KO keywords as five measurements; empty Outcomes as provider-zero.
+
+### Data-model
+
+No `outcomes` column or subject index. Failure subjects remain Evidence-derived. Do not invent coverage.
+
+### Hygiene
+
+One implementation commit, no amend, no push. Zero provider calls, credentials, spend, retained Evidence access, or continuation. Working tree left clean after the commit.
