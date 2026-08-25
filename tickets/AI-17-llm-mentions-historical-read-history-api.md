@@ -541,8 +541,84 @@ introduces a genuinely new unresolved premise.
 - Only GROK writes `src/` and tests after separate implementation authorization.
 - No amend or push without [CHAZ] authorization.
 
-## Stop point
+## Final Steward reconciliation lock
 
-AI-17 remains provisional until GROK's read-only ticket review is reconciled and the final
-ticket is committed. Even then implementation remains blocked until [CHAZ] separately
-authorizes GROK from that exact clean final-ticket commit.
+This section is normative and supersedes any earlier less-specific wording in this ticket.
+GROK's read-only ticket review returned `RECONCILE`; GPT independently verified the material
+findings. No Product question remains.
+
+### LEFT JOIN classification safety
+
+The Historical candidate query must select matching v1 result-context rows and LEFT JOIN the
+full Outcome identity `(derivation_version_id, attempt_id, capture_id)` exactly as the typed
+Target Metrics reader does. The SQL query must not contain any predicate on
+`o.classification`, `o.capture_id`, `o.attempt_id`, or Outcome non-nullness that would turn
+the LEFT JOIN into an effective INNER JOIN. In particular, do not write
+`WHERE o.classification IN (...)` or `WHERE o.classification IS NOT NULL`.
+
+Classification is inspected only after the matching context row has been returned to Python.
+Missing Outcome or classification outside exactly `observation_admitted` and
+`observation_admitted_empty` is HTTP 409. No SQL LIMIT is permitted before all matching
+context candidates have been verified.
+
+### Request/context overlap
+
+Verified Attempt request testimony must agree with persisted context only on the fields that
+are actually request parameters: keyword, match_type, search_filter, search_scope, platform,
+location_code, language_code, date_from, and date_to. `items_count` is not an Attempt request
+field. It stays exclusively in `result_context` and is validated against the admitted typed
+fact set.
+
+### Computed requested-window rule
+
+The read module must implement the AI-16 inclusive calendar-month rule locally or reuse it
+only through a non-mutated public helper if one already exists. Do not edit the Derivation
+module merely to share its private helper.
+
+Parse exact valid `YYYY-MM-DD` Attempt strings, take each endpoint's `(year, month)`, reject
+an inverted range, and enumerate months inclusively. Never hardcode a twelve-element period
+list. The frozen v1 request happens to yield twelve requested months; twelve is a golden
+cardinality consequence, not the algorithm.
+
+Persisted unreturned rows must equal exactly
+`requested_periods - returned_in_window_periods` using set equality over `(year, month)`, not
+row count.
+
+### Admitted classification/count pairing
+
+Historical v1 pairing is exact:
+
+- `observation_admitted` requires `observation_count >= 1`, `items_count >= 1`, and
+  `observation_count == items_count == len(monthly)`;
+- `observation_admitted_empty` requires `observation_count == 0`, `items_count == 0`,
+  `monthly == []`, and unreturned periods equal the complete computed requested-period set.
+
+`observation_admitted` with zero monthly facts is HTTP 409. `observation_admitted_empty`
+with any envelope or monthly fact is HTTP 409. A returned stated `0/0` metric row remains an
+`observation_admitted` fact because its Observation exists.
+
+### Historical OpenAPI polarity
+
+Do not copy Target Metrics' OpenAPI assumptions. Historical `capture_outcome.classification`
+must expose exactly `observation_admitted` and `observation_admitted_empty`;
+`observation_count` has minimum 0, not 1. Descriptions must state positively that admitted-
+empty is valid subject-bearing history. A test that merely finds the substring
+`observation_admitted_empty` is insufficient; it must verify enum/branch semantics and the
+admitted-empty meaning.
+
+Required adversarial proofs additionally include: a context row with missing/NULL joined
+Outcome returns 409 rather than empty 200; `observation_admitted` plus zero facts/count
+returns 409; `observation_admitted_empty` plus a leftover envelope/monthly row returns 409;
+a second keyword's Capture is excluded by the exact subject filter; and requested-window/
+unreturned computation is demonstrated from Attempt dates rather than a hardcoded period list.
+
+The implementation allowlist remains exactly the production/test paths plus this ticket
+already stated above. The new read module may import accepted Historical Recipe/Derivation
+constants or helpers without modifying those modules.
+
+## Final stop point
+
+AI-17 is final and accepted after the Steward reconciliation commit containing this section.
+Implementation remains blocked until [CHAZ] separately authorizes GROK from that exact clean
+final-ticket commit. No source/test mutation, Recipe selection, PostgreSQL/Evidence mutation,
+provider/network activity, amend, or push is authorized merely by accepting this ticket.
