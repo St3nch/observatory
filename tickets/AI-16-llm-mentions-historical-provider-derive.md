@@ -501,6 +501,126 @@ that operator block over SSH when the governed runner is unavailable or unreliab
 
 ## Stop point
 
-AI-16 remains provisional until GROK's read-only ticket review is reconciled and the final
-ticket is committed. Even then implementation remains blocked until [CHAZ] separately
-authorizes GROK from that exact clean final-ticket commit.
+## Final Steward reconciliation lock
+
+This section is normative and supersedes any earlier less-specific wording in this ticket.
+GROK's read-only review returned `RECONCILE`; GPT independently verified the material
+findings. No Product question remains.
+
+### Exact Recipe identity
+
+`recipe()` lives in `src/observatory/llm_mentions_historical_derive.py`. The parser module may
+add only `PROVIDER`, `PARSER_CONTRACT`, and `MONTHLY_KIND`; it must not import
+`provider_recipe` or own Recipe construction.
+
+The Recipe uses the existing schema/identity constants and these exact values. JCS object
+member order is canonical, but every array order below is identity and is locked exactly:
+
+- `adapter_contract = HISTORICAL_ADAPTER_CONTRACT`
+- `provider = "dataforseo"`
+- `parser_contract = PARSER_CONTRACT`
+- `admission.rule = "recipe_closed_classifications"`
+- `admission.capture_outcomes = [`
+  `"no_response"`, `"observation_admitted"`, `"observation_admitted_empty"`,
+  `"provider_envelope_rejected"`, `"provider_error"`, `"reconciliation_failed"`,
+  `"response_partial"`, `"transport_complete_non_admissible"` `]`
+- `data_period = {"inheritance": "never_from_capture", "rule":
+  "provider_stated_year_month_1_9999"}`
+- `provider_update_time = {"inheritance": "never_from_capture_or_sibling", "rule":
+  "structure_unstated"}`
+- `numeric.normalization = "exact_integer"`
+- `reconciliation.rule = "attempt_window_admit_all_returned_periods"`
+- `field_state.states = [` `"absent"`, `"inapplicable"`, `"json_null"`,
+  `"not_requested"`, `"stated"` `]`
+- `extension_policy.closed_objects = [` `"/"`, `"/items"`, `"/metrics"`, `"/result"`,
+  `"/tasks"`, `"/tasks/data"` `]`
+- `extension_policy.extension_permitted_objects = []`
+- `unknown_closed_field = "fail_closed"`
+- `unknown_extension_field = "fail_closed"`
+- `observation_identity.kinds` contains exactly one `MONTHLY_KIND` entry whose axes are
+  `requested_keyword: string`, `year: integer`, `month: integer`
+- `observation_kinds = [MONTHLY_KIND]`
+
+No additional Recipe member or alternate token is permitted in v1. The five field-state
+tokens satisfy the shared Recipe schema; they do not authorize nullable metric-state columns.
+
+### Exact requested-window algorithm
+
+Recipe token `attempt_window_admit_all_returned_periods` means exactly:
+
+1. Attempt `date_from` and `date_to` must each be exact lexical `YYYY-MM-DD` and valid
+   calendar dates.
+2. Take the `(year, month)` containing each endpoint and enumerate calendar months
+   inclusively from the start endpoint month through the end endpoint month.
+3. Start date after end date is invalid.
+4. Never derive the window from day counts, `datetime.now()`, Capture time, or provider echo.
+5. Lexically malformed, impossible, or inverted dates at a planning/test seam produce
+   `provider_envelope_rejected`. Production first uses the already-frozen Historical
+   validator, so this defense does not widen request policy.
+6. Every parsed returned month is admitted, including extras. Unreturned requested periods
+   are exactly `requested_periods - returned_in_window_periods`. An extra returned month does
+   not satisfy another requested period.
+
+### Schema and migration precision
+
+`llm_mentions_historical_monthly` must have exact additional uniqueness:
+
+`UNIQUE (capture_id, derivation_version_id, year, month)`
+
+Do not include `requested_keyword` in that constraint. Keyword remains typed content and an
+Observation-identity axis; including it in SQL uniqueness would permit two keywords for the
+same Capture/Recipe period.
+
+`llm_mentions_historical_result_context.location_code` and `.items_count` are BIGINT with
+the accepted I-JSON bounds `0..9007199254740991`. `date_from` and `date_to` remain exact TEXT
+Attempt testimony, not DATE/TIMESTAMPTZ normalization.
+
+For the long `llm_mentions_historical_unreturned_requested_periods` relation, use these short
+explicit constraint names to avoid PostgreSQL identifier truncation/collision:
+
+- `hist_unret_pk`
+- `hist_unret_context_fk`
+- `hist_unret_year_ck`
+- `hist_unret_month_ck`
+
+The migration-layer arithmetic is exact:
+
+- `PRE_AI16_SCHEMA_STATEMENTS - PRE_AI11_SCHEMA_STATEMENTS` is the existing three-table
+  Target Metrics layer and must remain length 3 with the existing Target Metrics assertions.
+- `SCHEMA_STATEMENTS - PRE_AI16_SCHEMA_STATEMENTS` is the new Historical layer.
+
+Do not naively replace the current Target Metrics test's `SCHEMA_STATEMENTS - PRE_AI11` with
+`SCHEMA_STATEMENTS - PRE_AI16`; that would measure Historical rather than Target Metrics.
+No Search Mentions or Organic migration-test allowlist expansion is authorized.
+
+### Complete-set and adversarial precision
+
+Complete-set comparison for unreturned periods is exact set equality over `(year, month)`
+tuples, not row-count equality. A count-preserving swapped/wrong period must fail.
+
+Required proofs additionally include:
+
+- one mixed mutation with an extra out-of-window returned month and one dropped in-window
+  month: the extra is admitted and exactly the dropped requested period remains unreturned;
+- provider_error, no_response, response_partial, parser rejection, and complete
+  non-admissible transport write zero unreturned-period rows;
+- production empty/changed keyword is a Historical validator integrity failure with no
+  Capture-stage rows; a separate bounded plan-seam empty-identity defense may classify
+  `provider_envelope_rejected`;
+- parsed metric I-JSON overflow rejects the entire admitted planning unit as
+  `provider_envelope_rejected` with no partial rows;
+- two-database equivalence covers every column of all three new Historical relations;
+- the existing closed AI-15 parser suite is rerun, without edits, because the parser module
+  is allowlisted for constants:
+  `uv run pytest -q tests/test_dataforseo_ai_optimization_llm_mentions_historical.py`.
+
+The targeted Historical derive suite, bounded migration tests, `uv run ruff check .`, and
+`uv run mypy src` remain required. The full suite remains deferred to the Steward exact-HEAD
+validation gate after implementation review/remediation.
+
+## Final stop point
+
+AI-16 is final and accepted after the Steward reconciliation commit containing this section.
+Implementation remains blocked until [CHAZ] separately authorizes GROK from that exact clean
+final-ticket commit. No provider, Evidence mutation, PostgreSQL mutation, source/test edit,
+implementation, amend, or push is authorized merely by accepting this ticket.
