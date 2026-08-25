@@ -1,9 +1,10 @@
 # AI-13 — LLM Mentions Historical Live paid-probe adapter
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** separate [CHAZ] implementation authorization at the final committed ticket  
+**Blocked by:** none  
 **Approved by:** [CHAZ] for provisional ticket drafting / [GPT] Steward reconciliation  
+**Closure authorized by:** [CHAZ] after exact-HEAD operator verification  
 **Pre-implementation review:** GROK RECONCILE, completed read-only at
 `c735542ab19a56617498a52031eec5419f578423`  
 **Review base:** `c735542ab19a56617498a52031eec5419f578423`  
@@ -641,3 +642,38 @@ domain target, Timeseries, Top Mentioned, generic Mentions writer, other ticket,
 authority document except this ticket's implementer fields.
 No amend. No push. No operator activation command.
 
+## Closure
+
+CHAZ explicitly authorized closure after the implementation review settled without a
+remediation requirement. GPT independently reviewed the exact implementation parent/child
+comparison through LinuxVedaOpsMCP and added the implemented module entrypoint in a separate
+Steward-owned documentation commit.
+
+Accepted lineage:
+
+- accepted implementation boundary:
+  `a2ec25eecbf13310b180bc83348cf9c416a51899`;
+- implementation:
+  `e347fcb59002e2e066f0e0caedd8d59a8931d28f`;
+- Steward entrypoint alignment and operator-verified HEAD:
+  `d51e4d5a75278189ec2fe8b4909ecf1612378d56`.
+
+CHAZ's exact-HEAD VPS operator verification:
+
+- initial exact-HEAD and clean-tree guards passed;
+- targeted AI-13/Capture Event suite passed under the guarded operator block;
+- full suite, run once: **1336 passed, 1 skipped**, 1 warning;
+- Ruff: passed;
+- mypy: passed with 35 source files;
+- final HEAD: exact `d51e4d5a75278189ec2fe8b4909ecf1612378d56`;
+- final tree: clean.
+
+The warning is the known Starlette/`httpx` TestClient deprecation and is accepted as
+non-blocking. This closure changes only this ticket. Per the accepted workflow, tests are
+not repeated after the ticket-only closure commit.
+
+No provider call, activation, credentials, spend, retry, continuation, live Evidence
+mutation, operator PostgreSQL mutation, F12, or F13 activity occurred. AI-13 closes with
+the zero-network Historical Live adapter and inspect path only; empirical provider
+activation, parser, Recipe, schema, Derivation, and consumer resources remain separate
+future boundaries.
