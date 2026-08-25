@@ -1,10 +1,11 @@
 # AI-16 — LLM Mentions Historical provider Derivation and typed persistence
 
-**Status:** provisional  
+**Status:** accepted  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** mandatory read-only GROK review of this provisional ticket and final Steward reconciliation  
+**Blocked by:** explicit [CHAZ] implementation authorization from the exact final accepted ticket commit  
 **Product direction:** [CHAZ] selected admission of syntactically valid extra/out-of-window returned months as normal monthly Observations; requested-window completeness remains separate context  
 **Draft base:** `826c7c3e82eeac94a56fb81c669aee4a23a802cb`  
+**Pre-implementation review:** GROK `RECONCILE`, completed read-only at `1b3471bfec16f82fde335f6cc26a82a8ca45441b`  
 **Implementation start commit:** not yet authorized  
 
 ## Purpose
