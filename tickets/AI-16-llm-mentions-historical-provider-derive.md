@@ -1,6 +1,6 @@
 # AI-16 — LLM Mentions Historical provider Derivation and typed persistence
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** explicit [CHAZ] implementation authorization from the exact final accepted ticket commit  
 **Product direction:** [CHAZ] selected admission of syntactically valid extra/out-of-window returned months as normal monthly Observations; requested-window completeness remains separate context  
@@ -733,3 +733,44 @@ Weakest: complete-set typed monthly compare is identity-set plus `_write_closed_
 ### Confirmation
 
 Zero provider, DNS, credential, account, pricing, restic, rclone, or public-network calls. Zero Evidence mutation. Zero operator PostgreSQL mutation. Ordinary tests used committed fixture/synthetic Evidence and isolated pytest PostgreSQL. No Recipe selection/API/F12/F13/shared-writer work. No amend. No push.
+
+## Steward review and closure — 2026-08-25
+
+The Steward accepts AI-16 as `done` after independent review of implementation commit
+`4d452e4ffafa5b176975fff0ed76be6019cb203a` against accepted parent
+`83682ac7ecf4d24dd9f0f73fd87958e22a2826c1`.
+
+The exact comparison contains only the six authorized implementation paths. Independent
+review confirmed the locked Recipe tokens and array order, one monthly Observation grain,
+extra-period admission, unreturned-requested-period semantics, inclusive calendar-month
+window calculation, AI-11-style Capture-cited Attempt authority, exact three-relation
+schema, `PRE_AI16` migration layering, exact `(year, month)` complete-set comparison,
+second-Recipe coexistence, and cross-adapter isolation. No remediation blocker remained.
+
+Accepted Recipe identity:
+
+- canonical bytes: `1489`;
+- derivation version:
+  `fe3e105f3f90c667df0294a2af12e5a27492bfe6eb63a0664b5326619f62d385`.
+
+The frozen AI-14 Conformance fixture remained exactly `5246` bytes with SHA-256
+`4419daf0b7076625129ab18c6bf3c83905b998c3b3332f2ba6d42c8879b50781`.
+
+Implementation-head verification remained green:
+
+- Historical derive suite: `21 passed`;
+- unchanged AI-15 Historical parser suite: `51 passed`;
+- bounded Target Metrics `PRE_AI16` migration tests: passed;
+- `uv run ruff check .`: passed;
+- `uv run mypy src`: passed with no issues in 37 source files.
+
+[CHAZ] then returned exact-HEAD full-suite evidence on
+`4d452e4ffafa5b176975fff0ed76be6019cb203a`:
+
+- `uv run pytest -q` → `1408 passed, 1 skipped, 1 warning` in `434.93s`, exit 0;
+- warning: existing Starlette/httpx TestClient deprecation;
+- skip unchanged.
+
+No provider, DNS, credential, Evidence, operator-PostgreSQL, restic, rclone, Recipe-selection,
+API, F12/F13, strategy, amend, or push activity occurred during Steward closure. The
+Historical admitted-history API remains the next separate reviewed boundary.

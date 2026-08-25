@@ -279,6 +279,7 @@ Implemented module entrypoints:
     uv run python -m observatory.dataforseo_ai_optimization_target_metrics_paid_probe
     uv run python -m observatory.dataforseo_ai_optimization_llm_mentions_historical_paid_probe
     uv run python -m observatory.target_metrics_derive
+    uv run python -m observatory.llm_mentions_historical_derive
     uv run python -m observatory.serve
 
 Listing an entrypoint does not authorize provider transport, credentials, spend, Evidence
