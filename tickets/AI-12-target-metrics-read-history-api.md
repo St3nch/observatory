@@ -1,9 +1,10 @@
 # AI-12 — Target Metrics Recipe selection and admitted-history API
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** Steward implementation review  
+**Blocked by:** none  
 **Authorized by:** [CHAZ] implementation authorization at the named start commit  
+**Closure authorized by:** [CHAZ] after exact-HEAD operator verification  
 **Pre-implementation review:** GROK RECONCILE, completed read-only at f7e243c8c180eedd2cce277c2e39db4b80a8128f  
 **Review base:** f7e243c8c180eedd2cce277c2e39db4b80a8128f  
 **Start commit:** `2297aa2c464a8b851e01c70b6ed75cebb21e204a`  
@@ -758,3 +759,35 @@ Weakest: OpenAPI helpers still accept either `const` or single-value `enum` beca
 Possible false greens: the parameterized SQL plants every envelope row for the Capture; one disagreeing row is enough for 409. Query-parameter `required` absence is treated as optional.
 
 No production change. No amend. No push. Zero provider/Evidence/F12/F13 activity.
+
+## Closure
+
+CHAZ explicitly authorized closure after the accepted implementation and both bounded
+remediation reviews settled. GPT independently reviewed the exact parent/child comparisons
+through LinuxVedaOpsMCP.
+
+Accepted implementation lineage:
+
+- start boundary: `2297aa2c464a8b851e01c70b6ed75cebb21e204a`;
+- implementation: `bed50a5c9b6b040ac3aeab0cf928d9556cf1d216`;
+- bounded remediation: `919cf37f7f549dc9932b3118c0aed18b2c76ef6b`;
+- final tests-only proof correction and operator-verified HEAD:
+  `dcf77b7ecd2b8c6c44f02cb5af9fab02869f491c`.
+
+CHAZ's exact-HEAD VPS operator verification:
+
+- initial exact-HEAD and clean-tree guards passed;
+- targeted AI-12/API/selection suite: **39 passed**, 1 warning;
+- full suite, run once: **1271 passed, 1 skipped**, 1 warning;
+- Ruff: passed;
+- mypy: passed with 34 source files;
+- final HEAD: exact `dcf77b7ecd2b8c6c44f02cb5af9fab02869f491c`;
+- final tree: clean.
+
+The warning is the known Starlette/`httpx` TestClient deprecation and is accepted as
+non-blocking. This closure changes only this ticket. Per the accepted workflow, tests are not
+repeated after the ticket-only closure commit.
+
+No provider calls, credentials, spend, continuation, live Evidence mutation, automatic Recipe
+selection, F12, or F13 activity occurred. AI-12 is closed without adding Target Metrics
+Outcomes or Holdings.
