@@ -1,8 +1,8 @@
 # API-02 — Provider Measurement Outcomes
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** [GPT] Steward review of committed remediation  
+**Blocked by:** none — [CHAZ] authorized closure after exact-HEAD verification  
 **Question-resolution pass:** completed against `5fa8bc17835e45795deda380276dab7b3b078004`  
 **Pre-implementation review:** completed against `00e7c754b804df88e3c33c42512668678bd3430f`  
 **Start commit:** `6c59da885d97f423be4453ae5bae67f350bc7933`
@@ -917,3 +917,46 @@ No `outcomes` or envelope schema change. Do not infer a subject index from the s
 ### Hygiene
 
 One remediation commit, no amend, no push. Zero provider calls, credentials, spend, continuation, or live Evidence mutation outside isolated tests. Working tree left clean after the commit.
+
+## Steward closure
+
+[GPT] independently reviewed the committed implementation and remediation through
+LinuxVedaOpsMCP, including the exact ticket, parent/child diffs, production code, tests,
+Evidence Store behavior, Recipe validation/selection, PostgreSQL schema, API boundary,
+and Grok's candid implementation assessments. Grok's reports and question passes were
+treated as coworker input, not independent verification.
+
+[CHAZ] authorized closure after running the final operator block against exact clean
+implementation HEAD `2296dfe06d89a508b473192f815f803ed67c6b5c`.
+
+Accepted exact-HEAD evidence:
+
+- targeted API-02 suite:
+
+      uv run pytest -q \
+        tests/test_provider_outcomes.py \
+        tests/test_api_keyword_overview.py \
+        tests/test_api_google_organic.py \
+        tests/test_api_search_mentions.py
+
+  Result: **69 passed**, 1 warning in 167.40 seconds.
+- full suite, run once after review/remediation settled:
+  **1222 passed, 1 skipped, 1 warning** in 357.28 seconds;
+- `uv run ruff check .`: all checks passed;
+- `uv run mypy`: success, no issues in 66 source files;
+- initial and final HEAD checks: exact
+  `2296dfe06d89a508b473192f815f803ed67c6b5c`;
+- initial and final working-tree checks: clean.
+
+The warning is the known Starlette/`httpx` TestClient deprecation and is accepted as
+non-blocking.
+
+Closure accepts the documented API-02 limits. In particular, Outcomes remains a
+subject-filtered, all-classification activity resource—not holdings, history, current
+status, cadence, strategy, or provider-corpus completeness. The store-wide Evidence walk
+remains the accepted low-volume bridge; holdings/index, pagination past 100, Attempt-audit
+count hardening, AI-12, F12/F13, and Organic `related_result` stop-before-derive remain
+separate work.
+
+This closure changes only the API-02 ticket. The suites, Ruff, and mypy are not repeated
+after this ticket-only commit. Agents do not push; [CHAZ] owns any push.
