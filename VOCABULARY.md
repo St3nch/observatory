@@ -52,6 +52,16 @@ Evidence (the preserved material) with Evidence Store (the subsystem that holds 
 Layout, commit markers, scrub, and recovery protocol are specified in
 `docs/specs/capture-event-v2.md`.
 
+**Holdings** — A read-only, rebuildable API projection of verified Evidence that inventories
+the exact requested subjects and surface-local request scopes for which Observatory
+possesses committed Attempt Evidence, together with bounded factual Attempt/Capture counts
+and Evidence time ranges. Holdings are not Evidence, Outcomes, Observations, provider
+corpus coverage, desired measurement panels, monitoring state, cadence, importance,
+recommendations, or strategy. At pre-F12 volume, a Holdings projection may be derived by a
+bounded verify-first Evidence scan. Before F12-scale recurring acquisition, the durable
+query path requires a scalable rebuildable measurement-subject index derived from Evidence;
+that index remains non-authoritative.
+
 **Observation** — An admitted, source-attributed fact produced by Derivation from a
 verified Capture that passes adapter admission rules. Every Observation cites one verified
 `capture_id`, its `attempt_id`, and a Derivation version. A failed, refused, malformed,
