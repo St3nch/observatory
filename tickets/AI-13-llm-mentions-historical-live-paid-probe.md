@@ -1,13 +1,13 @@
 # AI-13 — LLM Mentions Historical Live paid-probe adapter
 
-**Status:** accepted — implementation authorization pending  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** separate [CHAZ] implementation authorization at the final committed ticket  
 **Approved by:** [CHAZ] for provisional ticket drafting / [GPT] Steward reconciliation  
 **Pre-implementation review:** GROK RECONCILE, completed read-only at
 `c735542ab19a56617498a52031eec5419f578423`  
 **Review base:** `c735542ab19a56617498a52031eec5419f578423`  
-**Start commit:** not assigned
+**Start commit:** `a2ec25eecbf13310b180bc83348cf9c416a51899`
 
 ## Purpose
 
@@ -397,4 +397,247 @@ operator command and Evidence root, obtain explicit [CHAZ] authorization, prohib
 and replacement roots, and complete the bounded encrypted F6 snapshot/fresh-restore proof.
 
 This ticket itself never authorizes transport or spend.
+
+## Implementation report
+
+**Parent:** `a2ec25eecbf13310b180bc83348cf9c416a51899`  
+**Child:** this implementation commit  
+**Status:** `review`  
+**AI-13 only:** yes. Nothing pushed. No amend.
+
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+Branch `main`, tracking `origin/main` identical at the start commit. Working tree clean after this commit.
+
+### Changed-path allowlist
+
+- `src/observatory/capture_event.py` (sixth exact HTTP-v2 adapter branch)
+- `src/observatory/dataforseo_ai_optimization_llm_mentions_historical_paid_probe.py` (new)
+- `tests/test_dataforseo_ai_optimization_llm_mentions_historical_paid_probe.py` (new)
+- this ticket (Start commit, Status, Implementation report)
+
+### Adapter token
+
+`dataforseo-ai-optimization-llm-mentions-historical-live-paid-probe-v1`
+
+Production POST `https://api.dataforseo.com/v3/ai_optimization/llm_mentions/historical/live`
+
+Frozen request: keyword `generative engine optimization`, `date_from=2025-08-01`,
+`date_to=2026-07-31`, `platform=google`, `location_code=2840`, `language_code=en`,
+one include target, `search_scope=["answer"]`, `match_type=word_match`.
+
+### Independent vectors
+
+Fixed inputs: nonce `8888…88`, `authorized_at=2026-08-25T20:00:00.000000Z`,
+`observatory_version=conformance-llm-mentions-historical-paid-probe-v1`.
+Independent `hashlib.sha256` of literal JCS bytes (`test_independent_literal_vectors`);
+constructors reproduce them (`test_closed_request_vector_and_attempt_identity`).
+`contract` is in Attempt parameters and absent from the POST body.
+
+| Artifact | Value |
+|---|---|
+| request body | `[{"date_from":"2025-08-01","date_to":"2026-07-31","language_code":"en","location_code":2840,"platform":"google","target":[{"keyword":"generative engine optimization","match_type":"word_match","search_filter":"include","search_scope":["answer"]}]}]` |
+| request SHA-256 | `9f40139201acaa18f72fc14d6ae7b2f582317474bbc9e90f0661a5360740f480` |
+| fingerprint | `6b4977c1630976a3c6c55680adb5566f3d496aee99abe7614ffbcbd07f02bbb0` |
+| Attempt ID | `8f8694807187c47a68b7fcb82185a36df8cddde6f6ec222ca9a11720c4652444` |
+| complete Capture ID (`{"ok":true}`) | `7b3311189261e0906ea6d6f7dd438c2be2b79615aaa1f63017579e85b35c5084` |
+
+Previously published sandbox / Keyword Overview / Organic / Search Mentions / Target Metrics
+Attempt IDs remain byte-identical.
+
+### Closure-owned gate, one-shot, pre-send revalidation
+
+- Public capture and `_issue_verified_attempt` require `type is int` and value exactly
+  `200000` before Attempt commit or send.
+- `type(store) is EvidenceStore`; subclass cannot issue.
+- `_historical_attempt_exists` scans every committed Attempt in the root for this adapter
+  token (including unresolved).
+- Refuse at `_open_or_create`, `_run_gated_capture`, and issuer.
+- Capability is unconstructible, immutable, one-use. Transport authority lives in the
+  issuer closure. Consumption sets `consumed=True` before field comparison, Evidence
+  revalidation, or `perform_bounded_http_exchange`.
+- Immediate pre-send: identity + consumed record, visible-field match, `read_attempt` +
+  `verify_attempt_directory`, bundle `request.body` equality, `validate_historical_http_parameters`,
+  recomputed JCS, `_require_historical_target`, send closure-owned bytes only.
+- Neighbors (fixture, sandbox, KO, Organic, Search Mentions, Target Metrics) coexist and
+  do not consume this one-shot.
+- Historical module does not import, subclass, invoke, or mutate the Target Metrics gate.
+- Historical validator exact-matches the frozen keyword and does not call
+  `_validate_mentions_target` or `_mentions_keyword`.
+
+### Mock/loopback request
+
+One POST to `/v3/ai_optimization/llm_mentions/historical/live`, exact JCS body above, sent
+headers: `accept`, `accept-encoding: identity`, `connection: close`, `content-type`,
+`user-agent: observatory-dataforseo-v1`, `host: api.dataforseo.com`,
+`content-length: 247`, `authorization: Basic <sentinel>`.
+Loopback override only `http://127.0.0.1:<port>/v3/ai_optimization/llm_mentions/historical/live`.
+Committed Attempt still names production HTTPS. Redirects not followed (302 is complete Capture).
+
+### Transport accounting
+
+- Adapter ceiling `8_388_608`; shared transport does not own it.
+- Default ceiling: `8_388_608+1` body → `response_partial` of exactly 8 MiB.
+- 200/302/404/500 nonempty → `response_complete`.
+- Zero-byte 200 → complete, `present_zero_bytes`.
+- Mid-body timeout → `response_partial`.
+- `ConnectError` → `no_response`.
+- Duplicate `x-request-id` retained; denylist names omitted.
+- Credential echo in body or retained header: no Capture; Attempt remains; one-shot consumed.
+
+### Mixed-store / derive
+
+Fixture + sandbox + KO + Organic + Search Mentions + Target Metrics + Historical:
+`scrub_store` empty. `derive`, `derive_keyword_overview`, `derive_google_organic`,
+`derive_search_mentions`, and `derive_target_metrics` skip Historical Evidence; zero
+PostgreSQL `outcomes` rows cite its Attempt/Capture IDs. No Derivation module was edited.
+
+### Credential non-disclosure
+
+Sentinel login/password/basic never appear in committed manifests or retained headers.
+Authorization is injected only after the capability is issued. Ordinary tests delete
+credential env vars and fail any non-loopback `socket.create_connection`.
+
+### Acceptance criterion to proving-test map
+
+| Criterion | Tests |
+|---|---|
+| Independent literals + hashlib | `test_independent_literal_vectors`, `test_closed_request_vector_and_attempt_identity` |
+| contract excluded from POST, present in parameters | `test_closed_request_vector_and_attempt_identity` |
+| Constructors reproduce; old IDs unchanged | `test_closed_request_vector_and_attempt_identity`, `test_existing_adapter_identities_unchanged` |
+| Frozen keyword/dates/platform; unknown fields | `test_frozen_fields_are_rejected`, `test_missing_required_keys_are_rejected`, `test_wrong_policy_fields_are_rejected`, `test_confused_contracts_are_rejected` |
+| Schema/version-only peek | `test_http_v2_dispatch_peeks_schema_and_version_only` |
+| Auth/concrete-store/commit/read-back/capability | `test_authorization_required_before_attempt`, `test_subclassed_store_cannot_issue`, `test_attempt_is_committed_before_first_handler`, `test_failed_attempt_commit_never_reaches_handler` |
+| One-shot complete/unresolved/echo/partial/neighbors | `test_one_shot_is_adapter_specific_and_allows_neighbors`, `test_unresolved_attempt_blocks_second_invocation`, `test_credential_echo_leaves_unresolved_one_shot`, `test_over_limit_partial_consumes_one_shot`, `test_default_8mib_ceiling_is_partial` |
+| Forged/copied/pickled/replayed/cross-adapter | `test_forged_copied_mutated_and_replayed_capability_cannot_transport`, `test_cross_adapter_capabilities_are_isolated` |
+| Issued body/document replacement; `_used` reset | `test_issued_request_body_replacement_cannot_transport`, `test_issued_document_replacement_cannot_transport`, `test_closure_owned_replay_protection_ignores_used_attribute` |
+| Pool tamper with intact bundle | `test_pre_send_verifies_committed_attempt_and_request_body` |
+| One request, JCS, headers, Historical path, no redirect | `test_attempt_is_committed_before_first_handler`, `test_loopback_server_sees_attempt_and_does_not_follow_redirect`, `test_token_in_body_is_still_one_exchange` |
+| Complete/partial/no-response/8 MiB | `test_complete_status_classes_and_zero_byte`, `test_mid_body_timeout_and_no_response`, `test_default_8mib_ceiling_is_partial`, `test_secret_headers_omitted` |
+| Inspect | `test_inspect_emits_exact_bytes_without_mutation`, `test_inspect_rejects_wrong_adapter_partial_zero_and_tamper` |
+| Mixed scrub / all-Derivation skip | `test_one_shot_is_adapter_specific_and_allows_neighbors`, `test_fixture_and_provider_derive_skip_historical` |
+| No public network / no real credentials | autouse `_no_public_network`, `_isolate_credentials` |
+| Public surface has no subject/date injection | `test_public_cli_and_function_have_no_injection_seams` |
+
+### Code-review
+
+**Standards:** 0 hard / 3 judgement. Worst: Historical transport gate duplicates the Target
+Metrics closure-owned pattern by ticket requirement; extracting a shared capability
+framework is forbidden. The test module is large because the proof list is large.
+
+**Spec:** no missing required proof, no parser/Recipe/API creep, no TM-gate import.
+Public capture takes only concrete `EvidenceStore` and exact-int `200000`. Closed
+constructors take no keyword/date arguments.
+
+### Strongest / weakest
+
+Strongest: frozen-keyword validator distinct from `_mentions_keyword`; independent JCS with
+`contract` stripped; adapter-keyed whole-root one-shot including unresolved and
+credential-echo; pool-object tamper with original bundle body; TM derive skip without
+editing Derivation modules.
+
+Weakest: send/header-phase no-response still ConnectError-only (matching TM/PF-09);
+inspect unknown-version not planted (cannot commit an invalid v2 Capture through
+constructors); capability `_used` is still written as a non-authoritative mirror.
+
+### Remaining caller-controlled influence
+
+These cannot change the sent Historical request body through capability attributes:
+
+- `_exchange` still takes `client`, `endpoint`, and `max_response_body_bytes` (approved
+  test seam). A holder can deliver the **verified** body to loopback/mock, not a substitute
+  body.
+- `_commit_historical_capture` still reads capability attributes after transport.
+  Post-exchange `object.__setattr__` on `document` / `attempt_id` can still affect Capture
+  construction, not the HTTP body.
+- `_Issuance` lives in `_exchange.__closure__`. Same-process closure mutation is accepted
+  for this adapter as for AI-08; this is not F7.
+- `argparse type=int` CLI path is not the same as `type is int` on the public Python
+  function; CLI still requires `--authorize-max-micro-usd 200000`.
+
+Public capture/CLI expose no keyword, date, platform, location, language, target, URL,
+timeout, ceiling, retry, or continuation argument.
+
+### Architecture drift / coupling
+
+- Historical is a new `capture_event` HTTP-v2 branch plus a Historical-local module.
+- PF-09 `perform_bounded_http_exchange` is reused; timeout and 8 MiB ceiling stay adapter-owned.
+- Target Metrics gate is not imported. Search Mentions keyword grammar is not Historical
+  admission.
+- Do not later fold Historical months into TM `total.v1` / `source_domain.v1` or SM item
+  kinds.
+
+### Provider / parser traps (deferred)
+
+- Dual-platform omission, default dates, pre-floor zero months, newest-first sample order,
+  billing-row grain, zero vs missing vs `40102` remain claimed-contract, not Recipe.
+- This ticket does not parse `items[]`.
+
+### Closure blockers and deferred work
+
+- No live provider call. Real envelope, month list, and billed `cost` remain a later
+  activation ticket plus F6 one-shot protection.
+- F12, F13, parser, Recipe, schema, API, Outcomes, Holdings, Timeseries, Top Mentioned
+  remain out of scope.
+- AGENTS.md does not yet list this module entrypoint (Steward-owned).
+
+### Reuse vs Historical-local
+
+Reuse later: PF-09 exchange, HTTP-v2 Attempt/Capture spine, closure-owned issuance copied
+from TM **as a pattern**, Evidence inspect/scrub, adapter-keyed derive skip.
+
+Remain Historical-local: path, dates, frozen target, parser IR, Recipe, Observation kinds,
+completeness vs requested window, paid-probe module and one-shot token.
+
+### Evidence vs claimed contract vs synthetic proof
+
+Synthetic tests prove Observatory's closed request, transport, and Evidence accounting.
+They do not prove the provider's month topology, ordering, or billing grain. Official docs
+remain claimed contract. A later Capture is the only Empirical Historical Evidence.
+
+### Useful and unsafe downstream implications
+
+Useful later: a consumer can ask what monthly `mentions` and `ai_search_volume` DataForSEO
+returned for this exact tuple and window in one Capture.
+
+Unsafe: treating this adapter as monitoring cadence, treating a missing month as zero,
+equating the latest month with Target Metrics `total.mentions`, or treating the series as
+an answer/citation archive.
+
+### Command evidence
+
+```
+uv run pytest -q \
+  tests/test_dataforseo_ai_optimization_llm_mentions_historical_paid_probe.py \
+  tests/test_capture_event.py
+```
+
+exit 0, **141 passed**.
+
+```
+uv run ruff check .
+```
+
+exit 0, all checks passed.
+
+```
+uv run mypy src
+```
+
+exit 0, no issues in 35 source files.
+
+### Confirmation
+
+Zero DataForSEO / sandbox / DNS / paid-host / account / public-network requests.
+Zero real credentials. Zero live Evidence. Zero credit spend.
+Zero retry, continuation, operator PostgreSQL mutation, F12, or F13 work.
+No parser, fixture promotion, Recipe, Derivation edit, schema, API, ChatGPT branch,
+domain target, Timeseries, Top Mentioned, generic Mentions writer, other ticket, or
+authority document except this ticket's implementer fields.
+No amend. No push. No operator activation command.
 
