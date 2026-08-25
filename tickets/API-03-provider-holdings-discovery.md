@@ -991,3 +991,45 @@ path.
 One remediation commit, no amend, no push. Zero provider calls, credentials, spend,
 continuation, live Evidence mutation, or F12/F13. Working tree left clean after the
 commit.
+
+## Steward remediation review — final proof correction required
+
+Reviewed remediation commit:
+`e1a3ae6297edee5a39841e2182472ef7a3c90726`
+
+Verdict: **PRODUCTION ACCEPTED; FINAL TEST CORRECTION REQUIRED**.
+
+R1 production typing and descriptions are correct. R3's store-wide foreign-Capture and
+public parent-agreement paths, R4's token-bearing Evidence proof, and R5's surface-scope
+fail-closed proofs satisfy their bounded remediation requirements. No reader, API,
+Evidence Store, schema, Recipe, provider, or strategy-layer change is authorized.
+
+One R2 false green remains. The three route helpers assert only that each schema's
+`required` list equals the expected key set. A new optional envelope, item, or request
+property could therefore enter the advertised OpenAPI contract while those “exact key”
+assertions remain green.
+
+For each Holdings route, update its existing OpenAPI proof to:
+
+- assert `set(schema["properties"])` exactly equals the accepted envelope, item, and
+  surface request key sets, in addition to exact `required`;
+- assert the envelope, item, and request schemas are closed
+  (`additionalProperties is false`);
+- assert the applied-limit description distinguishes the Holdings limit from provider
+  page size;
+- assert both first and last request-start descriptions state their respective
+  minimum/maximum meaning and null relationship to `capture_count`;
+- assert the relevant Holdings schemas prohibit strategy, cadence, and recommendation
+  state, not merely any one of those terms.
+
+This is a tests-and-ticket-only correction. Allowed paths:
+
+- `tests/test_api_keyword_overview.py`
+- `tests/test_api_google_organic.py`
+- `tests/test_api_search_mentions.py`
+- `tickets/API-03-provider-holdings-discovery.md`
+
+Do not modify production code. Run the same API-03 targeted suite, Ruff, and mypy; do not
+run the full suite. Commit one child without amend or push, leave status `review`, and
+append a concise report addendum. If the existing production OpenAPI does not satisfy
+these assertions, stop and report rather than changing production under this boundary.
