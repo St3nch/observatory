@@ -142,8 +142,10 @@ is fixed:
       adapter identities remain unchanged.
 - [ ] No parser, Recipe, Derivation, Outcome, Observation, migration, PostgreSQL, API, F6,
       F7, F12, activation, panel, pricing, or provider-semantic behavior changes.
-- [ ] Targeted tests pass, then `uv run ruff check .` and `uv run mypy` pass. Full-suite
-      verification is reserved for the Steward review boundary under `AGENTS.md`.
+- [ ] Targeted PF-16 tests pass and `uv run ruff check .` passes. PF-16-touched source/test
+      paths typecheck clean. Repo-wide `uv run mypy` must introduce no new errors relative
+      to start commit `14037adf252085625b1e7fe5d159951cf81a8ea1`; pre-existing unrelated
+      baseline errors are not part of this ticket. Final full-suite verification is [CHAZ]-run.
 - [ ] Ordinary tests perform zero DataForSEO/API-host/DNS/public-network activity, use no
       real credentials, create no live provider Evidence, and spend no credits.
 
@@ -154,6 +156,11 @@ These locks are mandatory and narrow the looser acceptance bullets above where n
 - After issued-capability identity/issuance lookup succeeds, closure-owned consumption is
   set before visible-field comparison, committed-Evidence revalidation, or
   `perform_bounded_http_exchange`. Visible `_used` may mirror state but is not authority.
+- Preserve the pre-PF-16 credential and endpoint-failure boundary: after issued-capability
+  lookup and replay refusal, `credentials.require_nonempty()` and `_resolved_exchange_url`
+  run before closure-owned consumption. A credential-validation or endpoint-validation
+  failure therefore leaves the issuance reusable, as at the start commit. Consumption then
+  occurs before visible-field comparison and committed-Evidence revalidation.
 - If pre-send committed-Evidence revalidation fails, a second `_exchange` attempt using the
   same issued capability must fail one-exchange protection and the HTTP handler count must
   remain exactly zero.
