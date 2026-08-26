@@ -1,10 +1,10 @@
 # PF-16 — Keyword Overview F13 transport-capability hardening
 
-**Status:** provisional — read-only pre-implementation review required  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; F13 trigger is fired for the next Keyword Overview gate reuse  
 **Approved by:** [CHAZ] for provisional ticket review only  
-**Start commit:** not assigned — implementation is not authorized
+**Start commit:** 14037adf252085625b1e7fe5d159951cf81a8ea1
 
 ## Purpose
 
@@ -260,3 +260,157 @@ only then issues an exact implementation start commit.
 After PF-16 implementation is independently reviewed and closed, Google Organic receives
 its own separately bounded F13 remediation ticket before any intended live panel invokes
 that gate. Search Mentions remains separately gated by F13 if it is later reused.
+
+## Implementation report
+
+**Parent:** `14037adf252085625b1e7fe5d159951cf81a8ea1`  
+**Child:** this implementation commit  
+**Status:** `review`  
+**PF-16 only:** yes. Nothing pushed. No amend.
+
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### Changed paths
+
+- `src/observatory/dataforseo_paid_probe.py`
+- `tests/test_dataforseo_paid_probe.py`
+- this ticket (Start commit, Status=`review`, Implementation report)
+
+No other path.
+
+### Closure-owned issuance / consumption
+
+Keyword Overview `_build_transport_gate` now keeps a KO-local `_Issuance` list. Each genuine
+issue binds:
+
+- issued capability identity (`record.capability is attempt`)
+- concrete `EvidenceStore`
+- `attempt_id`
+- canonical committed Attempt preimage
+- exact committed request-body bytes
+- `consumed`
+
+Visible `attempt_id` / `document` / `request_body` / `_used` remain mirrors. They do not
+authorize transport or replay.
+
+After issued-capability identity/issuance lookup succeeds, `_exchange` sets
+`record.consumed = True` and mirrors `_used = True` before visible-field comparison,
+committed-Evidence revalidation, credentials, URL resolution, or
+`perform_bounded_http_exchange`.
+
+### Exact pre-send verification sequence
+
+1. `type(attempt) is _VerifiedAttempt` and issuance lookup by identity
+2. refuse if `record.consumed`; else consume
+3. compare visible `attempt_id`, document JCS preimage, and `request_body` to the closure record
+4. re-read committed Attempt by closure-owned `attempt_id`
+5. `verify_attempt_directory` on the committed Attempt path
+6. require canonical preimage and content-digest identity
+7. read exact Attempt-bundle `request.body`
+8. `validate_paid_http_parameters` on verified Attempt parameters
+9. recompute with `paid_request_body_bytes`
+10. require equality among recomputed bytes, committed bundle `request.body`, and
+    closure-owned bytes
+11. `_require_paid_target` on the verified Attempt
+12. send only `bytes(record.request_body)` through the existing PF-09 seam
+
+No Target Metrics / Historical validator or constructor. No
+`max_response_body_bytes` exchange argument. No shared capability framework.
+
+### Acceptance criterion → proving test
+
+| Criterion | Test |
+|---|---|
+| Closure-owned issuance binds identity, store, attempt_id, preimage, bytes, consumed | gate in `_build_transport_gate`; exercised by every issued-capability test below |
+| Replay uses closure-owned consumed, not visible `_used` | `test_closure_owned_replay_protection_ignores_used_attribute` |
+| Consume before verify/send-capable work; failed verify cannot retry | `test_failed_pre_send_verification_consumes_issuance` |
+| Immediate pre-send visible-field + committed Evidence + KO-local recompute | `test_pre_send_verifies_committed_attempt_and_request_body` plus `_revalidate_committed` |
+| `object.__setattr__` `request_body` replacement cannot transport | `test_issued_request_body_replacement_cannot_transport` |
+| `object.__setattr__` document replacement cannot transport | `test_issued_document_replacement_cannot_transport` |
+| Successful exchange then `_used=False` cannot replay | `test_closure_owned_replay_protection_ignores_used_attribute` |
+| Object-pool tamper, inode-distinct, bundle body unchanged, zero HTTP | `test_pre_send_verifies_committed_attempt_and_request_body` (pool case) |
+| Bundle `request.body` tamper independently zero HTTP | `test_pre_send_verifies_committed_attempt_and_request_body` (bundle case) |
+| Existing forged/unissued/subclass/one-shot/credential/transport tests remain | `tests/test_dataforseo_paid_probe.py` (113 passed) |
+| Published request bytes and Attempt/Capture identities unchanged | `test_published_paid_request_vector_remains_byte_identical`, `test_independent_paid_vector_bytes_and_ids`, `test_mock_sent_headers_and_body_equation` |
+
+### Adversary results / HTTP request counts
+
+- Body replacement: `StoreError`; handler calls `[]` (0 HTTP).
+- Document replacement: `StoreError`; handler calls `[]` (0 HTTP).
+- Successful mock exchange then `object.__setattr__(_used, False)`: first
+  `response_complete` with exactly `[PAID_REQUEST_BODY]`; second `StoreError` matching
+  `one-exchange`; observed request count remains 1.
+- Object-pool tamper: overwrite `EvidenceStore.object_path(<request-body-sha256>)` after
+  proving pool and bundle `request.body` are inode-distinct and the bundle body is still
+  `PAID_REQUEST_BODY`; `_exchange` raises `StoreError`; handler calls `[]`.
+- Bundle tamper: overwrite only `attempt_path(...)/request.body`; `_exchange` raises
+  `StoreError`; handler calls `[]`.
+- Failed pre-send verification then second `_exchange` on the same capability, including
+  `_used=False` reset: first `StoreError`, second `one-exchange`; handler calls remain `[]`.
+
+### Unchanged published bytes
+
+`paid_request_body_bytes` / `closed_paid_parameters` / `validate_paid_http_parameters` are
+the existing KO-local constructors. Independent vector still:
+
+- request body 216 bytes, SHA-256 `3fc7205a55a1a5c464c0ae4ebca21a1e3088c2022565929a670fdf757ab7987b`
+- fingerprint `6cc5765911abe752a974d2fba268d927fdc055147c1286fffdfe0ee585cdc610`
+- Attempt ID `89904bf8a6812fb3d0d845310e4705962bb4db928b80da3be67342dff5def185`
+- Capture ID `dbaaf68a38e54e39d4fc03807d72eda37f8efd9a212220c0a99d270ddcec6917`
+
+Mock send still posts exactly `PAID_REQUEST_BODY`. Production path, 1..5 keywords, US/en,
+`include_serp_info=false`, `include_clickstream_data=false`, authorization ceiling 20000,
+timeout, 8 MiB response-body ceiling, loopback-only test endpoint, credential behavior,
+one-Attempt-per-root, Capture/inspect semantics, and PF-09 one-POST seam are unchanged.
+
+### Checks
+
+- `uv run pytest -q tests/test_dataforseo_paid_probe.py` → 113 passed
+- `uv run ruff check .` → All checks passed
+- `uv run mypy src/observatory/dataforseo_paid_probe.py tests/test_dataforseo_paid_probe.py`
+  → Success: no issues found in 2 source files
+- `uv run mypy` (repo-wide) is already red at start commit `14037adf` with 10 errors in
+  `tests/test_api_target_metrics.py`, `tests/test_api_llm_mentions_historical.py`, and
+  `tests/test_dataforseo_ai_optimization_llm_mentions_historical_paid_probe.py`. PF-16 did
+  not add or change those files; fixing them is outside the allowlist.
+
+Full-suite pytest was not run; reserved for Steward/CHAZ review.
+
+### Strongest proof
+
+Failed committed-Evidence revalidation consumes issuance: after an inode-distinct object-pool
+overwrite, the first `_exchange` fails with zero HTTP, resetting visible `_used` to `False`
+cannot authorize a second `_exchange`, and the handler count remains zero. That is the F13
+consume-before-verify lock plus Evidence-path proof, not capability-attribute comparison.
+
+### Weakest proof / possible false greens
+
+- Body/document replacement tests assert `StoreError` without matching the issuance-mismatch
+  text; `calls == []` still proves zero HTTP.
+- Object-pool mismatch is typically raised by `read_attempt` verify-on-read (which already
+  checks the pool object). The later `verify_attempt_directory` line is therefore not
+  independently observed on that path. The separate bundle-`request.body` adversary still
+  proves the bundle-body/verify-directory path.
+- Ordinary tests do not prove Evidence Store crash/fsync/commit, Attempt-authorization
+  concurrency, or recovery.
+- Same-process mutation of the closure `_Issuance` list itself is not a capability-attribute
+  adversary and is unproven.
+
+### Remaining caller influence and unproven limits
+
+Caller-visible capability fields can no longer authorize transport or replay. Remaining
+influence is the existing private `_issue_verified_attempt` / `_exchange` test seams and
+the process-local issuance list, which is not a public API. This ticket does not authorize
+live Keyword Overview invocation, spend, F12, Google Organic/Search Mentions F13, or a
+shared capability framework.
+
+### Network / provider boundary
+
+Zero DataForSEO calls, zero sandbox calls, zero provider DNS/network activity, zero real
+credentials, zero live Evidence, zero spend. Tests use sentinel credentials, `httpx` mock
+transport, and the existing loopback-only override. The public paid capture CLI was not
+run against provider credentials. Nothing was pushed.

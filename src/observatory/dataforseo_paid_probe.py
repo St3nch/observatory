@@ -24,6 +24,7 @@ from observatory.capture_event import (
     PAID_HOST,
     PAID_PATH,
     PAID_POLICY,
+    DocumentError,
     canonical_json,
     content_digest,
     paid_http_attempt_document,
@@ -61,6 +62,13 @@ _INSPECT_COMPLETE_ERROR: Final[str] = (
 _INSPECT_INVALID_ERROR: Final[str] = "inspect rejected invalid Evidence"
 _INSPECT_ID_ERROR: Final[str] = "inspect capture-id is invalid"
 _CAPTURE_FAILED: Final[str] = "paid probe capture failed"
+_ISSUANCE_MISMATCH_ERROR: Final[str] = (
+    "issued transport capability does not match the closure-owned issuance record"
+)
+_ONE_EXCHANGE_ERROR: Final[str] = (
+    "paid probe transport capability is one-exchange only"
+)
+_VERIFY_ON_READ_ERROR: Final[str] = "committed Attempt failed verify-on-read"
 
 __all__ = [
     "PaidProbeInputs",
@@ -244,7 +252,41 @@ def _reject_credential_echo(
 
 
 def _build_transport_gate() -> tuple[Any, Any, type]:
-    issued: list[object] = []
+    class _Issuance:
+        """Closure-owned issuance record. Not a capability attribute."""
+
+        __slots__ = (
+            "capability",
+            "store",
+            "attempt_id",
+            "document_preimage",
+            "request_body",
+            "consumed",
+        )
+        capability: object
+        store: EvidenceStore
+        attempt_id: str
+        document_preimage: bytes
+        request_body: bytes
+        consumed: bool
+
+        def __init__(
+            self,
+            *,
+            capability: object,
+            store: EvidenceStore,
+            attempt_id: str,
+            document_preimage: bytes,
+            request_body: bytes,
+        ) -> None:
+            self.capability = capability
+            self.store = store
+            self.attempt_id = attempt_id
+            self.document_preimage = document_preimage
+            self.request_body = request_body
+            self.consumed = False
+
+    issued: list[_Issuance] = []
 
     class _VerifiedAttempt:
         """Internal capability. Not supported public API."""
@@ -264,8 +306,83 @@ def _build_transport_gate() -> tuple[Any, Any, type]:
         def __delattr__(self, name: str) -> None:
             raise AttributeError("issued transport capability is immutable")
 
-    def _is_issued(attempt: object) -> bool:
-        return any(candidate is attempt for candidate in issued)
+    def _issuance_for(attempt: object) -> _Issuance | None:
+        for record in issued:
+            if record.capability is attempt:
+                return record
+        return None
+
+    def _require_visible_fields_match(attempt: Any, record: _Issuance) -> None:
+        try:
+            visible_id = attempt.attempt_id
+            visible_document = attempt.document
+            visible_body = attempt.request_body
+        except AttributeError as exc:
+            raise StoreError("issued transport capability is missing issuance fields") from exc
+        if visible_id != record.attempt_id:
+            raise StoreError(_ISSUANCE_MISMATCH_ERROR)
+        try:
+            visible_preimage = canonical_json(visible_document)
+        except DocumentError as exc:
+            raise StoreError(_ISSUANCE_MISMATCH_ERROR) from exc
+        if visible_preimage != record.document_preimage:
+            raise StoreError(_ISSUANCE_MISMATCH_ERROR)
+        if not isinstance(visible_body, (bytes, bytearray)):
+            raise StoreError(_ISSUANCE_MISMATCH_ERROR)
+        if bytes(visible_body) != record.request_body:
+            raise StoreError(_ISSUANCE_MISMATCH_ERROR)
+
+    def _revalidate_committed(record: _Issuance) -> bytes:
+        store = record.store
+        if type(store) is not EvidenceStore:
+            raise TypeError(
+                "DataForSEO paid probe transport requires the concrete EvidenceStore "
+                "from create_store/open_store"
+            )
+        try:
+            read_back = store.read_attempt(record.attempt_id)
+        except IntegrityError as exc:
+            raise StoreError(_VERIFY_ON_READ_ERROR) from exc
+        if read_back is None:
+            raise StoreError("committed Attempt is not readable as Evidence")
+        read_preimage = canonical_json(read_back)
+        if content_digest(read_preimage) != record.attempt_id:
+            raise StoreError("read-back Attempt identity does not match")
+        if read_preimage != record.document_preimage:
+            raise StoreError("read-back Attempt does not match committed document")
+        fingerprint = read_back.get("request_fingerprint")
+        authorized_at = read_back.get("authorized_at")
+        if not isinstance(fingerprint, str) or not isinstance(authorized_at, str):
+            raise StoreError("frozen Attempt path fields are missing")
+        bundle = store.attempt_path(fingerprint, authorized_at, record.attempt_id)
+        try:
+            verified = store.verify_attempt_directory(bundle)
+        except IntegrityError as exc:
+            raise StoreError(_VERIFY_ON_READ_ERROR) from exc
+        if canonical_json(verified) != record.document_preimage:
+            raise StoreError("read-back Attempt does not match committed document")
+        if content_digest(canonical_json(verified)) != record.attempt_id:
+            raise StoreError("read-back Attempt identity does not match")
+        try:
+            stored_body = (bundle / "request.body").read_bytes()
+        except OSError as exc:
+            raise StoreError("committed request body is not readable as Evidence") from exc
+        if stored_body != record.request_body:
+            raise StoreError("read-back request body does not match committed bytes")
+        parameters = verified.get("parameters")
+        if not isinstance(parameters, Mapping):
+            raise StoreError("frozen Attempt parameters are missing")
+        try:
+            closed = validate_paid_http_parameters(parameters)
+        except DocumentError as exc:
+            raise StoreError(
+                "frozen Attempt parameters are not the closed paid-probe contract"
+            ) from exc
+        recomputed = paid_request_body_bytes(closed)
+        if recomputed != stored_body or recomputed != record.request_body:
+            raise StoreError("recomputed request body does not match committed bytes")
+        _require_paid_target(verified)
+        return bytes(record.request_body)
 
     def issue(
         store: EvidenceStore,
@@ -287,9 +404,10 @@ def _build_transport_gate() -> tuple[Any, Any, type]:
         read_back = store.read_attempt(attempt_id)
         if read_back is None:
             raise StoreError("committed Attempt is not readable as Evidence")
-        if content_digest(canonical_json(read_back)) != attempt_id:
+        preimage = canonical_json(read_back)
+        if content_digest(preimage) != attempt_id:
             raise StoreError("read-back Attempt identity does not match")
-        if canonical_json(read_back) != canonical_json(document):
+        if preimage != canonical_json(document):
             raise StoreError("read-back Attempt does not match committed document")
         bundle = store.attempt_path(
             str(read_back["request_fingerprint"]),
@@ -300,12 +418,21 @@ def _build_transport_gate() -> tuple[Any, Any, type]:
         if stored_body != request_body:
             raise StoreError("read-back request body does not match committed bytes")
         _require_paid_target(read_back)
+        committed_body = bytes(stored_body)
         capability = object.__new__(_VerifiedAttempt)
         object.__setattr__(capability, "attempt_id", attempt_id)
         object.__setattr__(capability, "document", _freeze_maps(read_back))
-        object.__setattr__(capability, "request_body", bytes(request_body))
+        object.__setattr__(capability, "request_body", committed_body)
         object.__setattr__(capability, "_used", False)
-        issued.append(capability)
+        issued.append(
+            _Issuance(
+                capability=capability,
+                store=store,
+                attempt_id=attempt_id,
+                document_preimage=preimage,
+                request_body=committed_body,
+            )
+        )
         return capability
 
     def exchange(
@@ -315,21 +442,27 @@ def _build_transport_gate() -> tuple[Any, Any, type]:
         endpoint: str | None = None,
         client: httpx.Client | None = None,
     ) -> HttpExchangeResult:
-        if type(attempt) is not _VerifiedAttempt or not _is_issued(attempt):
+        if type(attempt) is not _VerifiedAttempt:
             raise TypeError(
                 "DataForSEO paid probe transport requires a verified committed Attempt"
             )
-        if attempt._used:
-            raise StoreError("paid probe transport capability is one-exchange only")
+        record = _issuance_for(attempt)
+        if record is None or record.capability is not attempt:
+            raise TypeError(
+                "DataForSEO paid probe transport requires a verified committed Attempt"
+            )
+        if record.consumed:
+            raise StoreError(_ONE_EXCHANGE_ERROR)
+        record.consumed = True
+        object.__setattr__(attempt, "_used", True)
+        _require_visible_fields_match(attempt, record)
+        body = _revalidate_committed(record)
         credentials.require_nonempty()
         url = _resolved_exchange_url(endpoint)
-        object.__setattr__(attempt, "_used", True)
-        document = attempt.document
-        _require_paid_target(document)
         authorization = credentials.basic_authorization_header()
         return perform_bounded_http_exchange(
             url=url,
-            body=bytes(attempt.request_body),
+            body=body,
             application_headers=HTTP_HEADERS,
             authorization=authorization,
             timeout=_TIMEOUT,

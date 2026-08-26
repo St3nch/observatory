@@ -259,6 +259,21 @@ def _paid_attempt() -> dict[str, object]:
     )
 
 
+def _replacement_paid_body() -> bytes:
+    return paid_request_body_bytes(
+        closed_paid_parameters(keywords=("forged keyword",))
+    )
+
+
+def _replacement_paid_document() -> dict[str, object]:
+    return paid_http_attempt_document(
+        parameters=closed_paid_parameters(keywords=("forged keyword",)),
+        attempt_nonce=PAID_NONCE,
+        authorized_at=PAID_AUTHORIZED_AT,
+        observatory_version=PAID_SOFTWARE,
+    )
+
+
 def _complete_response() -> dict[str, object]:
     return {
         "status": 200,
@@ -1002,6 +1017,237 @@ def test_issue_then_send_is_one_exchange(tmp_path: Path) -> None:
             _exchange(verified, _credentials(), client=client)
     finally:
         client.close()
+
+
+# ===========================================================================
+# F13 closure-owned transport authority
+# ===========================================================================
+
+
+def test_issued_request_body_replacement_cannot_transport(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "issued-body")
+    issued = _issue_verified_attempt(
+        store,
+        _paid_attempt(),
+        PAID_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    replacement = _replacement_paid_body()
+    assert replacement != PAID_REQUEST_BODY
+    object.__setattr__(issued, "request_body", replacement)
+    calls: list[bytes] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.content)
+        raise AssertionError("handler must not run")
+
+    client = _mock_client(handler)
+    try:
+        with pytest.raises(StoreError):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert calls == []
+
+
+def test_issued_document_replacement_cannot_transport(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "issued-doc")
+    issued = _issue_verified_attempt(
+        store,
+        _paid_attempt(),
+        PAID_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    replacement_document = _replacement_paid_document()
+    replacement_body = _replacement_paid_body()
+    assert replacement_document != _paid_attempt()
+    validate_attempt(replacement_document)
+    object.__setattr__(issued, "document", replacement_document)
+    object.__setattr__(issued, "request_body", replacement_body)
+    calls: list[bytes] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.content)
+        raise AssertionError("handler must not run")
+
+    client = _mock_client(handler)
+    try:
+        with pytest.raises(StoreError):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert calls == []
+
+
+def test_closure_owned_replay_protection_ignores_used_attribute(
+    tmp_path: Path,
+) -> None:
+    store = create_store(tmp_path / "replay-used")
+    issued = _issue_verified_attempt(
+        store,
+        _paid_attempt(),
+        PAID_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    calls: list[bytes] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.content)
+        return _streamed_response(200, PAID_RESPONSE_BODY)
+
+    client = _mock_client(handler)
+    try:
+        first = _exchange(issued, _credentials(), client=client)
+        object.__setattr__(issued, "_used", False)
+        with pytest.raises(StoreError, match="one-exchange"):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert first.transport_state == "response_complete"
+    assert calls == [PAID_REQUEST_BODY]
+
+
+def test_pre_send_verifies_committed_attempt_and_request_body(tmp_path: Path) -> None:
+    replacement = _replacement_paid_body()
+    evidence_store = create_store(tmp_path / "pre-send-evidence")
+    evidence_issued = _issue_verified_attempt(
+        evidence_store,
+        _paid_attempt(),
+        PAID_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    request = evidence_issued.document["request"]
+    assert isinstance(request, Mapping)
+    body_state = request["body"]
+    assert isinstance(body_state, Mapping)
+    body_ref = body_state["body"]
+    assert isinstance(body_ref, Mapping)
+    digest = body_ref["sha256"]
+    assert isinstance(digest, str)
+    bundle = evidence_store.attempt_path(
+        str(evidence_issued.document["request_fingerprint"]),
+        str(evidence_issued.document["authorized_at"]),
+        evidence_issued.attempt_id,
+    )
+    pool = evidence_store.object_path(digest)
+    bundle_body = bundle / "request.body"
+    assert pool.is_file()
+    assert bundle_body.read_bytes() == PAID_REQUEST_BODY
+    assert pool.read_bytes() == PAID_REQUEST_BODY
+    assert pool.stat().st_ino != bundle_body.stat().st_ino
+    pool.write_bytes(replacement)
+    assert bundle_body.read_bytes() == PAID_REQUEST_BODY
+    evidence_calls: list[bytes] = []
+
+    def evidence_handler(request: httpx.Request) -> httpx.Response:
+        evidence_calls.append(request.content)
+        raise AssertionError("handler must not run")
+
+    evidence_client = _mock_client(evidence_handler)
+    try:
+        with pytest.raises(StoreError):
+            _exchange(evidence_issued, _credentials(), client=evidence_client)
+    finally:
+        evidence_client.close()
+    assert evidence_calls == []
+
+    bundle_store = create_store(tmp_path / "pre-send-bundle")
+    bundle_issued = _issue_verified_attempt(
+        bundle_store,
+        _paid_attempt(),
+        PAID_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    bundle_only = bundle_store.attempt_path(
+        str(bundle_issued.document["request_fingerprint"]),
+        str(bundle_issued.document["authorized_at"]),
+        bundle_issued.attempt_id,
+    )
+    (bundle_only / "request.body").write_bytes(replacement)
+    bundle_calls: list[bytes] = []
+
+    def bundle_handler(request: httpx.Request) -> httpx.Response:
+        bundle_calls.append(request.content)
+        raise AssertionError("handler must not run")
+
+    bundle_client = _mock_client(bundle_handler)
+    try:
+        with pytest.raises(StoreError):
+            _exchange(bundle_issued, _credentials(), client=bundle_client)
+    finally:
+        bundle_client.close()
+    assert bundle_calls == []
+
+    clean_store = create_store(tmp_path / "pre-send-clean")
+    clean_issued = _issue_verified_attempt(
+        clean_store,
+        _paid_attempt(),
+        PAID_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    clean_calls: list[bytes] = []
+
+    def clean_handler(request: httpx.Request) -> httpx.Response:
+        clean_calls.append(request.content)
+        return _streamed_response(200, PAID_RESPONSE_BODY)
+
+    clean_client = _mock_client(clean_handler)
+    try:
+        outcome = _exchange(clean_issued, _credentials(), client=clean_client)
+        with pytest.raises(StoreError, match="one-exchange"):
+            _exchange(clean_issued, _credentials(), client=clean_client)
+    finally:
+        clean_client.close()
+    assert outcome.transport_state == "response_complete"
+    assert clean_calls == [PAID_REQUEST_BODY]
+
+
+def test_failed_pre_send_verification_consumes_issuance(tmp_path: Path) -> None:
+    replacement = _replacement_paid_body()
+    store = create_store(tmp_path / "failed-verify")
+    issued = _issue_verified_attempt(
+        store,
+        _paid_attempt(),
+        PAID_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    request = issued.document["request"]
+    assert isinstance(request, Mapping)
+    body_state = request["body"]
+    assert isinstance(body_state, Mapping)
+    body_ref = body_state["body"]
+    assert isinstance(body_ref, Mapping)
+    digest = body_ref["sha256"]
+    assert isinstance(digest, str)
+    bundle = store.attempt_path(
+        str(issued.document["request_fingerprint"]),
+        str(issued.document["authorized_at"]),
+        issued.attempt_id,
+    )
+    pool = store.object_path(digest)
+    bundle_body = bundle / "request.body"
+    assert pool.is_file()
+    assert bundle_body.read_bytes() == PAID_REQUEST_BODY
+    assert pool.read_bytes() == PAID_REQUEST_BODY
+    assert pool.stat().st_ino != bundle_body.stat().st_ino
+    pool.write_bytes(replacement)
+    assert bundle_body.read_bytes() == PAID_REQUEST_BODY
+    calls: list[bytes] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.content)
+        raise AssertionError("handler must not run")
+
+    client = _mock_client(handler)
+    try:
+        with pytest.raises(StoreError):
+            _exchange(issued, _credentials(), client=client)
+        object.__setattr__(issued, "_used", False)
+        with pytest.raises(StoreError, match="one-exchange"):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert calls == []
 
 
 # ===========================================================================
