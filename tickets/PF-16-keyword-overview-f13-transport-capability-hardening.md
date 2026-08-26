@@ -1,6 +1,6 @@
 # PF-16 — Keyword Overview F13 transport-capability hardening
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** none; F13 trigger is fired for the next Keyword Overview gate reuse  
 **Approved by:** [CHAZ] for provisional ticket review only  
@@ -441,3 +441,23 @@ Zero DataForSEO calls, zero sandbox calls, zero provider DNS/network activity, z
 credentials, zero live Evidence, zero spend. Tests use sentinel credentials, `httpx` mock
 transport, and the existing loopback-only override. The public paid capture CLI was not
 run against provider credentials. Nothing was pushed.
+
+## Steward closure
+
+Closed by [GPT] after independent code/diff review and [CHAZ]-run final validation on
+implementation commit `5b6b90029f4b8e07bb8af96b0c3d2c2b909806da`.
+
+Final validation supplied by [CHAZ]:
+
+- `uv run pytest -q` -> `1433 passed, 1 skipped, 1 warning in 466.87s`;
+- `uv run ruff check .` -> `All checks passed!`;
+- `uv run mypy src/observatory/dataforseo_paid_probe.py tests/test_dataforseo_paid_probe.py`
+  -> `Success: no issues found in 2 source files`;
+- repo-wide `uv run mypy` -> the same 10 pre-existing errors in the same 3 unrelated
+  Target Metrics/Historical test files as the accepted PF-16 start baseline, with no new
+  PF-16 errors.
+
+The final remediation preserves the pre-PF-16 credential/endpoint failure boundary while
+keeping F13 closure-owned replay authority and consume-before-visible/Evidence-verification
+semantics. No provider call, live Evidence creation, credential use, spend, or push was
+authorized or performed by this closure.
