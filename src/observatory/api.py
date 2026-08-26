@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 from observatory import __version__
 from observatory.capture_event import (
+    HISTORICAL_ADAPTER_CONTRACT,
     MENTIONS_ADAPTER_CONTRACT,
     ORGANIC_ADAPTER_CONTRACT,
     TARGET_METRICS_ADAPTER_CONTRACT,
@@ -28,6 +29,10 @@ from observatory.keyword_overview_read import (
     load_keyword_overview_holdings,
     load_keyword_overview_outcomes,
     load_provider_attempt,
+)
+from observatory.llm_mentions_historical_read import (
+    HistoricalHistoryEnvelope,
+    load_llm_mentions_historical_history,
 )
 from observatory.provider_history import (
     HISTORY_LIMIT_DEFAULT,
@@ -68,6 +73,7 @@ _PROVIDER_ATTEMPT_ADAPTERS: Final[frozenset[str]] = frozenset(
         ORGANIC_ADAPTER_CONTRACT,
         MENTIONS_ADAPTER_CONTRACT,
         TARGET_METRICS_ADAPTER_CONTRACT,
+        HISTORICAL_ADAPTER_CONTRACT,
     }
 )
 _FIXTURE_ADAPTER: Final[str] = "fixture-panel-v1"
@@ -390,6 +396,36 @@ def create_app(settings: Settings | None = None, *, store: EvidenceStore | None 
             with _read_connect(dsn) as connection:
                 return TargetMetricsHistoryEnvelope.model_validate(
                     load_target_metrics_history(
+                        evidence,
+                        connection,
+                        requested_keyword=requested_keyword,
+                        pinned_version=derivation_version_id,
+                        limit=limit,
+                        order=order,
+                    )
+                )
+        except IntegrityError as exc:
+            raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
+        except ProviderRecipeSelectionError as exc:
+            raise _recipe_http_error(exc) from exc
+
+    @v1.get("/providers/dataforseo/google/ai-optimization/llm-mentions-historical/history")
+    async def get_llm_mentions_historical_history(
+        request: Request,
+        requested_keyword: str = Query(min_length=1),
+        derivation_version_id: str | None = Query(default=None),
+        limit: int = Query(default=HISTORY_LIMIT_DEFAULT, ge=1, le=HISTORY_LIMIT_MAX),
+        order: Literal["asc", "desc"] = Query(default="asc"),
+    ) -> HistoricalHistoryEnvelope:
+        settings = request.app.state.settings
+        if not isinstance(settings, Settings):
+            raise HTTPException(status_code=503, detail="settings are not configured")
+        evidence = _require_store(request)
+        dsn = _require_dsn(settings)
+        try:
+            with _read_connect(dsn) as connection:
+                return HistoricalHistoryEnvelope.model_validate(
+                    load_llm_mentions_historical_history(
                         evidence,
                         connection,
                         requested_keyword=requested_keyword,

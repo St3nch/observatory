@@ -11,10 +11,17 @@ from fastapi.testclient import TestClient
 from observatory.api import create_app
 from observatory.capture import CaptureOutcome, FixtureCaptureInputs, capture_fixture
 from observatory.capture_event import (
+    HISTORICAL_ADAPTER_CONTRACT,
     TARGET_METRICS_ADAPTER_CONTRACT,
     body_ref,
+    historical_http_attempt_document,
+    historical_http_capture_document,
     target_metrics_http_attempt_document,
     target_metrics_http_capture_document,
+)
+from observatory.dataforseo_ai_optimization_llm_mentions_historical_paid_probe import (
+    closed_historical_parameters,
+    historical_request_body_bytes,
 )
 from observatory.dataforseo_ai_optimization_target_metrics_paid_probe import (
     closed_target_metrics_parameters,
@@ -23,6 +30,10 @@ from observatory.dataforseo_ai_optimization_target_metrics_paid_probe import (
 from observatory.derive import DEFAULT_VERSION, derive
 from observatory.evidence_store import EvidenceStore, IntegrityError, create_store
 from observatory.fixture_algorithm import SCENARIOS
+from observatory.llm_mentions_historical_derive import (
+    HISTORICAL_RECIPE_ID,
+    derive_llm_mentions_historical,
+)
 from observatory.migrate import apply_migrations, connect
 from observatory.provider_recipe_selection import (
     NOT_SELECTED_SIGNAL,
@@ -435,6 +446,78 @@ def test_target_metrics_attempt_uses_provider_reader_not_fixture_path(
     assert body_json["capture_outcome"]["observation_count"] == 11
     assert "observations" not in body_json
     assert "source_domains" not in body_json
+    assert pinned.status_code == 200
+    assert pinned.json()["recipe_resolution"] == "pinned"
+
+
+def test_historical_attempt_uses_provider_reader_not_fixture_path(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    fixture = (
+        Path(__file__).resolve().parent
+        / "fixtures"
+        / "dataforseo_ai_optimization_llm_mentions_historical_ai14.json"
+    )
+    body = fixture.read_bytes()
+    store = create_store(tmp_path / "historical-attempt")
+    parameters = closed_historical_parameters()
+    attempt = historical_http_attempt_document(
+        parameters=parameters,
+        attempt_nonce="11" * 32,
+        authorized_at="2026-08-25T18:32:00.000000Z",
+        observatory_version="ai17-attempt-v1",
+    )
+    attempt_id = store.commit_attempt(
+        attempt, request_body=historical_request_body_bytes(parameters)
+    )
+    store.commit_capture(
+        historical_http_capture_document(
+            attempt=attempt,
+            request_started_at="2026-08-25T18:32:01.100000Z",
+            transport_ended_at="2026-08-25T18:32:01.400000Z",
+            transport_state="response_complete",
+            response={
+                "status": 200,
+                "http_version": "HTTP/1.1",
+                "header_policy": "http-headers-v1",
+                "headers": [["content-type", "application/json"]],
+                "omitted_headers": [],
+                "body": {"state": "present_nonempty", "body": body_ref(body)},
+                "completeness": "complete",
+            },
+            transport_failure=None,
+            response_headers_at="2026-08-25T18:32:01.200000Z",
+            response_body_ended_at="2026-08-25T18:32:01.300000Z",
+        ),
+        response_body=body,
+    )
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_llm_mentions_historical(store, connection)
+    with _app(store, postgres_dsn) as client:
+        unselected = client.get(f"/v1/attempts/{attempt_id}")
+    assert unselected.status_code == 503
+    assert unselected.json() == {"detail": NOT_SELECTED_SIGNAL}
+    assert "observations" not in unselected.json()
+    with connect(postgres_dsn) as connection:
+        select_provider_recipe(
+            connection, HISTORICAL_ADAPTER_CONTRACT, HISTORICAL_RECIPE_ID
+        )
+    with _app(store, postgres_dsn) as client:
+        selected = client.get(f"/v1/attempts/{attempt_id}")
+        pinned = client.get(
+            f"/v1/attempts/{attempt_id}?derivation_version_id={HISTORICAL_RECIPE_ID}"
+        )
+    assert selected.status_code == 200
+    body_json = selected.json()
+    assert body_json["adapter_contract"] == HISTORICAL_ADAPTER_CONTRACT
+    assert body_json["derivation_version_id"] == HISTORICAL_RECIPE_ID
+    assert body_json["recipe_resolution"] == "selected"
+    assert body_json["attempt_outcome"]["classification"] == "authorized_unresolved"
+    assert body_json["capture_outcome"]["classification"] == "observation_admitted"
+    assert body_json["capture_outcome"]["observation_count"] == 12
+    assert "observations" not in body_json
+    assert "monthly" not in body_json
     assert pinned.status_code == 200
     assert pinned.json()["recipe_resolution"] == "pinned"
 

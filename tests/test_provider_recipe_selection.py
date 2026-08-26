@@ -8,13 +8,20 @@ import pytest
 from psycopg.errors import ForeignKeyViolation
 
 from observatory.capture_event import (
+    HISTORICAL_ADAPTER_CONTRACT,
     PAID_ADAPTER_CONTRACT,
     TARGET_METRICS_ADAPTER_CONTRACT,
     body_ref,
+    historical_http_attempt_document,
+    historical_http_capture_document,
     paid_http_attempt_document,
     paid_http_capture_document,
     target_metrics_http_attempt_document,
     target_metrics_http_capture_document,
+)
+from observatory.dataforseo_ai_optimization_llm_mentions_historical_paid_probe import (
+    closed_historical_parameters,
+    historical_request_body_bytes,
 )
 from observatory.dataforseo_ai_optimization_target_metrics_paid_probe import (
     closed_target_metrics_parameters,
@@ -31,6 +38,11 @@ from observatory.evidence_store import create_store
 from observatory.keyword_overview_derive import (
     derive_keyword_overview,
     derive_keyword_overview_extended,
+)
+from observatory.llm_mentions_historical_derive import (
+    HISTORICAL_RECIPE,
+    HISTORICAL_RECIPE_ID,
+    derive_llm_mentions_historical,
 )
 from observatory.migrate import (
     DERIVATION_VERSIONS_SQL,
@@ -358,3 +370,85 @@ def test_target_metrics_derive_does_not_select_and_selection_resolves(
     assert resolved.resolution == "selected"
     assert pinned.resolution == "pinned"
     assert TARGET_METRICS_RECIPE["adapter_contract"] == TARGET_METRICS_ADAPTER_CONTRACT
+
+
+def test_historical_derive_does_not_select_and_selection_resolves(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    fixture = (
+        Path(__file__).resolve().parent
+        / "fixtures"
+        / "dataforseo_ai_optimization_llm_mentions_historical_ai14.json"
+    )
+    body = fixture.read_bytes()
+    parameters = closed_historical_parameters()
+    attempt = historical_http_attempt_document(
+        parameters=parameters,
+        attempt_nonce="11" * 32,
+        authorized_at="2026-08-25T18:32:00.000000Z",
+        observatory_version="ai17-selection-v1",
+    )
+    store.commit_attempt(attempt, request_body=historical_request_body_bytes(parameters))
+    store.commit_capture(
+        historical_http_capture_document(
+            attempt=attempt,
+            request_started_at="2026-08-25T18:32:01.100000Z",
+            transport_ended_at="2026-08-25T18:32:01.400000Z",
+            transport_state="response_complete",
+            response={
+                "status": 200,
+                "http_version": "HTTP/1.1",
+                "header_policy": "http-headers-v1",
+                "headers": [["content-type", "application/json"]],
+                "omitted_headers": [],
+                "body": {"state": "present_nonempty", "body": body_ref(body)},
+                "completeness": "complete",
+            },
+            transport_failure=None,
+            response_headers_at="2026-08-25T18:32:01.200000Z",
+            response_body_ended_at="2026-08-25T18:32:01.300000Z",
+        ),
+        response_body=body,
+    )
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_llm_mentions_historical(store, connection)
+        rows = connection.execute(
+            """
+            SELECT adapter_contract FROM provider_recipe_selections
+            WHERE adapter_contract = %s
+            """,
+            (HISTORICAL_ADAPTER_CONTRACT,),
+        ).fetchall()
+        with pytest.raises(ProviderRecipeNotSelected):
+            resolve_provider_recipe(connection, HISTORICAL_ADAPTER_CONTRACT)
+        registered = connection.execute(
+            """
+            SELECT derivation_version_id FROM provider_recipes
+            WHERE adapter_contract = %s
+            """,
+            (HISTORICAL_ADAPTER_CONTRACT,),
+        ).fetchone()
+        register_provider_recipe(connection, CORE_RECIPE)
+        select_provider_recipe(
+            connection, HISTORICAL_ADAPTER_CONTRACT, HISTORICAL_RECIPE_ID
+        )
+        resolved = resolve_provider_recipe(connection, HISTORICAL_ADAPTER_CONTRACT)
+        pinned = resolve_provider_recipe(
+            connection,
+            HISTORICAL_ADAPTER_CONTRACT,
+            pinned_version=HISTORICAL_RECIPE_ID,
+        )
+        with pytest.raises(WrongAdapterRecipe):
+            resolve_provider_recipe(
+                connection,
+                HISTORICAL_ADAPTER_CONTRACT,
+                pinned_version=CORE_RECIPE_ID,
+            )
+    assert rows == []
+    assert registered == (HISTORICAL_RECIPE_ID,)
+    assert resolved.derivation_version_id == HISTORICAL_RECIPE_ID
+    assert resolved.resolution == "selected"
+    assert pinned.resolution == "pinned"
+    assert HISTORICAL_RECIPE["adapter_contract"] == HISTORICAL_ADAPTER_CONTRACT

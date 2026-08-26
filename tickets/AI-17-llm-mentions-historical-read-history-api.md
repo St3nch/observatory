@@ -1,12 +1,12 @@
 # AI-17 — LLM Mentions Historical Recipe selection and admitted-history API
 
-**Status:** accepted  
+**Status:** review  
 **Owner:** [GROK] implementation / [GPT] Steward review  
-**Blocked by:** explicit [CHAZ] implementation authorization from the exact final accepted ticket commit  
+**Blocked by:** Steward review of this implementation commit  
 **Authorized workstream:** [CHAZ] approved the next Historical boundary after pushed AI-16 closure  
 **Draft base:** `817dd4c5b8bcb57bbd0125f3816816a254a1c1ba`  
 **Pre-implementation review:** GROK `RECONCILE`, completed read-only at `4e4a737ffd7c2f03335d071c3b7c0e56f9343249`  
-**Implementation start commit:** not yet authorized  
+**Implementation start commit:** `f749e93aa98277603f8955b4e7f9ab768909376a`  
 
 ## Purpose
 
@@ -622,3 +622,178 @@ AI-17 is final and accepted after the Steward reconciliation commit containing t
 Implementation remains blocked until [CHAZ] separately authorizes GROK from that exact clean
 final-ticket commit. No source/test mutation, Recipe selection, PostgreSQL/Evidence mutation,
 provider/network activity, amend, or push is authorized merely by accepting this ticket.
+
+## Implementation report
+
+**Parent:** `f749e93aa98277603f8955b4e7f9ab768909376a`  
+**Child:** this implementation commit  
+**Status:** `review`  
+**AI-17 only:** yes. Nothing pushed. No amend.
+
+Loaded skills:
+
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/implement/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/tdd/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/codebase-design/SKILL.md`
+- `/home/chaz/projects/vedaops/observatory/.grok/skills/code-review/SKILL.md`
+
+### Changed paths
+
+Production:
+
+- `src/observatory/llm_mentions_historical_read.py` (new)
+- `src/observatory/api.py` (Historical Attempt-audit membership plus one history route)
+
+Tests:
+
+- `tests/test_api_llm_mentions_historical.py` (new)
+- `tests/test_api_attempts.py` (bounded Historical Attempt-audit routing)
+- `tests/test_provider_recipe_selection.py` (bounded derive-does-not-select / isolated pinning)
+
+Ticket:
+
+- this file (Start commit, Status, Implementation report)
+
+No schema/migration, parser, Recipe, Derivation, `provider_history.py`, Outcomes/Holdings,
+F12/F13, strategy, provider, credential, Evidence, or operator-PostgreSQL change.
+
+### Route and Recipe
+
+Exact route:
+
+`GET /v1/providers/dataforseo/google/ai-optimization/llm-mentions-historical/history`
+
+Accepted Historical Recipe v1:
+
+`fe3e105f3f90c667df0294a2af12e5a27492bfe6eb63a0664b5326619f62d385`
+
+Resolution reuses `select_provider_recipe()` / `resolve_provider_recipe()`. Local
+`UnsupportedHistoricalRecipe` maps through the existing 404 selection taxonomy. No
+automatic Recipe selection: derive registers v1 and leaves `provider_recipe_selections`
+empty until an explicit select.
+
+- no selection, no pin → 503 `provider_recipe_not_selected`
+- selected v1 → 200, `recipe_resolution=selected`
+- pinned v1, including without current selection → 200, `recipe_resolution=pinned`
+- malformed / unknown / wrong-adapter / registered same-adapter non-v1 pin → 404
+- tampered/noncanonical v1 Recipe bytes → 409
+
+### Admitted history behavior
+
+Outer envelope is `history_list_response()` then a dedicated
+`HistoricalHistoryEnvelope` (`extra="forbid"`). Route response model is not
+`HistoryListEnvelope`.
+
+One `captures[]` item is one admitted Capture document. Allowed classifications are
+exactly `observation_admitted` and `observation_admitted_empty`.
+
+- `observation_admitted`: `observation_count >= 1`, `items_count >= 1`, and
+  `observation_count == items_count == len(monthly)`
+- `observation_admitted_empty`: counts 0, `monthly == []`, unreturned periods equal the
+  complete computed requested-period set
+- admitted with zero facts → 409
+- admitted-empty with leftover envelope or leftover monthly → 409
+- returned `0/0` metrics remain ordinary monthly facts
+- extra out-of-window months remain ordinary monthly facts; no `is_extra`
+
+Inner `monthly` order is always `year, month, within_capture_identity` ascending. Outer
+`order=desc` does not reverse it.
+
+### Golden AI-14 cardinalities
+
+Frozen fixture SHA-256
+`4419daf0b7076625129ab18c6bf3c83905b998c3b3332f2ba6d42c8879b50781`
+unchanged.
+
+For the closed v1 window `2025-08-01`..`2026-07-31`:
+
+- 12 monthly facts
+- `items_count` 12
+- `observation_count` 12
+- `unreturned_requested_periods` `[]`
+- exact frozen request literals and Recipe disclosure
+
+Twelve is a computed consequence of `requested_periods(date_from, date_to)`, not a
+hardcoded period tuple.
+
+### LEFT JOIN / complete-set / verify-before-limit / foreign Attempt
+
+Candidate SQL starts from `llm_mentions_historical_result_context`, LEFT JOINs
+`outcomes` on `(derivation_version_id, attempt_id, capture_id)`, and contains no
+`o.classification` / Outcome-non-nullness WHERE predicate and no SQL LIMIT.
+Classification is inspected in Python. Missing/NULL joined Outcome and non-admitted
+Outcome are 409, not empty 200.
+
+Complete-set proofs: count, envelope, monthly, identity, provider/adapter/Attempt/kind,
+content/keyword, and count-preserving wrong unreturned period all 409.
+
+Verify-before-limit: two matching Captures, `limit=1`, damage the candidate outside the
+returned window, still 409.
+
+Foreign Attempt cross-link of context/Outcome onto a sibling Historical Attempt while
+Capture Evidence still cites the parent Attempt is 409. Missing/corrupt Attempt and
+Capture Evidence are 409.
+
+### OpenAPI
+
+Historical schemas expose both admitted classifications, `observation_count` minimum 0,
+closed `{year,month}` unreturned model, frozen request Literals, and positive
+admitted-empty / Capture-grain / 0/0-vs-unreturned / `has_more`-is-not-pagination /
+no-`is_extra` descriptions. OpenAPI inspection is scoped to Historical models so Target
+Metrics' "never emits observation_admitted_empty" text cannot false-green or false-red
+the polarity proof.
+
+### Attempt audit
+
+`HISTORICAL_ADAPTER_CONTRACT` is a member of `_PROVIDER_ATTEMPT_ADAPTERS`.
+`GET /v1/attempts/{attempt_id}` routes Historical Attempts through the existing generic
+provider Attempt reader.
+
+### Validation
+
+Targeted:
+
+```
+uv run pytest -q \
+  tests/test_api_llm_mentions_historical.py \
+  tests/test_api_attempts.py \
+  tests/test_provider_recipe_selection.py
+```
+
+exit 0, **36 passed**.
+
+```
+uv run ruff check .
+```
+
+exit 0, all checks passed.
+
+```
+uv run mypy src
+```
+
+exit 0, no issues in 38 source files.
+
+Full suite not run. Steward owns the later exact-HEAD full validation gate.
+
+### Strongest / weakest
+
+Strongest: LEFT JOIN missing-Outcome 409 plus candidate-SQL proof that classification is
+not a SQL membership filter; computed requested-window set equality (including
+count-preserving swapped unreturned month); admitted-empty as valid history with
+pairing 409s; verify-before-limit on a damaged out-of-window Capture.
+
+Weakest assumption / false-green risk: missing-Outcome and some complete-set mutations
+use `session_replication_role = replica` because the production context FK would
+otherwise forbid a context row without a matching Outcome. That proves the Python
+LEFT JOIN path, not that such a row can be written by ordinary derive. Socket
+`create_connection` is a bounded regression guard, not universal network-absence proof.
+Identity/content disagreement is recomputed Observation identity plus typed-row fields;
+the reader does not re-parse the provider body.
+
+### Confirmation
+
+Zero provider, DNS, credential, account, pricing, restic, rclone, or public-network
+calls. Zero Evidence mutation. Zero operator PostgreSQL mutation. Ordinary tests used
+committed fixture/synthetic Evidence and isolated pytest PostgreSQL. No Recipe/parser/
+Derivation/schema change. No Outcomes/Holdings. No amend. No push.
