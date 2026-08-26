@@ -8,6 +8,16 @@
 
 ## Purpose
 
+Final Steward reconciliation: ACCEPTED after required read-only ticket review. This final
+reconciliation supersedes the provisional-review label in the header above. Implementation
+is authorized only from the exact final ticket commit later issued by the Steward as the
+start commit. The implementer records that exact Start commit and sets Status=`review` in
+the implementation commit, per `AGENTS.md`.
+
+The read-only review returned `READY_AFTER_TICKET_RECONCILIATION`; the required proof locks
+are incorporated below. No live-provider, spend, pricing, panel, or activation authorization
+is implied by this acceptance.
+
 Harden the existing DataForSEO Labs Google Keyword Overview Live paid-probe transport gate
 to satisfy deferred-register item F13 before the gate is invoked, substantively modified,
 or reused again.
@@ -137,6 +147,34 @@ is fixed:
 - [ ] Ordinary tests perform zero DataForSEO/API-host/DNS/public-network activity, use no
       real credentials, create no live provider Evidence, and spend no credits.
 
+### Final reconciled F13 proof locks
+
+These locks are mandatory and narrow the looser acceptance bullets above where needed:
+
+- After issued-capability identity/issuance lookup succeeds, closure-owned consumption is
+  set before visible-field comparison, committed-Evidence revalidation, or
+  `perform_bounded_http_exchange`. Visible `_used` may mirror state but is not authority.
+- If pre-send committed-Evidence revalidation fails, a second `_exchange` attempt using the
+  same issued capability must fail one-exchange protection and the HTTP handler count must
+  remain exactly zero.
+- Revalidation of verified Attempt parameters uses the Keyword Overview-local
+  `validate_paid_http_parameters`, and exact body recomputation uses
+  `paid_request_body_bytes`. Equality is required across recomputed bytes, the committed
+  Attempt bundle `request.body`, and closure-owned issued bytes. Do not use Target Metrics
+  or Historical validators/constructors.
+- Object-pool tamper and Attempt-bundle body tamper are separate adversaries. The pool case
+  overwrites `EvidenceStore.object_path(<request-body-sha256>)` while proving the Attempt
+  bundle `request.body` remains original and inode-distinct from the pool object; exchange
+  must reach exactly zero HTTP handler calls.
+- The bundle case overwrites only the committed Attempt bundle
+  `attempt_path(...)/request.body`; exchange must reach exactly zero HTTP handler calls.
+- Capability-attribute `object.__setattr__` mutation does not count as committed-Evidence
+  tamper. The Evidence tests must mutate the actual committed pool/bundle paths consumed by
+  verify-on-read, not monkeypatch a reader or alter an irrelevant copy.
+- Do not add Target Metrics/Historical-only transport kwargs or seams, including an optional
+  `max_response_body_bytes` exchange argument. Keyword Overview's existing body-ceiling
+  boundary remains unchanged.
+
 ## Expected changed-path allowlist
 
 Implementation is expected to change only:
@@ -173,6 +211,11 @@ The review must specifically challenge:
 
 Return `READY`, `READY_AFTER_TICKET_RECONCILIATION`, or `NOT_READY`. Do not edit anything.
 
+Review result: `READY_AFTER_TICKET_RECONCILIATION`. Steward reconciliation accepted the
+review's three blocking clarifications: authoritative pool-vs-bundle Evidence tamper proofs,
+explicit failed-verification replay consumption, and KO-local validator/body recomputation.
+The final locks are recorded in `Final reconciled F13 proof locks` above.
+
 ## Required implementation report
 
 If and only if the Steward later accepts and commits this ticket and issues an exact start
@@ -189,8 +232,9 @@ Use only appropriate project-local skills and report each absolute `SKILL.md` pa
 
 ## Hard boundaries
 
-- Provisional ticket review only until the Steward reconciles [GROK]'s review and commits a
-  final accepted ticket. No implementation start commit exists yet.
+- The read-only review is complete and reconciled. Implementation begins only from the exact
+  final ticket commit explicitly issued by the Steward as the start commit; the ticket-only
+  finalization commit itself performs no provider activity.
 - [GROK] is the only writer of `src/` and `tests/`; [GPT] owns this ticket and other
   authority files except the implementer's permitted ticket fields/report after an exact
   implementation start is issued.
