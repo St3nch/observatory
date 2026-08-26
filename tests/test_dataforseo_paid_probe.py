@@ -1250,6 +1250,69 @@ def test_failed_pre_send_verification_consumes_issuance(tmp_path: Path) -> None:
     assert calls == []
 
 
+def test_endpoint_validation_failure_leaves_issuance_reusable(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "endpoint-reuse")
+    issued = _issue_verified_attempt(
+        store,
+        _paid_attempt(),
+        PAID_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    calls: list[bytes] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.content)
+        return _streamed_response(200, PAID_RESPONSE_BODY)
+
+    client = _mock_client(handler)
+    try:
+        with pytest.raises(StoreError, match="loopback"):
+            _exchange(
+                issued,
+                _credentials(),
+                endpoint=(
+                    "https://api.dataforseo.com/v3/dataforseo_labs/"
+                    "google/keyword_overview/live"
+                ),
+                client=client,
+            )
+        assert calls == []
+        outcome = _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert outcome.transport_state == "response_complete"
+    assert calls == [PAID_REQUEST_BODY]
+
+
+def test_credential_validation_failure_leaves_issuance_reusable(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "credential-reuse")
+    issued = _issue_verified_attempt(
+        store,
+        _paid_attempt(),
+        PAID_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+    emptied = _credentials()
+    object.__setattr__(emptied, "_login", "")
+    object.__setattr__(emptied, "_password", "")
+    calls: list[bytes] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.content)
+        return _streamed_response(200, PAID_RESPONSE_BODY)
+
+    client = _mock_client(handler)
+    try:
+        with pytest.raises(CredentialError):
+            _exchange(issued, emptied, client=client)
+        assert calls == []
+        outcome = _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert outcome.transport_state == "response_complete"
+    assert calls == [PAID_REQUEST_BODY]
+
+
 # ===========================================================================
 # Headers, credentials, mock branches
 # ===========================================================================

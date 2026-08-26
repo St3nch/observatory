@@ -453,12 +453,12 @@ def _build_transport_gate() -> tuple[Any, Any, type]:
             )
         if record.consumed:
             raise StoreError(_ONE_EXCHANGE_ERROR)
+        credentials.require_nonempty()
+        url = _resolved_exchange_url(endpoint)
         record.consumed = True
         object.__setattr__(attempt, "_used", True)
         _require_visible_fields_match(attempt, record)
         body = _revalidate_committed(record)
-        credentials.require_nonempty()
-        url = _resolved_exchange_url(endpoint)
         authorization = credentials.basic_authorization_header()
         return perform_bounded_http_exchange(
             url=url,

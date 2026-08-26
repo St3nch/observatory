@@ -304,26 +304,31 @@ issue binds:
 Visible `attempt_id` / `document` / `request_body` / `_used` remain mirrors. They do not
 authorize transport or replay.
 
-After issued-capability identity/issuance lookup succeeds, `_exchange` sets
-`record.consumed = True` and mirrors `_used = True` before visible-field comparison,
-committed-Evidence revalidation, credentials, URL resolution, or
-`perform_bounded_http_exchange`.
+After issued-capability identity/issuance lookup and replay refusal succeed,
+`credentials.require_nonempty()` and `_resolved_exchange_url(endpoint)` run. Only then
+does `_exchange` set `record.consumed = True` and mirror `_used = True`, before
+visible-field comparison, committed-Evidence revalidation, or
+`perform_bounded_http_exchange`. A credential or endpoint failure therefore leaves the
+issuance reusable. Visible `_used` is not authority.
 
 ### Exact pre-send verification sequence
 
 1. `type(attempt) is _VerifiedAttempt` and issuance lookup by identity
-2. refuse if `record.consumed`; else consume
-3. compare visible `attempt_id`, document JCS preimage, and `request_body` to the closure record
-4. re-read committed Attempt by closure-owned `attempt_id`
-5. `verify_attempt_directory` on the committed Attempt path
-6. require canonical preimage and content-digest identity
-7. read exact Attempt-bundle `request.body`
-8. `validate_paid_http_parameters` on verified Attempt parameters
-9. recompute with `paid_request_body_bytes`
-10. require equality among recomputed bytes, committed bundle `request.body`, and
+2. refuse if `record.consumed`
+3. `credentials.require_nonempty()`
+4. `url = _resolved_exchange_url(endpoint)`
+5. consume (`record.consumed = True`, `_used` mirror)
+6. compare visible `attempt_id`, document JCS preimage, and `request_body` to the closure record
+7. re-read committed Attempt by closure-owned `attempt_id`
+8. `verify_attempt_directory` on the committed Attempt path
+9. require canonical preimage and content-digest identity
+10. read exact Attempt-bundle `request.body`
+11. `validate_paid_http_parameters` on verified Attempt parameters
+12. recompute with `paid_request_body_bytes`
+13. require equality among recomputed bytes, committed bundle `request.body`, and
     closure-owned bytes
-11. `_require_paid_target` on the verified Attempt
-12. send only `bytes(record.request_body)` through the existing PF-09 seam
+14. `_require_paid_target` on the verified Attempt
+15. send only `bytes(record.request_body)` through the existing PF-09 seam
 
 No Target Metrics / Historical validator or constructor. No
 `max_response_body_bytes` exchange argument. No shared capability framework.
@@ -341,8 +346,10 @@ No Target Metrics / Historical validator or constructor. No
 | Successful exchange then `_used=False` cannot replay | `test_closure_owned_replay_protection_ignores_used_attribute` |
 | Object-pool tamper, inode-distinct, bundle body unchanged, zero HTTP | `test_pre_send_verifies_committed_attempt_and_request_body` (pool case) |
 | Bundle `request.body` tamper independently zero HTTP | `test_pre_send_verifies_committed_attempt_and_request_body` (bundle case) |
-| Existing forged/unissued/subclass/one-shot/credential/transport tests remain | `tests/test_dataforseo_paid_probe.py` (113 passed) |
+| Existing forged/unissued/subclass/one-shot/credential/transport tests remain | `tests/test_dataforseo_paid_probe.py` (115 passed after remediation) |
 | Published request bytes and Attempt/Capture identities unchanged | `test_published_paid_request_vector_remains_byte_identical`, `test_independent_paid_vector_bytes_and_ids`, `test_mock_sent_headers_and_body_equation` |
+| Endpoint-validation failure leaves issuance reusable | `test_endpoint_validation_failure_leaves_issuance_reusable` |
+| Credential-validation failure leaves issuance reusable | `test_credential_validation_failure_leaves_issuance_reusable` |
 
 ### Adversary results / HTTP request counts
 
@@ -358,6 +365,10 @@ No Target Metrics / Historical validator or constructor. No
   `StoreError`; handler calls `[]`.
 - Failed pre-send verification then second `_exchange` on the same capability, including
   `_used=False` reset: first `StoreError`, second `one-exchange`; handler calls remain `[]`.
+- Forbidden/non-loopback endpoint after issue: `StoreError` matching `loopback`, handler
+  calls `[]`; same capability then succeeds once with `[PAID_REQUEST_BODY]`.
+- Emptied credential slots after issue: `CredentialError`, handler calls `[]`; restored
+  sentinel credentials then succeed once with `[PAID_REQUEST_BODY]`.
 
 ### Unchanged published bytes
 
@@ -376,16 +387,25 @@ one-Attempt-per-root, Capture/inspect semantics, and PF-09 one-POST seam are unc
 
 ### Checks
 
-- `uv run pytest -q tests/test_dataforseo_paid_probe.py` → 113 passed
+- `uv run pytest -q tests/test_dataforseo_paid_probe.py` → 115 passed
 - `uv run ruff check .` → All checks passed
 - `uv run mypy src/observatory/dataforseo_paid_probe.py tests/test_dataforseo_paid_probe.py`
   → Success: no issues found in 2 source files
-- `uv run mypy` (repo-wide) is already red at start commit `14037adf` with 10 errors in
+- `uv run mypy` (repo-wide) remains the pre-existing 10 errors in
   `tests/test_api_target_metrics.py`, `tests/test_api_llm_mentions_historical.py`, and
-  `tests/test_dataforseo_ai_optimization_llm_mentions_historical_paid_probe.py`. PF-16 did
-  not add or change those files; fixing them is outside the allowlist.
+  `tests/test_dataforseo_ai_optimization_llm_mentions_historical_paid_probe.py`. No new
+  mypy errors relative to start commit `14037adf`.
 
-Full-suite pytest was not run; reserved for Steward/CHAZ review.
+Full-suite pytest was not run; reserved for [CHAZ].
+
+### Steward-review remediation
+
+Steward review found that the first implementation consumed before
+`credentials.require_nonempty()` and `_resolved_exchange_url`. That was not required by
+F13 and contradicted the pre-PF-16 credential/endpoint-failure boundary.
+
+Remediation start: `6a813f9f8d9c3ed9fa4007f1e10d1fe2691bb954`. This commit restores that
+boundary and adds the two reuse tests above. F13 consume-before-verify is unchanged.
 
 ### Strongest proof
 
