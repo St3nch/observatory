@@ -1,6 +1,6 @@
 # AI-17 — LLM Mentions Historical Recipe selection and admitted-history API
 
-**Status:** review  
+**Status:** done  
 **Owner:** [GROK] implementation / [GPT] Steward review  
 **Blocked by:** Steward review of this implementation commit  
 **Authorized workstream:** [CHAZ] approved the next Historical boundary after pushed AI-16 closure  
@@ -797,3 +797,42 @@ Zero provider, DNS, credential, account, pricing, restic, rclone, or public-netw
 calls. Zero Evidence mutation. Zero operator PostgreSQL mutation. Ordinary tests used
 committed fixture/synthetic Evidence and isolated pytest PostgreSQL. No Recipe/parser/
 Derivation/schema change. No Outcomes/Holdings. No amend. No push.
+
+## Steward review and closure — 2026-08-25
+
+The Steward accepts AI-17 as `done` after independent review of implementation commit
+`7e29a3250881955a2a04b5ab965d82d977dffce8` against accepted parent
+`f749e93aa98277603f8955b4e7f9ab768909376a`.
+
+The exact comparison contains only the six authorized implementation paths. Independent
+review confirmed the Historical v1-only Recipe reader, selected/pinned resolution,
+context-first LEFT JOIN to the full Outcome identity with no SQL classification/non-null
+predicate and no SQL limit before verification, valid `observation_admitted_empty` history,
+exact admitted/admitted-empty count pairing, Evidence-authoritative provenance, exact
+Attempt/context request agreement, computed inclusive requested-period semantics, exact
+unreturned `(year, month)` set equality, complete monthly/envelope identity checks,
+deterministic inner Data Period ordering, verify-before-limit behavior, foreign-Attempt
+defenses, strict Historical OpenAPI polarity, and generic provider Attempt routing.
+No remediation blocker remained.
+
+Accepted Historical Recipe v1 remains:
+
+`fe3e105f3f90c667df0294a2af12e5a27492bfe6eb63a0664b5326619f62d385`.
+
+Implementation-head verification remained green:
+
+- targeted AI-17/API/Attempt/selection suite: `36 passed`;
+- `uv run ruff check .`: passed;
+- `uv run mypy src`: passed with no issues in 38 source files.
+
+[CHAZ] then returned exact-HEAD full-suite evidence on
+`7e29a3250881955a2a04b5ab965d82d977dffce8`:
+
+- `uv run pytest -q` -> `1426 passed, 1 skipped, 1 warning` in `466.78s`, exit 0;
+- warning: existing Starlette/httpx TestClient deprecation;
+- skip unchanged.
+
+No provider, DNS, credential, Evidence, operator-PostgreSQL, restic, rclone, schema,
+Recipe, parser, Derivation, Outcomes/Holdings, F12/F13, strategy, amend, or push activity
+occurred during Steward closure. Historical Recipe-addressed Derivation and its fully typed
+admitted-history API are now complete for this v1 slice.
