@@ -1,9 +1,9 @@
 # OPS-04 — GitHub queue and draft-PR control plane
 
-**Status:** provisional
+**Status:** accepted
 **Owner:** [GROK] implementation / [GPT] Steward review
 **Kind:** development-workflow tooling; not Observatory acquisition/runtime behavior
-**Blocked by:** none — OPS-03 dispatcher is closed and live-smoke proven
+**Blocked by:** implementation unblocked — OPS-03 dispatcher is closed and live-smoke proven; live GitHub commissioning remains separate
 **Approved by:** [CHAZ] to proceed with the next Bootie Factory control-plane layer
 **Start commit:** pending final Steward acceptance
 
@@ -240,6 +240,115 @@ Do not implement or mutate GitHub/repository state during review.
 - No provider, DNS, Evidence, paid, production credential, or production PostgreSQL work.
 - No generic multi-agent framework, webhook server, or GitHub Actions runner in this slice.
 - No real GitHub mutations from ordinary tests.
+
+## Pre-implementation review reconciliation
+
+The read-only review at provisional commit
+`7afc1f2602aca9f311bf6a08360ca33eb855875f` returned
+`READY_AFTER_TICKET_RECONCILIATION`. The rules below are normative and supersede any
+earlier provisional wording in this ticket where there is conflict.
+
+### Queue and actor identity
+
+- The production queue is one exact `(repository_id, issue_number)` pair recorded during a
+  one-time operator commissioning step outside the repository. Production refuses without
+  that record. Repository or issue identity is not a per-run CLI argument, and issue-title
+  search is not an identity mechanism.
+- The production actor is GitHub numeric user id `54292644`, login `St3nch`,
+  `user.type=User`. Numeric id is primary. Local Git identity, display name, authenticated
+  host account, bots, and login-only matches are not actor authority.
+- A comment id is an event handle, not immutable content. Accept only comments whose first
+  observed `updated_at == created_at`, persist the exact normalized body SHA-256 when
+  claimed, and refuse any later body-hash mismatch.
+
+### Exact command and remote-main gate
+
+- After CRLF normalization and outer whitespace stripping, the entire body must match
+  `^/bootie (implement|resume) tickets/[A-Za-z0-9._-]+\.md [0-9a-f]{40}$`.
+  Added prose, quotes, HTML, mentions, shell fragments, and non-lowercase/non-40-hex SHA
+  syntax refuse.
+- Reuse OPS-03 ticket/SHA normalization before dispatch. Never shell-interpolate comment
+  text; every subprocess uses a closed argv list.
+- Recheck Observatory origin identity, then fetch only
+  `refs/heads/main:refs/remotes/origin/main`. Generic `git fetch origin`, pull, or stale
+  remote-main fallback is forbidden.
+- The start commit must be an ancestor of freshly updated `refs/remotes/origin/main`, not
+  merely local `main`, and `git show <start>:<ticket>` must be accepted before dispatch.
+- Controller Git fetch/push is separate from OPS-03 because OPS-03 deliberately forbids
+  those verbs. Grok execution still goes only through OPS-03 `dispatch()` /
+  `invoke_real_grok` or its closed-argv CLI equivalent.
+- Writer identity is ticket-stable: `bootie/<ticket-id>`. Comment/event id is never part of
+  Writer identity.
+
+### Idempotency and crash state
+
+- One exclusive controller flock prevents overlapping `--once` dispatch.
+- Persist event state before side effects and move monotonically through
+  `claimed -> dispatching -> dispatched -> branch_pushed -> pr_ensured -> result_posted -> done`.
+  Writes are atomic/fail-closed.
+- Replaying one comment id may continue only that event's already-recorded publication or
+  result work and must never call OPS-03 a second time. `resume` requires a new exact
+  `/bootie resume ...` comment.
+- A dispatcher record that is `running` with no live PID is reported as stuck. OPS-04 does
+  not clear, abandon, reset, or silently relaunch it.
+- `--once` processes the single oldest unprocessed command-like event per invocation; it
+  does not drain an arbitrary backlog. Persistent systemd polling remains a later ticket.
+
+### Branch and draft-PR publication
+
+- Repository mutation happens only after `child_completed=true`. Failure, refusal,
+  cancelled, and stuck outcomes may post a bounded queue result but never push or create a
+  PR.
+- Ticket branch identity is exactly `dispatcher/<ticket-id>`. Initial publication uses an
+  explicit non-force source/destination refspec for that branch only. Bare `git push`, any
+  argv naming `main`, tags, another branch, or an arbitrary ref refuses.
+- Remediation replacement is allowed only with
+  `--force-with-lease=refs/heads/dispatcher/<id>:<recorded_published_sha>` plus the exact
+  ticket-branch source/destination refspec. The expected SHA comes from controller state,
+  never a remote-tracking ref. Remote mismatch refuses. Plain `--force` is forbidden.
+- PR identity is persisted by numeric PR number. All GitHub calls are bound to
+  `St3nch/observatory`; the PR must be open, draft, unmerged, same-repo, base `main`, and
+  head `St3nch:dispatcher/<id>`. Closed, merged, ready, fork, foreign-head/base, or other
+  mismatch refuses rather than opening a replacement. Do not search by title.
+- The controller pushes the branch itself before PR creation. Production PR creation uses
+  a narrow GitHub API call or equivalent that cannot opportunistically push the current
+  checkout; `gh pr create` is not the production publication primitive.
+- Result comments use a closed field set plus event comment id and bounded redacted
+  diagnostic. Never post raw Grok output, arbitrary original comment text, tool inputs,
+  environment, logs, or credentials. A duplicate result comment is tolerated only for the
+  crash window after GitHub accepted the post but before local `result_posted` persisted.
+
+### Commissioning boundary
+
+The review found `gh` is not currently installed and no authenticated GitHub CLI session
+exists on the VPS. Deterministic implementation and zero-network review may proceed.
+Live commissioning is separately authorized later and must first install/verify the chosen
+GitHub client, authenticate without exposing token material, create the dedicated queue
+issue, record its exact numeric repository id + issue number, and verify least-privilege
+access. The controller must never call `gh auth token` or display/log/persist token
+material. No live queue comment, branch push, or PR creation is authorized by this
+implementation ticket alone.
+
+### Additional mandatory proofs
+
+In addition to the proof list above, zero-network tests must prove:
+
+- edited-at-ingest and claimed-body-hash mismatch refuse before dispatch;
+- actor validation uses numeric id + login + `type=User`; bots and login-only matches refuse;
+- exact full-body grammar rejects extra text/quotes/HTML/mentions;
+- narrow main-only fetch is used; fetch failure and local-main-only ancestry refuse;
+- controller flock prevents concurrent `--once` double-dispatch;
+- same comment id never redispatches; only a new resume event may call OPS-03 resume;
+- exact ticket/start/mode and ticket-stable Writer identity reach the dispatcher seam;
+- stuck dispatcher state is reported without state repair or relaunch;
+- push argv is explicit and `main` is impossible;
+- first publish is non-force; remediation lease uses exactly the recorded prior SHA and
+  mismatch refuses;
+- stored PR-number validation rejects foreign/fork/wrong-base/closed/merged/ready state;
+- failure/cancelled/refused/stuck results cannot mutate repository refs or PRs;
+- crash/restart state-machine recovery cannot duplicate dispatch or PR creation;
+- tests bomb real `gh`, GitHub HTTP, Grok/xAI, provider, DNS, Evidence, and production DB
+  access; Ruff and touched-path mypy pass.
 
 ## Implementation report
 
