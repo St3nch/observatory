@@ -1,11 +1,11 @@
 # OPS-03 — Headless Grok Build dispatcher bootstrap
 
-**Status:** accepted
+**Status:** review
 **Owner:** [GROK] implementation / [GPT] Steward review
 **Kind:** development-workflow tooling; not Observatory capture/acquisition behavior
 **Blocked by:** none — read-only review reconciled by Steward
 **Approved by:** [CHAZ] to bootstrap GitHub-gated headless Grok Build development
-**Start commit:** pending final Steward acceptance
+**Start commit:** b37afff8e99d043a604df3728410321be18f518b
 
 ## Purpose
 
@@ -320,3 +320,104 @@ explicit `--always-approve` with substantive denies, isolated worktree, no subag
 no ask-user, disabled web search, and the unchanged scope boundaries. Dispatcher success
 requires both child process exit `0` and a successful Grok JSON stop reason; exit `0` with
 `stopReason="cancelled"` is non-success/resumable and must be tested.
+
+## Implementation report
+
+<!-- implement fills; may set Status: review; never Status: done -->
+
+- End commit: supplied in the implementer handoff report (a commit cannot
+  embed its own final hash).
+- Acceptance evidence:
+  - `uv run pytest -q tests/test_grok_dispatcher.py` — 29 passed
+  - `uv run ruff check tools/grok_dispatcher.py tests/test_grok_dispatcher.py` — clean
+  - `uv run mypy tools/grok_dispatcher.py tests/test_grok_dispatcher.py` — clean
+  - Missing ticket: `test_missing_ticket_refuses_before_grok`
+  - Unaccepted git object: `test_unaccepted_start_commit_object_refuses_despite_later_accepted_head`
+  - Object not HEAD file: `test_accepted_start_commit_object_is_used_not_later_head_file`
+  - Invalid/malformed SHA: `test_invalid_start_commit_refuses_before_grok`,
+    `test_malformed_start_commit_refuses_before_grok`
+  - Dirty base: `test_dirty_base_refuses_before_grok`
+  - Identity: `test_wrong_origin_refuses_before_grok`,
+    `test_production_paths_are_canonical`,
+    `test_origin_identity_accepts_equivalent_ssh_forms_only`
+  - Exact start worktree: `test_worktree_head_equals_exact_start_commit`
+  - One Writer: `test_duplicate_active_writer_refuses`,
+    `test_running_state_with_live_pid_refuses_second_writer`,
+    `test_other_ticket_live_worktree_refuses_before_grok`
+  - Prompt/boundaries: `test_prompt_contains_ticket_start_commit_and_hard_boundaries`
+  - Session id and closed argv: `test_implement_records_child_session_id_and_always_approve_denies`
+  - Resume: `test_resume_reuses_same_session_id_and_worktree`
+  - Failure honesty: `test_nonzero_timeout_and_auth_failure_are_not_success`,
+    `test_exit_zero_with_cancelled_stop_reason_is_not_success`,
+    `test_cli_exit_nonzero_on_cancelled_json_result`,
+    `test_grok_runner_exception_is_failed_not_running`
+  - Completion postconditions: `test_end_turn_without_commit_is_not_success`,
+    `test_multiple_commits_is_not_success`,
+    `test_dirty_worktree_after_grok_is_not_success`,
+    `test_wrong_ticket_status_or_done_is_not_success`,
+    `test_valid_single_commit_completion_succeeds`
+  - Secrets/env/denies: `test_logs_and_state_redact_secret_like_inputs`,
+    `test_child_environment_strips_secret_bearing_names`,
+    `test_deny_rules_cover_network_and_secret_path_writes`
+  - No merge/done: `test_dispatcher_cannot_merge_main_or_mark_ticket_done`
+- Unproven limits:
+  - Ordinary tests inject a fake Grok child. They do not prove real auth, resume,
+    `--always-approve` / `--deny` enforcement, Git metadata writes, or host sandbox
+    behavior. The manual installed-CLI smoke remains a separately authorized
+    post-review proof.
+  - `--no-memory` is accepted by grok 1.0.5 but is not listed in `grok --help`;
+    it is the installed CLI's documented-in-binary memory disable flag.
+  - `--no-ask-user` is accepted by the installed CLI (hidden/undocumented in the
+    summary help) and is passed because the ticket requires it.
+  - Deny rules are argv-closed and tested as such. The installed CLI's matching
+    of those rule strings is unproven here. This is not an OS-level network
+    sandbox; an arbitrary interpreter in the child can still open sockets.
+  - Child environment stripping is name-based (`API_KEY`, `TOKEN`, `SECRET`,
+    `PASSWORD`, `AUTHORIZATION`, `CREDENTIAL`, `DATAFORSEO`, `GH_TOKEN`,
+    `GITHUB_TOKEN`, `XAI_API_KEY` as contained markers). Novel env names are
+    not stripped.
+  - Dispatcher success now requires child exit `0`, JSON `stopReason`
+    `end_turn`/`EndTurn`, exactly one commit on `start..HEAD`, a clean
+    worktree, ticket `Status=review` never `done`, and ticket Start commit
+    equal to the recorded start SHA. Other stop reasons remain non-success.
+    Exit `0` with `stopReason="cancelled"` stays non-success/resumable and is
+    not subjected to those commit postconditions.
+  - Repository identity accepts the two equivalent GitHub SSH spellings of
+    `St3nch/observatory.git` (`ssh://github.com/...` and `git@github.com:...`).
+    The live canonical clone currently uses the `git@` form. HTTPS or any other
+    remote is refused.
+  - There is no operator `abandon` command. A crashed `running` record or a
+    worktree created before state was written stays fail-closed until a later
+    boundary.
+  - No OS-level sandbox is claimed. GitHub triggering, PR creation, merge, and
+    the deferred OPS-01 hook framework remain unbuilt.
+- Strongest part: fail-closed gates run before the child; completion no longer
+  treats a clean `end_turn` with no commit as success; launch exceptions persist
+  failed state and clear `child_pid`; `--always-approve` is paired with a
+  broader deny set and secret env stripping.
+- Weakest part: fake-child tests cannot prove the installed CLI will honor deny
+  rules, return the assumed JSON shape in every failure mode, or resume the
+  recorded session. Identity and dispatcher-home paths are injectable so tests
+  never touch the live `~/.local/share/vedaops/observatory/dispatcher/` tree.
+- Possible false greens: redaction regexes miss novel secret formats; JSON
+  parsing accepts a small family of objects (`sessionId`/`stopReason` or snake
+  case) and would miss an unexpected wrapper; lock tests prove exclusive Writer
+  state/PID/lock behavior in one process, not NFS/crash-fsync semantics;
+  postcondition git counts are ordinary `rev-list --count`, not a signed
+  commit-object proof.
+- Remaining caller influence: production `main()` is the only path that uses
+  `invoke_real_grok` and `DispatcherPaths.production()`. Tests bomb the real
+  child and must pass an explicit `paths` object.
+- Architecture: one module under `tools/` plus one test module. No
+  `src/observatory` change, no OPS-01 revival, no generic agent platform, no
+  GitHub control plane.
+- Review findings remaining:
+  - Steward remediation of completion false-green, child env/deny boundary, and
+    launch-exception honesty is in this amended implementation commit. Steward
+    independent diff review still required.
+  - Changed paths are `tools/grok_dispatcher.py`, `tests/test_grok_dispatcher.py`,
+    and this ticket.
+
+## Closure
+
+<!-- Project Steward only -->
