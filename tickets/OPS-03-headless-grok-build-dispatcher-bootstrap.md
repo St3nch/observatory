@@ -1,6 +1,6 @@
 # OPS-03 — Headless Grok Build dispatcher bootstrap
 
-**Status:** review
+**Status:** done
 **Owner:** [GROK] implementation / [GPT] Steward review
 **Kind:** development-workflow tooling; not Observatory capture/acquisition behavior
 **Blocked by:** none — read-only review reconciled by Steward
@@ -421,3 +421,30 @@ requires both child process exit `0` and a successful Grok JSON stop reason; exi
 ## Closure
 
 <!-- Project Steward only -->
+
+- Steward review: PASS.
+- Reviewed implementation commit:
+  `a1f49db704b42bf9bb8125c3e11fa98b71410830`.
+- Exact accepted start commit:
+  `b37afff8e99d043a604df3728410321be18f518b`.
+- Independent compare confirmed exactly the three authorized changed paths:
+  `tools/grok_dispatcher.py`, `tests/test_grok_dispatcher.py`, and this ticket.
+- Steward review specifically verified the remediation for completion false-greens,
+  secret/environment and deny boundaries, and child-launch exception state honesty.
+- [CHAZ] final repository-wide pytest: `1462 passed, 1 skipped, 1 warning`.
+- [CHAZ] repository-wide Ruff: clean.
+- Writer touched-path mypy for `tools/grok_dispatcher.py` and
+  `tests/test_grok_dispatcher.py`: clean.
+- Repository-wide mypy still reports 12 errors in 4 untouched files; these are
+  outside the OPS-03 diff and are recorded as a pre-existing baseline rather
+  than widened into this ticket.
+- Installed-CLI dispatcher smoke: PASS.
+  - real Grok session: `01a044be-441f-7ba3-ae60-a05feafcddf7`
+  - disposable smoke start: `9c41533ec3b7dca8355aaf8409babc2f09597a1c`
+  - disposable smoke implementation:
+    `11ad698ade1a766d0347de4a482f255233b5bda7`
+  - `stopReason=end_turn`, process exit `0`, exactly one implementation commit,
+    clean worktree, and `SMOKE_RESULT.txt = DISPATCHER_SMOKE_OK`
+  - final proof: `BOOTIE_FACTORY_SMOKE=PASS`
+- OPS-03 is closed. GitHub-triggered queue/PR automation remains the next
+  separately governed layer.
