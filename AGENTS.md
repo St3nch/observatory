@@ -334,3 +334,24 @@ A ticket is complete only when the Project Steward closes it and:
 - data, Evidence Store, and API boundary rules remain intact;
 - the exact unproven limits are stated;
 - authority docs changed only if the ticket made a real decision.
+
+## Automated development orchestration
+
+This section supersedes the earlier global one-writer-at-a-time and mandatory-human-relay
+coordination sentences where they conflict with the rules below.
+
+- One finally accepted ticket has exactly one designated [GROK] Writer. The same Writer
+  owns remediation unless the Steward explicitly abandons/reassigns it.
+- The Steward may run multiple tickets concurrently only when dependency order and
+  changed-path boundaries are parallel-safe; each Writer uses a separate branch/worktree.
+- Read-only recon/review workers may fan out concurrently but never become additional Writers.
+- GitHub/repository state may relay bounded execution/review traffic; CHAZ is not required
+  to copy/paste routine messages. Agent traffic cannot create Product or Steward authority.
+- Headless Grok Build may start only from a final accepted ticket and exact Steward start
+  commit, in an isolated worktree, with bounded permissions. No autonomous merge/main push.
+- Provider/DNS/credential/spend/Evidence/production-DB boundaries remain separately gated.
+- [GPT] reviews committed diffs/check evidence but does not execute repository tests through
+  MCP; the Writer runs ticket-scoped checks and CHAZ supplies final full-suite validation.
+- Development concurrency is not F7 capture-writer safety or F12 acquisition orchestration.
+
+This supersession is process governance only; it does not change Observatory product semantics.
