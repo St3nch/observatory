@@ -132,21 +132,30 @@ load-bearing execution seams.
 
 ### Closed headless argv and permissions
 
-- Every implementation and resume run explicitly overrides the current user-level
-  `permission_mode = "always-approve"` with `--permission-mode dontAsk`.
-- The closed allow set is limited to repository-local read/edit/write/grep plus the Git and
-  validation operations needed for one implementation commit: status, diff, show,
-  rev-parse, log, add, and commit; and `uv run pytest`, `uv run ruff`, and touched-path
-  `uv run mypy`.
-- The closed deny set includes Git push/merge/rebase/reset/clean/checkout-or-switch to
-  `main`, destructive filesystem commands, provider/network clients, and access to
-  `~/.grok/auth.json`, `.env`/secret/credential paths, and DataForSEO credential variables.
+- Every implementation and resume run explicitly selects an unattended automation
+  permission mode rather than inheriting user config. For OPS-03 the accepted mode is
+  explicit `--always-approve` **plus a substantive deny set**, because live commissioning
+  proved that `dontAsk` with a narrowly enumerated Bash allowlist can cancel otherwise-safe
+  implementation work before producing a commit.
+- The deny set includes Git push/merge/rebase/reset/clean/checkout-or-switch to `main`,
+  destructive filesystem commands, provider/network clients, GitHub mutation/network
+  commands, and access to known auth/secret/credential paths or DataForSEO credential
+  variables. Ordinary local repository inspection and test/build commands are permitted.
+- This is not an OS security boundary and is not permission to widen scope. The Writer is
+  still confined by the accepted changed-path allowlist, isolated worktree, prompt,
+  no-subagent rule, and independent review.
 - Every run also carries `--no-subagents`, `--no-ask-user`, `--disable-web-search`, and
   memory disabled. WebFetch/MCP/provider/network tooling is not available to the Writer.
 - The prompt is delivered verbatim (`--verbatim` or an exact prompt file), so the tested
   closed prompt is the prompt actually supplied to Grok.
 - Project-local-skill-only use remains a prompt/governance rule, not a claimed CLI security
   boundary. Bundled/user skills existing on disk are an explicit unproven limit.
+
+**Commissioning evidence:** the first OPS-03 Writer session
+`01a0447d-7539-7be2-b3c5-e092dfbb0737` twice returned process exit `0` with JSON
+`stopReason = "cancelled"` while the worktree remained clean at the exact start commit.
+The dispatcher must therefore judge the Grok JSON result as well as the child process exit
+code; process exit `0` alone is never implementation success.
 
 ### Sandbox boundary for OPS-03
 
@@ -302,3 +311,12 @@ The read-only review and Steward reconciliation are complete. The first implemen
 is launched manually from the exact Steward-issued start commit through the already-proved
 headless Grok Build session. Only after the dispatcher itself is independently reviewed and
 closed do we add GitHub-triggered queue/PR automation.
+
+## Commissioning clarification
+
+Live OPS-03 commissioning supersedes any stale sentence above that still describes this
+bootstrap as relying on a closed `dontAsk` allowlist. The accepted unattended mode is
+explicit `--always-approve` with substantive denies, isolated worktree, no subagents,
+no ask-user, disabled web search, and the unchanged scope boundaries. Dispatcher success
+requires both child process exit `0` and a successful Grok JSON stop reason; exit `0` with
+`stopReason="cancelled"` is non-success/resumable and must be tested.
