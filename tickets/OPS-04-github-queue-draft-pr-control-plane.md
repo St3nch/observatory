@@ -1,6 +1,6 @@
 # OPS-04 — GitHub queue and draft-PR control plane
 
-**Status:** review
+**Status:** done
 **Owner:** [GROK] implementation / [GPT] Steward review
 **Kind:** development-workflow tooling; not Observatory acquisition/runtime behavior
 **Blocked by:** implementation unblocked — OPS-03 dispatcher is closed and live-smoke proven; live GitHub commissioning remains separate
@@ -422,4 +422,30 @@ In addition to the proof list above, zero-network tests must prove:
 
 ## Closure
 
-<!-- Project Steward only -->
+Closed by [GPT] Project Steward after committed-diff review, two same-Writer remediation
+rounds, and [CHAZ] final validation on the integrated implementation commit
+`f1782fcd3188211f3358d227ecbe652ab88a0327`.
+
+- Implementation start: `4a1ff6e2f49ba60542015ff94eaf0760b3ae9df7`.
+- Writer session remained `01a044e3-7786-77f2-90f9-2ca96e84b30a` across implementation
+  and both remediation rounds; the dispatcher preserved exactly one implementation commit
+  from the fixed start.
+- Final changed-path footprint remained exactly this ticket,
+  `tools/github_queue_controller.py`, and `tests/test_github_queue_controller.py`.
+- Steward review accepted the fail-closed actor, edited-comment/body-hash, remote-main,
+  stuck-dispatch, publication-time worktree, branch/lease, and production PR-shape guards.
+- [CHAZ] full-suite validation: `uv run pytest -q` — 1509 passed, 1 skipped, 1 warning;
+  `uv run ruff check .` — clean.
+- Repo-wide `uv run mypy` remains nonzero from known unrelated baseline errors and from the
+  repository's existing omission of `tools/` from mypy module search. The ticket-scoped
+  command `MYPYPATH=tools uv run mypy tools/github_queue_controller.py
+  tests/test_github_queue_controller.py` passed with no issues.
+- Live GitHub commissioning remains a separate authorization boundary: install/verify the
+  chosen GitHub client, authenticate without exposing token material, create and record the
+  exact queue `(repository_id, issue_number)`, verify least privilege, then prove live
+  queue/branch/draft-PR behavior. Persistent polling/systemd remains separately deferred.
+- No provider, credential, Evidence, production-DB, merge, or automatic `main`-push
+  authority was added by this closure.
+
+OPS-04 is accepted as the deterministic GitHub queue/draft-PR controller layer. Live
+commissioning and persistent runtime activation are intentionally not implied by closure.
