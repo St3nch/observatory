@@ -286,7 +286,7 @@ Do not edit, commit, push, invoke providers, or use real credentials during revi
 
 ## Hard boundaries
 
-- No implementation starts from this provisional ticket.
+- Implementation starts only from this accepted ticket and an exact Steward-issued start commit.
 - [GPT] owns authority/ticket reconciliation; [GROK] writes implementation/tests only after
   final acceptance and exact start commit.
 - No automatic merge or push to `main`.
@@ -298,8 +298,7 @@ Do not edit, commit, push, invoke providers, or use real credentials during revi
 
 ## Next boundary
 
-After read-only review, [GPT] reconciles findings and the agent-workflow authority update,
-commits the final accepted ticket, and issues its exact start commit. The first implementation
-run is then launched manually through the already-proved headless Grok Build session. Only
-after the dispatcher itself is independently reviewed and closed do we add GitHub-triggered
-queue/PR automation.
+The read-only review and Steward reconciliation are complete. The first implementation run
+is launched manually from the exact Steward-issued start commit through the already-proved
+headless Grok Build session. Only after the dispatcher itself is independently reviewed and
+closed do we add GitHub-triggered queue/PR automation.
