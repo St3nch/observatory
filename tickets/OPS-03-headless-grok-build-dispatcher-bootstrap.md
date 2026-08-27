@@ -1,9 +1,9 @@
 # OPS-03 — Headless Grok Build dispatcher bootstrap
 
-**Status:** provisional-review
+**Status:** accepted
 **Owner:** [GROK] implementation / [GPT] Steward review
 **Kind:** development-workflow tooling; not Observatory capture/acquisition behavior
-**Blocked by:** required read-only ticket review and Steward reconciliation
+**Blocked by:** none — read-only review reconciled by Steward
 **Approved by:** [CHAZ] to bootstrap GitHub-gated headless Grok Build development
 **Start commit:** pending final Steward acceptance
 
@@ -82,6 +82,117 @@ installed CLI differs, stop and report rather than silently changing the workflo
 10. A failed/expired Grok authentication state, dirty base, invalid ticket/start SHA,
     duplicate Writer, tool refusal, nonzero child exit, or red required check fails closed
     with a clear operator-visible state and does not invent success.
+
+## Steward reconciliation — locked bootstrap decisions
+
+The required read-only review returned `READY_AFTER_TICKET_RECONCILIATION`. The following
+choices are now part of this accepted ticket and remove implementation discretion on the
+load-bearing execution seams.
+
+### Exact start commit and accepted-ticket gate
+
+- `implement` reads the ticket from the supplied Git object (`git show
+  <start-sha>:tickets/<ticket>` or an equivalent object read), never from the live working
+  tree, and requires that object to contain `**Status:** accepted`.
+- `implement` creates the ticket worktree at the exact start SHA and verifies its initial
+  `HEAD` equals that SHA.
+- `resume` never resets the worktree. It requires the recorded start SHA to remain an
+  ancestor of current worktree `HEAD`, and requires the recorded branch and worktree path
+  to match.
+- The canonical bootstrap repository is `/home/chaz/projects/vedaops/observatory` with
+  `origin` equal to `ssh://github.com/St3nch/observatory.git`. A different repository
+  identity refuses.
+- The primary checkout must be clean under porcelain status including untracked files. A
+  resumed ticket worktree may be dirty because interrupted Grok work is not rolled back.
+
+### Worktree ownership
+
+- The **dispatcher** owns worktree creation using ordinary `git worktree add -b ...
+  <path> <start-sha>`.
+- Grok is launched with `--cwd <that-path>` and never with Grok Build `--worktree` / `--ref`
+  for this bootstrap.
+- Ticket worktrees live below
+  `~/.local/share/vedaops/observatory/dispatcher/worktrees/` and are not created inside the
+  primary `main` checkout.
+- Resume uses the exact same recorded path. No fresh worktree is created for remediation.
+
+### One Writer and resume identity
+
+- One exclusive filesystem lock exists per ticket. The key is the ticket, not
+  `(ticket,start_sha)`.
+- `implement` refuses when the ticket lock is held, a recorded child PID is still live, or
+  state is `running`. There is no timeout that silently releases Writer ownership.
+- A crashed/abandoned run is explicitly resumed or explicitly abandoned by a later operator
+  boundary; it never silently starts a second Writer.
+- New headless execution uses JSON output and records the actual returned Grok `sessionId`.
+  The dispatcher must not invent or pre-fill a fake session UUID.
+- Resume uses `--resume <recorded-session-id>` with the same `--cwd`; it never uses
+  `--continue`, `--session-id` to reuse an existing session, `--fork-session`, or
+  `--worktree`.
+
+### Closed headless argv and permissions
+
+- Every implementation and resume run explicitly overrides the current user-level
+  `permission_mode = "always-approve"` with `--permission-mode dontAsk`.
+- The closed allow set is limited to repository-local read/edit/write/grep plus the Git and
+  validation operations needed for one implementation commit: status, diff, show,
+  rev-parse, log, add, and commit; and `uv run pytest`, `uv run ruff`, and touched-path
+  `uv run mypy`.
+- The closed deny set includes Git push/merge/rebase/reset/clean/checkout-or-switch to
+  `main`, destructive filesystem commands, provider/network clients, and access to
+  `~/.grok/auth.json`, `.env`/secret/credential paths, and DataForSEO credential variables.
+- Every run also carries `--no-subagents`, `--no-ask-user`, `--disable-web-search`, and
+  memory disabled. WebFetch/MCP/provider/network tooling is not available to the Writer.
+- The prompt is delivered verbatim (`--verbatim` or an exact prompt file), so the tested
+  closed prompt is the prompt actually supplied to Grok.
+- Project-local-skill-only use remains a prompt/governance rule, not a claimed CLI security
+  boundary. Bundled/user skills existing on disk are an explicit unproven limit.
+
+### Sandbox boundary for OPS-03
+
+The built-in Grok `workspace` sandbox is **not** required in this bootstrap implementation.
+With a dispatcher-owned Git worktree, Git ref/object metadata needed by `git commit` lives
+outside the worktree CWD; the installed sandbox can therefore make the required commit
+infeasible or can warn/fall back without proving enforcement. OPS-03 instead relies on the
+closed `dontAsk` permission set plus isolated worktree and explicit denials above.
+
+A later ticket may add a host-proved custom sandbox profile that permits only the required
+Git metadata writes and fails closed when enforcement is unavailable. OPS-03 must not claim
+OS-level sandbox enforcement.
+
+### State, logs, timeout, and exit state
+
+- Dispatcher state, lock files, and logs live under
+  `~/.local/share/vedaops/observatory/dispatcher/`, never in the repository, Evidence Store,
+  or Grok auth files.
+- Persist only the bounded run record: ticket, start SHA, branch, worktree, Grok session ID,
+  child PID while live, timestamps/state, implementation commit when known, exit/stop
+  result, and a bounded non-secret diagnostic.
+- Use one final JSON result rather than streaming tool payload logs. Do not persist raw tool
+  inputs or file contents.
+- Child timeout is **7200 seconds**. Exit `0` means the Grok process completed; exit `1`,
+  `130`, `143`, timeout, auth expiry, or any other nonzero result is recorded as failure or
+  interrupted/resumable state, never implementation success.
+
+### Tooling/test seam
+
+- Keep implementation under `tools/` plus one focused test module. Do not change
+  `pyproject.toml` merely to package the dispatcher.
+- Tests import/execute the tool through a test-local seam or subprocess entrypoint; normal
+  project packaging remains unchanged.
+- Because repository mypy configuration does not include `tools/`, implementation
+  validation explicitly invokes mypy on the touched dispatcher path and its focused test.
+- Ordinary tests inject/fake the Grok child boundary and must be incapable of accidentally
+  invoking the real `grok` executable.
+- The manual installed-CLI smoke remains a separately authorized post-review proof. Fake
+  child tests do not prove real auth, resume, permissions, Git metadata writes, or host
+  sandbox behavior.
+
+### GitHub remains the next layer
+
+No GitHub polling, labels, webhooks, Actions, PR creation, automatic reviewer launch, or
+merge automation is added by OPS-03. Closing this local dispatcher proof is the prerequisite
+for that Bootie Factory control-plane layer.
 
 ## Recommended implementation shape
 
