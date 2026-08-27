@@ -1,11 +1,11 @@
 # OPS-04 — GitHub queue and draft-PR control plane
 
-**Status:** accepted
+**Status:** review
 **Owner:** [GROK] implementation / [GPT] Steward review
 **Kind:** development-workflow tooling; not Observatory acquisition/runtime behavior
 **Blocked by:** implementation unblocked — OPS-03 dispatcher is closed and live-smoke proven; live GitHub commissioning remains separate
 **Approved by:** [CHAZ] to proceed with the next Bootie Factory control-plane layer
-**Start commit:** pending final Steward acceptance
+**Start commit:** 4a1ff6e2f49ba60542015ff94eaf0760b3ae9df7
 
 ## Purpose
 
@@ -353,6 +353,72 @@ In addition to the proof list above, zero-network tests must prove:
 ## Implementation report
 
 <!-- implement fills; may set Status: review; never Status: done -->
+
+- End commit: supplied in the implementer handoff (a commit cannot embed its own final hash).
+- Skills loaded:
+  - `/home/chaz/.local/share/vedaops/observatory/dispatcher/worktrees/OPS-04-github-queue-draft-pr-control-plane/.grok/skills/implement/SKILL.md`
+  - `/home/chaz/.local/share/vedaops/observatory/dispatcher/worktrees/OPS-04-github-queue-draft-pr-control-plane/.grok/skills/tdd/SKILL.md`
+  - `/home/chaz/.local/share/vedaops/observatory/dispatcher/worktrees/OPS-04-github-queue-draft-pr-control-plane/.grok/skills/code-review/SKILL.md`
+- Start commit: `4a1ff6e2f49ba60542015ff94eaf0760b3ae9df7`
+- Changed paths:
+  - `tools/github_queue_controller.py`
+  - `tests/test_github_queue_controller.py`
+  - this ticket
+- Acceptance evidence:
+  - `uv run pytest -q tests/test_github_queue_controller.py` — 47 passed
+  - `uv run ruff check tools/github_queue_controller.py tests/test_github_queue_controller.py` — clean
+  - `MYPYPATH=tools uv run mypy tools/github_queue_controller.py tests/test_github_queue_controller.py` — clean
+  - Actor/id/login/`User` with no GitHub mutation: `test_non_allowlisted_actor_refuses_before_dispatcher_or_repo_mutation`
+  - Grammar/ticket/SHA: `test_malformed_command_refuses_before_dispatch`, `test_crlf_and_whitespace_command_is_accepted`
+  - Edited-at-ingest / body-hash: `test_edited_at_ingest_refuses_before_dispatch`, `test_claimed_body_hash_mismatch_refuses_before_dispatch`, `test_claimed_event_edited_to_non_command_prose_is_refused_not_skipped`
+  - Duplicate comment id: `test_duplicate_comment_id_is_idempotent_and_never_rediscovers_writer`
+  - origin/main freshness: `test_start_not_on_origin_main_refuses`, `test_fetch_failure_refuses_and_does_not_use_stale_local_main`, `test_fetch_argv_is_main_only_and_push_argv_builders_reject_main`
+  - Accepted start object: `test_unaccepted_ticket_at_start_object_refuses`
+  - Dirty primary: `test_dirty_primary_refuses_before_dispatch`
+  - Dispatcher seam: `test_passes_exact_ticket_start_mode_and_ticket_stable_writer`
+  - Non-success never publishes: `test_dispatcher_non_success_never_pushes_or_opens_pr`
+  - Stuck dispatcher: `test_stuck_dispatcher_is_reported_without_repair_or_relaunch`
+  - Exact ticket-branch publish: `test_successful_implement_publishes_only_ticket_branch_without_force`
+  - Remediation lease: `test_resume_force_with_lease_uses_recorded_sha_and_mismatch_refuses`
+  - One draft PR / foreign PR refuse: `test_one_ticket_reuses_open_draft_pr_and_rejects_foreign_state`
+  - No main/merge/approve/ready/done: `test_controller_cannot_push_main_merge_approve_mark_ready_or_close_done`
+  - Bounded redacted results: `test_result_comments_are_bounded_and_redact_secrets`
+  - `--once` oldest only: `test_once_processes_oldest_command_like_event_only`
+  - Same comment vs new resume: `test_same_comment_never_rediscovers_only_new_resume_event_calls_dispatcher`
+  - Crash/restart: `test_crash_after_dispatching_does_not_relaunch_or_duplicate_pr`, `test_crash_dispatching_without_dispatcher_record_is_stuck_not_relaunched`
+  - Publication-time worktree revalidation: `test_publication_refuses_if_branch_moved_after_dispatcher_result`
+  - Production PR list/get merged shapes: `test_pull_from_api_accepts_get_and_list_production_shapes`, `test_pull_from_api_refuses_missing_or_contradictory_merged_fields`, `test_pull_from_api_refuses_missing_or_non_boolean_head_fork`
+  - Flock: `test_controller_flock_prevents_concurrent_once`
+  - `gh api` not `gh pr create` / no auth token: `test_gh_api_argv_never_uses_pr_create_or_auth_token`
+  - CLI `--once`: `test_cli_once_is_required`
+  - No Observatory runtime import: `test_controller_does_not_import_observatory_runtime`
+  - Missing queue commission: `test_missing_queue_config_refuses_without_dispatcher_or_github`
+- Unproven limits:
+  - Ordinary tests inject fake GitHub, fake dispatcher, and a git runner that redirects `origin` fetch/push/ls-remote to a local bare repo. They do not prove live `gh` authentication, draft-PR creation against github.com, or real Grok execution.
+  - `_pull_from_api` now has ordinary tests for GET (`merged` bool) and list (`merged_at` only) shapes, contradictory/missing merged fields, and missing/non-boolean `head.repo.fork`. Other nested `base`/`head` fields and live `gh api` bytes remain unproven until commissioning.
+  - Queue identity is a local `queue.json` with `github_repository_id` + `queue_issue_number`. No such file is created here; production refuses without it.
+  - Live GitHub commissioning (install/verify `gh`, authenticate without exposing token material, create the queue issue, record numeric repo id + issue number, least-privilege check) remains separately authorized.
+  - Persistent systemd polling is intentionally unbuilt.
+  - Controller fetch/push uses the local `origin` remote. Tests never talk to github.com; production `--once` will.
+  - Force-with-lease expected SHA comes from controller event/ticket publication state, never a remote-tracking ref. Remote mismatch is a git non-zero push, not an independent GitHub compare.
+  - A `dispatching` crash with no dispatcher record stays `dispatching` (not `done`), posts no queue comment, and cannot redispatch. Later `--once` polls report stuck again. Completing that event still needs a later Steward/operator boundary.
+  - Secret redaction reuses OPS-03 name/assignment/`sk-` patterns. Novel secret formats can leak into the bounded diagnostic.
+  - Actor allowlist is the closed triple numeric id `54292644` + login `St3nch` + `type=User`. Login-only or bot matches refuse.
+  - Unauthorized-actor refusals persist local `done` with no GitHub post/PR/push. Other authorized-event refusals may still post a bounded queue result.
+  - Session `tests/conftest.py` may still start throwaway PostgreSQL when this module is collected; this ticket does not use it and cannot change `conftest.py`.
+- Strongest part: fail-closed command/actor/origin-main gates run before OPS-03; unauthorized actors cannot post; publication revalidates the local ticket branch/worktree immediately before push; PR merged-state parsing accepts the real list/get shapes without assuming a list `merged` bool.
+- Weakest part: the live `gh api` adapter and origin fetch/push remain unproven; a `dispatching` event with no dispatcher record is parked, not operator-repaired; tests still redirect git origin.
+- Possible false greens: fake GitHub always returns `St3nch/observatory` and draft PRs unless a test mutates them; fake dispatcher does not enforce OPS-03 postconditions unless the test constructs them; redaction regexes miss novel secrets; `ls-remote` skip-push still trusts the SHA the local git runner returns after worktree revalidation.
+- Steward remediation (first amend): unauthorized actors no longer reach result-comment posting; stuck `dispatching` without dispatcher state no longer advances to `done`; `_pull_from_api` no longer requires a `merged` bool on list payloads; `_step_push` revalidates worktree branch, exact HEAD SHA, and cleanliness before any publish.
+- Steward remediation (second amend): `_oldest_unprocessed` keeps existing non-done event IDs eligible even when the current GitHub body is no longer command-like, so a claimed `/bootie` comment edited into prose hits body-hash mismatch instead of disappearing; `_nested_fork` refuses missing or non-boolean `head.repo.fork` instead of treating it as non-fork.
+- Remaining caller influence: production `main()` constructs `GhApiClient` / `ProductionDispatcher` / `SubprocessGit` only when those seams are not injected. Tests always inject. Writer children still cannot use `gh` or git network; OPS-03 denies are unchanged.
+- Architecture: one `--once` controller under `tools/` imports OPS-03 `dispatch()` and does not change dispatcher semantics. Controller-owned git fetch/push is required because OPS-03 forbids those verbs. Grok still goes only through OPS-03.
+- What later tickets should reuse: closed `gh api` argv allowlist, ticket-stable `bootie/<ticket-id>` writer identity, per-ticket publication record (`published_sha`, `pr_number`), monotonic event states, exclusive controller flock.
+- What should remain duplicated: ticket/SHA grammar in the comment parser (defense in depth before OPS-03 normalize); push argv construction (OPS-03 must not grow push).
+- Deferred: systemd timer, live commissioning, webhook/Actions, merge/`main` push, Steward closure, Product acceptance.
+- Code-review vs start commit `4a1ff6e2f49ba60542015ff94eaf0760b3ae9df7`:
+  - Standards: allowlist held; private OPS-03 `_normalize_ticket` / `_normalize_sha` reuse is the required coupling. Worst remaining: live GitHub JSON beyond the merged-field fixtures.
+  - Spec: first- and second-round Steward findings have regressions. systemd/webhook/`gh pr create` remain omitted. Worst residual: live `gh`/GitHub/Grok unproven, as the ticket required.
 
 ## Closure
 
