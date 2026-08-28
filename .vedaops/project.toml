@@ -2,4 +2,4 @@ schema_version = 1
 id = "observatory"
 name = "Observatory"
 mutable = true
-capabilities = ["read", "write", "patch", "execute"]
+capabilities = ["read", "write", "patch", "execute", "grok_review", "grok_write"]

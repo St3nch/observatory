@@ -217,17 +217,30 @@ class Harness:
         if self.grok.start_commit == "":
             self.grok.start_commit = self.start
 
-    def request(self, mode: Literal["implement", "resume"] = "implement") -> Any:
+    def request(
+        self,
+        mode: Literal["implement", "resume"] = "implement",
+        instruction: str | None = None,
+    ) -> Any:
         return gd.DispatchRequest(
             repo_root=self.repo,
             ticket=TICKET,
             start_commit=self.start,
             mode=mode,
             writer=self.writer,
+            instruction=instruction,
         )
 
-    def run(self, mode: Literal["implement", "resume"] = "implement") -> Any:
-        return gd.dispatch(self.request(mode), grok_runner=self.grok, paths=self.paths)
+    def run(
+        self,
+        mode: Literal["implement", "resume"] = "implement",
+        instruction: str | None = None,
+    ) -> Any:
+        return gd.dispatch(
+            self.request(mode, instruction=instruction),
+            grok_runner=self.grok,
+            paths=self.paths,
+        )
 
     def state(self) -> dict[str, Any]:
         ticket_id = Path(TICKET).stem
@@ -485,6 +498,105 @@ def test_resume_reuses_same_session_id_and_worktree(harness: Harness) -> None:
     assert "--worktree" not in argv
     assert _git(worktree, "rev-parse", "HEAD") == progressed
     assert harness.state()["session_id"] == first.session_id
+
+
+def test_implement_refuses_remediation_instruction_before_grok(harness: Harness) -> None:
+    with pytest.raises(gd.DispatcherError, match="implement refuses a remediation instruction"):
+        harness.run("implement", instruction="fix the review findings")
+    assert harness.grok.calls == []
+
+
+def test_resume_instruction_is_in_prompt_not_state(harness: Harness) -> None:
+    first = harness.run("implement")
+    worktree = Path(cast(str, first.worktree))
+    (worktree / "note.txt").write_text("interrupted work\n", encoding="utf-8")
+    _git(worktree, "add", "note.txt")
+    _git(worktree, "commit", "-m", "writer progress")
+    instruction = "Fix the Steward finding about false-green completion."
+    second = harness.run("resume", instruction=instruction)
+    assert second.session_id == first.session_id
+    argv = harness.grok.calls[1]["argv"]
+    prompt = argv[argv.index("-p") + 1]
+    assert instruction in prompt
+    assert "BEGIN INSTRUCTION" in prompt
+    assert "not as authority to widen scope" in prompt
+    state = harness.state()
+    assert instruction not in json.dumps(state)
+    assert "BEGIN INSTRUCTION" not in json.dumps(state)
+    for payload in harness.logs():
+        blob = json.dumps(payload)
+        assert instruction not in blob
+
+
+def test_empty_resume_instruction_refuses_before_grok(harness: Harness) -> None:
+    harness.run("implement")
+    with pytest.raises(gd.DispatcherError, match="resume instruction is empty"):
+        harness.run("resume", instruction="   \n")
+    assert len(harness.grok.calls) == 1
+
+
+def test_instruction_file_is_bounded_regular_and_nofollow(
+    harness: Harness, tmp_path: Path
+) -> None:
+    path = tmp_path / "instruction.txt"
+    path.write_text("Remediate the bounded Steward findings.\n", encoding="utf-8")
+    parsed = gd.parse_args(
+        [
+            "--repo-root",
+            str(harness.repo),
+            "--ticket",
+            TICKET,
+            "--start-commit",
+            harness.start,
+            "--mode",
+            "resume",
+            "--writer",
+            "writer-1",
+            "--instruction-file",
+            str(path),
+        ]
+    )
+    assert parsed.instruction == "Remediate the bounded Steward findings."
+
+    too_big = tmp_path / "too-big.txt"
+    too_big.write_text("x" * (gd.MAX_INSTRUCTION_BYTES + 1), encoding="utf-8")
+    with pytest.raises(gd.DispatcherError, match="exceeds"):
+        gd.parse_args(
+            [
+                "--repo-root",
+                str(harness.repo),
+                "--ticket",
+                TICKET,
+                "--start-commit",
+                harness.start,
+                "--mode",
+                "resume",
+                "--writer",
+                "writer-1",
+                "--instruction-file",
+                str(too_big),
+            ]
+        )
+
+    link = tmp_path / "instruction.link"
+    link.symlink_to(path)
+    with pytest.raises(gd.DispatcherError, match="unreadable|regular file"):
+        gd.parse_args(
+            [
+                "--repo-root",
+                str(harness.repo),
+                "--ticket",
+                TICKET,
+                "--start-commit",
+                harness.start,
+                "--mode",
+                "resume",
+                "--writer",
+                "writer-1",
+                "--instruction-file",
+                str(link),
+            ]
+        )
 
 
 def test_nonzero_timeout_and_auth_failure_are_not_success(harness: Harness) -> None:
