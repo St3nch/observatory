@@ -78,6 +78,7 @@ from observatory.migrate import connect
 from observatory.settings import (
     DATAFORSEO_LOGIN_ENV,
     DATAFORSEO_PASSWORD_ENV,
+    CredentialError,
     DataForSEOCredentials,
 )
 
@@ -891,3 +892,246 @@ def test_public_capture_function_has_no_endpoint_or_limit() -> None:
     policy = validate_attempt(_organic_attempt())["policy"]
     assert isinstance(policy, Mapping)
     assert policy["pricing_basis"] == "dataforseo-google-organic-live-2026-08-18"
+
+
+# --- PF-17: F13 transport-capability hardening -------------------------------
+#
+# Every adversary below is a *valid* Organic request that today's gate accepts on
+# contract shape, so a refusal proves closure-owned transport authority rather than
+# an unrelated pre-existing check. Each pre-send proof asserts zero handler calls.
+
+PF17_ALT_KEYWORD = "website comparison"
+
+
+def _alt_organic_parameters() -> dict[str, object]:
+    return closed_organic_parameters(keyword=PF17_ALT_KEYWORD)
+
+
+def _replacement_organic_body() -> bytes:
+    return organic_request_body_bytes(_alt_organic_parameters())
+
+
+def _replacement_organic_document() -> dict[str, object]:
+    return organic_http_attempt_document(
+        parameters=_alt_organic_parameters(),
+        attempt_nonce=NONCE,
+        authorized_at=AUTHORIZED_AT,
+        observatory_version=SOFTWARE,
+    )
+
+
+def _issue_organic(store: EvidenceStore) -> Any:
+    return _issue_verified_attempt(
+        store,
+        _organic_attempt(),
+        ORGANIC_REQUEST_BODY,
+        authorize_max_micro_usd=AUTHORIZE,
+    )
+
+
+def _refusing_client() -> tuple[httpx.Client, list[bytes]]:
+    """Client whose handler must never run; returns the client and its call log."""
+
+    calls: list[bytes] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.content)
+        raise AssertionError("handler must not run")
+
+    return _mock_client(handler), calls
+
+
+def _sending_client() -> tuple[httpx.Client, list[bytes]]:
+    calls: list[bytes] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.content)
+        return _streamed_response(200, ORGANIC_RESPONSE_BODY)
+
+    return _mock_client(handler), calls
+
+
+def _attempt_bundle(store: EvidenceStore, issued: Any) -> Path:
+    return store.attempt_path(
+        str(issued.document["request_fingerprint"]),
+        str(issued.document["authorized_at"]),
+        issued.attempt_id,
+    )
+
+
+def _request_body_digest(issued: Any) -> str:
+    request = issued.document["request"]
+    assert isinstance(request, Mapping)
+    body_state = request["body"]
+    assert isinstance(body_state, Mapping)
+    body_ref = body_state["body"]
+    assert isinstance(body_ref, Mapping)
+    digest = body_ref["sha256"]
+    assert isinstance(digest, str)
+    return digest
+
+
+def test_pf17_valid_body_replacement_refuses_before_transport(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "pf17-body")
+    issued = _issue_organic(store)
+    replacement = _replacement_organic_body()
+    assert replacement != ORGANIC_REQUEST_BODY
+    object.__setattr__(issued, "request_body", replacement)
+    client, calls = _refusing_client()
+    try:
+        with pytest.raises(StoreError, match="closure-owned issuance record"):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert calls == []
+
+
+def test_pf17_document_only_replacement_refuses_before_transport(tmp_path: Path) -> None:
+    """Document swapped, original committed body retained: still refused pre-send."""
+
+    store = create_store(tmp_path / "pf17-doc-only")
+    issued = _issue_organic(store)
+    replacement_document = _replacement_organic_document()
+    assert replacement_document != _organic_attempt()
+    validate_attempt(replacement_document)
+    object.__setattr__(issued, "document", replacement_document)
+    assert bytes(issued.request_body) == ORGANIC_REQUEST_BODY
+    client, calls = _refusing_client()
+    try:
+        with pytest.raises(StoreError, match="closure-owned issuance record"):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert calls == []
+
+
+def test_pf17_document_and_matching_body_replacement_refuses_before_transport(
+    tmp_path: Path,
+) -> None:
+    store = create_store(tmp_path / "pf17-doc-body")
+    issued = _issue_organic(store)
+    replacement_document = _replacement_organic_document()
+    replacement_body = _replacement_organic_body()
+    validate_attempt(replacement_document)
+    assert organic_request_body_bytes(_alt_organic_parameters()) == replacement_body
+    object.__setattr__(issued, "document", replacement_document)
+    object.__setattr__(issued, "request_body", replacement_body)
+    client, calls = _refusing_client()
+    try:
+        with pytest.raises(StoreError, match="closure-owned issuance record"):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert calls == []
+
+
+def test_pf17_used_flag_reset_cannot_replay(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "pf17-replay")
+    issued = _issue_organic(store)
+    client, calls = _sending_client()
+    try:
+        first = _exchange(issued, _credentials(), client=client)
+        object.__setattr__(issued, "_used", False)
+        assert issued._used is False
+        with pytest.raises(StoreError, match="one-exchange"):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert first.transport_state == "response_complete"
+    assert calls == [ORGANIC_REQUEST_BODY]
+
+
+def test_pf17_object_pool_tamper_refused_with_bundle_unchanged(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "pf17-pool")
+    issued = _issue_organic(store)
+    bundle = _attempt_bundle(store, issued)
+    pool = store.object_path(_request_body_digest(issued))
+    bundle_body = bundle / "request.body"
+    assert pool.is_file() and bundle_body.is_file()
+    assert pool.read_bytes() == ORGANIC_REQUEST_BODY
+    assert bundle_body.read_bytes() == ORGANIC_REQUEST_BODY
+    assert pool.stat().st_ino != bundle_body.stat().st_ino
+    pool.write_bytes(_replacement_organic_body())
+    assert bundle_body.read_bytes() == ORGANIC_REQUEST_BODY
+    client, calls = _refusing_client()
+    try:
+        with pytest.raises(StoreError, match="verify-on-read"):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert calls == []
+
+
+def test_pf17_bundle_request_body_tamper_refused(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "pf17-bundle")
+    issued = _issue_organic(store)
+    bundle = _attempt_bundle(store, issued)
+    pool = store.object_path(_request_body_digest(issued))
+    (bundle / "request.body").write_bytes(_replacement_organic_body())
+    assert pool.read_bytes() == ORGANIC_REQUEST_BODY
+    client, calls = _refusing_client()
+    try:
+        with pytest.raises(StoreError, match="verify-on-read"):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert calls == []
+
+
+def test_pf17_failed_evidence_verification_consumes_issuance(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "pf17-consume")
+    issued = _issue_organic(store)
+    bundle = _attempt_bundle(store, issued)
+    (bundle / "request.body").write_bytes(_replacement_organic_body())
+    client, calls = _refusing_client()
+    try:
+        with pytest.raises(StoreError, match="verify-on-read"):
+            _exchange(issued, _credentials(), client=client)
+        with pytest.raises(StoreError, match="one-exchange"):
+            _exchange(issued, _credentials(), client=client)
+    finally:
+        client.close()
+    assert calls == []
+
+
+def test_pf17_endpoint_validation_failure_leaves_issuance_reusable(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "pf17-endpoint")
+    issued = _issue_organic(store)
+    refusing, refused_calls = _refusing_client()
+    try:
+        with pytest.raises(StoreError, match="loopback"):
+            _exchange(
+                issued,
+                _credentials(),
+                endpoint="https://api.dataforseo.com/v3/serp/google/organic/live/advanced",
+                client=refusing,
+            )
+    finally:
+        refusing.close()
+    assert refused_calls == []
+    sending, calls = _sending_client()
+    try:
+        result = _exchange(issued, _credentials(), client=sending)
+    finally:
+        sending.close()
+    assert result.transport_state == "response_complete"
+    assert calls == [ORGANIC_REQUEST_BODY]
+
+
+def test_pf17_credential_validation_failure_leaves_issuance_reusable(tmp_path: Path) -> None:
+    store = create_store(tmp_path / "pf17-credentials")
+    issued = _issue_organic(store)
+    refusing, refused_calls = _refusing_client()
+    try:
+        with pytest.raises(CredentialError):
+            _exchange(issued, DataForSEOCredentials("", ""), client=refusing)
+    finally:
+        refusing.close()
+    assert refused_calls == []
+    sending, calls = _sending_client()
+    try:
+        result = _exchange(issued, _credentials(), client=sending)
+    finally:
+        sending.close()
+    assert result.transport_state == "response_complete"
+    assert calls == [ORGANIC_REQUEST_BODY]

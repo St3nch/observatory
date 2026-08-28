@@ -1,10 +1,10 @@
 # PF-17 - Google Organic F13 transport-capability hardening
 
-**Status:** provisional-review
+**Status:** review
 **Owner:** [CLAUDE] implementation / [GPT] Steward review
-**Blocked by:** none after final Steward reconciliation; implementation starts only from the exact final ticket commit issued by the Steward
+**Blocked by:** Steward review of this implementation commit
 **Approved by:** [CHAZ] for bounded Organic F13 preparation; [CLAUDE] designated Writer
-**Start commit:** pending final Steward acceptance
+**Start commit:** 3aaef614af807b7697541a46bf3687e634243f1d
 
 ## Purpose
 
@@ -154,3 +154,127 @@ except permitted implementer Start/Status/report fields. The implementer sets St
 
 Commit this final accepted ticket and issue that exact commit as the implementation start
 commit. Only then may the designated [CLAUDE] implementer modify the allowlisted code/tests.
+
+## Implementation report
+
+**Start commit:** `3aaef614af807b7697541a46bf3687e634243f1d`
+**Writer:** [CLAUDE] (designated under `AGENTS.md` §Agent lanes)
+
+### Validation
+
+- `uv run pytest tests/test_dataforseo_google_organic_paid_probe.py -q` — **43 passed**
+  (9 new PF-17 proofs, 34 pre-existing).
+- Sibling suites importing the Organic gate, run to protect the changed-path boundary:
+  `search_mentions_paid_probe`, `target_metrics_paid_probe`,
+  `llm_mentions_historical_paid_probe`, `google_organic_derive`, `api_google_organic`,
+  `dataforseo_paid_probe`, `dataforseo_sandbox` — **386 passed**.
+- `uv run ruff check .` — **All checks passed**.
+- Touched-path `uv run mypy src/observatory/dataforseo_google_organic_paid_probe.py
+  tests/test_dataforseo_google_organic_paid_probe.py` — **Success, no issues**.
+- Repo-wide `uv run mypy` — **14 errors in 5 files (80 checked)**, an error set byte-identical
+  to the same command at start commit `3aaef61`. No error is in a PF-17 touched path; the
+  baseline errors are the known `tools/` module-search omission and pre-existing
+  Target Metrics / Historical API test typing.
+- Full-suite `uv run pytest -q` deliberately **not** run; final full-suite validation is
+  [CHAZ]-run per the Validation boundary.
+- Zero DataForSEO/provider calls, zero API-host/DNS/public-network activity, zero real
+  credentials, zero live provider Evidence, zero spend. Tests use sentinel credentials,
+  `httpx.MockTransport`, `tmp_path` stores, and the file's autouse `_no_public_network`
+  guard. The session PostgreSQL substrate from `tests/conftest.py` is ordinary local test
+  infrastructure and was not used by any PF-17 proof.
+
+### Strongest part
+
+Transport authority is now closure-owned end to end. `_Issuance` binds capability identity,
+concrete `EvidenceStore`, `attempt_id`, canonical committed preimage, exact committed bytes,
+and a `consumed` flag that no caller can reach — not even through `object.__setattr__`, which
+is the exact private seam F13 named. The pre-send revalidation is genuinely independent of
+the capability: it re-reads the Attempt by closure identity, verifies the exact bundle
+directory, reads committed `request.body`, revalidates the closed Organic parameter contract,
+recomputes the request bytes with the Organic constructor, and requires three-way equality
+across recomputed, committed, and issued bytes before `_require_organic_target` re-runs.
+Only closure-owned bytes reach the unchanged PF-09 seam.
+
+### Weakest / most fragile part
+
+`_issuance_for` is a linear scan over a closure list that never shrinks; an issuance record
+(including its 179-byte committed body and preimage) lives for the life of the process. That
+is correct and bounded for a one-shot adapter but would need revisiting if a gate ever issued
+many capabilities. Second: `_require_visible_fields_match` compares the *visible* document by
+re-canonicalizing it, so it depends on `canonical_json` raising `DocumentError` rather than
+silently coercing an exotic substitute; that behavior is verified but is a coupling to
+canonicalization strictness rather than to a type check.
+
+### Possible false greens
+
+- The nine proofs assert the **specific** guard message (`closure-owned issuance record`,
+  `verify-on-read`, `one-exchange`) rather than bare `StoreError`, so a refusal from an
+  unrelated pre-existing gate would not satisfy them. Every adversary is a *valid* Organic
+  document/body built from `closed_organic_parameters(keyword="website comparison")`, not a
+  KO/sandbox/malformed input.
+- Honest disclosure: the endpoint- and credential-reusability proofs **already passed against
+  the unhardened gate** at start commit, because the current ordering was already correct.
+  They are regression locks on PF-16-corrected ordering, not evidence of new behavior. The
+  other seven failed before this change and pass after.
+- `_replacement_organic_document()` reuses the issued nonce/`authorized_at`, so it differs
+  only in keyword. That is sufficient (distinct preimage and `attempt_id`) but a future
+  reader should not read it as proving nonce-level discrimination.
+- Mock transport does not prove real httpx wire behavior; PF-09 is unchanged and separately
+  covered.
+
+### Remaining caller influence
+
+A same-process caller can still replace visible `attempt_id`, `document`, `request_body`, and
+`_used` via `object.__setattr__` — they remain mirrors. They can no longer influence what is
+sent, whether a replay is permitted, or whether Evidence revalidation passes. Per the ticket's
+reconciled scope lock, mutation of those mirrors **after** `_exchange` returns still reaches
+`_commit_organic_capture` and the returned Outcome; that window is unchanged, at PF-16 parity,
+and deliberately out of PF-17.
+
+### Architecture drift / coupling
+
+No generic or shared capability framework was introduced. `_Issuance`,
+`_require_visible_fields_match`, and `_revalidate_committed` are private to the Organic
+closure. No foreign adapter validator or constructor is used: revalidation calls
+`validate_organic_http_parameters` and `organic_request_body_bytes` only. PF-09, the Evidence
+Store, capture-event constructors, and every sibling adapter are untouched. The structure
+intentionally parallels PF-16 by convergent design, not by shared code.
+
+### Evidence / provider traps
+
+- Pool tamper and independent bundle `request.body` tamper are *different* failures and are
+  proven separately; the pool proof asserts inode-distinctness and that the bundle body is
+  unchanged, which depends on the store's forbidden-hardlink invariant.
+- Revalidation failure consumes the issuance before it can fail, so a tampered store yields a
+  refused, non-replayable capability rather than a retry loop — proven explicitly.
+- The published Organic vector is unchanged: 179 bytes, body SHA-256
+  `0ea1022b…98e2b`, fingerprint `9ab79d60…cedb02`, Attempt `b577bc1f…d1a1be`, and the sample
+  conformance Capture `ab94c98e…9d41c4`.
+
+### Closure blockers
+
+None known within PF-17's scope. Closure needs [CHAZ] full-suite validation and [GPT] review
+of this committed diff.
+
+### Deferred / out of scope
+
+- Post-exchange mirror mutation before Capture commit / Outcome construction (scope-locked
+  above; same window exists in PF-16's Keyword Overview gate).
+- F13 remains unfired for the sandbox, Search Mentions, Target Metrics, and Historical gates.
+  This ticket hardens Organic only and authorizes no live invocation, spend, or reuse.
+
+### What later provider gates should reuse conceptually
+
+The shape, not the code: a closure-owned issuance record as sole transport authority;
+visible attributes demoted to mirrors; credential and endpoint validation before consumption
+so their failure leaves the issuance reusable; consumption before any Evidence read so a
+verification failure cannot be retried; and pre-send re-read plus adapter-local recomputation
+requiring three-way byte equality.
+
+### What should deliberately remain provider-local
+
+The Organic parameter validator and body constructor, the 30000 micro-USD ceiling, the
+32 MiB response ceiling and `max_response_body_bytes` seam, the one-shot adapter-contract
+rule, the loopback path restriction, and the error-message texts. Each gate must keep its own
+published bytes and closed contract independently reviewable; a shared abstraction here would
+make one adapter's drift silently change another's authorized request.
