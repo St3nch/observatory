@@ -2,11 +2,17 @@
 
 **Status:** provisional-review
 **Owner:** [CLAUDE] implementation / [GPT] Steward review
-**Blocked by:** read-only pre-implementation ticket review and Steward reconciliation
+**Blocked by:** none after final Steward reconciliation; implementation starts only from the exact final ticket commit issued by the Steward
 **Approved by:** [CHAZ] for bounded Organic F13 preparation; [CLAUDE] designated Writer
 **Start commit:** pending final Steward acceptance
 
 ## Purpose
+
+Final Steward reconciliation: **ACCEPTED** after the required read-only ticket review
+returned `READY_AFTER_TICKET_RECONCILIATION`. The proof and scope locks from that review
+are incorporated below. This acceptance authorizes implementation only from the exact final
+ticket commit issued by the Steward; the implementer records that commit as `Start commit`,
+sets `Status=review`, and records the Implementation report in the implementation commit.
 
 Harden only the existing DataForSEO Google Organic Live Advanced paid-probe transport
 capability boundary required by deferred item F13 before Organic is reused.
@@ -56,7 +62,7 @@ Published Organic vector remains byte-identical:
 - body SHA-256: `0ea1022be28baf54e8a68f49002c963ada85f78082dec843030db28458498e2b`
 - fingerprint: `9ab79d6031d2a82a9aec4d9c6c5399bd540fcbbea80fca8a0216911333cedb02`
 - Attempt: `b577bc1fb75f4ba7576a96c1328fbe74df9d975f3bd03f6c01d7441dfed1a1be`
-- Capture: `ab94c98e528e776317c459a2dc2f8010b33b8ce142bab52d4e699fb5599d41c4`
+- sample complete Capture conformance vector: `ab94c98e528e776317c459a2dc2f8010b33b8ce142bab52d4e699fb5599d41c4`
 
 ## Required behavior
 
@@ -72,13 +78,25 @@ Published Organic vector remains byte-identical:
 5. Visible attempt_id/document/body must match closure state before revalidation.
 6. Immediately pre-send, reread the exact Attempt by closure attempt_id, integrity-verify
    it and its directory, verify canonical preimage/content identity, read bundle
-   `request.body`, validate with Organic-local `validate_organic_http_parameters`,
+   `request.body`, validate with Organic-specific `validate_organic_http_parameters`,
    recompute with Organic-local `organic_request_body_bytes`, and require equality across
    recomputed, committed, and closure-owned bytes. Re-run `_require_organic_target`.
 7. Construct the existing authorization header and send only closure-owned bytes through
    the unchanged PF-09 seam with Organic HTTP_HEADERS, timeout, 32 MiB default,
    `max_response_body_bytes`, and client seam.
 8. No shared/generic capability framework and no foreign adapter validators/constructors.
+
+### Final reconciled scope locks
+
+- PF-17 closes the **pre-send transport-authority window** only. Post-exchange mutation of
+  visible capability fields before Capture commit / Outcome construction remains unchanged
+  and outside this ticket, at PF-16 parity; do not widen PF-17 to change Capture or Outcome
+  behavior.
+- Preserve existing externally asserted error-message substrings `verified committed Attempt`
+  for forged/unissued capability refusal and `one-exchange` for replay refusal.
+- The required document-only adversary proves pre-send refusal by asserting exactly zero
+  HTTP handler calls. It does not require constructing a second committed Attempt or proving
+  downstream mis-parented Capture behavior.
 
 ## Required proofs
 
@@ -121,23 +139,18 @@ provider Evidence, and zero spend.
 
 ## Required ticket review
 
-Before implementation, the designated [CLAUDE] implementer must perform a read-only challenge of this exact ticket against
-authority, current Organic code/tests, F13, and PF-16. Specifically check the 179-byte
-vector, credential/endpoint-before-consume semantics, document-only desync proof, valid
-Organic adversaries, pool vs bundle Evidence tamper, Organic-only seams, minimal changed
-paths, and absence of generic-framework drift.
-
-Return exactly one: `READY`, `READY_AFTER_TICKET_RECONCILIATION`, or `NOT_READY`.
-Do not edit, commit, push, invoke providers, or use credentials.
+Completed by the designated [CLAUDE] implementer at provisional ticket commit
+`5582628f47fb6c4fe66d989a63b25702ebd30e0c`. Verdict:
+`READY_AFTER_TICKET_RECONCILIATION`. The Steward independently checked and accepted the
+material findings now incorporated into this ticket.
 
 ## Hard boundaries
 
-No implementation begins from this provisional ticket commit. No push is authorized.
+Implementation begins only from the exact final accepted ticket commit issued by [GPT]. No push is authorized.
 [CLAUDE] is the designated writer of `src/` and `tests/` for PF-17; [GPT] owns this ticket
 except permitted implementer Start/Status/report fields. The implementer sets Status=`review`, never `done`.
 
 ## Next boundary
 
-Commit this provisional ticket only. [CHAZ] relays the ticket-review result to [GPT].
-[GPT] reconciles it, commits the final accepted ticket, and issues the exact implementation
-start commit. Only then may Observatory Implementer branch and modify code/tests.
+Commit this final accepted ticket and issue that exact commit as the implementation start
+commit. Only then may the designated [CLAUDE] implementer modify the allowlisted code/tests.
