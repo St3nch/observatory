@@ -10,6 +10,11 @@ schema, and API work is nevertheless reviewed for whether a future connected str
 can receive sufficient typed facts, relationships, provenance, completeness, and limitations
 without direct storage access or misleading inference.
 
+Observatory preserves what external sources and instruments reported; it does not calculate
+strategy-facing trends, opportunity scores, recommendations, or conclusions from combinations
+of observations. Provider-computed metrics may be preserved as attributed testimony, while
+cross-observation analytical calculations belong to downstream strategy systems.
+
 ## Current status
 
 Observatory now implements the capture-event Evidence boundary, format-2 filesystem Evidence

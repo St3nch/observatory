@@ -2,23 +2,30 @@
 
 ## North star
 
-Observatory is a standalone, long-lived **historical measurement system for search and AI
-visibility**. It acquires, validates, preserves, derives, and serves source-attributed SEO,
-GEO, search, and AI observations that many projects can use through an API.
+Observatory is a standalone, long-lived **historical observation and testimony system for
+search and AI visibility**. It acquires, validates, preserves, derives, and serves
+source-attributed SEO, GEO, search, and AI observations that many projects can use through
+an API.
 
-Here, **historical measurement system** means preserving what a named source actually
-reported or returned for a specific subject, query, surface, and measurement context at a
-particular acquisition time, together with the exact Evidence and any independent provider
-update times or data periods. Past testimony remains attributable and re-interpretable so
-later consumers can compare states across time without rewriting what was originally
-observed.
+Here, **historical observation and testimony system** means preserving what a named source
+or instrument actually reported or returned for a specific subject, query, surface, and
+measurement context at a particular acquisition time, together with the exact Evidence and
+any independent provider update times or data periods. Past testimony remains attributable
+and re-interpretable so later consumers can compare states across time without rewriting
+what was originally observed.
+
+Observatory does **not** calculate strategy-facing trends, opportunity scores,
+recommendations, conclusions, or other analytical meaning from combinations of
+Observations. A metric or classification calculated by a Provider may be preserved as
+Provider-attributed testimony; calculations whose purpose is to compare, interpret, score,
+or recommend from multiple observations belong downstream.
 
 **Search and AI visibility** includes the attributable testimony needed to understand how
 subjects, pages, domains, brands, and competitors appear or are referenced across search and
 AI surfaces: rankings and SERP composition; AI mentions, citations, and source relationships;
 query/topic demand and discovery; domain/page/entity relationships; backlinks and other
 provider-attributed visibility signals; bounded page/content/technical state when deliberately
-measured; and the historical changes in those measurements.
+acquired from an accepted source or instrument; and historical change across those observations.
 Observatory preserves this testimony and its limits; downstream systems decide what it
 means for strategy or action.
 

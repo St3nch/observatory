@@ -39,7 +39,10 @@ creation.
 
 **Decision:** Observatory stores observations and their provenance. Interpretation,
 recommendations, scoring, reporting narratives, and SEO/GEO strategy belong to separate
-consumer systems.
+consumer systems. Provider-computed metrics and classifications may be preserved as
+Provider-attributed testimony, but Observatory does not calculate analytical trends,
+opportunity scores, cross-observation comparisons, recommendations, or conclusions for
+strategy purposes.
 
 **Why:** Observation history remains broadly reusable only when it is not rewritten around
 one project's judgment.

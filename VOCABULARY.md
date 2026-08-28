@@ -131,8 +131,11 @@ not become Observations merely because a Capture succeeded.
 classification where disclosed, and Derivation version. Authoritative reads verify cited
 event and body identities before use.
 
-**Strategy layer** — A separate downstream system that interprets observations and produces
-recommendations, conclusions, scores, reports, or SEO/GEO strategy.
+**Strategy layer** — A separate downstream system that interprets observations and may
+compare or calculate across them to produce trends, opportunities, recommendations,
+conclusions, scores, reports, or SEO/GEO strategy. Provider-computed metrics and
+classifications may remain Provider-attributed Observatory testimony; analytical
+calculations whose purpose is to interpret multiple observations belong downstream.
 
 **Query panel** — A named, versioned measurement definition. Its long-term owning system is
 deferred until multiple consumers require shared panel identity. The fixture contract’s
