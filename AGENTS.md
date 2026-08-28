@@ -61,14 +61,17 @@ capture/evidence storage boundary and Outcome-as-history phrasing.
 
 ### Agent lanes
 
-- **[GROK]** implements. He is the only agent who writes code and tests. One ticket at a
-  time; no ticket, no implementation.
+- **[GROK]** implements when designated for a ticket. One ticket at a time; no ticket, no
+  implementation.
 - **[GPT]** is Project Steward and primary reviewer: maintains authority and tickets,
-  sequences work, issues bounded prompts, reviews [GROK]'s committed implementation,
+  sequences work, issues bounded prompts, reviews the designated implementer's committed
+  implementation,
   reconciles findings, and records acceptance. Writes no code or tests.
-- **[CLAUDE]** has no standing role in the project loop. [CHAZ] may explicitly invite
-  Claude or another model for a read-only milestone audit; audit findings are inputs, not
-  authority.
+- **[CLAUDE]** may implement when [CHAZ] explicitly designates Claude for a ticket, under
+  the same ticket, start-commit, review, and bounded-assignment rules as [GROK]. Otherwise
+  [CHAZ] may invite Claude or another model for a read-only milestone audit; audit findings
+  are inputs, not authority.
+- Exactly one of **[GROK]** or **[CLAUDE]** is the implementation writer for a ticket.
 - **[CHAZ]** decides. He relays all traffic; agents never contact each other directly.
 
 Every agent may read the whole repository, and [GPT] may run `uv run pytest -q`,
@@ -167,7 +170,7 @@ Main chain:
 5. `to-tickets` → breakdown proposed to the Steward, who files the result under `tickets/`.
    Only the Steward writes `tickets/`, except for an implementer's own assigned ticket.
 6. **Steward provisional acceptance** of one bounded ticket for technical review
-7. **[GROK] read-only pre-implementation ticket review** → false premises, missing proofs,
+7. **Designated implementer read-only pre-implementation ticket review** → false premises, missing proofs,
    overconstraints, architecture/provider traps, consumer-readiness gaps for applicable
    provider/schema/API work, and ready-or-reconcile recommendation; no implementation or
    repository mutation
@@ -182,7 +185,7 @@ Main chain:
 Before any major provider-surface review, ticket review, remediation, or implementation
 prompt:
 
-1. **[GROK] code-first questions** — inspect the actual authority, code, schema, tests, and
+1. **Designated implementer code-first questions** — inspect the actual authority, code, schema, tests, and
    Evidence boundary, then return uncertainties and coworker questions without mutation.
 2. **[GPT] consolidation** — independently verify the material premises, remove answered or
    duplicate questions, and separate Steward technical judgments from Product choices.
@@ -220,19 +223,19 @@ The handoff between lanes is a commit, not a working tree.
 All agent traffic is relayed by [CHAZ]. No agent contacts another directly.
 
 1. [GPT] (Steward) prepares one bounded draft ticket.
-2. Before implementation, [GROK] performs a read-only adversarial ticket review and reports
+2. Before implementation, the designated implementer performs a read-only adversarial ticket review and reports
    false premises, missing acceptance proofs, overconstraints, likely false greens,
    architecture/provider traps, and whether the ticket is ready or needs reconciliation.
 3. [CHAZ] relays that review to [GPT].
 4. [GPT] reconciles the findings, updates and commits the final accepted ticket, and issues
    a bounded implementation prompt naming its exact start commit.
-5. [GROK] implements and returns an implementation report.
+5. The designated implementer implements and returns an implementation report.
 6. [CHAZ] relays that report to [GPT].
 7. [GPT] reviews the committed code and tests, reconciles the report and findings against
    authority, and accepts the ticket or issues the next bounded prompt through [CHAZ].
 
-[GROK] is the only agent writing the working code, and the only one carrying the working
-context of having built it. His judgement on what is weak, fragile, or under-tested is a
+The designated implementer is the only agent writing the working code for that ticket and
+the only one carrying the working context of having built it. That implementer's judgement on what is weak, fragile, or under-tested is a
 first-class input. Every implementation report must candidly state the strongest and weakest
 parts, possible false greens, remaining caller influence, architecture drift/coupling,
 parser/provider traps, closure blockers, deferred work, what later surfaces should reuse,
@@ -246,7 +249,7 @@ when reviewing, because an implementer's account of their own work cannot be the
 evidence. Such findings are inputs, not authority: they change the project only after the
 Steward reconciles them and records the result.
 
-[GPT] treats [GROK] as a coworker and asks direct bounded questions when an answer is
+[GPT] treats the designated implementer as a coworker and asks direct bounded questions when an answer is
 uncertain or the implementer's context can materially improve judgement. Questions do not
 transfer Steward or Product Owner authority. A question relayed through [CHAZ] costs less
 than a wrong sequencing decision.
@@ -340,8 +343,8 @@ A ticket is complete only when the Project Steward closes it and:
 This section supersedes the earlier global one-writer-at-a-time and mandatory-human-relay
 coordination sentences where they conflict with the rules below.
 
-- One finally accepted ticket has exactly one designated [GROK] Writer. The same Writer
-  owns remediation unless the Steward explicitly abandons/reassigns it.
+- One finally accepted ticket has exactly one designated Writer, either [GROK] or [CLAUDE].
+  The same Writer owns remediation unless the Steward explicitly abandons/reassigns it.
 - The Steward may run multiple tickets concurrently only when dependency order and
   changed-path boundaries are parallel-safe; each Writer uses a separate branch/worktree.
 - Read-only recon/review workers may fan out concurrently but never become additional Writers.
