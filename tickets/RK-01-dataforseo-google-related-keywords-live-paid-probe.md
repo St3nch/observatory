@@ -1,12 +1,17 @@
 # RK-01 — DataForSEO Google Related Keywords Live paid-probe adapter
 
-**Status:** provisional-review  
+**Status:** ready  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
-**Blocked by:** designated implementer read-only pre-implementation review and Steward reconciliation  
+**Blocked by:** none  
 **Approved by:** [CHAZ] for bounded Related Keywords MVP preparation; [CLAUDE] designated Writer  
-**Start commit:** pending final Steward acceptance
+**Start commit:** pending final accepted ticket commit
 
 ## Purpose
+
+Final Steward reconciliation: **ACCEPTED** after the required read-only ticket review
+returned `READY_AFTER_TICKET_RECONCILIATION`. The material findings are incorporated below.
+Implementation is authorized only from the exact final ticket commit issued by the Steward;
+that commit becomes the Writer's `Start commit` in the implementation report.
 
 Implement one closed, Evidence-only DataForSEO Labs Google Related Keywords Live adapter.
 The adapter commits and verifies an HTTP-v2 Attempt before its only send-capable path,
@@ -103,7 +108,12 @@ into parser or Recipe semantics by RK-01:
 - whether documented approximate depth maxima are observed for the selected first seed;
 - real response key presence, nullability, ordering, additive fields, status behavior,
   provider timestamps, and cost;
+- whether the live endpoint accepts the complete frozen request key set exactly as sent,
+  including the currently documented-but-undescribed `include_clickstream_data` and
+  `ignore_synonyms` booleans;
 - whether `include_serp_info=true` materially changes billed cost for this exact endpoint;
+- whether the selected `limit=1000` ever binds for a real `depth=3` response; the provider's
+  documented depth cardinalities are claimed estimates, not Observatory completeness proof;
 - whether one captured response exercises every response-semantic branch needed by a later
   strict Recipe.
 
@@ -126,6 +136,11 @@ Production exchange:
   response-derived follow-up, and automatic second requests: disabled;
 - maximum exchanges under one invocation and one fresh Evidence root: one;
 - exact authorization acknowledgement: `200000` micro-USD.
+
+The 32 MiB response ceiling is deliberately conservative for the first enriched Related
+Keywords contract because no real Evidence yet establishes response size with up to 1000
+returned items and `include_serp_info=true`. It is an adapter-local bound, not a shared Labs
+default and not a claim that a normal response is expected to approach 32 MiB.
 
 The exact provider task is:
 
@@ -166,13 +181,16 @@ synonym suppression, core-keyword replacement, filters, tag, unknown keys, boole
 where exact integers are required, multiple tasks, alternate provider paths, and any hidden
 continuation or pagination shape.
 
-The operator keyword is exactly one seed query, not a domain or list. The implementer must
-propose and test a conservative bounded grammar based on provider documentation and existing
-accepted operator-subject precedents. The grammar must be broad enough for ordinary search
-queries such as `conspiracy theories` without silently importing Google Organic query
-operator semantics or Search Mentions target grammar. If current provider documentation
-requires a materially different length/character bound than existing precedents, the
-pre-implementation review must report it before implementation.
+The operator keyword is exactly one seed query, not a domain or list. Current Related
+Keywords provider documentation requires UTF-8 and lowercases the supplied keyword but does
+not publish a Related Keywords-specific character-count or word-count maximum. RK-01 therefore
+uses an explicit **Observatory-chosen conservative operator bound**, not a claimed provider
+limit: 1..80 printable ASCII characters; at most 10 words separated by ASCII space; must
+begin and end with an ASCII alphanumeric; internal characters are limited to
+`A-Z a-z 0-9 space & ' ( ) + , . / : -`. This intentionally matches accepted bounded
+keyword precedents while keeping the first contract small and deterministic. It does **not**
+inherit the Google Organic query-operator deny set; that deny set is SERP-contract policy,
+not Related Keywords provider authority.
 
 The first later live activation candidate is `conspiracy theories`, but RK-01 ordinary tests
 must use deterministic synthetic/sentinel subjects as appropriate and never call the
@@ -194,7 +212,12 @@ The proposed closed Evidence policy is:
 Current claimed pricing puts a fully returned 1000-item response at approximately `$0.132`.
 The exact-int `200000` acknowledgement is a bounded fail-closed ceiling with headroom, not
 an expected cost, invoice claim, standing spend authorization, or permission to retry.
-Pricing must be freshly rechecked in the later activation ticket before any live command.
+Current official pricing explicitly documents a 2x multiplier for
+`include_clickstream_data=true`, which this contract fixes to `false`; it does not currently
+state a separate `include_serp_info=true` multiplier. Do not invent one. Pricing must be
+freshly rechecked in the later activation ticket before any live command, and that recheck
+must explicitly confirm whether `include_serp_info=true` changes billing for this exact
+endpoint before the `200000` acknowledgement is accepted for RK-02.
 
 RK-01 authorizes **zero spend** and **zero provider transport**.
 
@@ -209,7 +232,12 @@ RK-01 authorizes **zero spend** and **zero provider transport**.
 4. Build the transport gate hardened from birth using the accepted PF-16/PF-17 conceptual
    pattern: closure-owned issuance record binds capability identity, concrete
    `EvidenceStore`, committed Attempt identity/preimage, exact committed body bytes, and
-   consumed state. Caller-visible capability fields are mirrors only.
+   consumed state. Caller-visible capability fields are mirrors only. Unlike PF-16/PF-17's
+   deliberately bounded remediation scope, this new gate must also keep the closure-owned
+   committed Attempt identity/document authoritative after exchange: expose only the
+   smallest Related Keywords-private closure accessor or equivalent closure-local operation
+   needed by Capture commit and capture-return construction. Do not add a shared capability
+   framework or a caller-visible authority seam.
 5. Preserve credential/endpoint validation before closure-owned consumption. After those
    validations succeed, consume before visible-field comparison, committed-Evidence
    revalidation, authorization-header construction, or send.
@@ -231,14 +259,21 @@ RK-01 authorizes **zero spend** and **zero provider transport**.
     persist credentials in Evidence. Credential echo in retained body/header testimony
     fails before Capture commit and still consumes the one-shot.
 12. Commit at most one verified Capture preserving PF-09 complete/partial/no-response
-    transport testimony. Provider HTTP or JSON status does not redefine transport state.
+    transport testimony. Construct the Capture parent from the closure-owned committed
+    Attempt document and use the closure-owned `attempt_id` in the returned capture result;
+    post-exchange mutation of caller-visible capability mirrors must not alter either.
+    Provider HTTP or JSON status does not redefine transport state.
 13. Expose byte-exact read-only inspect of a verified complete nonempty Related Keywords
     Capture. Inspect performs no parsing, normalization, network access, or mutation.
 14. The internal endpoint seam may target only an exact loopback URL with the production
     Related Keywords path. Every other override shape fails closed before transport.
-15. A response claiming `total_count > items_count`, a nonzero remaining result set, or any
-    other pagination opportunity must still produce at most the one authorized exchange.
-    RK-01 never follows `offset` or performs a second request.
+15. RK-01 must have **no response-body awareness of pagination**. A response body may contain
+    bytes that later parse as `total_count > items_count`, a nonzero remainder, a token, or
+    any other apparent pagination opportunity, but the adapter does not parse or inspect
+    those bytes and still performs at most the one authorized exchange. The proof is
+    structural: synthetic response bytes containing such fields are captured byte-exactly
+    while the test asserts exactly one handler call. RK-01 never follows `offset` or performs
+    a second request.
 16. Existing provider Derivations and APIs must not accidentally interpret Related Keywords
     Evidence. Valid Related Keywords Evidence remains raw until RK-03/RK-04.
 
@@ -279,6 +314,12 @@ Do not infer from one Capture:
 avoiding the documented depth-4 shape that can exceed one call's 1000-item return ceiling.
 That is a Product acquisition boundary, not a claim that depth 3 is complete in the provider
 corpus.
+
+If a future verified response reports truncation under this contract, the returned rows are
+bounded by the exact request ordering `keyword_data.keyword_info.search_volume,desc`; they
+must not be represented as a random or representative sample. RK-01 preserves only the raw
+Evidence and request context; RK-03/RK-04 must decide what the real Evidence justifies about
+returned-prefix and completeness semantics.
 
 ## Public surface
 
@@ -332,6 +373,8 @@ At minimum, ordinary credential-free tests must prove:
 - visible request-body replacement, valid Related Keywords document replacement, and
   matching document+body replacement all fail before transport;
 - visible `_used=False` reset after one success cannot replay;
+- post-exchange mutation of visible `attempt_id`, `document`, or request-body mirrors cannot
+  change the Capture's parent Attempt or the returned capture-result `attempt_id`;
 - committed object-pool tamper and independent Attempt-bundle `request.body` tamper are
   separately detected before transport;
 - pre-send Evidence-verification failure consumes issuance and cannot be retried;
@@ -390,11 +433,32 @@ transport and temporary Evidence Stores are permitted test substrates.
 
 ## Required pre-implementation ticket review
 
-Before implementation, the designated [CLAUDE] Writer must challenge this exact provisional
-ticket read-only against current authority, current capture-event/provider code/tests,
-PF-09, PF-16/PF-17, D12/D13, and current official DataForSEO Related Keywords documentation.
+Completed by the designated [CLAUDE] Writer at provisional ticket commit
+`8644479b388ff992ae4aab30b69e8a85c0367605`. Verdict:
+`READY_AFTER_TICKET_RECONCILIATION`.
 
-Specifically challenge:
+The Steward independently verified the material findings against repository authority,
+current transport/Evidence code, PF-17, and current official DataForSEO documentation. The
+accepted reconciliation is:
+
+- close the known PF-17 post-exchange caller-mirror window for this **new** gate rather than
+  deliberately reproducing it;
+- define the 80-character / 10-word keyword grammar as Observatory policy because the
+  Related Keywords documentation publishes no endpoint-specific length/word bound;
+- make the no-pagination proof structural and parser-free;
+- record live acceptance of the complete frozen key set and real `limit=1000` binding as
+  RK-02 Evidence questions;
+- retain the `200000` micro-USD acknowledgement because current published pricing keeps the
+  documented 1000-item non-clickstream case below it, while requiring RK-02 to recheck
+  `include_serp_info=true` billing explicitly rather than speculate about an undocumented
+  surcharge;
+- retain the 32 MiB adapter-local response ceiling as a conservative first-Evidence bound.
+
+The completed review challenged the ticket against current authority, current
+capture-event/provider code/tests, PF-09, PF-16/PF-17, D12/D13, and current official
+DataForSEO Related Keywords documentation.
+
+The completed review specifically challenged:
 
 - whether one operator-supplied keyword with every other request knob fixed is the correct
   reuse boundary rather than hardcoding `conspiracy theories` or exposing more options;
@@ -415,26 +479,14 @@ Specifically challenge:
 - any false premise, missing proof, false green, overconstraint, unnecessary coupling, or
   provider-specific fact that should remain unproven until RK-02 Evidence exists.
 
-External technical/provider uncertainty should be resolved with current official/primary
-documentation rather than guessing. Web research is evidence, not repository authority and
-does not authorize provider transport.
-
-Return exactly one:
-
-`READY`
-
-`READY_AFTER_TICKET_RECONCILIATION`
-
-or
-
-`NOT_READY`
-
-Do not edit, commit, push, invoke providers, use credentials, or create Evidence during the
-review.
+External technical/provider uncertainty was checked against current official/primary
+documentation. That claimed contract remains evidence for design, not repository authority,
+and authorizes no provider transport.
 
 ## Hard boundaries
 
-No implementation begins from this provisional ticket commit. No provider call, credentials,
+Implementation begins only from the exact final accepted ticket commit issued by [GPT]. No
+provider call, credentials,
 spend, live Evidence, activation, pagination, or push is authorized.
 
 [CLAUDE] is the designated Writer for RK-01. [GPT] owns this ticket except the implementer's
@@ -443,7 +495,7 @@ implementer never sets `done`.
 
 ## Next boundary
 
-Commit this provisional ticket only. [CHAZ] relays the read-only ticket-review result to
-[GPT]. [GPT] reconciles the findings, commits the final accepted RK-01 ticket, and issues the
-exact implementation start commit. Only then may the designated [CLAUDE] Writer modify the
-allowlisted implementation paths.
+[GPT] commits this final accepted RK-01 ticket and issues that exact commit as the
+implementation start commit. Only then may the designated [CLAUDE] Writer modify the
+allowlisted implementation paths. No provider transport, credentials, spend, live Evidence,
+pagination, or push is authorized by implementation start.
