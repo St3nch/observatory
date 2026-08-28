@@ -1,9 +1,9 @@
 # PF-17 - Google Organic F13 transport-capability hardening
 
 **Status:** provisional-review
-**Owner:** [GROK] implementation / [GPT] Steward review
+**Owner:** [CLAUDE] implementation / [GPT] Steward review
 **Blocked by:** read-only pre-implementation ticket review and Steward reconciliation
-**Approved by:** [CHAZ] for bounded Organic F13 preparation / Grok Bot implementation experiment
+**Approved by:** [CHAZ] for bounded Organic F13 preparation; [CLAUDE] designated Writer
 **Start commit:** pending final Steward acceptance
 
 ## Purpose
@@ -121,7 +121,7 @@ provider Evidence, and zero spend.
 
 ## Required ticket review
 
-Before implementation, a read-only [GROK] reviewer must challenge this exact ticket against
+Before implementation, the designated [CLAUDE] implementer must perform a read-only challenge of this exact ticket against
 authority, current Organic code/tests, F13, and PF-16. Specifically check the 179-byte
 vector, credential/endpoint-before-consume semantics, document-only desync proof, valid
 Organic adversaries, pool vs bundle Evidence tamper, Organic-only seams, minimal changed
@@ -133,8 +133,8 @@ Do not edit, commit, push, invoke providers, or use credentials.
 ## Hard boundaries
 
 No implementation begins from this provisional ticket commit. No push is authorized.
-[GROK] is the only writer of `src/` and `tests/`; [GPT] owns this ticket except permitted
-implementer Start/Status/report fields. The implementer sets Status=`review`, never `done`.
+[CLAUDE] is the designated writer of `src/` and `tests/` for PF-17; [GPT] owns this ticket
+except permitted implementer Start/Status/report fields. The implementer sets Status=`review`, never `done`.
 
 ## Next boundary
 
