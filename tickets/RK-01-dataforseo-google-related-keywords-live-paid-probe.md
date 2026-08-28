@@ -1,8 +1,8 @@
 # RK-01 — DataForSEO Google Related Keywords Live paid-probe adapter
 
-**Status:** review  
+**Status:** closed  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
-**Blocked by:** Steward review of this implementation commit  
+**Blocked by:** none  
 **Approved by:** [CHAZ] for bounded Related Keywords MVP preparation; [CLAUDE] designated Writer  
 **Start commit:** 3d9f5900647767f8d911859ff98c4e70b6966313
 
@@ -782,3 +782,45 @@ Two additions:
   accessor never consulted. It took an adversary aimed at the accessor's own return value to
   expose the seam. Any later gate copying this pattern must attack the accessor, not just the
   mirrors — proving the mirror is inert says nothing about whether the accessor is.
+
+## Steward closure
+
+**Closed:** 2026-08-28  
+**Accepted implementation:** `d23abce3374219fb1ce10459b4790d5f51d00fb5`  
+**Start commit:** `3d9f5900647767f8d911859ff98c4e70b6966313`
+
+Independent Steward review accepted the final single-child RK-01 implementation after the
+Writer amended the first implementation commit to remove the mutable closure-authority
+leak. The accepted gate retains only immutable Attempt authority (`attempt_id`, canonical
+Attempt preimage bytes, and exact committed request bytes) and rebuilds a detached validated
+Attempt snapshot when Capture construction requires a parent document. Mutation of the
+private accessor's returned mapping, including nested children, therefore cannot alter
+closure authority, Capture parentage, or the returned result `attempt_id`.
+
+Closure evidence:
+
+- final implementation remains exactly one commit from the accepted start commit and the
+  complete diff is confined to the four RK-01 allowlisted paths;
+- remediation from `10e594bf299a367ddb49fb3082d76dad84937119` to the accepted commit touched
+  only the Related Keywords adapter module, its tests, and this ticket; `capture_event.py`
+  was unchanged by remediation;
+- Writer RK-01 module: **70 passed**;
+- Writer affected existing suites: **259 passed**;
+- Writer `ruff check .`: clean;
+- Writer touched-path mypy: clean;
+- Writer repo-wide mypy: **14 errors**, byte-identical to the accepted start-commit baseline
+  and absent from touched paths;
+- CHAZ final repository-wide `uv run pytest -q` at the exact accepted implementation:
+  **1592 passed, 1 skipped, 1 known Starlette deprecation warning**, 483.10s;
+- working tree was clean on `main` at the accepted implementation before Steward closure.
+
+The previously missing required proofs are present: one-shot refusal after a genuine
+`no_response` Capture, inspect rejection of committed valid wrong-adapter Captures, inspect
+rejection of a valid Related Keywords `no_response` Capture, and a direct adversary against
+the private committed-Attempt accessor that would expose the original authority leak.
+
+No live DataForSEO call, provider credential use, paid Evidence, spend, parser, Recipe,
+Derivation, PostgreSQL schema, API, Ranked Keywords, or Strategy work is authorized or
+claimed by this closure. RK-02 remains the separate one-shot live Evidence activation
+boundary and requires fresh provider/pricing review plus explicit CHAZ authorization before
+any real transport or spend. No push is authorized by this closure.
