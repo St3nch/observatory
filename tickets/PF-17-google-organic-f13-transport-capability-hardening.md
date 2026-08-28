@@ -1,8 +1,8 @@
 # PF-17 - Google Organic F13 transport-capability hardening
 
-**Status:** review
+**Status:** done
 **Owner:** [CLAUDE] implementation / [GPT] Steward review
-**Blocked by:** Steward review of this implementation commit
+**Blocked by:** none
 **Approved by:** [CHAZ] for bounded Organic F13 preparation; [CLAUDE] designated Writer
 **Start commit:** 3aaef614af807b7697541a46bf3687e634243f1d
 
@@ -278,3 +278,20 @@ The Organic parameter validator and body constructor, the 30000 micro-USD ceilin
 rule, the loopback path restriction, and the error-message texts. Each gate must keep its own
 published bytes and closed contract independently reviewable; a shared abstraction here would
 make one adapter's drift silently change another's authorized request.
+
+## Steward closure
+
+**Implementation commit:** `41b02ad50a8ed0d02e3554c17536e5749c2fe4b3`
+
+[GPT] independently reviewed the exact single-child implementation diff from
+`3aaef614af807b7697541a46bf3687e634243f1d` and confirmed that only the three allowlisted
+paths changed, the reconciled PF-17 transport-authority ordering is implemented, PF-09 and
+neighboring adapters remain untouched, and the required adversarial proofs are present.
+
+[CHAZ] then ran the final authoritative repository-wide suite at the implementation commit:
+
+- `uv run pytest -q` — **1522 passed, 1 skipped, 1 warning** in 474.60s;
+- exit code `0`.
+
+PF-17 is accepted and closed. This closure authorizes no provider call, spend, live
+Evidence creation, or push.
