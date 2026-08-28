@@ -1,10 +1,10 @@
 # RK-01 — DataForSEO Google Related Keywords Live paid-probe adapter
 
-**Status:** ready  
+**Status:** review  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
-**Blocked by:** none  
+**Blocked by:** Steward review of this implementation commit  
 **Approved by:** [CHAZ] for bounded Related Keywords MVP preparation; [CLAUDE] designated Writer  
-**Start commit:** pending final accepted ticket commit
+**Start commit:** 3d9f5900647767f8d911859ff98c4e70b6966313
 
 ## Purpose
 
@@ -499,3 +499,286 @@ implementer never sets `done`.
 implementation start commit. Only then may the designated [CLAUDE] Writer modify the
 allowlisted implementation paths. No provider transport, credentials, spend, live Evidence,
 pagination, or push is authorized by implementation start.
+
+## Implementation report
+
+**Start commit:** `3d9f5900647767f8d911859ff98c4e70b6966313`
+**Writer:** [CLAUDE] (designated under `AGENTS.md` §Agent lanes)
+
+### Changed paths
+
+- `src/observatory/capture_event.py` — **purely additive**, 339 insertions, 0 deletions
+- `src/observatory/dataforseo_google_related_keywords_paid_probe.py` — new
+- `tests/test_dataforseo_google_related_keywords_paid_probe.py` — new
+- this ticket — Start commit, Status, Implementation report only
+
+No path outside the allowlist was required.
+
+### Published Related Keywords vector
+
+- request body: **315 bytes** for seed `conspiracy theories`
+- body SHA-256: `cf6e74c5ee61c617145fc6e4901046056779815dd3d3dbf154e604a53702bdc1`
+- fingerprint: `a766fbbd886e720b4af1ab2016e0b86bcf54a1d2dfb62300e009649f9982b10e`
+- Attempt: `5a673a457e994be7fa432f755a1ff8bd7df65a0da9d2c9a5aa35c309a26e9fc6`
+
+The body bytes and SHA-256 were computed by hand during the read-only pre-implementation
+review, before any implementation existed, and the production constructors reproduce them
+exactly. The test module pins the literals independently of the constructors.
+
+### Validation
+
+- new module: `uv run pytest tests/test_dataforseo_google_related_keywords_paid_probe.py -q`
+  — **65 passed**.
+- directly affected existing suites (`test_capture_event`, `test_http_event_v2`,
+  `test_dataforseo_paid_probe`, `test_dataforseo_sandbox`,
+  `test_dataforseo_google_organic_paid_probe`, the three AI Optimization paid probes,
+  `test_evidence_store`, `test_evidence_status_scrub`) — **611 passed**.
+- `uv run ruff check .` — **All checks passed**.
+- touched-path mypy (all three code paths) — **Success, no issues**.
+- repo-wide `uv run mypy` — **14 errors in 5 files (82 source files)**, an error set
+  byte-identical to the same command at start commit `3d9f590` (80 files). No error is in a
+  touched path; the baseline errors are the known `tools/` module-search omission and
+  pre-existing Target Metrics / Historical API test typing.
+- full-suite `uv run pytest -q` deliberately **not** run; that remains [CHAZ]-run.
+- Zero DataForSEO/provider calls, zero API-host/DNS/public-network activity, zero real
+  credentials, zero live Evidence, zero spend.
+
+### Strongest part
+
+> **Corrected after Steward review.** The original report claimed closure-owned state was
+> authoritative for the entire lifecycle. That claim was **wrong** as first implemented:
+> `_Issuance` stored the mutable committed `read_back` mapping and `_committed_attempt`
+> returned it directly, so a caller reaching the private seam could mutate closure authority
+> in place. See "Steward-directed remediation" below. The claim is accurate only as of the
+> amended commit.
+
+The gate is hardened from birth and closure-owned state is authoritative for the **entire**
+lifecycle, not only pre-send. `_committed_attempt` is a Related-Keywords-private accessor
+that returns the closure-recorded `attempt_id` and a detached Attempt snapshot; Capture
+commit and the returned capture result both use it. I verified this is a real proof by
+mutation: reverting `_commit_related_keywords_capture` to the sibling adapters'
+`attempt=capability.document` makes
+`test_post_exchange_mirror_mutation_cannot_change_capture_or_result` commit a Capture whose
+parent is `c35831f0…` instead of `5a673a45…` — a genuinely mis-parented Capture. Reverting
+`_require_visible_fields_match` fails all three pre-send replacement proofs. Neither test
+passes for an adjacent reason.
+
+The post-exchange proof deliberately commits the replacement Attempt into the store first,
+so a mis-parented Capture would be a *valid* commit if the mirror still had authority.
+Without that step the test would have failed only because `commit_capture`'s
+`_require_verified_parent` could not find the replacement — a weaker result that would not
+have distinguished the hardening from an Evidence-layer accident.
+
+### Weakest / most fragile part
+
+`_validate_related_keywords_seed` is Observatory policy with no provider-documented bound
+behind it. Current Related Keywords documentation specifies only "single keyword", UTF-8,
+and lowercase conversion — no character or word maximum — so the 80-character / 10-word /
+printable-ASCII rule is a conservative Observatory invention. If the provider silently
+accepts richer seeds, this bound rejects work the provider would have served; if the
+provider is stricter than we assume, RK-02 discovers it at the cost of the one-shot. The
+grammar deliberately allows `site:example.com` because the Google Organic operator deny set
+is SERP-contract policy, not Related Keywords authority — but that means an operator-shaped
+seed will be sent verbatim and will probably return a thin or empty graph.
+
+Secondary: `_issuance_for` is a linear scan over a closure list that never shrinks, holding
+the committed body and preimage for process lifetime. Correct and bounded for a one-shot
+adapter; it would need revisiting if a gate ever issued many capabilities.
+
+### Possible false greens
+
+- Mock transport does not prove real httpx wire behaviour; PF-09 is unchanged and separately
+  covered.
+- The no-pagination proof is structural, not semantic: it proves the adapter performs one
+  handler call while capturing bytes that *would* parse as `total_count=5000,
+  items_count=100`. It proves the adapter cannot continue because it never parses. It does
+  **not** prove anything about real provider pagination.
+- `test_seed_grammar_accepts_ordinary_queries` asserts the grammar admits the intended
+  shapes; it cannot prove the provider accepts them.
+- The alternate-seed adversary (`flat earth`) differs from the issued seed only in keyword,
+  reusing nonce and `authorized_at`. Sufficient for distinct preimage and `attempt_id`, but
+  it does not prove nonce-level discrimination.
+- `RK_RESPONSE_BODY` is a 14-byte synthetic stand-in. Nothing here establishes real response
+  size, and the 32 MiB ceiling remains untested against a real 1000-item enriched payload.
+
+### Remaining caller influence
+
+A same-process caller can still replace visible `attempt_id`, `document`, `request_body`,
+and `_used` through `object.__setattr__` — they remain mirrors. They can no longer influence
+what is sent, whether a replay is permitted, whether Evidence revalidation passes, which
+Attempt the Capture cites, or the returned result's `attempt_id`. Caller-supplied
+`endpoint`, `client`, and `max_response_body_bytes` remain private `_run_gated_capture`
+seams absent from the public function and CLI.
+
+### Architecture drift / coupling
+
+No shared or generic capability framework. `_Issuance`, `_require_visible_fields_match`,
+`_revalidate_committed`, `_require_issued`, and `_committed_attempt` are all private to the
+Related Keywords closure. Revalidation calls only
+`validate_related_keywords_http_parameters` and `related_keywords_request_body_bytes` — no
+foreign adapter validator or constructor. The `capture_event.py` change is purely additive:
+one recognizer branch, one attempt-v2 branch, two request-only dispatch branches, and the
+six Related-Keywords functions. PF-09, the Evidence Store, and every sibling adapter are
+untouched, and the KO and Organic published vectors are re-asserted in the new module.
+
+This gate now differs structurally from the other six adapters, which still build their
+Capture from `capability.document`. That divergence is deliberate and Steward-directed, but
+it is a genuine readability cost: a reader comparing adapters will find seven gates and one
+of them shaped differently.
+
+### Evidence / provider traps
+
+- All 12 sent request keys are frozen and validated exactly; `filters` and `tag` are absent
+  rather than empty placeholders, so the Attempt records "not requested" rather than a value
+  the provider might act on.
+- `contract` is committed in Attempt parameters and excluded from the POST bytes.
+- Explicit `false` booleans are sent, so a later null `serp_info` or absent clickstream block
+  is provably request-disabled by the verified Attempt rather than ambiguous absence.
+- Depth 3 with limit 1000 means `limit` is very unlikely to bind (documented depth-3 estimate
+  is ~584), so real Evidence will probably not exercise limit truncation. Nothing downstream
+  should treat truncation semantics as proven.
+- One-shot refusal is keyed on the adapter token within an Evidence root and holds after
+  unresolved, complete, partial, and credential-echo first attempts; fixture, KO, and Organic
+  Evidence coexist in the same root and scrub clean.
+
+### Closure blockers
+
+None known in scope. Closure needs [CHAZ] full-suite validation and [GPT] review of this
+committed diff.
+
+### Deferred / out of scope
+
+- Live acceptance of the frozen key set — including the documented-but-undescribed
+  `ignore_synonyms` — remains an RK-02 question; a rejected key would consume the one-shot.
+- Whether `include_serp_info=true` changes billing is unproven and must be rechecked before
+  RK-02 accepts the `200000` acknowledgement. No surcharge is implemented or assumed.
+- Real response semantics, `total_count` meaning, `related_keywords[]` nullability/ordering,
+  and depth cardinality all remain RK-02/RK-03 Evidence questions.
+- No parser, Conformance fixture, Recipe, Derivation, PostgreSQL schema, API, Holdings,
+  Measurement Outcomes, Ranked Keywords, or Strategy work was performed.
+- The other six gates retain the PF-16/PF-17-parity post-exchange window; closing it there
+  is separate work.
+
+### What later provider gates should reuse conceptually
+
+The shape, not the code: a closure-owned issuance record as sole transport authority;
+visible attributes demoted to mirrors for the whole lifecycle, not just pre-send; a minimal
+private accessor so Capture commit and the returned result stay authoritative; credential
+and endpoint validation before consumption so their failure leaves the issuance reusable;
+consumption before any Evidence read so verification failure cannot be retried; pre-send
+re-read plus adapter-local recomputation requiring three-way byte equality; and structural
+rather than parsed proof that an Evidence-only adapter cannot continue a paginated response.
+
+### What should deliberately remain provider-local
+
+The closed parameter validator and body constructor, the seed grammar, the frozen twelve-key
+task, the 200000 micro-USD ceiling, the 32 MiB response ceiling, the one-shot adapter-token
+rule, the loopback path restriction, and every error-message text. Each gate must keep its
+own published bytes and closed contract independently reviewable; a shared abstraction here
+would let one adapter's drift silently change another adapter's authorized request.
+
+## Steward-directed remediation
+
+Steward review of `10e594bf299a367ddb49fb3082d76dad84937119` found one implementation
+blocker and three missing required proofs. Remediated in place; the final implementation
+remains one commit from start commit `3d9f5900647767f8d911859ff98c4e70b6966313`.
+
+Remediation touched only:
+
+- `src/observatory/dataforseo_google_related_keywords_paid_probe.py`
+- `tests/test_dataforseo_google_related_keywords_paid_probe.py`
+- this report
+
+`src/observatory/capture_event.py` needed no remediation and is unchanged from the first
+implementation; all accepted request bytes, vectors, and existing adapter identities are
+untouched.
+
+### Blocker 1 — closure-owned Attempt authority leaked (fixed)
+
+**Confirmed defect.** `_Issuance` held the mutable committed `read_back` mapping and
+`committed_attempt()` returned that live object. A same-process caller using the private
+seam could mutate closure authority in place; a later `_commit_related_keywords_capture()`
+would then consume the mutated parent. Reproduced against `10e594…` before fixing: after
+one in-place edit, a re-read of the accessor returned a document canonicalizing to
+`c35831f0d74e324677660e58584fd26b22f241c29b889e270c23e73ba1173ce3` instead of the issued
+`5a673a457e994be7fa432f755a1ff8bd7df65a0da9d2c9a5aa35c309a26e9fc6`.
+
+**Fix.** The issuance record no longer stores any Attempt mapping. Closure authority is now
+exclusively immutable: `attempt_id` (`str`) and `document_preimage` (`bytes`), alongside the
+already-immutable `request_body`. A closure-local `_committed_snapshot()` rebuilds a
+**detached** document from those bytes on every call via `validate_attempt(preimage)`,
+re-canonicalizes it, and requires the recomputed identity to equal the closure `attempt_id`
+before returning. Because reconstruction parses bytes, every returned mapping and every
+nested child is a fresh object; nothing returned aliases closure state, so mutating a
+snapshot — at any depth — cannot reach closure authority. No shared or generic framework was
+added; `_committed_snapshot` is private to the Related Keywords closure.
+
+**Adversarial proof.** `test_private_snapshot_mutation_cannot_poison_closure_authority`
+commits the replacement Attempt first so mis-parentage would be a *valid* commit, takes the
+accessor's return, clears and replaces it in place including a nested `parameters` child,
+then requires a fresh accessor read and the committed Capture to still cite
+`5a673a45…`. `test_private_snapshot_is_detached_on_every_call` additionally proves distinct
+objects and distinct nested children per call. Both **fail against `10e594…`** at the
+closure-poisoning assertion — the authority-leak reason, not a missing or malformed parent —
+and pass against the amended commit.
+
+### Missing proof 2 — one-shot after `no_response` (added)
+
+`no_response` added to the one-shot parameterisation. The branch performs a genuine
+connect-failure first exchange, asserts the committed Capture is
+`transport_state=no_response`, then requires the second Related Keywords Attempt in that
+Evidence root to be refused before transport.
+
+### Missing proof 3 — inspect wrong adapter (added)
+
+`test_inspect_rejects_valid_wrong_adapter_capture` now supplies two *committed, verifiable*
+wrong-adapter Captures — a fixture Capture and a full Google Organic Capture — and requires
+Related Keywords inspect to refuse both. The previous test only committed an Organic
+Attempt, so it never exercised the decisive valid-Evidence/wrong-adapter path.
+
+### Missing proof 4 — inspect `no_response` (added)
+
+`test_inspect_rejects_no_response_capture` builds a valid Related Keywords `no_response`
+Capture, asserts `response is None`, and requires inspect to reject it. Existing partial and
+zero-body inspect proofs are preserved unchanged.
+
+### Candid note on proofs 2-4
+
+These three were **coverage gaps, not defects**: all three pass against the original
+`10e594…` production code as well as the amended code. Only Blocker 1 was a real behavioural
+fault. The Steward was right that their absence left the ticket's required proof set
+incomplete, and I should have caught that the wrong-adapter test committed an Attempt where
+the requirement called for a Capture.
+
+### Remediation validation
+
+- `tests/test_dataforseo_google_related_keywords_paid_probe.py` — **70 passed** (65 before,
+  plus 3 new tests and 2 new parameterised cases).
+- affected existing suites (`test_capture_event`, `test_dataforseo_paid_probe`,
+  `test_dataforseo_google_organic_paid_probe`, `test_evidence_status_scrub`) —
+  **259 passed**.
+- `uv run ruff check .` — **All checks passed**.
+- touched-path mypy — **Success, no issues**.
+- repo-wide `uv run mypy` — **14 errors in 5 files (82 source files)**, error set
+  byte-identical to start commit `3d9f590`.
+- full-suite `uv run pytest -q` remains [CHAZ]-run after Steward acceptance.
+- Zero provider calls, credentials, live Evidence, or spend.
+
+### Updated weaknesses and false-green analysis
+
+The prior report's weakest-part assessment stands: the seed grammar remains Observatory
+policy with no provider-documented bound behind it, and `_issuance_for` remains a linear
+scan over a never-shrinking closure list.
+
+Two additions:
+
+- **`_committed_snapshot` re-parses and re-validates on every call.** That is what makes it
+  safe, but it means Capture construction now depends on `validate_attempt` accepting the
+  stored preimage bytes. If a future capture-event change made validation stricter than the
+  bytes committed by an older Attempt, Capture commit would fail closed rather than silently
+  mis-parent. Failing closed is correct, but it is a new coupling worth naming.
+- **A false green I nearly shipped.** The original post-exchange proof would have passed even
+  with the authority leak, because it mutated only the *capability mirror*, which the
+  accessor never consulted. It took an adversary aimed at the accessor's own return value to
+  expose the seam. Any later gate copying this pattern must attack the accessor, not just the
+  mirrors — proving the mirror is inert says nothing about whether the accessor is.
