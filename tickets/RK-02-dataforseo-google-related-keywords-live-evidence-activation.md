@@ -1,8 +1,8 @@
 # RK-02 — DataForSEO Google Related Keywords Live one-shot Evidence activation
 
-**Status:** review — accepted complete Evidence; closure authorization pending  
+**Status:** done  
 **Owner:** [CHAZ] operator / [GPT] Steward verification  
-**Blocked by:** explicit [CHAZ] authorization to close RK-02  
+**Blocked by:** none  
 **Draft/review base:** `5d45137845820035137e07bb566f296bebcc158a`  
 **Reviewer:** [CLAUDE] read-only technical review  
 **Review result:** `RECONCILE` at `5d45137845820035137e07bb566f296bebcc158a`; Steward reconciled the technical findings and [CHAZ] resolved the remaining Product choice on 2026-08-31
@@ -658,11 +658,18 @@ measurement needs without redundant KO acquisition, but this Capture does **not*
 cross-surface semantic interchangeability. That comparison must be made explicitly before
 Strategy or acquisition policy treats one surface as a substitute for the other.
 
-The Steward therefore classifies RK-02 as **Accepted complete Evidence** under this ticket's
-technical stop point: the one-shot complete/nonempty Capture exists, local Evidence is clean,
-bounded F6 snapshot/restore and receipt round-trip proofs are accepted, restored-body equality
-is exact, and the payload assessment is sufficient to begin RK-03. Per project closure
-discipline, the ticket remains `review` until [CHAZ] explicitly authorizes closure.
+## Steward closure — 2026-08-31
+
+[CHAZ] explicitly authorized RK-02 closure after reviewing the accepted complete Evidence,
+bounded F6 protection/restore proof, and the reconciled full-body payload assessment. The
+Steward accepts RK-02 as `done`.
+
+This closure records the one-shot Related Keywords Capture as sufficient primary Evidence for
+the next strict-parser boundary. It authorizes no retry, second provider exchange, pagination,
+recurring acquisition, Recipe/Derivation/API implementation, Ranked Keywords work, or
+Strategy behavior by itself. The separately recorded MVP provider-testimony closeout checkpoint
+requires equivalent deep review of earlier live provider Captures before final MVP closure;
+that checkpoint does not block RK-03 sequencing.
 
 ## Acceptance / stop point
 

@@ -449,6 +449,50 @@ implementation ticket: future provider capability families require read-only rev
 explicit selection under D12. This checkpoint authorizes no provider exchange, F12/F13
 activity, strategy state, or further API/schema remediation.
 
+## MVP provider-testimony closeout checkpoint — accepted 2026-08-31
+
+Before [CHAZ] and the Steward declare the current Observatory MVP complete, perform a
+read-only deep empirical review of the accepted live provider Captures that materially define
+the MVP. The purpose is **provider-testimony fidelity**, not Strategy feature discovery: for
+each supported surface, verify that Observatory understood what the provider actually
+returned and did not accidentally discard, collapse, or mislabel useful source-attributed
+testimony while moving from Evidence to parser, Recipe, Observation, persistence, and API.
+
+The checkpoint applies the same discipline that RK-02 established through independent
+full-body review. At minimum it covers the earlier live Keyword Overview (PF-03), Google
+Organic (PF-10), Search Mentions (AI-03), and Target Metrics (AI-09) Captures. Historical LLM
+Mentions (AI-14) receives a consistency audit against the same rubric because its activation
+already included independent exact-body review. RK-02 itself satisfies this checkpoint for
+its current Related Keywords Capture once closed.
+
+Each pass begins from the exact protected provider body and current accepted implementation,
+and checks the whole payload rather than a convenient sample: subject/fact/relationship and
+reference grains; returned versus unresolved subjects; null/empty/zero/absent/request-disabled
+and sentinel states; independent Provider Update Times and Data Periods; cardinality,
+ordering, duplication, completeness/limit/continuation testimony; provider-native identifiers
+and opaque vocabularies; cross-surface structural overlap without assumed semantic
+equivalence; and whether the accepted parser/Recipe/Observations/API preserve the materially
+useful distinctions that were actually returned. One-Capture correlations remain testimony,
+not invariants.
+
+A secondary review section may record downstream capability implications that become visible
+only after the provider testimony is understood. Those notes are not the review's purpose and
+do not move strategy, scoring, recommendations, or consumer-owned state into Observatory.
+Useful downstream possibilities may be handed to a separate Strategy project, while
+Observatory authority records only the provider facts, preservation requirements, and limits.
+
+This checkpoint does **not** authorize another provider call and does not require speculative
+remediation. Existing protected Evidence is reviewed first; unobserved branches normally use
+synthetic adversarial proof under D12. A finding earns parser/Recipe/schema/API remediation
+only when the review identifies actual semantic loss, false interpretation, or a materially
+useful provider distinction that the accepted consumer contract cannot faithfully expose.
+Additional live acquisition remains separately gated under D12.
+
+This is an **MVP closeout gate, not a pause on current feature sequencing**. Related Keywords
+parser/Derivation/API work and the later Ranked Keywords slice may continue under their normal
+reviewed tickets. The retro-review checkpoint must be completed and any material findings
+reconciled before the Product Owner and Steward record final MVP closure.
+
 ## Dependency-based sequencing direction
 
 PF-04 → PF-08 established the provider recipe/parser/Observation/API foundation. From that
