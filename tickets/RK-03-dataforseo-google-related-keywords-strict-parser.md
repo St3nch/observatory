@@ -1,14 +1,14 @@
 # RK-03 — DataForSEO Google Related Keywords strict parser and RK-02 Conformance fixture
 
-**Status:** review — dual pre-implementation reviews reconciled; [CHAZ] implementation authorization pending  
+**Status:** ready — [CHAZ] authorized [CLAUDE] implementation from the exact accepted-ticket HEAD  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
-**Blocked by:** explicit [CHAZ] implementation authorization from the exact final accepted-ticket HEAD  
+**Blocked by:** none inside RK-03; implementation must remain on the accepted changed-path and no-network boundary  
 **Product direction:** [CHAZ] selected RK-03 as the next active Related Keywords boundary after RK-02 closure on 2026-08-31  
 **Draft base:** `3e9f347e6d2c4abdaa007943a629d98caa2bc830`  
 **Claude pre-implementation review:** `RECONCILE` at `80349a3d902f4919cc695bbed815e887f8a529a6`  
 **Grok independent review:** `RECONCILE` at `80349a3d902f4919cc695bbed815e887f8a529a6`  
 **Steward reconciliation:** accepted into this ticket before implementation; no Product question remains  
-**Implementation start commit:** pending explicit [CHAZ] authorization record  
+**Implementation start commit:** `bf6a32a418e89ba51ad36f40802d80e909be52ec` — explicitly authorized by [CHAZ]  
 
 ## Purpose
 
@@ -26,10 +26,11 @@ Holdings, Measurement Outcomes, canonical keyword identity, graph union across C
 frontier-node persistence policy, Strategy scoring, Ranked Keywords work, F12/F13 work, or
 another provider exchange. Those remain separate later boundaries.
 
-This provisional ticket is not implementation authority. The designated Writer must perform
-the required read-only code-first review, after which GPT reconciles the findings and commits
-the final accepted ticket. [CHAZ] must then explicitly authorize implementation from that
-exact clean committed HEAD.
+[CHAZ] explicitly authorized [CLAUDE] to implement RK-03 from exact clean accepted-ticket
+HEAD `bf6a32a418e89ba51ad36f40802d80e909be52ec`. That authorization is limited to this
+ticket's accepted parser/fixture scope and changed-path allowlist. It authorizes no provider
+call, credential use, Evidence mutation, PostgreSQL mutation, Recipe/API/RK-04 work, Ranked
+Keywords work, amend, or push.
 
 ## Authority and accepted foundation
 
