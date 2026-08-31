@@ -1,6 +1,6 @@
 # RK-03 — DataForSEO Google Related Keywords strict parser and RK-02 Conformance fixture
 
-**Status:** review — [CLAUDE] implemented; awaiting independent [GPT] Steward review and [CHAZ] closure  
+**Status:** done — [GPT] Steward accepted implementation; [CHAZ] approved closure after green full-suite validation  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
 **Blocked by:** none inside RK-03; implementation must remain on the accepted changed-path and no-network boundary  
 **Product direction:** [CHAZ] selected RK-03 as the next active Related Keywords boundary after RK-02 closure on 2026-08-31  
@@ -854,3 +854,30 @@ the existing `inspect` subcommand, which uses `inspect_store` (not `_open_or_cre
 inventory afterwards is unchanged at one Attempt and one Capture. No Evidence was created, mutated, or
 deleted. No PostgreSQL connection was opened; the parser tests use no database fixture. No restic,
 rclone, or backup operation ran. No commit was amended and nothing was pushed.
+
+## Steward closure — 2026-09-01
+
+[GPT] independently reviewed implementation commit
+`e6e6681dcf7e06a630c072daee218248cb9dfc8d` against parent
+`514b387914df659f6eb97f9fac49353c7544d24b` and the accepted RK-03 ticket.
+The compare is a single implementation child changing exactly the accepted four-path allowlist.
+No RK-03 remediation was required.
+
+Independent Steward verification confirmed:
+
+- clean `main` at implementation HEAD `e6e6681dcf7e06a630c072daee218248cb9dfc8d`;
+- exact RK-01 seed grammar and frozen Attempt-parameter semantics are preserved in the parser;
+- `uv run ruff check .` passes;
+- full configured `uv run mypy` reports the same inherited 14 errors in five untouched files
+  documented by the Writer; RK-03 introduces no mypy errors and does not widen scope to repair them;
+- the committed RK-02 Conformance fixture reports exactly `177120` bytes through the governed reader;
+- no implementation scope creep into capture, Recipe, persistence, API, RK-04, Ranked Keywords,
+  provider, credential, network, Evidence, or PostgreSQL work was found.
+
+[CHAZ] then supplied the required full-suite integration validation from the exact implementation
+HEAD: `uv run pytest -q` → **1793 passed, 1 skipped, 1 warning** in **466.31s**. The warning is the
+existing Starlette/httpx deprecation warning and is not an RK-03 failure.
+
+[CHAZ] explicitly approved RK-03 closure after that green integration result. RK-03 is therefore
+**closed**. The inherited repository-wide mypy defect remains separate maintenance work and does not
+alter this ticket's accepted parser/fixture result.
