@@ -487,6 +487,13 @@ Evidence root. It does not complete routine F6 automation.
 
 ### Verified provider payload findings
 
+After the initial bounded assessment, independent read-only [CLAUDE] and [GROK] reviews plus
+a separate Steward-local full-body analysis all rechecked the same exact `177120`-byte body.
+They independently converged on the corrections and additional findings below. This
+reconciliation changes only the recorded interpretation of already accepted Evidence; it
+does not alter the Capture, authorize another provider exchange, or freeze RK-03/RK-04
+semantics prematurely.
+
 - The envelope version is `0.1.20260831`. Top-level and task statuses are `20000` / `Ok.`;
   `tasks_count=1`, `tasks_error=0`, and task `result_count=1`. No duplicate JSON object member
   names were observed in the exact body.
@@ -518,54 +525,138 @@ Evidence root. It does not complete routine F6 automation.
   `avg_backlinks_info`, `clickstream_keyword_info`, `keyword`, `keyword_info`,
   `keyword_info_normalized_with_bing`, `keyword_info_normalized_with_clickstream`,
   `keyword_properties`, `language_code`, `location_code`, `se_type`, `search_intent_info`,
-  and `serp_info`.
+  and `serp_info`. `seed_keyword_data` is value-identical to the depth-0 item's
+  `keyword_data` in this Capture. RK-03 must preserve both provider paths and synthetic-test
+  disagreement rather than silently double-counting or deduplicating them by assumption.
 - `related_keywords` is an array on 60 items and null on 20; no absent or empty-array branch
   is observed. Fifty-nine arrays contain eight targets and one contains five, for 477 total
-  related-keyword references. No array contains a duplicate target, and no self-reference is
-  observed.
-- The provider's related-keyword testimony is not a closed graph over the returned 80 items:
-  167 distinct referenced targets are not themselves present as returned item keywords. Later
-  graph modeling must preserve those provider-reported edges without inventing returned-node
-  testimony for unresolved targets.
-- Under `include_serp_info=true`, `serp_info` is a populated object on 62 items and null on 18;
-  no absent branch is observed. Populated objects share the keys `check_url`,
-  `last_updated_time`, `previous_updated_time`, `se_results_count`, `se_type`, and
-  `serp_item_types`.
-- `avg_backlinks_info` is a populated object on 59 items and null on 21. `keyword_info`,
-  `keyword_properties`, and `search_intent_info` are populated objects on all 80 items.
+  references to 246 distinct target strings. No array contains a duplicate target, and no
+  self-reference is observed. The 20 nulls occur at both depth `2` (10) and depth `3` (10),
+  so null is not evidenced as a depth-boundary or graph-leaf state.
+- The provider's related-keyword testimony is a relatedness neighborhood, not a parent-child
+  tree or breadth-first edge set. Among references whose target is also one of the 80 returned
+  items, target-depth minus source-depth is observed as `+1` on 96 edges, `0` on 96, `-1` on
+  69, and `-2` on 21. Sixty-seven distinct targets have more than one incoming reference;
+  maximum observed in-degree is 26. Provider-stated `depth` must therefore remain testimony
+  attached to the returned item rather than being recomputed from the relationship set.
+- The returned 80 items do not close the relationship neighborhood: 167 distinct related
+  targets are not returned as enriched item keywords. Fourteen distinct frontier targets
+  occur on 18 references from depth-1 or depth-2 sources even though `depth=3` was requested
+  and `limit=1000` did not bind. The reason those targets lack enriched returned items is
+  unstated; they must not be labeled as merely beyond depth or truncated by limit. Later
+  modeling must preserve the exact source-to-target testimony without inventing enriched-node
+  facts for those frontier strings.
+- Under `include_serp_info=true`, `serp_info` has three empirically distinct states in this
+  Capture: 60 metrics-bearing objects, 18 JSON nulls, and 2 present objects whose SERP payload
+  fields are null while `last_updated_time` is the sentinel-shaped exact string
+  `0001-01-01 00:00:00 +00:00`. No absent branch is observed. The two sentinel-shaped objects
+  must not be silently promoted to ordinary Provider Update Times; the exact provider value
+  is testimony while its semantic meaning remains a later Recipe decision. Existing Keyword
+  Overview timestamp validation would accept year 1 syntactically, so RK-03 must not reuse
+  that helper without an explicit Related Keywords rule.
+- In this one Capture, all 60 items with a `related_keywords` array also have metrics-bearing
+  `serp_info`, while the 20 null-edge items have either null SERP (18) or the sentinel-shaped
+  object (2). This exact correlation is testimony, not an invariant or proof of what null
+  means. Nine of the 60 edge-bearing items do not list `related_searches` among
+  `serp_item_types`, so the relationship array must not be modeled as a copy of that SERP
+  feature.
+- `avg_backlinks_info` is an object on 59 items and null on 21. `keyword_info`,
+  `keyword_properties`, and `search_intent_info` are objects on all 80 items. Provider
+  `main_intent` is `informational` on 78 items and `commercial` on 2; this is attributed
+  classification testimony for this Capture, not a Strategy conclusion.
+- `keyword_properties.core_keyword` is stated on 21 items, naming 20 distinct strings; 16 of
+  those strings appear in neither the 80 returned keyword strings nor the 246 distinct
+  `related_keywords` targets. Across returned keywords, relationship targets, and stated
+  core keywords, this body names 263 distinct strings. `core_keyword` is therefore a
+  separate provider keyword-reference layer that RK-03 must preserve distinctly from
+  discovery edges; its identity/canonicalization meaning belongs to RK-04 or a later Recipe.
+  `synonym_clustering_algorithm` is independently stated on 41 items and null on 39, so it
+  must not be presence-coupled to `core_keyword`.
+- Metrics-bearing SERP objects preserve provider-native `serp_item_types`; in this Capture
+  all 60 include `organic`, while observed counts include `related_searches` 51,
+  `ai_overview` 48, `people_also_ask` 43, `video` 21, `images` 14, and
+  `discussions_and_forums` 8, plus smaller provider-native categories. These are exact
+  one-Capture SERP-composition facts, not general Google prevalence claims or Strategy
+  conclusions.
 - With `include_clickstream_data=false`, `clickstream_keyword_info` and
   `keyword_info_normalized_with_clickstream` are null on all 80 items. The separate
-  `keyword_info_normalized_with_bing` field is also null on all 80 items. This Capture does
-  not establish their non-null shapes.
-- The first five inspected keyword-info objects each preserve provider `last_updated_time`,
-  current search-volume/CPC/competition testimony, and twelve `monthly_searches` rows spanning
-  August 2025 through July 2026. Their SERP, backlinks, and search-intent structures carry
-  distinct provider update timestamps. These sampled rows demonstrate that acquisition time,
-  keyword-data update time, SERP/backlink/intent update time, and monthly Data Period are
-  separate clocks; the sample does not prove twelve-row monthly history for every returned
-  item.
+  `keyword_info_normalized_with_bing` field is also null on all 80 items even though the
+  clickstream request flag does not itself define Bing-normalized semantics. This Capture
+  does not establish any of their non-null shapes.
+- Related Keywords enriched node structures overlap strongly with existing Keyword Overview
+  value shapes (`keyword_info`, monthly searches/trend, properties, backlinks, and intent),
+  but semantic interchangeability is **not** proven. RK result/item shape, discovered-subject
+  grain, SERP testimony, absent `search_partners`, relationship context, and sentinel-clock
+  behavior differ materially. Shared low-level parsing helpers may later be appropriate;
+  reusing Keyword Overview reconciliation, Observation kinds, or subject identity would make
+  an unsupported semantic claim.
+- Full-body reconciliation proves that all 80 returned items carry exactly 12
+  `monthly_searches` rows over the identical descending Data Period sequence July 2026 through
+  August 2025: 960 provider-stated monthly points in this Capture. Fifty monthly points state
+  numeric zero. Current `keyword_info.search_volume` differs from the newest monthly value on
+  63 of 80 items, so current search volume and monthly-series testimony must remain separate
+  facts rather than one being derived from the other. Twelve-row coverage is proven for this
+  Capture only, not as a future provider invariant.
+- Provider clocks are independently stated by structure: `keyword_info.last_updated_time` on
+  all 80 items, `search_intent_info.last_updated_time` on all 80, real
+  `avg_backlinks_info.last_updated_time` on 59, and SERP `last_updated_time`/
+  `previous_updated_time` according to the SERP states above. Capture/acquisition time,
+  structure-local Provider Update Times, and monthly Data Periods are distinct axes and must
+  never inherit from one another.
 
 ### RK-03 fixture and interpretation limits
 
-The exact protected body is suitable as strong primary Conformance-fixture material for a
-later strict Related Keywords parser. It exercises all requested traversal depths, a nonempty
-80-item result, seed inclusion, search-volume ordering testimony, nullable related-keyword
-arrays, nullable SERP enrichment, nullable backlinks enrichment, populated keyword/intention
-structures, clickstream-disabled null structures, multiple provider update clocks, and a
-provider graph whose references extend beyond returned item nodes.
+The exact protected body is sufficient as primary Conformance-fixture material for a later
+strict Related Keywords parser; no second provider exchange is justified by this review. The
+fixture exercises all requested depth labels, 80 enriched returned terms, 477
+ordered relationship references with repeated and frontier targets, the duplicate seed-data
+path, a separate `core_keyword` reference space, nullable relationship/backlink/SERP states,
+two sentinel-shaped SERP objects, 960 monthly Data Period points, provider intent and SERP
+composition, exact decimal-capable metrics, request-disabled clickstream nulls, and multiple
+independent structure-local clocks.
 
-This single Capture does **not** prove universal ordering or tie-break rules, complete corpus
-coverage, fixed depth cardinality, `limit`/offset pagination behavior, empty or absent
-`related_keywords`, duplicate/self-edge behavior, non-null clickstream/Bing-normalized shapes,
-SERP/backlink absent branches, provider-error envelopes, future unknown/additive fields,
-count-conflict behavior, stable field nullability, or a general billing formula. Those are
-bounded synthetic-adversarial-test territory for RK-03 or later explicitly accepted work;
-they do not justify another provider call.
+RK-03 must preserve provider testimony without deciding later semantic identity: exact
+returned strings; item order; stated `depth`; each `related_keywords` source/array-position/
+target relationship; frontier strings without invented enrichment; `seed_keyword_data` and
+the depth-0 item as distinct provider paths; stated/null `core_keyword`; numeric zero versus
+JSON null; SERP null versus sentinel-shaped object versus metrics-bearing object; exact
+provider timestamp strings; current metrics separately from monthly Data Period facts; exact
+raw `check_url`; and provider-native category/SERP-type values. Mechanical low-level parser
+helpers may be shared only where their semantics genuinely match this contract.
 
-The graph testimony also does not define Strategy topic membership, semantic similarity,
-canonical keyword identity beyond later Recipe rules, traversal completeness, or unresolved
-edge-target persistence policy. Those belong to later separately accepted RK-04 work and
-must not be smuggled into the strict parser.
+This single Capture does **not** prove universal ordering or tie-break rules, graph/tree
+structure, traversal completeness, the meaning of `related_keywords=null`, stable fanout,
+provider selection rules, complete corpus coverage, fixed depth cardinality, `limit`/offset
+pagination behavior, empty or absent `related_keywords`, duplicate/self-edge behavior,
+non-null clickstream/Bing-normalized shapes, SERP/backlink absent branches, provider-error
+envelopes, future unknown/additive fields, count-conflict behavior, stable field nullability,
+zero-date sentinel meaning, or a general billing formula. Those are synthetic-adversarial or
+later-contract questions and do not justify another paid call.
+
+RK-03 must also **not** decide canonical keyword identity, cross-Capture graph union,
+frontier-node persistence, `core_keyword` canonicalization, relationship centrality or
+importance, RK/Keyword Overview Observation equivalence, Strategy topic membership,
+semantic similarity, or consumer recommendations. Those questions belong to RK-04, a later
+Recipe/API boundary, or the downstream Strategy layer as applicable.
+
+### Downstream capability implications — preserved for later Strategy work
+
+Without making Strategy conclusions inside Observatory, this Capture demonstrates that this
+closed Related Keywords contract can provide materially richer source-attributed inputs than a
+flat expansion list: query-neighborhood relationships and repeated-reference structure;
+enriched node demand metrics plus twelve monthly Data Periods; provider intent and clustering
+references; SERP composition including AI Overview/PAA/video/image/forum testimony; backlinks
+context; unresolved frontier terms; and independent update clocks. A future Strategy layer
+may use admitted Observatory APIs over those facts for neighborhood exploration, demand-change
+analysis, intent/SERP mapping, cluster investigation, or other downstream comparisons. Any
+importance score, trend calculation, opportunity inference, topic membership, or action
+recommendation remains downstream under D3.
+
+The substantial JSON-shape overlap between RK node measurements and Keyword Overview is also
+a future acquisition/consumer-design question: RK may eventually satisfy some downstream
+measurement needs without redundant KO acquisition, but this Capture does **not** establish
+cross-surface semantic interchangeability. That comparison must be made explicitly before
+Strategy or acquisition policy treats one surface as a substitute for the other.
 
 The Steward therefore classifies RK-02 as **Accepted complete Evidence** under this ticket's
 technical stop point: the one-shot complete/nonempty Capture exists, local Evidence is clean,
