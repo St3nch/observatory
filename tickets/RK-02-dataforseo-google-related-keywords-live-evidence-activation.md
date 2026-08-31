@@ -1,8 +1,8 @@
 # RK-02 — DataForSEO Google Related Keywords Live one-shot Evidence activation
 
-**Status:** authorized — one-shot invocation not yet consumed  
+**Status:** review — accepted complete Evidence; closure authorization pending  
 **Owner:** [CHAZ] operator / [GPT] Steward verification  
-**Blocked by:** synchronization of this authorization record and final no-spend preflight  
+**Blocked by:** explicit [CHAZ] authorization to close RK-02  
 **Draft/review base:** `5d45137845820035137e07bb566f296bebcc158a`  
 **Reviewer:** [CLAUDE] read-only technical review  
 **Review result:** `RECONCILE` at `5d45137845820035137e07bb566f296bebcc158a`; Steward reconciled the technical findings and [CHAZ] resolved the remaining Product choice on 2026-08-31
@@ -435,6 +435,143 @@ Only after source and restored Evidence verify, assess:
 One Capture establishes testimony only for this exact exchange. It does not prove provider
 ordering, universal nullability, complete corpus coverage, fixed depth cardinality, stable
 future fields, or a billing formula.
+
+## Steward live Evidence and payload assessment — 2026-08-31
+
+[CHAZ] performed exactly one authorized RK-02 capture-process invocation from clean,
+synchronized `main` at activation HEAD
+`6bec2a9cc8c6aa04ff9081435f06a58a3d98bb36`. The process started at
+`2026-08-31T19:58:12Z`, ended at `2026-08-31T19:58:13Z`, exited `0`, emitted one Attempt
+and one Capture, and left the repository clean at the activation HEAD. The one-shot
+authorization is consumed. No retry, replacement root, pagination, continuation, polling,
+follow-up, changed seed, or second provider exchange occurred or is authorized.
+
+Committed live Evidence:
+
+- Attempt `d41ba58d56a4adfa297c832175b9efe21606af3b4a1b78b1f05119700364e7fb`;
+- Capture `774ab90603bd32c906023290f2c10acab69ff0dbfd95a87d928278d9a1322d63`;
+- exact Evidence root
+  `$HOME/.local/share/observatory/rk02-related-keywords-conspiracy-theories-2026-08-31`;
+- source Evidence status `format-2 ok` and source scrub clean;
+- exact inspected body `177120` bytes;
+- body SHA-256
+  `e128f2f81d51479237f1bd7e51feee3dfffcae4596558ebff67365f03cd1decb`;
+- independently recorded source inventory contains exactly the one Attempt and one Capture
+  above and has SHA-256
+  `6d6b229b2f5e1084c9bf753550364db226d7ab92c032a72da1fdf37809e23801`.
+
+### Accepted bounded F6 proof
+
+The existing encrypted restic repository `52a88583` through `vedaops-drive:` created
+snapshot
+`5839e6fb2ab9bd05a2efe32c9f3d7936f190e1c1bf42daed425c9f617e9cf382`, tagged
+`observatory-evidence-store` and `f6-paid-rk02`. A fresh restore into
+`/tmp/rk02-related-keywords-restore.25iEZh` opened as format 2 and scrubbed clean.
+
+Source inventory, snapshot-restored inventory, and independently recomputed restored
+inventory were byte-identical and all had the same inventory SHA-256 above. The restored
+Capture inspected successfully as exactly `177120` bytes with the same body SHA-256 as the
+source, and the source/restored body files were byte-identical.
+
+Non-secret receipt files were copied to the accepted off-host `receipts/` and
+`restore-proofs/` folders and downloaded again to fresh local files. Each remote round trip
+was byte-identical:
+
+- `rk02-related-keywords-backup-5839e6fb.ok.json` SHA-256
+  `93b11ffb12cb25c6668fe9ea6f28d20b00f2faad6d1bed56c0c3850eae556f61`;
+- `rk02-related-keywords-restore-5839e6fb.ok.json` SHA-256
+  `4ecd35cce98df37efb79263143dd875f741df2ee9443520bc39bdb783f946415`.
+
+This satisfies the accepted bounded manual F6 protection requirement for this RK-02 paid
+Evidence root. It does not complete routine F6 automation.
+
+### Verified provider payload findings
+
+- The envelope version is `0.1.20260831`. Top-level and task statuses are `20000` / `Ok.`;
+  `tasks_count=1`, `tasks_error=0`, and task `result_count=1`. No duplicate JSON object member
+  names were observed in the exact body.
+- Provider-reported top-level and task cost both equal `0.0216`; reported times are
+  `0.2494 sec.` and `0.1849 sec.`. Task ID is
+  `08311958-1463-0387-0000-415a20bd3cc6`, and task path is exactly
+  `["v3", "dataforseo_labs", "google", "related_keywords", "live"]`.
+- The task request echo agrees with the frozen RK-01 request: API `dataforseo_labs`, function
+  `related_keywords`, `se_type=google`, exact seed `conspiracy theories`, United States
+  `location_code=2840`, English `language_code=en`, `depth=3`, `limit=1000`, `offset=0`,
+  requested search-volume-descending `order_by`, seed inclusion true, SERP inclusion true,
+  clickstream inclusion false, synonyms not ignored, and core-keyword replacement false.
+- The observed cost `0.0216` exactly matches the freshly reviewed published calculation for
+  one task plus 80 returned items (`0.012 + 80 * 0.00012`) for this Capture. That agreement is
+  testimony for this request only, not proof of a universal billing formula.
+- The result has exactly the keys `items`, `items_count`, `language_code`, `location_code`,
+  `se_type`, `seed_keyword`, `seed_keyword_data`, and `total_count`. It echoes the exact seed,
+  location, and language, reports `total_count=80` and `items_count=80`, and contains exactly
+  80 item objects. The configured `limit=1000` therefore did not bind on this Capture.
+- All 80 returned item keywords are unique in this body. The numeric search-volume testimony
+  is observed in non-increasing order across the returned item array, consistent with the
+  requested ordering. One Capture does not prove stable ordering, tie-break behavior, or a
+  future provider invariant.
+- Traversal depths are observed across the full requested range: one item at depth `0`, eight
+  at depth `1`, thirty at depth `2`, and forty-one at depth `3`. The exact seed is returned as
+  the depth-0 item.
+- Every item has exactly `depth`, `keyword_data`, `related_keywords`, and `se_type`. Every
+  item `keyword_data` object has the same twelve keys observed in `seed_keyword_data`:
+  `avg_backlinks_info`, `clickstream_keyword_info`, `keyword`, `keyword_info`,
+  `keyword_info_normalized_with_bing`, `keyword_info_normalized_with_clickstream`,
+  `keyword_properties`, `language_code`, `location_code`, `se_type`, `search_intent_info`,
+  and `serp_info`.
+- `related_keywords` is an array on 60 items and null on 20; no absent or empty-array branch
+  is observed. Fifty-nine arrays contain eight targets and one contains five, for 477 total
+  related-keyword references. No array contains a duplicate target, and no self-reference is
+  observed.
+- The provider's related-keyword testimony is not a closed graph over the returned 80 items:
+  167 distinct referenced targets are not themselves present as returned item keywords. Later
+  graph modeling must preserve those provider-reported edges without inventing returned-node
+  testimony for unresolved targets.
+- Under `include_serp_info=true`, `serp_info` is a populated object on 62 items and null on 18;
+  no absent branch is observed. Populated objects share the keys `check_url`,
+  `last_updated_time`, `previous_updated_time`, `se_results_count`, `se_type`, and
+  `serp_item_types`.
+- `avg_backlinks_info` is a populated object on 59 items and null on 21. `keyword_info`,
+  `keyword_properties`, and `search_intent_info` are populated objects on all 80 items.
+- With `include_clickstream_data=false`, `clickstream_keyword_info` and
+  `keyword_info_normalized_with_clickstream` are null on all 80 items. The separate
+  `keyword_info_normalized_with_bing` field is also null on all 80 items. This Capture does
+  not establish their non-null shapes.
+- The first five inspected keyword-info objects each preserve provider `last_updated_time`,
+  current search-volume/CPC/competition testimony, and twelve `monthly_searches` rows spanning
+  August 2025 through July 2026. Their SERP, backlinks, and search-intent structures carry
+  distinct provider update timestamps. These sampled rows demonstrate that acquisition time,
+  keyword-data update time, SERP/backlink/intent update time, and monthly Data Period are
+  separate clocks; the sample does not prove twelve-row monthly history for every returned
+  item.
+
+### RK-03 fixture and interpretation limits
+
+The exact protected body is suitable as strong primary Conformance-fixture material for a
+later strict Related Keywords parser. It exercises all requested traversal depths, a nonempty
+80-item result, seed inclusion, search-volume ordering testimony, nullable related-keyword
+arrays, nullable SERP enrichment, nullable backlinks enrichment, populated keyword/intention
+structures, clickstream-disabled null structures, multiple provider update clocks, and a
+provider graph whose references extend beyond returned item nodes.
+
+This single Capture does **not** prove universal ordering or tie-break rules, complete corpus
+coverage, fixed depth cardinality, `limit`/offset pagination behavior, empty or absent
+`related_keywords`, duplicate/self-edge behavior, non-null clickstream/Bing-normalized shapes,
+SERP/backlink absent branches, provider-error envelopes, future unknown/additive fields,
+count-conflict behavior, stable field nullability, or a general billing formula. Those are
+bounded synthetic-adversarial-test territory for RK-03 or later explicitly accepted work;
+they do not justify another provider call.
+
+The graph testimony also does not define Strategy topic membership, semantic similarity,
+canonical keyword identity beyond later Recipe rules, traversal completeness, or unresolved
+edge-target persistence policy. Those belong to later separately accepted RK-04 work and
+must not be smuggled into the strict parser.
+
+The Steward therefore classifies RK-02 as **Accepted complete Evidence** under this ticket's
+technical stop point: the one-shot complete/nonempty Capture exists, local Evidence is clean,
+bounded F6 snapshot/restore and receipt round-trip proofs are accepted, restored-body equality
+is exact, and the payload assessment is sufficient to begin RK-03. Per project closure
+discipline, the ticket remains `review` until [CHAZ] explicitly authorizes closure.
 
 ## Acceptance / stop point
 
