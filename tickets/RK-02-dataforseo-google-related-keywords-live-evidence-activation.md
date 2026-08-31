@@ -1,11 +1,11 @@
 # RK-02 — DataForSEO Google Related Keywords Live one-shot Evidence activation
 
-**Status:** provisional  
+**Status:** accepted — live operator command separately gated  
 **Owner:** [CHAZ] operator / [GPT] Steward verification  
-**Blocked by:** one [CHAZ] Product decision; final Steward acceptance; separate explicit [CHAZ] one-shot authorization  
-**Draft base:** `5d45137845820035137e07bb566f296bebcc158a`  
+**Blocked by:** separate explicit [CHAZ] one-shot provider/spend authorization  
+**Draft/review base:** `5d45137845820035137e07bb566f296bebcc158a`  
 **Reviewer:** [CLAUDE] read-only technical review  
-**Review result:** `RECONCILE` at `5d45137845820035137e07bb566f296bebcc158a`; Steward technical reconciliation remains provisional pending one Product decision
+**Review result:** `RECONCILE` at `5d45137845820035137e07bb566f296bebcc158a`; Steward reconciled the technical findings and [CHAZ] resolved the remaining Product choice on 2026-08-31
 
 ## Purpose
 
@@ -19,11 +19,11 @@ Derivation Recipe, Outcome, Observation, PostgreSQL schema, Derivation, Recipe s
 Holdings, Measurement Outcomes, Ranked Keywords work, Strategy behavior, pagination,
 acquisition cadence, or backup framework.
 
-This provisional ticket authorizes only Steward reconciliation work. It does **not**
-authorize provider transport, credentials, spend, Evidence creation, or the capture command.
-[CLAUDE]'s required read-only review is complete. After [CHAZ] resolves the one remaining
-Product question, [GPT] must record final acceptance and commit the final operator boundary.
-[CHAZ] must then separately authorize the exact one-shot command from the exact final clean HEAD.
+This accepted ticket freezes the operator boundary but does **not** itself authorize provider
+transport, credential use, spend, Evidence creation, or the capture command. [CLAUDE]'s
+required read-only review and Steward reconciliation are complete. [CHAZ] must separately
+authorize the exact one-shot command from the exact final clean HEAD before the paid process
+may start.
 
 ## Accepted RK-01 foundation
 
@@ -199,12 +199,11 @@ the live RK-01 adapter and Evidence CLI. The technical corrections below are acc
 - F7 and F13 do not block this gate;
 - the missing RK-01 module entrypoint is added to `AGENTS.md` by Steward authority maintenance.
 
-One Product choice remains intentionally unresolved before final acceptance: if the single
-authorized invocation commits a paid Attempt but yields no fixture-quality Capture/body,
-does RK-02 remain a hard stop requiring a later separate Product decision, or is one narrowly
-pre-authorized replacement-root re-run allowed for that failure class? The Steward recommends
-the existing AI-09/AI-14 rule: **hard stop, no pre-authorized retry**. Until [CHAZ] decides,
-this ticket remains provisional and no paid command is authorized.
+[CHAZ] resolved the remaining Product choice on 2026-08-31: **hard stop, no pre-authorized
+retry**. If the single authorized invocation commits a paid Attempt but yields no fixture-
+quality Capture/body, RK-02 stops. Preserve and protect all committed paid Evidence, record the
+honest result, and require a new later Steward/Product boundary before any replacement root or
+second provider exchange. No failure class in RK-02 carries an automatic retry entitlement.
 
 ## Final-ticket operator record required
 
@@ -279,7 +278,7 @@ Do not manually interrupt merely because 120 seconds passes. If the process is s
 after five minutes, report the live state to the Steward before any intervention; that
 five-minute point is an operator escalation threshold, not permission to kill or retry.
 
-## Provisional capture shape — not authorized
+## Final capture shape — separately gated
 
 ```bash
 cd /home/chaz/projects/vedaops/observatory
@@ -290,7 +289,7 @@ uv run python -m observatory.dataforseo_google_related_keywords_paid_probe captu
   --authorize-max-micro-usd 200000
 ```
 
-This command is **not authorized** by this provisional ticket.
+This command is frozen by RK-02 but remains **not authorized to run** until [CHAZ] separately gives the exact one-shot provider/spend authorization from the final clean HEAD.
 
 ## Immediate post-capture gate
 
