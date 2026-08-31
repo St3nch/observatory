@@ -1,13 +1,14 @@
 # RK-04 — DataForSEO Google Related Keywords Derivation Recipe and typed persistence
 
-**Status:** accepted — independent pre-implementation reviews reconciled; awaiting explicit [CHAZ] implementation authorization  
+**Status:** implementation authorized — [CLAUDE] may implement from the exact accepted-ticket HEAD recorded below  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
-**Blocked by:** explicit [CHAZ] implementation authorization from the final accepted-ticket HEAD  
+**Blocked by:** none inside RK-04; implementation remains bounded to the accepted allowlist and no-network/provider boundary  
 **Draft base:** `1739147fadf5b666608d82cfa73b159781c323ea`  
 **Review base:** `5d79327d1dfebd40c6aa067ed411ece735c18826`  
 **Claude pre-implementation review:** `RECONCILE`  
 **Grok independent pre-implementation review:** `RECONCILE`  
 **Steward reconciliation:** accepted below; no Product question remains  
+**Implementation authorization:** [CHAZ] explicitly authorized RK-04 implementation from exact accepted-ticket HEAD `fecc743a61ba36d87952d3184433f4be90b68bf8`  
 **Product direction:** continue the bounded Related Keywords MVP slice; no provider call is needed  
 
 ## Purpose
@@ -30,8 +31,11 @@ No provider exchange, credentials, spend, new Evidence, API, Strategy state, Ran
 cross-surface normalization, recurring acquisition, or generic Labs framework is authorized.
 
 The required code-first Claude and independent Grok reviews are complete and reconciled below.
-Implementation may begin only after separate explicit [CHAZ] authorization from the final
-accepted-ticket HEAD.
+[CHAZ] explicitly authorized [CLAUDE] implementation from exact accepted-ticket HEAD
+`fecc743a61ba36d87952d3184433f4be90b68bf8`. That authorization is limited to this ticket's
+final semantic/persistence contract and changed-path allowlist; it authorizes no provider call,
+credential use, Evidence mutation, API/RK-05 work, Ranked Keywords work, Strategy work, amend,
+or push.
 
 ## Authority and accepted foundation
 
