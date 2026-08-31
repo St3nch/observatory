@@ -2,9 +2,10 @@
 
 **Status:** provisional  
 **Owner:** [CHAZ] operator / [GPT] Steward verification  
-**Blocked by:** RK-01 closed Evidence-only adapter; [CLAUDE] read-only review; final Steward reconciliation; separate explicit [CHAZ] one-shot authorization  
-**Draft base:** `00308c64a6cd0e60b73deda37986aebf70bdaf3f`  
-**Reviewer:** [CLAUDE] read-only technical review
+**Blocked by:** one [CHAZ] Product decision; final Steward acceptance; separate explicit [CHAZ] one-shot authorization  
+**Draft base:** `5d45137845820035137e07bb566f296bebcc158a`  
+**Reviewer:** [CLAUDE] read-only technical review  
+**Review result:** `RECONCILE` at `5d45137845820035137e07bb566f296bebcc158a`; Steward technical reconciliation remains provisional pending one Product decision
 
 ## Purpose
 
@@ -18,9 +19,10 @@ Derivation Recipe, Outcome, Observation, PostgreSQL schema, Derivation, Recipe s
 Holdings, Measurement Outcomes, Ranked Keywords work, Strategy behavior, pagination,
 acquisition cadence, or backup framework.
 
-This provisional ticket authorizes only read-only review and Steward ticket work. It does
-**not** authorize provider transport, credentials, spend, Evidence creation, or the capture
-command. After [CLAUDE]'s review, [GPT] must reconcile and commit the final operator boundary.
+This provisional ticket authorizes only Steward reconciliation work. It does **not**
+authorize provider transport, credentials, spend, Evidence creation, or the capture command.
+[CLAUDE]'s required read-only review is complete. After [CHAZ] resolves the one remaining
+Product question, [GPT] must record final acceptance and commit the final operator boundary.
 [CHAZ] must then separately authorize the exact one-shot command from the exact final clean HEAD.
 
 ## Accepted RK-01 foundation
@@ -70,6 +72,10 @@ authorization.
 F3 broad rollout and F12 recurring acquisition remain unfired. This ticket creates no panel,
 cadence, monitoring state, Strategy state, or automatic follow-up acquisition.
 
+F7 remains unfired because RK-02 uses one fresh Evidence root and one operator process. F13
+does not block this activation: RK-01 was hardened from birth with closure-owned transport
+authority and is not one of F13's older affected gates.
+
 ## Fresh claimed-contract and pricing check — 2026-08-31
 
 The Steward rechecked the current official Related Keywords Live documentation and DataForSEO
@@ -100,13 +106,21 @@ Current official documentation still claims:
 
 Current official Labs Google pricing lists the applicable "all other endpoints" rate as
 `$0.012` per task plus `$0.00012` per returned item. A full 1000-item response is therefore
-approximately `$0.132` under the published schedule. The pricing page explicitly states that
-`include_clickstream_data=true` multiplies request cost by two. RK-01 fixes clickstream to
-`false`. The current pricing page does not state a separate `include_serp_info=true` surcharge.
+approximately `$0.132` under the published schedule. This is a deliberately conservative
+upper-bound calculation using the configured `limit=1000`, not the expected charge; the same
+claimed contract documents an approximate depth-3 maximum near 584 items. The pricing page
+explicitly states that `include_clickstream_data=true` multiplies request cost by two. RK-01
+fixes clickstream to `false`. The current pricing page does not state a separate
+`include_serp_info=true` surcharge.
 
 The `200000` micro-USD acknowledgement remains a conservative fail-closed operator ceiling
 with headroom. It is not expected cost, a provider-enforced billing cap, an invoice guarantee,
 or permission for a retry.
+
+The committed Attempt continues to record RK-01's frozen
+`pricing_basis="dataforseo-labs-google-related-keywords-live-2026-08-28"`. The 2026-08-31
+recheck is later operator claimed-contract review and deliberately does not rewrite that
+closed RK-01 constant.
 
 Official documentation/pricing are mutable claimed contract, not Observatory Evidence.
 Recheck them again before final one-shot authorization if the operation does not occur in the
@@ -166,6 +180,32 @@ Challenge:
 Return `READY`, `RECONCILE`, or `NOT_READY`, with exact file/code references and concrete
 ticket corrections. Do not implement anything.
 
+## Steward reconciliation of [CLAUDE] review
+
+[CLAUDE] returned `RECONCILE`. GPT independently verified the load-bearing findings against
+the live RK-01 adapter and Evidence CLI. The technical corrections below are accepted:
+
+- credential echo is rejected before Capture commit, so a paid Attempt can exist without a
+  Capture and the provider response bytes are not retained;
+- non-zero capture exit may print no Attempt/Capture IDs, so the operator boundary needs an
+  explicit read-only committed-ID recovery step;
+- missing credentials fail before root creation, but a later post-create/pre-Attempt failure
+  can still leave a FORMAT-only root;
+- Attempt-without-Capture is authorized/unresolved and cannot be treated as definitely unsent
+  or definitely uncharged;
+- Evidence `status`/`scrub` must always carry the exact `--evidence-root`;
+- successful Related Keywords inspect proves the adapter contract and complete nonempty
+  transport testimony, not provider semantic success;
+- F7 and F13 do not block this gate;
+- the missing RK-01 module entrypoint is added to `AGENTS.md` by Steward authority maintenance.
+
+One Product choice remains intentionally unresolved before final acceptance: if the single
+authorized invocation commits a paid Attempt but yields no fixture-quality Capture/body,
+does RK-02 remain a hard stop requiring a later separate Product decision, or is one narrowly
+pre-authorized replacement-root re-run allowed for that failure class? The Steward recommends
+the existing AI-09/AI-14 rule: **hard stop, no pre-authorized retry**. Until [CHAZ] decides,
+this ticket remains provisional and no paid command is authorized.
+
 ## Final-ticket operator record required
 
 The final reconciled ticket must freeze before [CHAZ] authorization:
@@ -184,6 +224,11 @@ The final reconciled ticket must freeze before [CHAZ] authorization:
 - exact Attempt/Capture set equality;
 - restored response-body byte-count/SHA-256 equality when complete Evidence exists;
 - explicit no retry, replacement root, pagination, continuation, follow-up, or second call.
+
+Accepted F6 identifiers to carry into the final record are rclone remote `vedaops-drive:`,
+restic repository path `VedaOps Backups/Observatory/evidence-store/repository`, restic
+password file `$HOME/.config/restic/observatory-password`, and tags
+`observatory-evidence-store` plus `f6-paid-rk02`.
 
 Candidate final Evidence root:
 
@@ -215,13 +260,24 @@ Before the paid process starts, prove at minimum:
   response-ceiling/retry/continuation/pagination seam.
 
 The RK-01 CLI loads DataForSEO credentials **before** opening or creating the Evidence root.
-Missing credentials therefore fail before this adapter creates the root. Do not copy AI-14's
-FORMAT-only-root failure semantics into RK-02.
+Missing credentials therefore fail before this adapter creates the root. However, once
+credentials load, `_open_or_create` can create FORMAT before later keyword/Attempt validation.
+A post-create, pre-Attempt failure may therefore leave a FORMAT-only root. Do not delete that
+root and rerun under the same authorization; stop for Steward/[CHAZ] reconciliation.
+
+If an Attempt is committed but no Capture is committed, the result is **authorized/unresolved**.
+It must not be treated as definitely unsent, definitely uncharged, or safe to retry. Process
+death after Attempt commit, credential-echo rejection after transport, or Capture-commit/read-
+back failure can leave this state. Credential echo specifically rejects before Capture commit;
+the paid provider response bytes are then not retained by Observatory.
 
 A failed preflight before process start consumes no Product authorization. Once the capture
 process is invoked, the one-shot Product authorization is consumed regardless of exit code or
-provider/transport result. Do not interrupt a started process merely because it takes longer
-than expected; the accepted read timeout is 120 seconds.
+provider/transport result. The HTTP client has phase-specific timeouts (`connect=30`,
+`read=120`, `write=30`, `pool=30` seconds); `read=120` is not a total wall-clock deadline.
+Do not manually interrupt merely because 120 seconds passes. If the process is still running
+after five minutes, report the live state to the Steward before any intervention; that
+five-minute point is an operator escalation threshold, not permission to kill or retry.
 
 ## Provisional capture shape — not authorized
 
@@ -240,12 +296,46 @@ This command is **not authorized** by this provisional ticket.
 
 After the single later-authorized invocation:
 
-1. record UTC start/end, exit code, repository HEAD/tree, and emitted IDs;
+1. record UTC start/end, exit code, repository HEAD/tree, and any emitted IDs;
 2. never rerun the paid command under the same authorization;
-3. inspect/open the exact Evidence root and run status/scrub;
-4. if complete nonempty Capture Evidence exists, use the RK-01 byte-exact inspector and
+3. on any non-zero exit, remember the CLI may print no IDs. If the exact Evidence root exists,
+   recover the committed-ID inventory read-only from COMMITTED marker parent directories
+   before drawing any sent/unsent conclusion;
+4. run status and scrub with the exact explicit Evidence root;
+5. if complete nonempty Capture Evidence exists, use the RK-01 byte-exact inspector and
    record body byte count and SHA-256 outside the Evidence root;
-5. preserve every committed paid Attempt even if fixture-quality complete Evidence does not result.
+6. preserve every committed paid Attempt even if fixture-quality complete Evidence does not result.
+
+Exact source committed-ID recovery/inventory command:
+
+```bash
+EVIDENCE_ROOT="$HOME/.local/share/observatory/rk02-related-keywords-conspiracy-theories-2026-08-31"
+INVENTORY="/tmp/rk02-related-keywords-source-inventory.txt"
+
+: > "$INVENTORY"
+for kind in attempts captures; do
+  base="$EVIDENCE_ROOT/$kind/v1"
+  if [ -d "$base" ]; then
+    find "$base" -type f -name COMMITTED -printf '%h\n' \
+      | sed 's#.*/##' \
+      | LC_ALL=C sort \
+      | sed "s/^/${kind%s} /" >> "$INVENTORY"
+  fi
+done
+
+cat "$INVENTORY"
+sha256sum "$INVENTORY"
+```
+
+Exact local Evidence checks:
+
+```bash
+uv run python -m observatory.evidence status --evidence-root "$EVIDENCE_ROOT"
+uv run python -m observatory.evidence scrub --evidence-root "$EVIDENCE_ROOT"
+```
+
+`status` proves only that the format-2 store opens. `scrub` verifies commitment-claiming
+directories it discovers. Neither is a Capture-completeness or provider-success witness.
 
 Inspect shape after a Capture ID exists:
 
@@ -260,16 +350,20 @@ sha256sum /tmp/rk02-related-keywords-response.body
 ```
 
 Capture CLI exit `0` is not semantic provider-success proof. Successful byte-exact inspect is
-the adapter-level witness that the cited Capture is verified HTTP event version 2,
-`transport_state=response_complete`, response completeness is `complete`, and the body is
-present and nonempty.
+the adapter-level witness that the cited Capture is for
+`dataforseo-labs-google-related-keywords-live-paid-probe-v1`, is verified HTTP event version
+2, has `transport_state=response_complete`, response completeness `complete`, and a present
+nonempty body. Inspect proves complete transport testimony, **not** that the provider body is
+semantically successful; a complete provider-error envelope may still inspect successfully.
 
 Partial/no-response, inspect refusal, credential-echo refusal, scrub failure, provider error,
 unexpected transport/provider result, or other abnormal result is a hard stop and does not
 authorize retry.
 
 If any paid Related Keywords Attempt was committed, protect it through bounded F6 even if no
-fixture-quality complete body exists.
+fixture-quality complete body exists. On credential-echo rejection specifically, the Attempt
+must still be inventoried and protected even though no Capture exists and the response bytes
+were discarded before Capture commit.
 
 ## Bounded F6 protection
 
