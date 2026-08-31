@@ -1,6 +1,6 @@
 # RK-03 — DataForSEO Google Related Keywords strict parser and RK-02 Conformance fixture
 
-**Status:** ready — [CHAZ] authorized [CLAUDE] implementation from the exact accepted-ticket HEAD  
+**Status:** review — [CLAUDE] implemented; awaiting independent [GPT] Steward review and [CHAZ] closure  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
 **Blocked by:** none inside RK-03; implementation must remain on the accepted changed-path and no-network boundary  
 **Product direction:** [CHAZ] selected RK-03 as the next active Related Keywords boundary after RK-02 closure on 2026-08-31  
@@ -637,3 +637,220 @@ The Writer should run the bounded Related Keywords parser tests plus:
 Do not run the full suite unless the accepted final ticket explicitly changes that boundary.
 Per current project process, [CHAZ] supplies final full-suite validation at the later
 integration/closure point.
+
+## Implementation report — [CLAUDE], 2026-08-31
+
+### Commit boundary
+
+- Parent / implementation base: `514b387914df659f6eb97f9fac49353c7544d24b` (clean `main`).
+  Its parent `bf6a32a418e89ba51ad36f40802d80e909be52ec` is the accepted-ticket HEAD; `514b387`
+  records [CHAZ]'s authorization only and changed no production/test contract.
+- Child: the single implementation commit carrying this report. No amend, no push, no rebase.
+
+### Changed paths
+
+Exactly the accepted allowlist, all three source files new:
+
+- `src/observatory/dataforseo_google_related_keywords.py` (new);
+- `tests/test_dataforseo_google_related_keywords.py` (new);
+- `tests/fixtures/dataforseo_google_related_keywords_rk02.json` (new);
+- this ticket (status + this report only).
+
+No other production helper, `capture_event.py`, paid-probe module, existing fixture, schema,
+migration, API, or Recipe file was touched, and no allowlist widening was needed.
+
+### Fixture promotion proof
+
+Promoted once through the exact frozen guarded inspector procedure in this ticket, from the
+protected RK-02 Evidence root, with the `.tmp` staging file and length/hash guards. Never from
+`/tmp`, never reserialized, never pretty-printed.
+
+- `wc -c` → `177120`
+- `sha256sum` → `e128f2f81d51479237f1bd7e51feee3dfffcae4596558ebff67365f03cd1decb`
+
+Both match the RK-02 recorded response identity exactly. All five pre-existing provider
+fixtures were re-hashed after the change and are unchanged:
+
+| Fixture | SHA-256 |
+|---|---|
+| `dataforseo_keyword_overview_pf03.json` | `d91fdc7ab8acf429f0ff9c00bd7cdb725be1ba9585481af35d14f7c4e79a6d1c` |
+| `dataforseo_google_organic_pf10.json` | `7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f` |
+| `dataforseo_ai_optimization_search_mentions_ai03.json` | `8b3cd0fb0c9fa23c102696bfe6b7212396c0f7c110e9ca8ca5b8ee5af182e80a` |
+| `dataforseo_ai_optimization_target_metrics_ai09.json` | `7b6974704f73cff9687986a83ab14ba8ec942ccdbfde359ec7e8fde6bea8eee2` |
+| `dataforseo_ai_optimization_llm_mentions_historical_ai14.json` | `4419daf0b7076625129ab18c6bf3c83905b998c3b3332f2ba6d42c8879b50781` |
+
+A read-only inventory of the RK-02 Evidence root after promotion still contains exactly the one
+committed Attempt `d41ba58d…64e7fb` and one committed Capture `774ab906…1a322d63`.
+
+### Verification results
+
+- `uv run pytest -q tests/test_dataforseo_google_related_keywords.py` → **201 passed** (5.60s).
+- `uv run ruff check .` → **All checks passed!**
+- `uv run mypy src/observatory/dataforseo_google_related_keywords.py
+  tests/test_dataforseo_google_related_keywords.py` → **Success: no issues found in 2 source files**.
+- `uv run mypy` (whole configured `src` + `tests` scope) → **14 errors in 5 files**. Every one of
+  those errors is **pre-existing at the authorized base commit** and lives in files this ticket did
+  not touch: `tests/test_grok_dispatcher.py`, `tests/test_github_queue_controller.py`,
+  `tests/test_dataforseo_ai_optimization_llm_mentions_historical_paid_probe.py`,
+  `tests/test_api_target_metrics.py`, `tests/test_api_llm_mentions_historical.py`. Verified by
+  running the same `mypy` against a `git archive` extraction of `514b387…` in a scratch directory:
+  identical **14 errors in 5 files**, 82 source files before versus 84 after. RK-03 therefore adds
+  zero mypy errors and fixes none; repairing them would require paths outside the allowlist.
+  **This is a repository-level defect the Steward should schedule separately.**
+- The full suite was not run, per this ticket's verification boundary; [CHAZ] supplies final
+  full-suite validation at integration.
+
+### Acceptance criterion → proving test
+
+| Accepted requirement | Proving test |
+|---|---|
+| Fixture exact length and SHA-256 | `test_frozen_fixture_independent_sha256_and_length` |
+| Existing fixtures byte-identical | `test_existing_fixtures_remain_byte_identical` |
+| Shared `Field`/`ParseClassification` reuse causes no regression | `test_existing_provider_parsers_still_read_their_own_fixtures` |
+| No Evidence-root or `/tmp` dependency in ordinary tests | `test_ordinary_tests_read_only_the_committed_fixture` |
+| Autouse no-public-network guard | `_no_public_network` fixture, `test_autouse_guard_blocks_public_network`, `test_no_credentials_in_environment` |
+| Envelope/task/Decimal cost/task id/path testimony | `test_golden_envelope_and_task_testimony` |
+| Frozen Attempt contract | `test_golden_attempt_context_is_the_frozen_contract`, `test_every_frozen_attempt_value_is_enforced`, `test_attempt_parameter_key_set_is_closed`, `test_attempt_integers_reject_booleans`, `test_attempt_booleans_reject_non_boolean_values`, `test_seed_grammar_rejects_out_of_contract_seeds`, `test_seed_must_be_a_string` |
+| Provider echo typed independently | `test_golden_provider_echo_is_typed_independently` |
+| Result context, `total_count`/`items_count` | `test_golden_result_context`, `test_total_count_is_independent_of_items_count`, `test_negative_total_count_fails`, `test_items_count_must_equal_actual_item_array_length` |
+| 80 items, exact provider order and indexes | `test_golden_item_order_and_provider_indexes` |
+| Depth distribution `0:1 1:8 2:30 3:41`, no recomputation | `test_golden_depth_distribution_and_no_recomputation` |
+| `seed_keyword_data` separate from depth-0 item, observed equality proven | `test_golden_seed_path_is_retained_separately_from_depth_zero_item` |
+| 60/20 states, 59×8 + 1×5, 477 occurrences | `test_golden_related_keyword_states_and_occurrences` |
+| 246 distinct targets, 167 frontier-only | `test_golden_distinct_and_frontier_targets` |
+| Depth deltas `+1:96 0:96 -1:69 -2:21` | `test_golden_depth_delta_distribution` |
+| 67 multiply referenced, max in-degree 26, not stored | `test_golden_incoming_reference_counts_are_recomputable_not_stored` |
+| Null `related_keywords` at depths 2 and 3 (ten each) | `test_golden_null_related_keywords_span_depth_two_and_three` |
+| Pinned seed tuple, named frontier target below depth 3, named core-only string | `test_golden_pinned_relationship_frontier_and_core_only_strings` |
+| `core_keyword` 21/59, 20 distinct, 16 core-only, no canonicalization | `test_golden_core_keyword_is_a_reference_layer_only`, `test_golden_pinned_relationship_frontier_and_core_only_strings`, `test_core_keyword_may_name_any_string_without_replacement` |
+| `core_keyword` independent of clustering algorithm | `test_golden_synonym_algorithm_is_independent_of_core_keyword`, `test_core_keyword_and_synonym_algorithm_states_are_independent` |
+| SERP three structural states 60/18/2 | `test_golden_serp_has_three_structural_states`, `test_serp_states_stay_structurally_distinguishable` |
+| Both hollow SERP keywords by exact string and nested field states | `test_golden_hollow_serp_objects_are_exact_and_stated` |
+| SERP item types ordered, observed counts, open vocabulary | `test_golden_serp_item_types_stay_ordered_provider_vocabulary`, `test_new_serp_item_type_and_foreign_intent_values_stay_parseable`, `test_serp_item_types_absent_null_and_empty_states` |
+| Backlinks 59/21 and intent 78/2 | `test_golden_backlinks_and_intent_testimony` |
+| 960 item monthly rows, one 12-period sequence, 50 zeros, 63 divergent, seed path's own 12 | `test_golden_monthly_history_and_independent_current_volume` |
+| Categories order/duplicates preserved | `test_golden_categories_preserve_provider_order_and_duplicates`, `test_categories_and_foreign_intent_array_states_are_preserved`, `test_categories_reject_non_integer_members` |
+| Clickstream `NOT_REQUESTED` distinguishable from Bing `JSON_NULL` | `test_golden_clickstream_and_bing_states_are_distinguishable`, `test_request_disabled_clickstream_states`, `test_bing_normalized_states_and_unsupported_shape` |
+| Structure-local clocks not replaced by Capture time | `test_golden_structure_local_clocks_stay_independent` |
+| Signed trend values | `test_golden_search_volume_trend_values_may_be_negative`, `test_search_volume_trend_accepts_negative_values` |
+| Stated zero vs JSON null | `test_golden_stated_zero_and_null_remain_distinguishable`, `test_zero_and_null_metric_states_remain_distinguishable` |
+| BOM/UTF-8/trailing/invalid JSON/duplicate member/non-finite | `test_decode_rejects_bom_bad_utf8_trailing_and_invalid_json`, `test_decode_rejects_duplicate_object_members`, `test_decode_rejects_non_finite_numbers` |
+| Decimal forms without float round-trip | `test_decimal_forms_survive_without_binary_float_round_trip`, `test_backlinks_decimal_values_accept_integer_and_fraction_forms` |
+| Structural ints reject bool/str/decimal | `test_structural_integers_reject_booleans_strings_and_decimals` |
+| Unknown members fail at every closed layer, incl. `search_partners` | `test_unknown_members_fail_at_every_closed_layer` |
+| Open provider vocabulary values stay parseable | `test_open_provider_vocabulary_values_stay_parseable` |
+| tasks_count/tasks_error/status topology | `test_tasks_count_and_task_array_topology`, `test_tasks_error_must_match_success_topology`, `test_root_and_task_success_disagreement_fails` |
+| Provider error returns parser-only IR without reading result | `test_consistent_provider_error_preserves_envelope_without_reading_result` |
+| Malformed provider-error echo/counts still fail | `test_provider_error_with_malformed_echo_or_counts_still_fails`, `test_result_count_rejects_negative_boolean_and_string` |
+| Successful result topology; null/omitted/wrong type fails | `test_successful_result_topology_must_be_exactly_one_object`, `test_successful_result_null_omitted_or_wrong_type_fails`, `test_items_must_be_an_array`, `test_result_seed_keyword_must_be_a_string` |
+| `items=[]` is empty parser IR only | `test_empty_items_parses_as_empty_parser_ir_only` |
+| Echo/result disagreement visible, Attempt not overwritten | `test_echo_and_result_disagreement_stays_visible_without_overwriting_attempt` |
+| Shuffled order preserved with synthetic indexes | `test_shuffled_item_order_is_preserved_with_synthetic_indexes` |
+| Duplicate returned keywords remain separate | `test_duplicate_returned_keywords_remain_separate_occurrences` |
+| Depth 0..4 parses; outside fails | `test_claimed_contract_depth_range_parses`, `test_depth_outside_claimed_contract_fails`, `test_depth_rejects_non_integers` |
+| `related_keywords` absent/null/empty distinct | `test_related_keywords_absent_null_and_empty_remain_distinct` |
+| Duplicate/repeated/self targets survive in order | `test_duplicate_repeated_and_self_referencing_targets_survive_in_order` |
+| Wrong-typed relationship targets fail | `test_wrong_typed_related_target_fails`, `test_related_keywords_wrong_container_fails` |
+| `seed_keyword_data` states and disagreement | `test_seed_keyword_data_states_and_disagreement_stay_visible`, `test_seed_keyword_data_wrong_container_is_rejected_or_null` |
+| Missing depth-0 row and item location/language disagreement stay visible | `test_missing_depth_zero_row_is_visible_not_a_parse_failure`, `test_item_location_and_language_disagreement_is_visible` |
+| Nested stated `se_type` must be google | `test_nested_stated_se_type_must_be_google`, `test_item_se_type_is_required_and_typed`, `test_result_se_type_must_stay_google` |
+| Enrichment absent/null/stated distinct; scalars rejected | `test_enrichment_object_absent_null_and_stated_states_stay_distinct`, `test_enrichment_scalars_are_not_accepted_as_objects`, `test_item_keyword_data_absent_and_null_states` |
+| Monthly empty/shorter/longer/shuffled/out-of-window; absent vs null | `test_monthly_arrays_may_be_empty_shorter_longer_or_shuffled`, `test_monthly_absent_and_null_states_stay_distinct` |
+| Duplicate `(year, month)` fails `duplicate_period` | `test_duplicate_monthly_period_fails_closed` |
+| Invalid month 0/13, year 0/10000 fail | `test_invalid_monthly_period_fails` |
+| Negative nonnegative metrics fail | `test_negative_monthly_search_volume_fails`, `test_negative_nonnegative_metrics_fail` |
+| Year-1 SERP string preserved; malformed timestamps fail | `test_year_one_serp_timestamp_is_preserved_exactly`, `test_malformed_or_impossible_timestamps_fail` |
+| `check_url` exact text, no URL normalization | `test_check_url_is_preserved_text_exactly_without_normalization` |
+| No cross-field inference | `test_no_cross_field_inference_between_relationships_and_serp` |
+
+### Exact parser / IR decisions implemented
+
+- Public surface is exactly `parse_related_keywords(body, parameters) -> RelatedKeywordsIR`. The
+  module imports only `RELATED_KEYWORDS_ADAPTER_CONTRACT` from `capture_event` and
+  `Field`/`FieldState`/`ParseClassification` from `dataforseo_keyword_overview`. No HTTP, transport,
+  Evidence, credential, PostgreSQL, Recipe, or API seam exists. No generic Labs framework was created;
+  the mechanical decode/type helpers are duplicated locally in the AI-10/AI-15 idiom.
+- The RK-01 seed grammar (1..80 chars, the adapter regex, ≤10 words) is duplicated locally rather
+  than shared, and deliberately uses `re.match` exactly as `capture_event._validate_related_keywords_seed`
+  does, so the parser can never reject a seed the adapter already accepted into verified Evidence.
+- Every non-seed Attempt value is pinned to its frozen RK-01 constant and fails as `frozen_parameter`;
+  the parameter key set is closed; booleans are rejected for integer fields and non-booleans for flags.
+- Relationship grain is the occurrence: `RelatedKeywordReference(target, provider_array_index)` inside
+  a `Field`-stateful tuple on the containing item. No dedup, no tree, no parent/child link, no global
+  node identity, no in-degree or centrality is stored. `ABSENT`, `JSON_NULL`, and a stated empty tuple
+  are three distinct states.
+- `depth` is stored as row testimony bounded `0..4` (claimed contract) and never recomputed or checked
+  against the requested depth. Item array order is preserved with `provider_array_index`.
+- `seed_keyword_data` and each item's `keyword_data` are parsed by the same function into two
+  independent `Field[KeywordData]` values; the golden test proves this Capture's equality while the
+  parser never requires or exploits it.
+- `serp_info` has three faithful states: `JSON_NULL`, a `STATED` object with populated fields, and a
+  `STATED` object whose inner fields are `JSON_NULL` with `last_updated_time` exactly
+  `0001-01-01 00:00:00 +00:00`. The parser invents no sentinel enum and no `never_updated` meaning.
+  Timestamps validate lexical form, year `1..9999`, and calendar reality, then keep the exact string.
+- Monthly rows keep `(year, month, search_volume, provider_array_index)` in provider order with no
+  sorting or completeness inference, but duplicate `(year, month)` fails `duplicate_period` — matching
+  Keyword Overview, Search Mentions, and Historical. Relationship occurrences and keyed Data Periods
+  deliberately follow different rules, and that asymmetry is stated in code comments.
+- Nonnegative: structural counts, `total_count`, `items_count`, `result_count`, current and monthly
+  `search_volume`, `keyword_difficulty`, `se_results_count`. Signed: all three
+  `search_volume_trend` members and `categories` IDs. Decimal-capable metrics use `Decimal` with no
+  binary-float path.
+- Open provider vocabularies (`main_intent`, `foreign_intent`, `competition_level`,
+  `synonym_clustering_algorithm`, `serp_item_types`, `categories` IDs) are well-typed but unclosed.
+  Every known object layer is closed and unknown members fail `unknown_field`, including a newly
+  appearing `search_partners`.
+- Clickstream structures resolve to `NOT_REQUESTED` under the verified `include_clickstream_data=false`
+  and fail `request_disabled_populated` when populated. `keyword_info_normalized_with_bing` is **not**
+  request-controlled: absent/null are preserved as their own states and a populated shape fails with
+  the distinct code `unsupported_shape` so provider drift there is a visible review trigger.
+- `outcome` is `ParseClassification.ADMITTED` or `PROVIDER_ERROR` and is a parser-local label only.
+  On consistent provider non-success the IR carries request, echo, envelope, task, and `result_count`
+  testimony with `result=None`, and the result/items branch is never read — proven with a deliberately
+  unparseable poisoned `result` payload.
+
+### Weakest / most fragile areas
+
+1. **`unsupported_shape` on Bing-normalized is the most likely future breakage.** Nothing in the
+   request suppresses `keyword_info_normalized_with_bing`; RK-02 observed it null on all 80 rows and
+   the parser now hard-fails any populated shape. If DataForSEO starts populating it, every Related
+   Keywords Capture stops parsing until a new parser/Recipe version lands. This is deliberate
+   fail-closed behaviour under D11, given a distinct error code precisely so it reads as a trigger
+   rather than a mystery type error — but it is the single most fragile rule in the module.
+2. **Closed key sets across nine object layers.** Any additive provider field anywhere fails
+   `unknown_field`. That is the accepted drift boundary from the newer AI-04/AI-10/AI-15 precedent,
+   but it makes this parser strictly more brittle than the older diagnostic-based Keyword Overview and
+   Google Organic parsers. The two policies now coexist in the repository.
+3. **Golden count assertions.** Roughly a dozen tests assert exact fixture counts (477, 246, 167,
+   96/96/69/21, 67, 26, 50, 63, 11, 20). They are honest one-Capture facts and the ticket labels them
+   as such, but they are also the assertions most likely to be misread later as parser invariants.
+   The pinned-tuple test exists specifically so a reorder or collapse cannot pass on counts alone.
+4. **`_request_disabled_null` has an unexercised branch.** Its `include_clickstream=True` path cannot
+   be reached under the frozen contract (the Attempt validator rejects `true`), so it is present for
+   honesty but untested. A future clickstream-enabled adapter is a different contract anyway.
+5. **The provider-error branch is entirely synthetic.** RK-02 returned `20000`; no real Related
+   Keywords error envelope has ever been observed. Its shape follows AI-10 precedent, not Evidence.
+
+### Explicit unproven limits
+
+This commit proves interpretation of one Capture plus synthetic mutations. It does **not** establish:
+stable provider ordering or tie-break behaviour; tree structure or traversal semantics; why 14
+in-budget referenced targets were not returned; what `related_keywords: null` means; that twelve
+monthly rows or the observed period window recur; field nullability across Captures; closure of any
+provider vocabulary; the semantic status of the year-1 SERP clock; `total_count` as corpus size versus
+returned count; `limit`/`offset` pagination behaviour; real provider-error envelope shape; the real
+shape of clickstream or Bing-normalized structures; count-conflict behaviour; any billing formula; or
+any cross-surface semantic equivalence with Keyword Overview. The parser also decides nothing about
+Observation identity, canonical keyword identity, graph node identity, frontier persistence, graph
+union across Captures, importance, or Strategy — all of that remains RK-04 or later.
+
+### Zero provider / network / credential / Evidence / PostgreSQL confirmation
+
+No DataForSEO or other provider request was made. No public-network I/O occurred; the test module
+installs an autouse guard that fails any non-loopback `socket.create_connection`, and a test asserts
+the guard is live. No credentials were read, and a test asserts both DataForSEO credential variables
+are absent from the environment. The RK-02 Evidence root was accessed exactly once, read-only, through
+the existing `inspect` subcommand, which uses `inspect_store` (not `_open_or_create`); its committed-ID
+inventory afterwards is unchanged at one Attempt and one Capture. No Evidence was created, mutated, or
+deleted. No PostgreSQL connection was opened; the parser tests use no database fixture. No restic,
+rclone, or backup operation ran. No commit was amended and nothing was pushed.
