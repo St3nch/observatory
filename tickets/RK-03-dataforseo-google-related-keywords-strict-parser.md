@@ -1,8 +1,8 @@
 # RK-03 — DataForSEO Google Related Keywords strict parser and RK-02 Conformance fixture
 
 **Status:** draft — designated Writer pre-implementation review pending  
-**Owner:** [TBD Writer] implementation / [GPT] Steward review  
-**Blocked by:** [CHAZ] Writer designation; designated Writer read-only review; Steward reconciliation and final accepted-ticket commit  
+**Owner:** [CLAUDE] implementation / [GPT] Steward review  
+**Blocked by:** [CLAUDE] read-only pre-implementation review; Steward reconciliation and final accepted-ticket commit  
 **Product direction:** [CHAZ] selected RK-03 as the next active Related Keywords boundary after RK-02 closure on 2026-08-31  
 **Draft base:** `3e9f347e6d2c4abdaa007943a629d98caa2bc830`  
 **Pre-implementation review:** pending  
