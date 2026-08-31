@@ -1,8 +1,8 @@
 # RK-02 — DataForSEO Google Related Keywords Live one-shot Evidence activation
 
-**Status:** accepted — live operator command separately gated  
+**Status:** authorized — one-shot invocation not yet consumed  
 **Owner:** [CHAZ] operator / [GPT] Steward verification  
-**Blocked by:** separate explicit [CHAZ] one-shot provider/spend authorization  
+**Blocked by:** synchronization of this authorization record and final no-spend preflight  
 **Draft/review base:** `5d45137845820035137e07bb566f296bebcc158a`  
 **Reviewer:** [CLAUDE] read-only technical review  
 **Review result:** `RECONCILE` at `5d45137845820035137e07bb566f296bebcc158a`; Steward reconciled the technical findings and [CHAZ] resolved the remaining Product choice on 2026-08-31
@@ -19,11 +19,11 @@ Derivation Recipe, Outcome, Observation, PostgreSQL schema, Derivation, Recipe s
 Holdings, Measurement Outcomes, Ranked Keywords work, Strategy behavior, pagination,
 acquisition cadence, or backup framework.
 
-This accepted ticket freezes the operator boundary but does **not** itself authorize provider
-transport, credential use, spend, Evidence creation, or the capture command. [CLAUDE]'s
-required read-only review and Steward reconciliation are complete. [CHAZ] must separately
-authorize the exact one-shot command from the exact final clean HEAD before the paid process
-may start.
+This accepted ticket freezes the operator boundary. [CLAUDE]'s required read-only review and
+Steward reconciliation are complete. On 2026-08-31 [CHAZ] separately authorized exactly one
+live provider invocation under the frozen RK-02 contract. That authorization is not consumed
+by this ticket edit, commit, push, or final no-spend preflight; it is consumed only when the
+paid capture process is invoked from the clean synchronized authorization-record HEAD.
 
 ## Accepted RK-01 foundation
 
@@ -205,6 +205,37 @@ quality Capture/body, RK-02 stops. Preserve and protect all committed paid Evide
 honest result, and require a new later Steward/Product boundary before any replacement root or
 second provider exchange. No failure class in RK-02 carries an automatic retry entitlement.
 
+## [CHAZ] live one-shot authorization — 2026-08-31
+
+[CHAZ] explicitly authorizes exactly one RK-02 DataForSEO Labs Google Related Keywords Live
+provider request under the accepted closed adapter contract, with:
+
+- exact seed `conspiracy theories`;
+- exact acknowledgement `200000` micro-USD;
+- exact frozen RK-01 request dimensions and endpoint;
+- exactly one capture-process invocation and at most one provider POST;
+- no retry;
+- no replacement Evidence root;
+- no pagination, continuation, polling, follow-up, changed seed, or second exchange.
+
+The authorization was issued while `main` was clean and synchronized at
+`cb235400b05a9c1136d95689023f3409874df21c`. It becomes runnable only after this durable
+authorization record itself is committed and synchronized to `origin/main`, and after the
+final no-spend preflight proves the repository is still clean/synchronized, the exact RK-02
+Evidence root is absent, the required credential environment values are present in that same
+operator shell without disclosure, F6 prerequisites remain available, and no conflicting
+writer/backup process is active.
+
+The exact clean synchronized commit containing this authorization record is the activation
+HEAD for the one-shot run. Record that concrete HEAD in the operator output before invocation
+and later in RK-02 closure. Any repository mutation after that synchronization invalidates the
+preflight and requires reconciliation before the paid process starts.
+
+This authorization is **not consumed** by recording/committing/pushing it or by a failed
+preflight before process start. First invocation of the frozen paid capture command consumes
+it regardless of exit code or transport/provider result. After process start, no failure class
+authorizes a retry or replacement root.
+
 ## Final-ticket operator record required
 
 The final reconciled ticket must freeze before [CHAZ] authorization:
@@ -289,7 +320,7 @@ uv run python -m observatory.dataforseo_google_related_keywords_paid_probe captu
   --authorize-max-micro-usd 200000
 ```
 
-This command is frozen by RK-02 but remains **not authorized to run** until [CHAZ] separately gives the exact one-shot provider/spend authorization from the final clean HEAD.
+This frozen command is covered by the 2026-08-31 [CHAZ] one-shot provider/spend authorization above. It may run exactly once only after this authorization record is committed and synchronized and the final no-spend preflight passes from that exact clean activation HEAD.
 
 ## Immediate post-capture gate
 
