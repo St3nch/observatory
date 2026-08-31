@@ -1,12 +1,14 @@
 # RK-03 — DataForSEO Google Related Keywords strict parser and RK-02 Conformance fixture
 
-**Status:** draft — designated Writer pre-implementation review pending  
+**Status:** review — dual pre-implementation reviews reconciled; [CHAZ] implementation authorization pending  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
-**Blocked by:** [CLAUDE] read-only pre-implementation review; Steward reconciliation and final accepted-ticket commit  
+**Blocked by:** explicit [CHAZ] implementation authorization from the exact final accepted-ticket HEAD  
 **Product direction:** [CHAZ] selected RK-03 as the next active Related Keywords boundary after RK-02 closure on 2026-08-31  
 **Draft base:** `3e9f347e6d2c4abdaa007943a629d98caa2bc830`  
-**Pre-implementation review:** pending  
-**Start commit:** pending final accepted ticket  
+**Claude pre-implementation review:** `RECONCILE` at `80349a3d902f4919cc695bbed815e887f8a529a6`  
+**Grok independent review:** `RECONCILE` at `80349a3d902f4919cc695bbed815e887f8a529a6`  
+**Steward reconciliation:** accepted into this ticket before implementation; no Product question remains  
+**Implementation start commit:** pending explicit [CHAZ] authorization record  
 
 ## Purpose
 
@@ -85,11 +87,10 @@ The designated Writer must challenge these choices rather than merely restating 
 9. **Current metrics and monthly points are independent testimony.** Do not derive current
    `search_volume` from the newest monthly row or require equality. Do not require twelve
    monthly rows, newest-first order, or the exact RK-02 Data Period window.
-10. **Monthly rows preserve occurrence/order.** Calendar-valid rows retain their provider
-    array index. The provisional rule is to preserve duplicate `(year, month)` rows rather
-    than reject them in RK-03; later Recipe identity/admission decides whether duplicate
-    periods are admissible. The reviewer must specifically challenge this against D11 and
-    existing parser precedent.
+10. **Monthly rows preserve provider order but keyed periods remain unique.** Calendar-valid
+    rows retain their provider array index and are not sorted, but duplicate `(year, month)`
+    rows fail closed as `duplicate_period`. Relationship occurrences and monthly Data Period
+    identity intentionally follow different parser rules.
 11. **SERP year-1 value is not semanticized here.** Exact provider timestamps use the
     provider lexical UTC form and must be real calendar datetimes with year `1..9999`.
     `0001-01-01 00:00:00 +00:00` therefore remains a stated exact string in the typed SERP
@@ -108,6 +109,69 @@ The designated Writer must challenge these choices rather than merely restating 
 14. **No shared Labs parser framework.** Small mechanical helpers may be duplicated or
     reused only when semantics genuinely match. Do not move KO/Organic parsing into a new
     generic provider framework in this ticket.
+
+## Steward reconciliation lock — 2026-08-31
+
+Independent [CLAUDE] and [GROK] reviews converged on the same load-bearing corrections. GPT
+rechecked current parser precedents and accepts the following final technical lock for RK-03.
+These rules supersede any provisional wording above that conflicts with them:
+
+1. **Monthly Data Period duplicates fail closed.** A `monthly_searches` array is a keyed Data
+   Period series, not an occurrence list. Duplicate `(year, month)` rows fail with a
+   deterministic `duplicate_period` parser error, matching Keyword Overview, Search Mentions,
+   and Historical precedent. This does not change the relationship layer: duplicate returned
+   keyword strings and duplicate/self/repeated `related_keywords` targets remain distinct
+   provider-indexed occurrences.
+2. **Reuse only the shared parser value vocabulary.** Import `Field`, `FieldState`, and
+   `ParseClassification` unchanged from `observatory.dataforseo_keyword_overview`. Do not
+   import or reuse Keyword Overview parsing/reconciliation functions, Recipe constants,
+   year bounds, closed intent/competition enums, Observation kinds, or disabled-SERP logic.
+   `ParseClassification.ADMITTED` remains a parser-local label despite its historical string
+   value `observation_admitted`; it is not a repository Measurement Outcome. A successful
+   `items=[]` result is empty parser IR only and acquires no admitted-empty semantics here.
+3. **Attempt context is the exact closed RK-01 contract.** The parser validates the complete
+   verified Attempt parameter key set and fixed values: contract token; one operator seed;
+   `location_code=2840`; `language_code="en"`; `depth=3`; `limit=1000`; `offset=0`;
+   exact search-volume-descending `order_by`; seed/SERP inclusion true; clickstream,
+   ignore-synonyms, and core-keyword replacement false. Only the already bounded seed string
+   varies. Do not edit `capture_event.py` merely to share this validation.
+4. **Status topology follows the newer Historical/Target Metrics strict boundary.** Root/task
+   success disagreement fails. Consistent root+task non-success returns parser
+   `PROVIDER_ERROR` after typing request/echo/envelope testimony and nonnegative
+   `result_count`, without reading Related Keywords result/items. On provider success,
+   `result` must be an array of exactly one object; JSON null, omitted, empty, or multiple
+   successful result topology fails. `items=[]` with `items_count=0` remains parseable empty
+   provider testimony once a valid result object exists.
+5. **Numeric sign rules are explicit.** Structural counts, current/monthly search volume,
+   keyword difficulty, and SERP result count are nonnegative integers; booleans are rejected.
+   `search_volume_trend.monthly`, `.quarterly`, and `.yearly` are signed provider integers and
+   negative values remain valid testimony. Decimal-capable metrics use `Decimal` and never
+   binary float.
+6. **Depth `0..4` is a claimed-contract parser drift bound, not an RK-02 invariant.** A
+   returned depth `4` is syntactically parseable even though this Attempt requested depth 3;
+   depth below 0 or above 4 fails. Request/depth disagreement remains visible for RK-04.
+7. **Stated nested `se_type` is adapter-typed.** When present as a string in Related Keywords
+   result/keyword/SERP/backlink/intent structures, it must equal `google`. Provider vocabularies
+   such as intent, competition level, clustering algorithm, and SERP item types remain open
+   well-typed strings rather than one-Capture closed enums.
+8. **The year-1 SERP value remains stated testimony.** The two RK-02 hollow SERP objects are
+   `STATED` SERP objects whose `last_updated_time` is exactly
+   `0001-01-01 00:00:00 +00:00`; the other hollow fields are JSON null as actually returned.
+   Do not map the object or timestamp to null, `never_updated`, a sentinel enum, or an
+   ordinary Provider Update Time flag. Exact lexical/calendar validation may accept year
+   `1..9999`; RK-04 decides semantic clock usability.
+9. **`total_count` is independent testimony.** It is a nonnegative integer but RK-03 does not
+   require `total_count >= items_count` or equality. `items_count` alone must equal the actual
+   item-array length. Any semantic completeness/count conflict is later reconciliation work.
+10. **`check_url` is exact provider text in RK-03.** When stated, require a string and preserve
+    it text-exactly; do not normalize it or impose Google Organic/Search Mentions URL
+    validation in this parser-only ticket.
+11. **Bing-normalized remains unsupported, not request-disabled.** Null/absent is preserved;
+    a populated `keyword_info_normalized_with_bing` fails explicitly as an unsupported v1
+    shape and is a trigger for later parser/Recipe review, not silent discard. Clickstream
+    fields continue to use `NOT_REQUESTED` under the frozen false request flag.
+12. **No cross-field inference.** In particular, do not infer `related_keywords` state from
+    SERP state, `related_searches`, depth, `core_keyword`, or any one-Capture correlation.
 
 ## Exact fixture provenance
 
@@ -132,13 +196,25 @@ The one-time fixture promotion command is frozen to the verified inspector, not 
 copy:
 
 ```bash
-test ! -e tests/fixtures/dataforseo_google_related_keywords_rk02.json
-uv run python -m observatory.dataforseo_google_related_keywords_paid_probe inspect \
+FIXTURE=tests/fixtures/dataforseo_google_related_keywords_rk02.json
+TMP="${FIXTURE}.tmp"
+test ! -e "$FIXTURE"
+rm -f "$TMP"
+if uv run python -m observatory.dataforseo_google_related_keywords_paid_probe inspect \
   --evidence-root "$HOME/.local/share/observatory/rk02-related-keywords-conspiracy-theories-2026-08-31" \
   --capture-id 774ab90603bd32c906023290f2c10acab69ff0dbfd95a87d928278d9a1322d63 \
-  > tests/fixtures/dataforseo_google_related_keywords_rk02.json
-wc -c tests/fixtures/dataforseo_google_related_keywords_rk02.json
-sha256sum tests/fixtures/dataforseo_google_related_keywords_rk02.json
+  > "$TMP"; then
+  test "$(wc -c < "$TMP")" -eq 177120
+  test "$(sha256sum "$TMP" | awk '{print $1}')" = \
+    e128f2f81d51479237f1bd7e51feee3dfffcae4596558ebff67365f03cd1decb
+  mv "$TMP" "$FIXTURE"
+else
+  rc=$?
+  rm -f "$TMP"
+  exit "$rc"
+fi
+wc -c "$FIXTURE"
+sha256sum "$FIXTURE"
 ```
 
 The committed fixture must be byte-identical to verified inspector stdout. Tests independently
@@ -192,6 +268,10 @@ fanout, frontier omission reason, `related_keywords=null` meaning, twelve-row hi
 field nullability, enum closure, SERP sentinel meaning, cross-surface semantic equivalence,
 or a billing formula.
 
+Category-ID and other provider arrays are occurrence/order testimony where the contract does
+not define a key. Preserve exact order and duplicates; do not sort or deduplicate them merely
+because some fixture arrays happen to appear ordered.
+
 ## Required production module and public interface
 
 Required new production module:
@@ -224,8 +304,10 @@ Verified Attempt context retains the exact closed parameter object:
 - `include_seed_keyword`, `include_serp_info`, `include_clickstream_data`,
   `ignore_synonyms`, and `replace_with_core_keyword`.
 
-The Attempt parameter key set is closed to exactly those adapter fields plus `contract`.
-Booleans must not satisfy integer fields.
+The Attempt parameter key set is closed to exactly those adapter fields plus `contract`, and
+all non-seed values must equal the frozen RK-01 adapter values recorded above. Only the one
+bounded operator seed string varies under the existing adapter grammar. Booleans must not
+satisfy integer fields.
 
 Provider task echo retains independently the exact well-typed echo fields present in the
 closed contract/fixture, including API/function and the echoed request dimensions. Result
@@ -274,9 +356,11 @@ members preserve `ABSENT`, `JSON_NULL`, `STATED`, and where request-controlled,
 CPC, current search volume, low/high top-of-page bid, category-ID array, monthly-search
 array, search-volume-trend object, and nested `se_type`. Decimal-capable numbers use
 `Decimal`, never binary float. Monthly rows retain `(year, month, search_volume,
-provider_array_index)`; calendar validity is `year=1..9999`, `month=1..12`. Stated zero is
-zero testimony. Array order is preserved and no twelve-row/newest-first/current-volume
-equation is imposed.
+provider_array_index)`; calendar validity is `year=1..9999`, `month=1..12`; search volume is
+nonnegative and stated zero is zero testimony. Array order is preserved and no
+twelve-row/newest-first/current-volume equation is imposed. Duplicate `(year, month)` rows
+fail closed as contradictory keyed Data Period testimony; raw Evidence remains authoritative
+and unchanged.
 
 `SearchVolumeTrend` retains field-stateful `monthly`, `quarterly`, and `yearly` provider
 integers without computing a trend or score.
@@ -310,16 +394,18 @@ unknown members fail deterministically rather than being ignored. This is a pars
 drift boundary, not a claim that the provider can never add fields.
 
 Root `tasks_count` must equal the task-array length and exactly one task is required.
-`tasks_error` must match the one-task success/error topology. Top-level/task success
-disagreement fails. On consistent provider non-success, return parser-only provider-error
-IR after structurally typing Attempt context, task echo, envelope/task testimony, and
-nonnegative `result_count`; do not interpret Related Keywords result/items on that branch.
+`tasks_error` must be zero for a successful single task and one for a non-success single task.
+Top-level/task success disagreement fails. On consistent provider non-success, return
+parser-only provider-error IR after structurally typing Attempt context, task echo,
+envelope/task testimony, and nonnegative `result_count`; do not interpret Related Keywords
+result/items on that branch.
 
 On provider success, `result_count` must match the result-array length and exactly one result
-is required. `items` must be an array; `items_count` must equal its length. `total_count` is
-typed and preserved independently; RK-03 does not require `total_count == items_count` or
-infer completeness from either. `items=[]` with `items_count=0` is parseable empty provider
-testimony only, not an admitted-empty Observation.
+is required; missing/null/wrong-typed `result` fails rather than becoming empty testimony.
+`items` must be an array; `items_count` must equal its length. `total_count` is typed and
+preserved independently; RK-03 does not require `total_count == items_count` or
+`total_count >= items_count`, and does not infer completeness from either. `items=[]` with
+`items_count=0` is parseable empty provider testimony only, not an admitted-empty Observation.
 
 Known optional nested objects/fields preserve absence/null/value states rather than
 synthesizing defaults. Wrong container/scalar types fail. Structural counts and array indexes
@@ -328,8 +414,9 @@ integer or Decimal lexical forms without float round-trip.
 
 Provider timestamp strings, when stated on known timestamp fields, must match exact lexical
 form `YYYY-MM-DD HH:MM:SS +00:00` and represent a real UTC calendar datetime with year
-`1..9999`. Preserve the exact string. Do not impose Keyword Overview's 2000-era Recipe bound
-or promote the year-1 SERP string into a semantic Provider Update Time.
+`1..9999`. Preserve the exact string. Keyword Overview's `2000..2100` restriction is a
+monthly Data Period rule and must not be imported here. Do not promote the year-1 SERP string
+into semantic Provider Update Time testimony.
 
 ## Required golden fixture proofs
 
@@ -361,16 +448,32 @@ At minimum prove from the exact RK-02 fixture:
   those values parser enums;
 - backlinks object/null counts 59/21 and exact provider intent testimony including
   `informational=78`, `commercial=2` main-intent values;
-- all 80 current keyword-info objects and all 960 monthly rows are retained exactly; golden
-  checks prove the one observed 12-period sequence, 50 stated monthly zeros, and 63 rows
-  where current search volume differs from the newest monthly point;
+- all 80 current keyword-info objects and all 960 item-level monthly rows are retained exactly;
+  golden checks prove the one observed 12-period sequence, 50 stated monthly zeros, and 63
+  item rows where current search volume differs from the newest monthly point. The separately
+  retained `seed_keyword_data` contributes another 12 monthly rows and must not be accidentally
+  folded into or dropped from the independent seed path;
+- the 20 null `related_keywords` rows include ten depth-2 and ten depth-3 items, proving the
+  parser cannot infer null from the requested depth boundary;
+- pin at least one exact provider-ordered relationship tuple from the depth-0 seed, one named
+  frontier target referenced by a source below depth 3, and one named core-only string, so
+  count-only graph tests cannot pass after reordering or collapsing testimony;
+- both hollow SERP keywords are asserted by exact keyword string and exact nested field states,
+  not merely counted as two special objects;
 - request-disabled clickstream fields remain distinguishable from the separately null
   Bing-normalized field;
 - structure-local timestamp strings remain on their own nested structures and are not
   replaced by Capture time;
 - ordinary tests contain no operator Evidence-root or `/tmp` dependency after fixture
   promotion;
-- all existing provider Conformance fixtures remain byte-identical.
+- the parser test module installs an autouse no-public-network guard so a false-green parser
+  test cannot reach a provider host;
+- all existing provider Conformance fixtures remain byte-identical, at minimum:
+  `dataforseo_keyword_overview_pf03.json`,
+  `dataforseo_google_organic_pf10.json`,
+  `dataforseo_ai_optimization_search_mentions_ai03.json`,
+  `dataforseo_ai_optimization_target_metrics_ai09.json`, and
+  `dataforseo_ai_optimization_llm_mentions_historical_ai14.json`.
 
 ## Required synthetic adversarial proofs
 
@@ -394,11 +497,13 @@ At minimum mutate decoded copies or dedicated synthetic JSON; never edit the fro
   `result_count` without interpreting result items;
 - malformed provider-error echo/count topology still fails;
 - wrong/negative/boolean `result_count`; empty/two-result successful topology;
-- exact Attempt parameter key set and fixed value types are enforced;
+- exact Attempt parameter key set, seed type/grammar, and every frozen non-seed parameter value
+  are enforced;
 - well-typed provider echo/result seed/location/language/se-type/count disagreement remains
   visible and does not overwrite Attempt context;
-- `total_count` may differ from returned `items_count` without the parser inventing
-  completeness; `items_count` must still equal actual item-array length;
+- `total_count` may differ from returned `items_count`, including being smaller, without the
+  parser inventing completeness; `items_count` must still equal actual item-array length;
+- successful `result=null`, omitted result, and otherwise wrong-typed result fail;
 - successful empty `items=[]` / `items_count=0` parses as empty parser IR only.
 
 ### Returned rows and relationship preservation
@@ -424,12 +529,23 @@ At minimum mutate decoded copies or dedicated synthetic JSON; never edit the fro
   out-of-window point without parser sorting/completeness inference;
 - stated monthly search-volume zero remains zero; current search volume is never checked
   against the newest monthly row;
-- under the provisional duplicate-period rule, duplicate `(year, month)` rows survive as
-  separate provider-indexed occurrences; reviewer must explicitly accept or reconcile this;
+- duplicate `(year, month)` rows fail closed with `duplicate_period`;
 - invalid month `0/13` and year `0/10000` fail calendar typing;
+- negative current or monthly `search_volume`, negative keyword difficulty, and negative
+  `se_results_count` fail; negative search-volume-trend values parse and remain exact;
+- competition/difficulty explicit zero versus JSON null remain distinguishable;
+- categories JSON null, empty array, duplicates, and arbitrary provider order remain
+  distinguishable/preserved; foreign-intent JSON null, empty array, and nonempty ordered
+  arrays remain distinguishable;
+- an otherwise well-typed new `main_intent`, `competition_level`,
+  `synonym_clustering_algorithm`, or SERP item-type string remains parseable opaque testimony;
+- a newly present `search_partners` member fails as unknown rather than being silently
+  imported from Keyword Overview semantics;
+- item location/language disagreement with result/Attempt and absence of a depth-0 seed row
+  remain visible parser testimony rather than parser reconciliation failures;
 - exact `0001-01-01 00:00:00 +00:00` is preserved as a stated SERP timestamp string;
   malformed/non-UTC/impossible timestamp strings fail;
-- SERP null, present all-null-ish/year-1 object, and metrics-bearing object remain
+- SERP null, present hollow year-1 object, and metrics-bearing object remain
   structurally distinguishable without a parser-invented sentinel enum;
 - empty/duplicate/new provider-native `serp_item_types` strings remain ordered testimony;
 - exact raw `check_url` string is preserved without URL normalization;
@@ -490,12 +606,32 @@ Return `READY`, `RECONCILE`, or `NOT_READY` with concrete code/ticket references
 questions for GPT/[CHAZ]. Do not edit files, copy/promote the fixture, call the provider,
 access credentials, mutate Evidence/PostgreSQL, commit, amend, or push.
 
+### Completed dual review and Steward resolution
+
+[CLAUDE], the designated Writer, returned `RECONCILE` from the exact clean review HEAD.
+Independently, [GROK] returned `RECONCILE` from the same HEAD without reading or anchoring on
+Claude's review. Both identified duplicate monthly periods as a parser-level contradiction,
+the need to preserve the year-1 SERP string as stated structural testimony, and several
+false-green/test-isolation risks. Claude additionally caught the shared field-state vocabulary,
+full-repository mypy scope, category-order/duplicate risk, and fixture-promotion retry hazard;
+Grok sharpened the frozen Attempt-value contract, status topology, open provider vocabulary,
+and no-cross-field-inference rules.
+
+GPT independently checked the current repository precedents and resolves the remaining
+technical questions as follows: duplicate monthly periods fail closed; successful
+`result=null` fails; `check_url` is exact string testimony without URL normalization in
+RK-03; depth `0..4` is retained as an explicitly claimed-contract parser bound; nested stated
+`se_type` is `google`; `total_count < items_count` remains visible parser testimony; negative
+current/monthly search volume fails while trend values remain signed; and RK-03 reuses the
+existing `Field`/`FieldState`/`ParseClassification` vocabulary with an explicit parser-only
+D14 lock. No Product question remains and no second provider call is justified.
+
 ## Implementation verification after later authorization
 
 The Writer should run the bounded Related Keywords parser tests plus:
 
 - `uv run ruff check .`;
-- `uv run mypy src`.
+- `uv run mypy`.
 
 Do not run the full suite unless the accepted final ticket explicitly changes that boundary.
 Per current project process, [CHAZ] supplies final full-suite validation at the later
