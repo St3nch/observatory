@@ -1,6 +1,6 @@
 # RANK-03 — DataForSEO Google Ranked Keywords Live one-shot Evidence activation
 
-**Status:** provisional review — awaiting independent [GROK] read-only activation review  
+**Status:** accepted activation boundary — independent [GROK] review returned `RECONCILE`; [GPT] Steward reconciled the exact operator record below on 2026-09-01; awaiting separate explicit [CHAZ] one-shot live authorization  
 **Owner:** [CHAZ] operator / [GPT] Steward verification  
 **Blocked by:** none; RANK-02 closed at `5a4903b96b46069ceb5738c441622134ce92cc0c`  
 **Draft base:** `5a4903b96b46069ceb5738c441622134ce92cc0c`  
@@ -256,8 +256,252 @@ concrete ticket corrections. Do not implement or mutate anything.
   Outcomes/Holdings, Strategy, recurring acquisition, or backup-framework implementation.
 - No amend and no push.
 
+## Steward reconciliation of [GROK] activation review — 2026-09-01
+
+[GROK] returned `RECONCILE`. The adapter itself is accepted as live-ready; no source/test
+change is required. The blocking gap was operator authority: the provisional ticket named the
+steps that later had to be frozen but did not yet freeze exact argv, failure recovery, explicit
+Evidence-root checks, or the manual F6 sequence. The Steward accepts that finding and records
+the exact activation procedure below.
+
+The review also confirmed that `theconspiratory.com` passes the implemented two-label ASCII
+target restriction, the public CLI exposes `--target` and not the private endpoint/body-ceiling
+seams, at most one provider POST exists, successful `inspect` is the verified-complete/nonempty
+transport witness, current official contract/pricing still support the closed request, and no
+F3/F7/F12/F13 or retention blocker exists. No Product choice remains except the later explicit
+one-shot live authorization itself.
+
+`AGENTS.md` is updated by Steward authority to list the implemented Ranked Keywords module
+entrypoint. Listing the command is not live-call authorization.
+
+## Final operator boundary — frozen before live authorization
+
+A later [CHAZ] live authorization may cover exactly one invocation of this command and no
+other provider process:
+
+```bash
+cd /home/chaz/projects/vedaops/observatory
+
+uv run python -m observatory.dataforseo_google_ranked_keywords_paid_probe capture \
+  --evidence-root "$HOME/.local/share/observatory/rank03-ranked-keywords-theconspiratory-2026-09-01" \
+  --target "theconspiratory.com" \
+  --authorize-max-micro-usd 50000
+```
+
+The live authorization is **not** consumed by ticket review, ticket edits, commit, push,
+synchronization, or a failed preflight before this command starts. It is consumed when this
+frozen capture process is first invoked, regardless of exit code or provider/transport result.
+After process start there is no pre-authorized retry, replacement Evidence root, changed target,
+pagination/offset follow-up, continuation, polling, or second provider exchange.
+
+The eventual durable authorization record must name its exact activation HEAD. Before process
+start that exact HEAD must be clean on `main` and synchronized to the required remote state.
+Any repository mutation after synchronization invalidates the preflight until reconciled.
+Nothing in this accepted boundary itself authorizes a push; repository synchronization remains
+subject to explicit [CHAZ] push authorization.
+
+## Exact no-spend preflight
+
+Before the paid process starts, perform and record the following without printing secrets:
+
+1. canonical repository is `/home/chaz/projects/vedaops/observatory`;
+2. branch is `main`, HEAD equals the later durable authorization-record activation HEAD, and
+   the tree is clean;
+3. the activation HEAD is synchronized to the remote state required by that authorization;
+4. exact Evidence root
+   `$HOME/.local/share/observatory/rank03-ranked-keywords-theconspiratory-2026-09-01` does not
+   exist;
+5. no competing Observatory capture writer or conflicting restic/rclone operation is active;
+6. `OBSERVATORY_DATAFORSEO_LOGIN` and `OBSERVATORY_DATAFORSEO_PASSWORD` are both nonempty in
+   the same operator shell, checked only by presence/nonempty status and never printed;
+7. `$HOME/.config/restic/observatory-password` exists and is readable by the operator without
+   printing its contents;
+8. rclone remote `vedaops-drive:` and the accepted restic repository remain available through
+   the existing operator tooling;
+9. the fresh official Ranked Keywords contract/pricing recheck remains current for the work
+   session; if execution moves to a later session, recheck before authorization/process start.
+
+Missing credentials fail before root creation. Wrong `50000` acknowledgement also fails before
+root creation. After credential/ack gates succeed, `_open_or_create` can create FORMAT before a
+later pre-Attempt failure; therefore a FORMAT-only root is possible. If that happens after the
+authorized process starts, do **not** delete/recreate the root and do not rerun. Stop for new
+Steward/[CHAZ] reconciliation.
+
+The HTTP read timeout is 120 seconds per read phase, not a total wall-clock deadline. Do not
+manually interrupt merely because 120 seconds passes. If the authorized process is still
+running after five minutes, report the live state to the Steward before intervention. Five
+minutes is an escalation threshold, not permission to kill or retry.
+
+## Immediate post-invocation record and hard stop
+
+After the one authorized process starts:
+
+1. record UTC start/end, exit code, exact repo HEAD/tree state, and any emitted Attempt/Capture
+   IDs;
+2. never rerun the paid capture command under the same authorization;
+3. a nonzero exit may print no IDs. If the exact Evidence root exists, recover committed IDs
+   read-only from COMMITTED marker parent directories before drawing any sent/unsent conclusion;
+4. always run Evidence `status` and `scrub` with the exact explicit `--evidence-root`;
+5. if a Capture ID exists, attempt the Ranked byte-exact `inspect`; successful inspect is the
+   adapter witness for a verified event-v2 Ranked Capture with `response_complete`, response
+   completeness `complete`, and present nonempty body. It is **not** provider semantic-success
+   proof; a complete provider-error envelope can inspect successfully;
+6. partial/no-response/inspect refusal/credential echo/scrub failure/provider error/unexpected
+   transport result is a hard stop, not retry permission;
+7. preserve and protect every committed paid Attempt even when no Capture or fixture-quality
+   body exists.
+
+If an Attempt is committed without a Capture, treat it as **authorized/unresolved**. It is not
+proof that no request was sent and not proof that no charge occurred. Credential echo rejects
+before Capture commit and discards the response bytes, but the paid Attempt must still be
+inventoried and protected.
+
+A PF-09 body-ceiling case is `response_partial`, not a separate `over_limit` transport state.
+`response_partial` and `no_response` Captures remain Evidence and must be protected even though
+Ranked `inspect` refuses them as fixture-quality bodies.
+
+## Exact source inventory and local Evidence checks
+
+Use the exact root and inventory paths:
+
+```bash
+EVIDENCE_ROOT="$HOME/.local/share/observatory/rank03-ranked-keywords-theconspiratory-2026-09-01"
+INVENTORY="/tmp/rank03-ranked-keywords-source-inventory.txt"
+BODY_FILE="/tmp/rank03-ranked-keywords-response.body"
+
+: > "$INVENTORY"
+for kind in attempts captures; do
+  base="$EVIDENCE_ROOT/$kind/v1"
+  if [ -d "$base" ]; then
+    find "$base" -type f -name COMMITTED -printf '%h\n' \
+      | sed 's#.*/##' \
+      | LC_ALL=C sort \
+      | sed "s/^/${kind%s} /" >> "$INVENTORY"
+  fi
+done
+
+cat "$INVENTORY"
+sha256sum "$INVENTORY"
+
+uv run python -m observatory.evidence status --evidence-root "$EVIDENCE_ROOT"
+uv run python -m observatory.evidence scrub --evidence-root "$EVIDENCE_ROOT"
+```
+
+`status` proves only that the format-2 store opens. `scrub` verifies the commitment-claiming
+directories it discovers under the accepted Evidence contract. Neither proves a provider
+semantic success or complete Capture.
+
+When a Capture ID exists, the only fixture-quality body witness is:
+
+```bash
+uv run python -m observatory.dataforseo_google_ranked_keywords_paid_probe inspect \
+  --evidence-root "$EVIDENCE_ROOT" \
+  --capture-id "<CAPTURE_ID>" \
+  > "$BODY_FILE"
+
+wc -c "$BODY_FILE"
+sha256sum "$BODY_FILE"
+```
+
+If inspect fails, do not fabricate a body file and do not rerun the provider call. Continue
+with inventory/protection of whatever paid Evidence exists.
+
+## Bounded manual F6 protection — exact command skeleton
+
+Reuse the accepted manual D10/RK-02 protection spine; build no backup automation.
+
+Set the accepted remote repository without printing secrets:
+
+```bash
+export RESTIC_REPOSITORY="rclone:vedaops-drive:VedaOps Backups/Observatory/evidence-store/repository"
+export RESTIC_PASSWORD_FILE="$HOME/.config/restic/observatory-password"
+```
+
+After the source root is quiescent, status/scrub is clean enough to continue, and the exact
+source inventory has been recorded, create one encrypted non-destructive snapshot containing
+the complete Evidence root plus the outside-root inventory:
+
+```bash
+restic backup \
+  "$EVIDENCE_ROOT" \
+  "$INVENTORY" \
+  --tag observatory-evidence-store \
+  --tag f6-paid-rank03
+```
+
+Record the full snapshot ID and non-secret command receipt. No destructive prune/forget action
+belongs to RANK-03.
+
+Restore that exact snapshot into a new temporary directory:
+
+```bash
+RESTORE_BASE="$(mktemp -d /tmp/rank03-ranked-keywords-restore.XXXXXX)"
+restic restore "<SNAPSHOT_ID>" --target "$RESTORE_BASE"
+```
+
+Because restic restores absolute source paths beneath the chosen target, define and verify the
+restored Evidence root explicitly from the restored path produced by this snapshot; do not
+silently substitute another local source root. Run `observatory.evidence status` and `scrub`
+against that exact restored Evidence root.
+
+Recompute a sorted restored Attempt/Capture inventory using the same COMMITTED-parent algorithm
+as the source inventory and require exact Attempt-set and Capture-set equality with the source.
+Hash both inventories and preserve the comparison outside both Evidence roots.
+
+If source `inspect` produced a complete body, run the same Ranked `inspect` against the restored
+Capture and record `wc -c` plus SHA-256. Require exact source/restored byte count and SHA-256,
+and preferably byte-for-byte equality (`cmp`) before the paid Evidence is considered protected.
+
+The final activation closure must record at minimum:
+
+- exact activation HEAD and process timestamps/exit;
+- exact Attempt/Capture inventories and inventory SHA-256;
+- source status/scrub result;
+- source body byte count/SHA-256 when inspect succeeds;
+- full restic snapshot ID and tags;
+- fresh restore path and restored status/scrub result;
+- exact source/restored Attempt-set and Capture-set equality;
+- restored body byte count/SHA-256 equality when a complete body exists;
+- non-secret backup/restore receipt identifiers/hashes under the accepted off-host receipt
+  convention;
+- explicit confirmation that no retry, replacement root, pagination, continuation, follow-up,
+  changed target, or second provider call occurred.
+
+Routine F6 automation remains deferred. This manual proof protects this one paid Evidence root
+only.
+
+## Post-protection full-response review
+
+Only after the source and fresh-restored Evidence verify may the project perform the deep
+payload review. Inspect the **entire exact provider body**, not a convenient row sample.
+
+The review has two distinct outputs:
+
+1. **Observatory fidelity** — identify the provider's actual fact/relationship grains,
+   requested/returned subjects, target/keyword/page/URL identities, aggregate versus item-level
+   testimony, live/lost/movement distinctions, field states, null/empty/zero/absent branches,
+   clocks/Data Periods, provider-native identifiers, duplicates/order/cardinality,
+   `total_count`/`items_count`/limit completeness boundaries, unknown/additive fields, exact
+   response size/cost, and which documented branches remain unobserved;
+2. **future Strategy usefulness** — record what the Evidence could later let a downstream
+   Strategy consumer ask about ranking visibility, keyword↔page relationships, competitor/gap
+   analysis, gained/lost visibility, AI Overview references, demand+rank combinations, and
+   content/topic patterns.
+
+The second output is research input about consumer usefulness only. Observatory must not emit
+opportunity rankings, scores, recommendations, competitor importance, campaign tactics, or
+SEO/GEO conclusions. Those remain downstream Strategy-layer work.
+
+One Capture proves the exact observed exchange only. It cannot prove provider invariance,
+full-corpus completeness, presence of every requested SERP type, universal lost-item shape,
+future billing formula, 32 MiB headroom, device/OS of the Labs index, a fixed previous-check
+interval, or any Strategy conclusion. Missing item types or `is_lost=true` rows in the first
+100-row prefix are not evidence that those branches do not exist.
+
 ## Next gate
 
-After independent review, the Steward reconciles the activation boundary. Only then may
-[CHAZ] separately authorize exactly one live invocation from a named clean activation HEAD.
-That later authorization must be explicit and durable before the paid process starts.
+RANK-03 is now an accepted **activation boundary**, but no live provider/spend authorization
+has been granted by this reconciliation. [CHAZ] must separately and explicitly authorize
+exactly one invocation of the frozen command from a named clean activation HEAD. That durable
+authorization must be committed, and the exact required synchronization/preflight must pass,
+before the paid process starts.
