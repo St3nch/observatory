@@ -506,12 +506,15 @@ SERP prose retention, and the Ranked-specific four-pillar time model. [GROK] ind
 returned `READY`, and [CHAZ]'s final integration suite produced `2592 passed, 1 skipped,
 1 warning` across 2593 collected tests. Nonblocking Recipe-digest/state-CHECK/coverage hardening
 is retained in the RANK-05 closure record rather than reopening the accepted implementation.
-The next Ranked boundary is **RANK-06 — Recipe selection and read/history API**. It must consume
-RANK-05 without changing provider semantics, inventing completeness, canonical Page identity,
-or Strategy interpretation. After RANK-06, Ranked joins the MVP provider-testimony deep review
-and Strategy-consumer handoff work. The retro-review checkpoint and any material fidelity or
-exposure findings must be reconciled before the Product Owner and Steward record final MVP
-closure.
+RANK-06 closed on 2026-09-01 with Recipe selection and the integrity-checked Ranked read/history
+API. Routine F6 Cloudflare R2 protection then closed on 2026-09-01 with a proven daily automated
+backup path, indefinite non-destructive retention, and monthly automated restore drill. The
+active next boundary is **MVP-01 — Seven-surface provider-testimony closeout**. It reviews the
+exact protected live Evidence and final accepted implementation for Keyword Overview, Google
+Organic, Search Mentions, Target Metrics, Historical LLM Mentions, Related Keywords, and Ranked
+Keywords under one fidelity rubric. No further provider exchange is authorized by this gate.
+Any material fidelity defect earns separately bounded remediation; otherwise the Product Owner
+and Steward may record final Observatory MVP closure after the seven passes are accepted.
 
 ## Dependency-based sequencing direction
 
