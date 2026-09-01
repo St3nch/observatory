@@ -1,10 +1,10 @@
 # RANK-03 — DataForSEO Google Ranked Keywords Live one-shot Evidence activation
 
-**Status:** accepted activation boundary — independent [GROK] review returned `RECONCILE`; [GPT] Steward reconciled the exact operator record below on 2026-09-01; awaiting separate explicit [CHAZ] one-shot live authorization  
+**Status:** done — one authorized live exchange completed; bounded F6 protection and independent full-body [CLAUDE]/[GROK]/[GPT] reconciliation accepted 2026-09-01  
 **Owner:** [CHAZ] operator / [GPT] Steward verification  
 **Blocked by:** none; RANK-02 closed at `5a4903b96b46069ceb5738c441622134ce92cc0c`  
 **Draft base:** `5a4903b96b46069ceb5738c441622134ce92cc0c`  
-**Live authorization:** not yet granted; this ticket draft authorizes zero provider calls and zero spend  
+**Live authorization:** granted by [CHAZ], consumed by the single capture-process invocation at activation HEAD `eeece3d02d5a2b9c0852dacf466e86c66d1dbb4b`; no retry or second provider exchange occurred or is authorized  
 
 ## Purpose
 
@@ -531,8 +531,319 @@ HEAD once it is synchronized to `origin/main`. Record that concrete HEAD in the 
 preflight/output and later closure. Any repository mutation after synchronization invalidates
 the activation preflight and requires Steward reconciliation before the paid process starts.
 
-## Next gate
+## Activation gate — satisfied
 
-Commit this durable authorization record, synchronize that exact commit to `origin/main` under
-the explicit [CHAZ] push authorization above, and verify the final no-spend preflight from that
-clean synchronized activation HEAD. Only then may the single frozen capture process start.
+The durable authorization record was committed at activation HEAD
+`eeece3d02d5a2b9c0852dacf466e86c66d1dbb4b`, synchronized to `origin/main` under the narrow
+[CHAZ] authorization above, and verified clean before the paid process started. The no-spend
+preflight passed every frozen gate. The one-shot live authorization was then consumed exactly
+once. Nothing below reopens transport authority.
+
+## Steward live Evidence and F6 closure — 2026-09-01
+
+The one authorized capture process started at `2026-09-01T05:32:46Z`, ended at
+`2026-09-01T05:32:49Z`, returned exit code `0`, and left the repository clean at activation
+HEAD `eeece3d02d5a2b9c0852dacf466e86c66d1dbb4b`.
+
+Committed paid Evidence:
+
+- Attempt `af0b78285bf7dd7043eaade7307de86dccb607d2e3e88b895bc322d3dac5f341`;
+- Capture `cd5152c65e27b24610606b545ce014121a72562328df27f3d91e3ce33cf6c3f1`;
+- source Evidence status `format-2 ok` and source scrub clean;
+- exact inspected provider body `390955` bytes;
+- body SHA-256
+  `5b0e7cb6a03a921039a2845c62bd6a91eba9d61e2b54240e9af15414ba1fbc84`;
+- independently recorded source Attempt/Capture inventory SHA-256
+  `9fb185b668675f8ee6fe7d39085e93558d5728e2f03d17f0fc1371f2b40a0830`.
+
+Exactly one Attempt and one Capture exist in this RANK-03 Evidence root. No retry,
+replacement root, pagination/offset follow-up, continuation, polling, changed target, or second
+provider exchange occurred.
+
+### Accepted bounded F6 proof
+
+The existing encrypted restic repository `52a88583` through `vedaops-drive:` created snapshot
+`df746a45a69c65e456e108626a530d794fc21ba9b8d80cf759226dd05a8412a3`, tagged
+`observatory-evidence-store` and `f6-paid-rank03`. A fresh restore into
+`/tmp/rank03-ranked-keywords-restore.VO4eZG` opened as `format-2 ok` and scrubbed clean.
+
+Source inventory, snapshot-restored inventory, and independently recomputed restored inventory
+were byte-identical and all had the same inventory SHA-256 above. The restored Capture
+inspected successfully as exactly `390955` bytes with the same body SHA-256 as the source, and
+the source/restored body files were byte-identical.
+
+Non-secret receipt files were copied to the accepted off-host `receipts/` and
+`restore-proofs/` folders and downloaded again to fresh local files. Each remote round trip
+was byte-identical:
+
+- `rank03-ranked-keywords-backup-df746a45.ok.json` SHA-256
+  `1c512d08e981a78079267457243a23c92daf44c88f1a41ef685ee7000a6c16d0`;
+- `rank03-ranked-keywords-restore-df746a45.ok.json` SHA-256
+  `c7da5e659336d1042c89cc1ed0b3a4113b4374fb0461ce358905ae23dee621a9`.
+
+This satisfies the accepted bounded manual F6 requirement for this paid Evidence root. It does
+not complete routine F6 automation.
+
+## Independent full-body reconciliation — accepted 2026-09-01
+
+After F6 protection, independent read-only [CLAUDE] and [GROK] reviews plus a separate
+[GPT] Steward census inspected the same exact protected `390955`-byte body. Both independent
+reviewers returned `READY`, found the Capture sufficient primary Conformance material, and
+recommended no second provider call. The Steward reconciles their reports below against the
+actual activation contract and existing Related Keywords precedent.
+
+Where reviewer analyses diverged, no new semantic invariant is accepted. In particular, the
+returned array is observed as nondecreasing by `rank_group`, consistent with the requested
+ordering, but tie-break semantics inside equal-rank groups remain unproven. Likewise, observed
+formula-like correlations among provider-modeled traffic values are not promoted into
+Observatory derivation rules.
+
+### Verified provider envelope, request, cost, and completeness
+
+- Envelope version is `0.1.20260831`; root and task both report `status_code=20000` /
+  `status_message="Ok."`; `tasks_count=1`, `tasks_error=0`, and task `result_count=1`.
+- Provider task ID is `09010532-1463-0381-0000-8f2c825ce89d`; task path is exactly
+  `["v3","dataforseo_labs","google","ranked_keywords","live"]`.
+- Root/provider cost and task cost are both `0.024`. For this Capture only, that agrees with
+  the published calculation `0.012 + (100 * 0.00012)`. This is billing testimony for this
+  exchange, not a universal billing formula.
+- Task request echo agrees with the frozen RANK-02 request: exact target
+  `theconspiratory.com`, US `2840`, English `en`, `ignore_synonyms=false`, exact five requested
+  item types, clickstream disabled, `limit=100`, `offset=0`, absolute metrics requested,
+  `historical_serp_mode="all"`, and rank-group-ascending order.
+- Result echo preserves `target=theconspiratory.com`, `location_code=2840`,
+  `language_code="en"`, and `se_type="google"`.
+- Provider claims `total_count=248` while `items_count=100` and exactly 100 item objects were
+  returned. The body is therefore a bounded returned prefix of a larger provider corpus, not
+  the site's complete row-level Ranked Keywords set.
+- Result-level `metrics.organic` position buckets account for all 248 corpus rows. The first
+  returned page contains all 9 rows in rank-group 11–20, all 18 in 21–30, all 43 in 31–40,
+  and 30 of the provider's 59 rows in 41–50. Thus this exact prefix is empirically complete
+  through `rank_group <= 40` and partial within 41–50. The remaining 148 corpus rows have no
+  row-level testimony in this Capture.
+- Returned `rank_group` is nondecreasing, with observed range 14–46. Returned
+  `rank_absolute` ranges 18–57 and is not the requested sort key. No universal tie-break rule
+  is proven.
+
+### Aggregate and ranking testimony must remain distinct
+
+- Both result-level aggregate families contain the five requested type keys: `organic`,
+  `paid`, `featured_snippet`, `local_pack`, and `ai_overview_reference`.
+- `metrics.organic` includes corpus `count=248`, ETV, estimated paid-traffic cost, movement
+  counts, and position buckets. Its position buckets sum to 248.
+- `metrics_absolute.organic` has a different shape: it does not state `count`, ETV, or
+  estimated paid-traffic cost. Its 1–100 position buckets sum to 244, not 248. Four corpus
+  rows therefore do not appear in those absolute-rank buckets. The reason is not available as
+  row-level testimony in this returned prefix and must not be invented.
+- All four non-organic requested aggregate families are present and zero-valued for their
+  ranking/movement testimony in both aggregate variants. Present zero is materially distinct
+  from an absent family.
+- All 100 returned ranked items have `serp_item.type="organic"` and
+  `ranked_serp_element.is_lost=false`.
+- All 100 returned `rank_changes` objects state `is_new=true`, `is_up=false`,
+  `is_down=false`, and `previous_rank_absolute=null`; corpus aggregates state organic
+  `is_new=248`, `is_up=0`, `is_down=0`, `is_lost=0`.
+- Provider `is_new`/`is_up`/`is_down`/`is_lost` is provider-internal comparison testimony,
+  not Observatory Capture-to-Capture change and not proof that the domain never ranked before.
+  `historical_serp_mode="all"` exercised the request mode but this Capture contains no lost
+  row shape.
+- `serp_item.position` is the string `"left"` on all returned rows. It is SERP layout/pane
+  testimony, not a ranking number and must not be conflated with `rank_group` or
+  `rank_absolute`.
+
+### Identity and occurrence testimony
+
+- All 100 returned keyword strings are distinct in this prefix. Exact keyword text remains
+  occurrence testimony; near-duplicate spelling/hyphenation variants must not be normalized
+  away by the parser.
+- The 100 rows reference 57 distinct absolute URLs. One URL can rank for multiple returned
+  keywords, so URL and keyword are not interchangeable identities.
+- Provider `domain` preserves two hosts: `theconspiratory.com` on 75 rows and
+  `www.theconspiratory.com` on 25. Provider `main_domain` is `theconspiratory.com` on all 100.
+  URL host agrees with `domain` in this Capture. The two provider paths must remain distinct;
+  collapsing `www` and apex would invent canonical-page identity.
+- There are 55 distinct `relative_url` values. At least `/theory/atlantis` and
+  `/theory/denver-airport` occur under both apex and `www`, proving that `relative_url` alone
+  is not an occurrence/page identity.
+- Page/query multiplicity is real testimony: a ranked URL may serve several returned keyword
+  rows. The strongest returned absolute-URL multiplicity is nine keywords; path-level grouping
+  can be larger when apex and `www` are collapsed, which Observatory must not do implicitly.
+- `keyword_properties.core_keyword` is non-null on 35 returned rows and is never equal to its
+  row keyword in this Capture. It is a separate provider clustering/reference field, not a
+  canonical keyword foreign key or an Observatory identity decision.
+- Provider item array position may be preserved as occurrence/order testimony but must not be
+  promoted into semantic identity.
+
+### Embedded keyword testimony
+
+- Every returned item contains a `keyword_data` object with the same observed twelve-key
+  family, including `keyword_info`, `keyword_properties`, `search_intent_info`,
+  `avg_backlinks_info`, `serp_info`, and the three clickstream/Bing-normalized paths.
+- Every `keyword_info.monthly_searches` array contains 12 points: 1200 monthly provider facts
+  across the 100 returned rows. The rows do not share one Capture-wide monthly window: 62 use
+  July 2026 through August 2025, while 38 use June 2026 through July 2025. Across this body,
+  13 distinct `(year, month)` Data Periods occur. Monthly Data Period is therefore row-local
+  testimony, not a single result-level period.
+- Current `keyword_info.search_volume` differs from the newest monthly point on 81 of 100
+  rows. Current volume and monthly-series facts must remain distinct and neither may be
+  derived from the other.
+- `competition_level` is `LOW` on all 100 returned rows while numeric `competition` includes
+  zero; null, zero, and categorical state must remain distinct. CPC and top-of-page-bid fields
+  are independently nullable and must not be modeled as one all-or-nothing commercial-metrics
+  state.
+- `keyword_properties.keyword_difficulty` is numeric, including real zero values, and agrees
+  with the duplicated `ranked_serp_element.keyword_difficulty` path on all 100 rows. Agreement
+  in one Capture does not authorize path collapse.
+- Detected language is not request-language identity: the provider classifies 94 rows as `en`
+  and six as other detected languages while the request/result locale remains English.
+- Provider main-intent vocabulary observed here is `informational` (89), `navigational` (9),
+  `transactional` (1), and `commercial` (1). `foreign_intent` is separately nullable/array
+  testimony.
+- `keyword_data.serp_info` is an object on all 100 real rows in this Capture, resolving the
+  contradictory documentation question for this fixture only. Its non-object/null/absent
+  branches remain unobserved and synthetic-testable.
+- The three clickstream/Bing-normalized keyword-data paths are JSON null on all 100 rows under
+  `include_clickstream_data=false`. Their non-null shapes remain unobserved.
+- `avg_backlinks_info` is present on all 100 rows and is separate from
+  `serp_item.backlinks_info`, which is null on all 100. Same-looking backlink/rank words on
+  different provider paths must not be reconciled by name.
+
+### SERP composition is not target participation
+
+- `serp_item_types` is provider SERP-composition testimony for the query's SERP and remains an
+  ordered provider-native list; it is not the target's ranked-element type set.
+- `ai_overview` appears in `serp_item_types` on 80 of the 100 returned organic-query SERPs,
+  while the target-level `ai_overview_reference` aggregate family states zero matching rows
+  across the full 248-row corpus. These facts are complementary and must not be collapsed into
+  either “the target has AI Overview visibility” or “there is no AI Overview testimony.”
+- `featured_snippet` appears in SERP-composition testimony on four returned query SERPs while
+  the target's `featured_snippet` aggregate family is zero across the full corpus. This is a
+  second concrete proof that SERP feature presence differs from target participation.
+
+### Independent Provider Update Times and Data Periods
+
+This one Capture joins several provider datasets with materially different clocks:
+
+- Observatory acquisition/Capture occurred on 2026-09-01;
+- ranked-SERP `last_updated_time`: 2026-07-10 through 2026-07-19;
+- ranked-SERP `previous_updated_time`: 2026-04-09 through 2026-06-02;
+- `keyword_info.last_updated_time`: 2026-07-10 through 2026-08-26;
+- `search_intent_info.last_updated_time`: 2026-04-24 through 2026-05-08;
+- `avg_backlinks_info.last_updated_time`: 2026-07-10 through 2026-07-19;
+- monthly `(year, month)` facts span the two row-local 12-month windows above.
+
+Capture time must not be exposed as ranking “as-of” time. No generic Provider Update Time may
+be inherited across structures. `previous_updated_time` remains separate testimony even though
+all returned `previous_rank_absolute` values are null. Relative prose such as `pre_snippet`
+`"N days ago"` is not a provider timestamp and must not be interpreted against Capture time.
+
+### Null, zero, empty, absent, and opaque provider values
+
+The body exercises present JSON null and numeric zero as distinct states inside the same
+families. It does not exercise absent optional keys or empty arrays for the major nullable
+children reviewed here. Strict parsing must preserve those distinctions and use synthetic
+adversarial variants for unobserved branches rather than inventing provider invariants.
+
+Provider-native strings, category IDs, SERP feature names, URLs, host/domain fields, and
+clustering/intent vocabularies remain attributed provider testimony. They are not an invitation
+to silently normalize identities, de-duplicate ordered lists, or define Observatory enums more
+narrowly than the accepted contract warrants.
+
+## Candidate modeling implications — not a schema freeze
+
+The reconciled Evidence demonstrates at least the following distinct testimony grains for
+later design review:
+
+1. result/request context and corpus-completeness testimony;
+2. target-level per-SERP-type `metrics` aggregate testimony;
+3. target-level per-SERP-type `metrics_absolute` aggregate testimony with a distinct shape;
+4. returned ranked keyword/URL occurrence testimony, including exact provider order and ranks;
+5. ranked-SERP context and composition testimony with its own clocks;
+6. embedded Ranked-local keyword enrichment testimony;
+7. monthly search-volume Data Period facts;
+8. ordered/multiplicity-preserving child vocabularies where provider arrays carry occurrence
+   testimony.
+
+These are candidate semantic grains, not accepted PostgreSQL tables or final Observation kinds.
+The later Recipe review must decide the smallest faithful decomposition, identities, relations,
+typed Field/FieldState use, admission rules, and API shape. Mechanical low-level parsing may be
+shared with Keyword Overview/Related Keywords where the byte/value semantics genuinely match;
+Ranked Keywords Observation identity must remain Ranked-local unless a later reviewed contract
+proves equivalence.
+
+Any history/API consumer must be able to distinguish at minimum provider `total_count=248`,
+provider `items_count=100`, actual returned item count, request `limit=100`, `offset=0`, and the
+requested/observed sort context. It must never present the returned prefix as the complete
+corpus. Aggregate facts must be explicitly corpus-scoped rather than visually attached to the
+100 returned rows as if computed only from them.
+
+## Downstream capability implications — preserved for later Strategy work
+
+Without moving scoring or recommendations into Observatory, this Capture demonstrates that a
+future Strategy consumer could use admitted Ranked testimony to investigate:
+
+- which exact queries the domain is reported as ranking for and which exact URL/host occurrence
+  received the ranking;
+- proximity to page one using distinct `rank_group` and `rank_absolute` facts;
+- page/query clusters and host fragmentation while keeping apex/`www` identity explicit;
+- demand, intent, difficulty, CPC/competition, and monthly history alongside ranking position;
+- overlap between the Related Keywords discovery neighborhood and actual target participation;
+- SERP feature context, including organic presence on AI-Overview-bearing SERPs versus actual
+  target `ai_overview_reference` participation;
+- later cross-surface comparisons with Google Organic, Keyword Overview, Search Mentions,
+  Target Metrics, Historical LLM Mentions, or future competitor surfaces, provided their
+  distinct clocks and semantics remain explicit;
+- true gained/lost Observatory visibility only after repeated Ranked Captures exist.
+
+Possible “cannibalization,” opportunity, competitor gap, topic importance, campaign priority,
+SEO/GEO score, or recommendation remains downstream inference. Provider `is_new` is not a
+substitute for Observatory longitudinal change.
+
+## Fixture sufficiency and unproven limits
+
+The exact protected body is accepted as strong primary Conformance material for the next strict
+Ranked parser boundary. It exercises a real 100-of-248 truncation, both aggregate variants,
+explicit zero requested types, 100 organic ranked occurrences, apex/`www` host divergence,
+multi-keyword pages, distinct current/monthly demand testimony, two monthly windows, provider
+intent/difficulty/backlink/SERP context, ordered SERP-composition vocabularies, request-disabled
+clickstream nulls, and independent structure-local clocks.
+
+This single Capture does **not** prove:
+
+- row-level testimony for the 148 unreturned corpus rows or offset/pagination behavior;
+- stable `total_count`, returned ordering tie-breaks, or future limit behavior;
+- `is_lost=true`, non-null previous-rank, provider up/down, or other lost-item shapes;
+- paid, featured-snippet, local-pack, or AI-Overview-reference ranked-item polymorphism;
+- non-null clickstream/Bing-normalized, rating, links, item-backlinks, or other unobserved
+  optional shapes;
+- absent-key/empty-array behavior, alternate competition levels, alternate layout positions,
+  shorter/longer monthly arrays, sentinel timestamps, subdomain/page targets, other locales,
+  `ignore_synonyms=true`, provider-error envelopes, or future additive fields;
+- semantic equivalence with Keyword Overview, Related Keywords, Google Organic, or any AI
+  surface;
+- canonical page/host identity, core-keyword canonicalization, competitor relationships, or
+  any Strategy conclusion;
+- a universal provider billing formula or stable weekly comparison interval.
+
+The 148 unreturned rows are historically unavailable at row level for this exact provider
+epoch, but the independent reviews agree that they are not required to learn this contract:
+the best-ranked prefix is already fixture-rich and full-corpus aggregate testimony is preserved.
+Another live request is therefore not justified by RANK-03. Any future deeper acquisition is a
+new Product/acquisition-policy question under D12 with new provenance and authorization.
+
+## Closure decision and next boundary
+
+[CLAUDE] and [GROK] independently return `READY`; the Steward accepts their converged Evidence
+findings, preserves the explicit limits above, and closes RANK-03 as `done`.
+
+No `src/` or `tests/` behavior changes in this closure. The next bounded Ranked Keywords work
+is **RANK-04: strict Ranked Keywords response parser plus frozen primary Conformance fixture**
+derived from these exact verified bytes, with synthetic adversarial mutations for the unproven
+branches above. RANK-04 must not silently freeze the later Recipe, Observation identity,
+PostgreSQL schema, history API, canonical host/page identity, Strategy scoring, recurring
+acquisition, or another provider exchange.
+
+Only after the strict parser/fixture boundary is reviewed and accepted should a separate
+Ranked Recipe/Derivation/persistence ticket decide the smallest faithful testimony grains and
+relations; a later separately reviewed read/history API then exposes the admitted contract.
+No additional provider call or push is authorized by this closure.

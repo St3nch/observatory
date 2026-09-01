@@ -490,11 +490,14 @@ Additional live acquisition remains separately gated under D12.
 
 This is an **MVP closeout gate, not a pause on current feature sequencing**. The Related
 Keywords parser/Derivation/API vertical slice closed with RK-05 on 2026-08-31. Ranked Keywords
-activation review RANK-01 and Evidence-only adapter RANK-02 closed on 2026-09-01; the next
-Ranked boundary is one separately gated live Evidence activation for the accepted
-`theconspiratory.com` domain contract before any parser/Recipe/schema/API work. The retro-review
-checkpoint must be completed and any material findings reconciled before the Product Owner and
-Steward record final MVP closure.
+activation review RANK-01, Evidence-only adapter RANK-02, and the one-shot protected live
+Evidence activation/full-body review RANK-03 closed on 2026-09-01. The accepted Ranked
+Capture is a 100-of-248 rank-group prefix with corpus-level aggregates, independent provider
+clocks, Ranked-local keyword/page occurrence testimony, and no justified second provider call.
+The next Ranked boundary is RANK-04: a strict response parser plus frozen Conformance fixture
+from those exact protected bytes; Recipe/Observation/persistence and read/history API remain
+separate later reviews. The retro-review checkpoint must be completed and any material findings
+reconciled before the Product Owner and Steward record final MVP closure.
 
 ## Dependency-based sequencing direction
 
