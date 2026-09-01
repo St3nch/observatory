@@ -1,6 +1,6 @@
 # RANK-04 — DataForSEO Google Ranked Keywords strict parser and RANK-03 Conformance fixture
 
-**Status:** implemented by the designated Writer from the authorized base; awaiting Steward review and [CHAZ] full-suite integration validation  
+**Status:** CLOSED — parser/Conformance boundary accepted after dual review, bounded remediation, and [CHAZ] full-suite integration validation  
 **Owner:** [CLAUDE] designated Writer / [GPT] Steward review / [GROK] independent reviewer  
 **Blocked by:** none; RANK-03 closed at `fbd53534aea47f114822e071c178b3ae1e378055`  
 **Draft base:** `fbd53534aea47f114822e071c178b3ae1e378055`  
@@ -1103,3 +1103,41 @@ condition that caused the failure.
 
 The full repository suite was deliberately not run from the Writer lane. [CHAZ] still owns the
 final full-suite rerun before Steward closure.
+
+## Closure — 2026-09-01
+
+RANK-04 is **CLOSED**.
+
+Accepted implementation commit:
+
+`e40344a98bc61d10b1da8a37829c654e955193af`
+
+Accepted credential-isolation remediation commit:
+
+`022966782cc5d0938ddd5b8b99d3732e9c862b25`
+
+[GPT] Steward review found the implementation aligned with the accepted parser-only contract.
+[GROK] independently returned `RECOMMENDATION: READY`, including explicit acceptance of the
+required-member/Field-state policy and adapter-local `se_type=google` rule. No parser semantic
+remediation was required.
+
+[CHAZ]'s first full-suite integration run at `e40344a98bc61d10b1da8a37829c654e955193af`
+produced `2489 passed, 2 failed, 1 skipped, 1 warning`; both failures were the test-harness
+credential-environment assertions documented above. The separately authorized remediation
+changed no production code or fixture bytes and restored the intended credential-isolation
+proof.
+
+[CHAZ]'s final full-suite integration run at
+`022966782cc5d0938ddd5b8b99d3732e9c862b25` produced:
+
+`2491 passed, 1 skipped, 1 warning`
+
+No provider call, credential use, public-network acquisition, Evidence mutation, PostgreSQL
+mutation, Recipe/Derivation, Observation kind, read/history API, Strategy feature, amend,
+rebase, or push is part of this closure.
+
+The next Ranked Keywords boundary is a **separately reviewed Recipe/Derivation/persistence
+ticket**. It must decide the smallest faithful Observation grains, identities, corpus-summary
+relations, Ranked-local enrichment relations, and rebuild proof without moving Strategy,
+scoring, recommendations, canonical page policy, or cross-surface semantic equivalence into
+Observatory. RANK-04 authorizes none of that later work.

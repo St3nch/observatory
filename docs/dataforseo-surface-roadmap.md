@@ -494,10 +494,15 @@ activation review RANK-01, Evidence-only adapter RANK-02, and the one-shot prote
 Evidence activation/full-body review RANK-03 closed on 2026-09-01. The accepted Ranked
 Capture is a 100-of-248 rank-group prefix with corpus-level aggregates, independent provider
 clocks, Ranked-local keyword/page occurrence testimony, and no justified second provider call.
-The next Ranked boundary is RANK-04: a strict response parser plus frozen Conformance fixture
-from those exact protected bytes; Recipe/Observation/persistence and read/history API remain
-separate later reviews. The retro-review checkpoint must be completed and any material findings
-reconciled before the Product Owner and Steward record final MVP closure.
+RANK-04 closed on 2026-09-01 with the exact protected body frozen as Conformance testimony, a
+strict Ranked-local parser, independent Steward/Grok acceptance, and [CHAZ] final integration
+validation of `2491 passed, 1 skipped, 1 warning`. A bounded credential-isolation test-harness
+remediation changed no parser semantics or fixture bytes. The next Ranked boundary is a
+separately reviewed Recipe/Derivation/persistence ticket; the later read/history API remains a
+separate review. Neither boundary moves Strategy, scoring, recommendations, canonical page
+policy, or cross-surface semantic equivalence into Observatory. The retro-review checkpoint
+must be completed and any material findings reconciled before the Product Owner and Steward
+record final MVP closure.
 
 ## Dependency-based sequencing direction
 
