@@ -1015,8 +1015,26 @@ must retain 503.
 
 Replace the permissive adapter-damage proof with exact selected and pinned 409 proofs. Run only
 the bounded affected RANK-06 tests/checks required for remediation, create one child commit,
-do not amend, and do not push. Full-suite integration remains [CHAZ] closure evidence after
-Steward acceptance.
+do not amend, and do not push.
+
+### Final closure gates after remediation
+
+RANK-06 must not close immediately after the remediation commit. The required final sequence is:
+
+1. [GPT] independently reviews the committed remediation and accepts or returns it;
+2. [GROK] performs one final independent **read-only adversarial review** of the complete
+   accepted RANK-06 implementation, including the remediation, and returns `READY` or a
+   bounded finding report;
+3. [GPT] reconciles any Grok findings against repository authority; any required code change
+   returns to [CLAUDE], the existing Writer, as a bounded remediation rather than opening a
+   second Writer lane;
+4. once code review is settled, [CHAZ] supplies the final full-repository `uv run pytest -q`
+   integration result at the exact candidate closure commit;
+5. only then may [GPT] record RANK-06 closure.
+
+The final Grok review performs no mutation, provider/network call, credential access, Evidence
+mutation, spend, amend, or push. Full-suite integration remains [CHAZ] closure evidence, not a
+Writer or Grok task.
 
 ## Explicit out of scope
 
