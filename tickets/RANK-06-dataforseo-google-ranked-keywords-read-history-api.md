@@ -1,12 +1,14 @@
 # RANK-06 — DataForSEO Google Ranked Keywords Recipe selection and admitted-history API
 
-**Status:** RECONCILED — Steward accepted read-only Grok findings; implementation not authorized  
-**Owner:** [GPT] Steward review / [CLAUDE] designated Writer; implementation still requires separate explicit [CHAZ] authorization  
+**Status:** AUTHORIZED — [CLAUDE] Writer may implement the reconciled RANK-06 contract  
+**Owner:** [GPT] Steward review / [CLAUDE] designated and implementation-authorized Writer  
 **Blocked by:** none; RANK-05 closed  
 **Draft base:** `512525f78c20e49eb096b8ab98c0ed4ad2d64df0`  
 **Pre-implementation review base:** `9aab9bf7c0884aa7c60f68276fc2d821285d35f5`  
 **Pre-implementation reviewer:** [GROK] independent read-only code-first review  
 **Pre-implementation recommendation:** `RECONCILE`; no Product question identified  
+**Implementation authorization base:** `659a93d4d58ed5090574fe309c4be46cf005a1c5`  
+**[CHAZ] implementation authority:** [CLAUDE] may implement this reconciled ticket; no provider calls, credentials, Evidence mutation, spend, amend, or push  
 **Provider authority:** zero calls, zero spend, zero credentials, zero Evidence mutation; existing RANK-03 Evidence / RANK-04 Conformance fixture / RANK-05 rebuildable state only  
 
 ## Purpose
