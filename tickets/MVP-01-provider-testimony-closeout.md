@@ -135,6 +135,40 @@ decision and must be recorded durably; MVP-01 itself does not predeclare that re
 6. When all seven are green, perform final MVP closeout reconciliation and ask [CHAZ] for the
    Product closure decision.
 
+## Legacy Evidence recovery proof — accepted 2026-09-01
+
+[CHAZ] restored the exact accepted encrypted Google Drive restic snapshots for PF-03, PF-10,
+and AI-03 into fresh `/tmp` directories. No provider call, Evidence mutation, backup deletion,
+or repository mutation occurred during the restore/inspection procedure.
+
+All three restored roots opened as `format-2 ok`, scrubbed without reported failure, and
+independently reproduced the exact accepted committed Attempt/Capture IDs. The snapshotted
+legacy inventory files independently contained the same IDs. PF-03's historical inventory
+SHA-256 remained exactly
+`58ac410ae1625c1088aceb32769d05e25b0474eecca083e075102512e1686d21`; AI-03's remained
+`e2302f202834d01a0889aa57edfae36a223daaa9922b9763a6616f50dfc7e169`. PF-10's original
+closure did not record an inventory digest, so MVP-01 does not invent one as historical
+proof; its restored and snapshotted inventories were instead required to contain exactly the
+accepted Attempt/Capture IDs. The restored PF-10 inventory file presently hashes to
+`b47d3077fabf51d34656ad6726d6dd1b54626bc07c48996403cca9e04d89fb6f`, recorded here only as
+an identity of the verified restored artifact, not as a retroactive activation-time claim.
+
+Verify-first inspection of the restored accepted Captures reproduced the original provider
+body identities exactly:
+
+- PF-03 Keyword Overview — 26,270 bytes, SHA-256
+  `d91fdc7ab8acf429f0ff9c00bd7cdb725be1ba9585481af35d14f7c4e79a6d1c`;
+- PF-10 Google Organic — 135,722 bytes, SHA-256
+  `7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f`;
+- AI-03 Search Mentions — 48,466 bytes, SHA-256
+  `8b3cd0fb0c9fa23c102696bfe6b7212396c0f7c110e9ca8ca5b8ee5af182e80a`.
+
+`MVP01_LEGACY_EVIDENCE_RECOVERY: PASS` is accepted. These restored bodies are now eligible as
+the Evidence anchors for the corresponding MVP-01 fidelity passes. Repository Conformance
+fixtures may be used for detailed read-only analysis only after byte identity with these
+accepted body hashes is independently confirmed; the fixtures do not become Evidence
+authority.
+
 ## Closure
 
 <!-- Project Steward fills after all seven passes and any earned remediation are complete. -->
