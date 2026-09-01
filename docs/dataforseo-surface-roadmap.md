@@ -463,7 +463,7 @@ full-body review. At minimum it covers the earlier live Keyword Overview (PF-03)
 Organic (PF-10), Search Mentions (AI-03), and Target Metrics (AI-09) Captures. Historical LLM
 Mentions (AI-14) receives a consistency audit against the same rubric because its activation
 already included independent exact-body review. RK-02 itself satisfies this checkpoint for
-its current Related Keywords Capture once closed.
+the now-closed Related Keywords vertical slice.
 
 Each pass begins from the exact protected provider body and current accepted implementation,
 and checks the whole payload rather than a convenient sample: subject/fact/relationship and
@@ -488,10 +488,11 @@ only when the review identifies actual semantic loss, false interpretation, or a
 useful provider distinction that the accepted consumer contract cannot faithfully expose.
 Additional live acquisition remains separately gated under D12.
 
-This is an **MVP closeout gate, not a pause on current feature sequencing**. Related Keywords
-parser/Derivation/API work and the later Ranked Keywords slice may continue under their normal
-reviewed tickets. The retro-review checkpoint must be completed and any material findings
-reconciled before the Product Owner and Steward record final MVP closure.
+This is an **MVP closeout gate, not a pause on current feature sequencing**. The Related
+Keywords parser/Derivation/API vertical slice closed with RK-05 on 2026-08-31. Ranked Keywords
+remains the next planned feature slice under its normal reviewed tickets. The retro-review
+checkpoint must be completed and any material findings reconciled before the Product Owner and
+Steward record final MVP closure.
 
 ## Dependency-based sequencing direction
 

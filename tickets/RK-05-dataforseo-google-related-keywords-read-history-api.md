@@ -1,6 +1,6 @@
 # RK-05 — DataForSEO Google Related Keywords Recipe selection and admitted-history API
 
-**Status:** review — [CLAUDE] implementation complete; awaiting [GPT] Steward review, [GROK] adversarial review, and [CHAZ] full-suite closure  
+**Status:** closed — [GPT] Steward accepted after independent Grok `READY`, bounded OpenAPI remediation, and [CHAZ] full-suite approval on 2026-08-31  
 **Start commit:** `988e7b03cf788c51455ec59e8e5f46e884cf434f`  
 **Reconciled contract:** `ab42c0df1196fac8769eb272928da5ae0baf802a` — [CHAZ] explicitly authorized [CLAUDE] implementation from that reconciled ticket  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
@@ -1380,3 +1380,54 @@ corrected description was restored immediately afterwards.
   inherited RK-05 baseline. Zero added, zero repaired.
 - Full repository pytest not run; it remains [CHAZ]'s closure run.
 - No provider call, no credentials, no network, no Evidence mutation, no push.
+
+## Steward closure — 2026-08-31
+
+RK-05 is accepted and closed.
+
+Closure lineage:
+
+- reconciled contract: `ab42c0df1196fac8769eb272928da5ae0baf802a`;
+- authorization-only implementation base: `988e7b03cf788c51455ec59e8e5f46e884cf434f`;
+- [CLAUDE] implementation commit: `963969311731e224ac1a4d6095a3cb438e77e91f`;
+- [CLAUDE] integrity-remediation child: `83f5c0105e0b4f8496cad44020403bd936ceb735`;
+- [CLAUDE] OpenAPI micro-remediation child: `500f22f8592c9b4c3194dff44ce6e7fa94404d14`.
+
+The Steward reviewed the initial implementation and found four real read-boundary gaps:
+occurrence-to-keyword binding, seed/monthly cross-family state agreement, per-field applicable
+state domains, and closed Google `se_type`. [CLAUDE] corrected those gaps without changing
+Recipe identity, schema, Derivation, or healthy API shape.
+
+Grok then independently reviewed the complete implementation range
+`988e7b03cf788c51455ec59e8e5f46e884cf434f..83f5c0105e0b4f8496cad44020403bd936ceb735`
+and returned **`READY`** with no behavioral blocker. Its one accepted nonblocking finding was
+a contradictory generated-OpenAPI description on monthly `search_volume`; the Steward
+required the bounded description/test remediation before closure. [CLAUDE] corrected that
+exact defect in `500f22f8592c9b4c3194dff44ce6e7fa94404d14`, and the Steward independently
+verified the child as description/test/ticket-only with no runtime semantic or public-shape
+change. A second full Grok pass was unnecessary because the reviewed behavioral implementation
+remained unchanged and the accepted reviewer finding itself received the exact bounded fix and
+field-specific regression proof.
+
+[CHAZ] supplied the final full-suite closure gate on exact HEAD
+`500f22f8592c9b4c3194dff44ce6e7fa94404d14`:
+
+    uv run pytest -q
+
+Result:
+
+    2105 passed, 1 skipped, 1 warning in 766.70s (0:12:46)
+
+The sole warning is the inherited Starlette/httpx TestClient deprecation from the virtual
+environment and is non-blocking for RK-05. [CHAZ] explicitly approved closure immediately
+after the green full-suite result.
+
+Writer verification remains recorded above: the final RK-05 focused suite is **195 passed**,
+Ruff is clean, targeted mypy is clean, and full configured mypy remains the inherited **14
+errors in the same five unrelated files**. RK-05 adds no known typecheck regression.
+
+No additional provider request, credential use, protected-Evidence mutation, schema/migration,
+parser, Recipe/Derivation, Measurement Outcomes, Holdings, Ranked Keywords, Strategy, recurring
+acquisition, amend, or push is part of this closure. The Related Keywords RK-01 through RK-05
+vertical slice is now closed. Ranked Keywords remains the next planned feature slice before the
+accepted MVP provider-testimony deep-review closeout gate and final MVP closure.
