@@ -1,6 +1,7 @@
 # RANK-02 — DataForSEO Google Ranked Keywords Live paid-probe adapter
 
-**Status:** implementation authorized — [CHAZ] explicitly designated [CLAUDE] as sole Writer on 2026-09-01; implementation only, no provider call authorized  
+**Status:** review — [CLAUDE] implementation delivered in one commit on 2026-09-01; awaiting [GPT] Steward review  
+**Start commit:** `6869dab7c617e53e66446e6bad3e5e6e948e74d3`  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
 **Blocked by:** none; RANK-01 closed at `d10349bb036905daf9dd53eeac0cffbe2c1e7118`  
 **Draft base:** `d10349bb036905daf9dd53eeac0cffbe2c1e7118`  
@@ -472,3 +473,234 @@ gate are already settled by RANK-01. RANK-02 may proceed only after [CHAZ] expli
 one Writer and authorizes implementation from the exact final accepted-ticket commit issued by
 the Steward. This acceptance still authorizes **zero provider calls, zero spend, zero live
 Evidence, and no parser/Recipe/schema/API/Strategy work**.
+
+## Implementation report — [CLAUDE], 2026-09-01
+
+### Parent and changed paths
+
+Implementation parent (exact Start commit): `6869dab7c617e53e66446e6bad3e5e6e948e74d3`.
+One implementation commit. Not amended, not pushed.
+
+Changed paths, all inside the accepted four-path allowlist:
+
+- `src/observatory/capture_event.py` — one new Ranked Keywords HTTP-v2 adapter branch
+  (constants, closed parameter/request/policy validators, the Observatory two-label ASCII
+  domain restriction, request/fingerprint/Attempt/Capture builders, public validators,
+  `__all__`, and the four existing dispatch sites);
+- `src/observatory/dataforseo_google_ranked_keywords_paid_probe.py` — new, Ranked-local
+  hardened gate, capture, and inspect;
+- `tests/test_dataforseo_google_ranked_keywords_paid_probe.py` — new, 122 tests;
+- this ticket (Status, Start commit, and this report only).
+
+No other path was touched. `derive.py`, provider derive modules, migrations/schema,
+fixtures, the API, sibling adapter modules and their tests, decisions, roadmap, and specs
+are unmodified. No `RECONCILE` was needed: the four-path allowlist was sufficient.
+
+### Verification evidence
+
+- `uv run pytest -q tests/test_dataforseo_google_ranked_keywords_paid_probe.py` →
+  **122 passed**. The Derivation-skip regression ran against the repository's real
+  disposable PostgreSQL fixture (docker `postgres:18-alpine`), not a stub.
+- Regression suites affected by the new adapter branch and PF-09:
+  `test_capture_event.py`, `test_http_event_v2.py`, `test_http_single_exchange.py`,
+  `test_evidence_store.py`, `test_evidence_status_scrub.py`, and every existing
+  sandbox/paid-probe adapter module (`dataforseo_sandbox`, `dataforseo_paid_probe`,
+  `google_organic`, `google_organic_paid_probe`, `keyword_overview`,
+  `related_keywords`, `related_keywords_paid_probe`, `search_mentions`,
+  `search_mentions_paid_probe`, `target_metrics`, `target_metrics_paid_probe`,
+  `llm_mentions_historical`, `llm_mentions_historical_paid_probe`) → **1084 passed**
+  across the two batches (434 + 650), zero failures.
+- `uv run ruff check .` → **All checks passed!**
+- Targeted `uv run mypy src/observatory/capture_event.py
+  src/observatory/dataforseo_google_ranked_keywords_paid_probe.py
+  tests/test_dataforseo_google_ranked_keywords_paid_probe.py` → **Success: no issues found
+  in 3 source files**.
+- Full configured `uv run mypy` → **14 errors in 5 files (checked 90 source files)**.
+  The inherited baseline at the Start commit was **14 errors in 5 files (checked 88 source
+  files)**; a sorted line-by-line diff of the two error sets is **identical**. The two new
+  files contribute zero errors. No unrelated baseline error was repaired.
+- Full repository pytest was **not** run; it remains a [CHAZ]/Steward closure gate.
+- No test contacts a public host. An autouse fixture replaces `socket.create_connection`
+  and fails any non-loopback address; credentials env vars are deleted per test.
+
+### Frozen request vector
+
+    [{"historical_serp_mode":"all","ignore_synonyms":false,"include_clickstream_data":false,
+      "item_types":["organic","paid","featured_snippet","local_pack","ai_overview_reference"],
+      "language_code":"en","limit":100,"load_rank_absolute":true,"location_code":2840,
+      "offset":0,"order_by":["ranked_serp_element.serp_item.rank_group,asc"],
+      "target":"theconspiratory.com"}]
+
+(single line, 359 bytes)
+
+- request body SHA-256 `70ef3e2a12ac7a6f840fd98ad0c114622a8f1d28163aaafa3aafa2dd3094a758`
+- `request_fingerprint` `e082900f9253eb5aa5729a65b5d55716fdf06e9aefb77add3f01ab3db1cbdf2f`
+- `attempt_id` `7b61e54336c109d12a6747a29e0d78a6e5a3a2b38d022de1c2c1bd255bd66347`
+  for nonce `9`×64, `authorized_at` `2026-09-01T20:00:00.000000Z`, software
+  `conformance-ranked-keywords-paid-probe-v1`
+
+These literals are hand-written in the test module and are never derived from the
+production constructor, so the constructor must reproduce them.
+
+### Strongest implementation point
+
+The closure-owned transport authority. Replay refusal now rests on **two independent**
+closure-owned facts rather than one flag: which closure list holds the issuance record
+(`live` vs `spent`) and the record's own `consumed` field. Consumption moves the record and
+sets the flag, so restoring either alone cannot re-authorize a send. The hostile tests reach
+the closure-owned `_Issuance` through `gc.get_referrers` — the module publishes no accessor
+for it — and prove that resetting closure-owned `consumed`, substituting the closure-owned
+`store`, and substituting `store` plus `root` together all fail closed with zero HTTP handler
+calls. Capture parentage and the returned `attempt_id` are rebuilt on every call from
+immutable closure bytes, proved with a hostile case where the replacement Attempt is itself
+valid and committed in the same store.
+
+### Weakest implementation point
+
+The one-shot Evidence-root scan is O(committed Attempts) and fully verifies every discovered
+commitment on every capture. That is deliberate (the ticket forbids silently skipping
+unverifiable material) but it means a large shared root makes each Ranked capture attempt
+progressively slower, and a single damaged foreign Attempt anywhere in the root blocks a new
+Ranked Attempt entirely with a generic message. That is the correct fail-closed direction,
+but it is a real operational sharp edge: an operator hitting it must scrub and repair the
+root before the probe can run. The fresh-root operating convention hides this today.
+
+### Possible false greens
+
+- **Mock transport is not a network stack.** `httpx.MockTransport` never exercises TLS,
+  DNS, real redirects, connection reuse, or a real server's chunked framing. The
+  no-redirect/no-proxy/no-HTTP2/no-retry proof reads `production_http_client`'s httpx and
+  httpcore private attributes (`_http2`, `_http1`, `_retries`) rather than observing a real
+  redirecting or HTTP/2-capable server. It proves configuration, not behavior.
+- **The body-ceiling partial** is forced through the internal `max_response_body_bytes`
+  seam at 16 bytes, not by a real 32 MiB response. The 32 MiB constant itself is only
+  asserted as a value.
+- **`transport_exception` in the one-shot matrix** uses `KeyboardInterrupt`, which PF-09
+  deliberately re-raises. A different post-consumption exception class could take a
+  different path; only this one is proved.
+- **Neighbour coexistence** is proved for fixture, Keyword Overview, Google Organic, and
+  Related Keywords Attempts. Search Mentions, Target Metrics, and LLM Mentions Historical
+  neighbours are not in the coexistence test; they are covered only indirectly by the
+  adapter-token comparison.
+- **The Derivation-skip regression** exercises `derive`, `derive_keyword_overview`,
+  `derive_google_organic`, and `derive_google_related_keywords`. It proves those four skip
+  Ranked Evidence; it does not prove the LLM Mentions derive modules do, and it proves
+  nothing about a future Ranked Derivation.
+- **`scrub_store(store) == []`** is asserted on a mixed root, but scrub only proves
+  integrity for commitment-claiming directories it discovers, per F6's recorded limit.
+
+### Remaining caller and private-seam influence
+
+- Mutating the closure-owned `_Issuance` fields that *are* the authority —
+  `attempt_id`, `document_preimage`, and `request_body` together and consistently — would
+  redirect what is sent and what a Capture cites. No in-process defense exists against
+  that: `gc.get_referrers` plus `object.__setattr__` reaches any closure state in the same
+  interpreter. RANK-02 raises the cost from "flip one visible flag" to "coherently rewrite
+  the closure's committed identity, preimage, and bytes"; it does not claim same-process
+  immunity, and this report should not be read as claiming it.
+- `_run_gated_capture`, `_exchange`, `_issue_verified_attempt`, `_committed_attempt`,
+  `_commit_ranked_keywords_capture`, and `max_response_body_bytes` remain private module
+  seams used by the tests. The public `capture_...` function and the CLI expose none of
+  them; `test_public_surface_exposes_no_contract_widening_seam` and the CLI rejection tests
+  hold that line.
+- The Capture is committed to the `EvidenceStore` the *caller* passes to
+  `_commit_ranked_keywords_capture`, not to the closure-owned store. That is proved not to
+  allow re-parenting (the cited `attempt_id` stays closure-owned), but a private-seam
+  caller could still write the Capture into a different valid store. The public path never
+  does.
+
+### Architecture coupling and drift
+
+Deliberately Ranked-local and duplicated rather than shared: the gate closure, the
+one-shot scan, the endpoint rule, the authorization check, the frozen-Attempt revalidation,
+the credential-echo rule, and inspect. No generic provider runner, transport-capability
+framework, or shared gate base class was introduced, per the ticket and F13. The only reuse
+is the accepted substrate: PF-09 `perform_bounded_http_exchange`, `EvidenceStore`,
+`DataForSEOCredentials`, and the shared `HTTP_HEADERS` / `HTTP_PROVIDER` constants.
+
+`capture_event.py` gained a seventh HTTP-v2 adapter branch. Its four `elif` dispatch chains
+(recognized adapter, fingerprint, Attempt, Capture) are now visibly repetitive. That is
+drift pressure worth naming, not something to refactor inside this ticket: collapsing them
+into a registry would touch every accepted adapter's published bytes path.
+
+**Adjacent finding, deliberately not fixed (outside the allowlist):**
+`_RELATED_KEYWORDS_RE` and `_PAID_KEYWORD_RE` in `capture_event.py` are anchored with
+`^...$`. In Python, `$` also matches immediately before a trailing newline, so those
+validators accept a seed keyword ending in `\n`. The new Ranked target restriction uses
+`\A...\Z` and rejects it (proved for `"example.com\n"`, `"\r"`, `"\t"`, and a leading
+newline). Whether the sibling validators should be re-anchored is a Steward decision; it
+would change no existing accepted vector, since no accepted vector contains a newline.
+
+### Provider assumptions still unproved without real Evidence
+
+Everything about the *response* remains claimed contract only. Specifically unproved:
+that the endpoint accepts this exact task shape at all; that `historical_serp_mode=all`
+returns live and lost items distinguishably in one payload; that `load_rank_absolute=true`
+actually produces `metrics_absolute`; that requesting five item types changes returned
+ordering as documented; that `limit=100` returns at most 100 items and prices at the
+published `$0.012 + 100 × $0.00012 ≈ $0.024`; that the response fits under 32 MiB; that
+`ai_overview_reference` rows exist for any real target; and that the provider echoes the
+requested `target` unmodified. No test asserts `is_lost`, movement, rank semantics,
+`keyword_data`, metrics, AI Overview reference structure, provider counts, or cost as
+truth. The 50,000 micro-USD ceiling is an Observatory fail-closed operator acknowledgement,
+not a provider-enforced cap or an invoice claim.
+
+### The two-label grammar versus provider authority
+
+The Observatory two-label ASCII domain restriction is **strictly stronger than** provider
+authority: DataForSEO documents `target` as domain, subdomain, **or** webpage with
+materially different parsing. Observatory refuses everything except exactly two lowercase
+ASCII DNS-style labels, with no `www` first label and no `xn--` label, and refuses rather
+than normalizes. It is named and documented as an Observatory restriction, never as
+registrable-domain or public-suffix validation, and the provisional 253-character whole-name
+cap was dropped as redundant (two 63-character labels plus a dot reach only 127).
+
+Subjects this deliberately excludes and which need a separately reviewed contract:
+subdomains (`blog.example.com`), exact-page URLs, multi-label public-suffix registrable
+domains (`example.co.uk`, `example.com.au`), internationalized/punycode domains
+(`xn--fsq.com`), single-label hosts, IP literals, and any `www.`-prefixed form. It also
+accepts strings that are two ASCII labels but not real registrable domains — `a.co` is
+accepted, and so is a nonexistent TLD. The restriction bounds *ambiguity of the provider
+subject*, not existence; an unregistered or nonexistent domain would simply be a provider
+answer, preserved as Evidence.
+
+### Deferred work and why it stays deferred
+
+- Ranked Keywords parser, Conformance fixture, Derivation Recipe, typed Observations,
+  schema/migration, Recipe selection, history/Outcomes/Holdings API: deferred by D11/D12 —
+  none may be designed before the first real Evidence is inspected.
+- The live activation ticket (fresh pricing recheck, exact fresh Evidence root, explicit
+  [CHAZ] one-shot authorization, F6 protection sequence): a separate reviewed boundary.
+- Second-page/offset/continuation, subdomain and exact-page targets, `historical_serp_mode`
+  live/lost split probes, other locales, and clickstream: separate adapter contracts under
+  D12, not options on this one.
+- F13 hardening of the Search Mentions gate: untouched. This adapter was born hardened, which
+  per the F13 current-state note does not fire the trigger.
+- F12 recurring acquisition and F3 broad rollout: unfired.
+- Registry-style collapse of the four `capture_event.py` adapter dispatch chains: named
+  above as drift pressure, deliberately not attempted inside a bounded probe ticket.
+
+### What later surfaces should reuse, and what should stay duplicated
+
+Reuse: the two-list closure consumption pattern (`live`/`spent` plus a record flag), the
+fail-closed one-shot scan built on `list_commitment_claiming_directories` +
+`verify_attempt_directory`, and the `gc.get_referrers` hostile-test technique for proving
+closure authority without publishing a seam. Keep duplicated: each adapter's frozen request
+vector, closed validators, endpoint rule, authorization constant, and inspect — these are
+the parts whose independence makes each adapter's published bytes separately reviewable.
+
+### Explicit confirmations
+
+- **Zero provider calls.** No DataForSEO request of any kind was made — not Ranked
+  Keywords, not Sandbox, not account/Status/Locations/Languages/pricing.
+- **Zero real provider credential use.** Tests use sentinel strings only
+  (`sentinel-login-rank02-pp33` / `sentinel-password-rank02-qq44`); the credential env vars
+  are deleted by an autouse fixture.
+- **Zero spend.**
+- **Zero live Evidence.** Only `tmp_path` stores were created. No existing or protected
+  Evidence root was read or mutated.
+- **No parser, Conformance fixture, Recipe, Derivation, schema/migration, PostgreSQL
+  production, selection, API, Outcomes/Holdings, or Strategy work.** The only PostgreSQL
+  contact is the allowed read-only compatibility regression against the disposable test
+  fixture.
+- **No amend. No push.** One commit on `main`, local only.

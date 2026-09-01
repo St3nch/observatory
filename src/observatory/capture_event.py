@@ -152,6 +152,41 @@ _RELATED_KEYWORDS_MAX_WORDS: Final[int] = 10
 _RELATED_KEYWORDS_RE: Final[re.Pattern[str]] = re.compile(
     r"^[A-Za-z0-9](?:[A-Za-z0-9 &'()+,./:-]*[A-Za-z0-9])?$"
 )
+RANKED_KEYWORDS_ADAPTER_CONTRACT: Final[str] = (
+    "dataforseo-labs-google-ranked-keywords-live-paid-probe-v1"
+)
+RANKED_KEYWORDS_HOST: Final[str] = "api.dataforseo.com"
+RANKED_KEYWORDS_PATH: Final[str] = "/v3/dataforseo_labs/google/ranked_keywords/live"
+RANKED_KEYWORDS_AUTHORIZED_COST_MICRO_USD: Final[int] = 50000
+RANKED_KEYWORDS_POLICY: Final[dict[str, object]] = {
+    "max_authorized_cost_micro_usd": RANKED_KEYWORDS_AUTHORIZED_COST_MICRO_USD,
+    "mode": "paid_probe",
+    "policy_version": "dataforseo-labs-google-ranked-keywords-live-paid-probe-v1",
+    "pricing_basis": "dataforseo-labs-google-ranked-keywords-live-2026-09-01",
+}
+_RANKED_KEYWORDS_LIMIT: Final[int] = 100
+_RANKED_KEYWORDS_OFFSET: Final[int] = 0
+_RANKED_KEYWORDS_ORDER_BY: Final[str] = "ranked_serp_element.serp_item.rank_group,asc"
+_RANKED_KEYWORDS_HISTORICAL_SERP_MODE: Final[str] = "all"
+# Provider-significant order. Documentation states requested item-type array order affects
+# returned ordering, so this list is exact request testimony, not a set.
+_RANKED_KEYWORDS_ITEM_TYPES: Final[tuple[str, ...]] = (
+    "organic",
+    "paid",
+    "featured_snippet",
+    "local_pack",
+    "ai_overview_reference",
+)
+_RANKED_KEYWORDS_LABEL_MAX: Final[int] = 63
+_RANKED_KEYWORDS_PUNYCODE_PREFIX: Final[str] = "xn--"
+_RANKED_KEYWORDS_EXCLUDED_FIRST_LABEL: Final[str] = "www"
+# Observatory two-label ASCII domain restriction. This is deliberately narrower than the
+# provider's documented domain/subdomain/webpage `target` syntax and is NOT a public-suffix
+# list check, a registrable-domain parser, or a claim about DNS validity. It exists so the
+# first Ranked Keywords adapter cannot silently send an ambiguous provider subject.
+_RANKED_KEYWORDS_TWO_LABEL_RE: Final[re.Pattern[str]] = re.compile(
+    r"\A[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?\Z"
+)
 _ORGANIC_KEYWORD_OPERATORS: Final[tuple[str, ...]] = (
     "allinanchor:",
     "allintext:",
@@ -292,6 +327,22 @@ _RELATED_KEYWORDS_PARAMETER_KEYS: Final[frozenset[str]] = frozenset(
         "replace_with_core_keyword",
     }
 )
+_RANKED_KEYWORDS_PARAMETER_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "contract",
+        "historical_serp_mode",
+        "ignore_synonyms",
+        "include_clickstream_data",
+        "item_types",
+        "language_code",
+        "limit",
+        "load_rank_absolute",
+        "location_code",
+        "offset",
+        "order_by",
+        "target",
+    }
+)
 _TARGET_METRICS_PARAMETER_KEYS: Final[frozenset[str]] = frozenset(
     {
         "contract",
@@ -400,6 +451,15 @@ __all__ = [
     "HISTORICAL_ADAPTER_CONTRACT",
     "HISTORICAL_AUTHORIZED_COST_MICRO_USD",
     "ORGANIC_AUTHORIZED_COST_MICRO_USD",
+    "RANKED_KEYWORDS_ADAPTER_CONTRACT",
+    "RANKED_KEYWORDS_AUTHORIZED_COST_MICRO_USD",
+    "RANKED_KEYWORDS_HOST",
+    "RANKED_KEYWORDS_PATH",
+    "RANKED_KEYWORDS_POLICY",
+    "ranked_keywords_http_attempt_document",
+    "ranked_keywords_http_capture_document",
+    "ranked_keywords_http_fingerprint_document",
+    "ranked_keywords_http_request",
     "RELATED_KEYWORDS_ADAPTER_CONTRACT",
     "RELATED_KEYWORDS_AUTHORIZED_COST_MICRO_USD",
     "RELATED_KEYWORDS_HOST",
@@ -455,6 +515,8 @@ __all__ = [
     "validate_target_metrics_http_request",
     "validate_historical_http_parameters",
     "validate_historical_http_request",
+    "validate_ranked_keywords_http_parameters",
+    "validate_ranked_keywords_http_request",
     "validate_related_keywords_http_parameters",
     "validate_related_keywords_http_request",
     "validate_organic_http_parameters",
@@ -1441,6 +1503,129 @@ def validate_related_keywords_http_request(value: object) -> dict[str, object]:
     return document
 
 
+def ranked_keywords_http_request(*, body: bytes) -> dict[str, object]:
+    """Build the closed HTTP-v2 Ranked Keywords paid-probe request wrapping *body*."""
+
+    if len(body) < 1:
+        raise DocumentError("HTTP request body must be present_nonempty")
+    return _validate_ranked_keywords_http_request(
+        {
+            "body": {"body": body_ref(body), "state": "present_nonempty"},
+            "headers": [list(pair) for pair in HTTP_HEADERS],
+            "host": RANKED_KEYWORDS_HOST,
+            "method": "POST",
+            "path": RANKED_KEYWORDS_PATH,
+            "port": None,
+            "query": [],
+            "scheme": "https",
+        }
+    )
+
+
+def ranked_keywords_http_fingerprint_document(
+    *, request: Mapping[str, object]
+) -> dict[str, object]:
+    """Build the closed request-fingerprint preimage for the Ranked Keywords probe."""
+
+    return _validate_fingerprint(
+        {
+            "adapter_contract": RANKED_KEYWORDS_ADAPTER_CONTRACT,
+            "provider": HTTP_PROVIDER,
+            "request": dict(request),
+            "schema": "observatory.request-fingerprint",
+            "version": 2,
+        }
+    )
+
+
+def ranked_keywords_http_attempt_document(
+    *,
+    parameters: Mapping[str, object],
+    attempt_nonce: str,
+    authorized_at: str,
+    observatory_version: str,
+) -> dict[str, object]:
+    """Construct a closed Ranked Keywords paid HTTP-v2 Attempt."""
+
+    params = _validate_ranked_keywords_http_parameters(dict(parameters))
+    request = ranked_keywords_http_request(
+        body=_ranked_keywords_http_request_body_bytes(params)
+    )
+    fingerprint = ranked_keywords_http_fingerprint_document(request=request)
+    document: dict[str, object] = {
+        "adapter_contract": RANKED_KEYWORDS_ADAPTER_CONTRACT,
+        "attempt_nonce": attempt_nonce,
+        "authorized_at": authorized_at,
+        "parameters": params,
+        "policy": dict(RANKED_KEYWORDS_POLICY),
+        "provider": HTTP_PROVIDER,
+        "request": request,
+        "request_fingerprint": content_digest(canonical_json(fingerprint)),
+        "schema": "observatory.attempt-event",
+        "software": {"observatory_version": observatory_version},
+        "version": 2,
+    }
+    return _validate_attempt(document)
+
+
+def ranked_keywords_http_capture_document(
+    *,
+    attempt: Mapping[str, object],
+    request_started_at: str,
+    transport_ended_at: str,
+    transport_state: str,
+    response: Mapping[str, object] | None,
+    transport_failure: Mapping[str, object] | None,
+    response_headers_at: str | None,
+    response_body_ended_at: str | None,
+    observatory_version: str | None = None,
+) -> dict[str, object]:
+    """Construct a closed Ranked Keywords paid HTTP-v2 Capture."""
+
+    parent = validate_attempt(attempt)
+    software = (
+        {"observatory_version": observatory_version}
+        if observatory_version is not None
+        else dict(cast(Mapping[str, object], parent["software"]))
+    )
+    document: dict[str, object] = {
+        "adapter_contract": RANKED_KEYWORDS_ADAPTER_CONTRACT,
+        "attempt_id": content_digest(canonical_json(parent)),
+        "provider": HTTP_PROVIDER,
+        "request": parent["request"],
+        "request_fingerprint": parent["request_fingerprint"],
+        "request_started_at": request_started_at,
+        "response": None if response is None else dict(response),
+        "response_body_ended_at": response_body_ended_at,
+        "response_headers_at": response_headers_at,
+        "schema": "observatory.capture-event",
+        "software": software,
+        "transport_ended_at": transport_ended_at,
+        "transport_failure": None if transport_failure is None else dict(transport_failure),
+        "transport_state": transport_state,
+        "version": 2,
+    }
+    return _validate_capture(document, attempt=parent)
+
+
+def validate_ranked_keywords_http_parameters(value: object) -> dict[str, object]:
+    """Validate a closed HTTP-v2 Ranked Keywords paid-probe `parameters` document."""
+
+    parsed, original = _parse(value)
+    document = _validate_ranked_keywords_http_parameters(parsed)
+    _require_re_jcs(document, original)
+    return document
+
+
+def validate_ranked_keywords_http_request(value: object) -> dict[str, object]:
+    """Validate a closed HTTP-v2 Ranked Keywords paid-probe `request` object."""
+
+    parsed, original = _parse(value)
+    document = _validate_ranked_keywords_http_request(parsed)
+    _require_re_jcs(document, original)
+    return document
+
+
 def validate_historical_http_parameters(value: object) -> dict[str, object]:
     """Validate a closed HTTP-v2 Historical paid-probe `parameters` document."""
 
@@ -1920,6 +2105,26 @@ def _validate_related_keywords_http_request(value: object) -> dict[str, object]:
     return request
 
 
+def _validate_ranked_keywords_http_request(value: object) -> dict[str, object]:
+    request = _validate_request_shape(value)
+    _reject_request_credential_headers(request["headers"])
+    if (
+        request["method"] != "POST"
+        or request["scheme"] != "https"
+        or request["host"] != RANKED_KEYWORDS_HOST
+        or request["port"] is not None
+        or request["path"] != RANKED_KEYWORDS_PATH
+        or request["query"] != []
+        or request["headers"] != HTTP_HEADERS
+        or not isinstance(request["body"], Mapping)
+        or request["body"].get("state") != "present_nonempty"
+    ):
+        raise DocumentError(
+            "request does not match the Ranked Keywords HTTP adapter contract"
+        )
+    return request
+
+
 def _validate_parameters(value: object) -> dict[str, object]:
     obj = _object(value, "parameters")
     _reject_unknown(obj, _PARAMETER_KEYS, "parameters")
@@ -2394,6 +2599,137 @@ def _validate_related_keywords_http_parameters(value: object) -> dict[str, objec
     }
 
 
+def _ranked_keywords_http_task(parameters: Mapping[str, object]) -> dict[str, object]:
+    return {key: parameters[key] for key in parameters if key != "contract"}
+
+
+def _ranked_keywords_http_request_body_bytes(parameters: Mapping[str, object]) -> bytes:
+    return canonical_json([_ranked_keywords_http_task(parameters)])
+
+
+def _validate_ranked_keywords_target(value: object) -> str:
+    """Apply the Observatory two-label ASCII domain restriction to `target`.
+
+    This is Observatory-chosen acquisition policy for the first Ranked Keywords adapter.
+    It is not a public-suffix-list lookup, not registrable-domain validation, and not a
+    claimed provider limit: the provider documents domain, subdomain, and webpage `target`
+    syntax with materially different semantics. Rejected input is refused, never
+    normalized, lowercased, IDNA-encoded, or stripped of a scheme or `www.` prefix,
+    because any such repair would silently change the provider subject.
+    """
+
+    if not isinstance(value, str):
+        raise DocumentError("parameters.target must be a string")
+    if _RANKED_KEYWORDS_TWO_LABEL_RE.match(value) is None:
+        raise DocumentError(
+            "parameters.target is not an accepted Observatory two-label ASCII domain"
+        )
+    first, _, second = value.partition(".")
+    if len(first) > _RANKED_KEYWORDS_LABEL_MAX or len(second) > _RANKED_KEYWORDS_LABEL_MAX:
+        raise DocumentError("parameters.target labels must be 1..63 characters")
+    if first == _RANKED_KEYWORDS_EXCLUDED_FIRST_LABEL:
+        raise DocumentError("parameters.target must not use a www first label")
+    if first.startswith(_RANKED_KEYWORDS_PUNYCODE_PREFIX) or second.startswith(
+        _RANKED_KEYWORDS_PUNYCODE_PREFIX
+    ):
+        raise DocumentError("parameters.target must not use an ASCII punycode label")
+    return value
+
+
+def _validate_ranked_keywords_item_types(value: object) -> list[str]:
+    """Require the exact documented item-type list in exact order.
+
+    Provider documentation states requested array order affects returned ordering, so
+    membership equality is insufficient; the sequence itself is request testimony.
+    """
+
+    if not isinstance(value, list):
+        raise DocumentError("parameters.item_types must be a list")
+    if len(value) != len(_RANKED_KEYWORDS_ITEM_TYPES):
+        raise DocumentError("parameters.item_types must be the closed five item types")
+    for index, item in enumerate(value):
+        if not isinstance(item, str) or item != _RANKED_KEYWORDS_ITEM_TYPES[index]:
+            raise DocumentError(
+                "parameters.item_types is not the closed Ranked Keywords item-type order"
+            )
+    return list(_RANKED_KEYWORDS_ITEM_TYPES)
+
+
+def _validate_ranked_keywords_order_by(value: object) -> list[str]:
+    if not isinstance(value, list) or len(value) != 1:
+        raise DocumentError("parameters.order_by must be exactly one ordering rule")
+    rule = value[0]
+    if not isinstance(rule, str) or rule != _RANKED_KEYWORDS_ORDER_BY:
+        raise DocumentError("parameters.order_by is not the closed Ranked Keywords order")
+    return [rule]
+
+
+def _validate_ranked_keywords_http_parameters(value: object) -> dict[str, object]:
+    obj = _object(value, "parameters")
+    _reject_unknown(obj, _RANKED_KEYWORDS_PARAMETER_KEYS, "parameters")
+    contract = _exact_string(
+        _require(obj, "contract", "parameters"),
+        RANKED_KEYWORDS_ADAPTER_CONTRACT,
+        "parameters.contract",
+    )
+    target = _validate_ranked_keywords_target(_require(obj, "target", "parameters"))
+    location_code = _json_int(
+        _require(obj, "location_code", "parameters"),
+        "parameters.location_code",
+    )
+    if location_code != 2840:
+        raise DocumentError("parameters.location_code must be exactly 2840")
+    language_code = _exact_string(
+        _require(obj, "language_code", "parameters"),
+        "en",
+        "parameters.language_code",
+    )
+    ignore_synonyms = _exact_bool(
+        _require(obj, "ignore_synonyms", "parameters"),
+        False,
+        "parameters.ignore_synonyms",
+    )
+    item_types = _validate_ranked_keywords_item_types(
+        _require(obj, "item_types", "parameters")
+    )
+    include_clickstream_data = _exact_bool(
+        _require(obj, "include_clickstream_data", "parameters"),
+        False,
+        "parameters.include_clickstream_data",
+    )
+    limit = _json_int(_require(obj, "limit", "parameters"), "parameters.limit")
+    if limit != _RANKED_KEYWORDS_LIMIT:
+        raise DocumentError("parameters.limit must be exactly 100")
+    offset = _json_int(_require(obj, "offset", "parameters"), "parameters.offset")
+    if offset != _RANKED_KEYWORDS_OFFSET:
+        raise DocumentError("parameters.offset must be exactly 0")
+    load_rank_absolute = _exact_bool(
+        _require(obj, "load_rank_absolute", "parameters"),
+        True,
+        "parameters.load_rank_absolute",
+    )
+    historical_serp_mode = _exact_string(
+        _require(obj, "historical_serp_mode", "parameters"),
+        _RANKED_KEYWORDS_HISTORICAL_SERP_MODE,
+        "parameters.historical_serp_mode",
+    )
+    order_by = _validate_ranked_keywords_order_by(_require(obj, "order_by", "parameters"))
+    return {
+        "contract": contract,
+        "historical_serp_mode": historical_serp_mode,
+        "ignore_synonyms": ignore_synonyms,
+        "include_clickstream_data": include_clickstream_data,
+        "item_types": item_types,
+        "language_code": language_code,
+        "limit": limit,
+        "load_rank_absolute": load_rank_absolute,
+        "location_code": location_code,
+        "offset": offset,
+        "order_by": order_by,
+        "target": target,
+    }
+
+
 def _validate_organic_http_parameters(value: object) -> dict[str, object]:
     obj = _object(value, "parameters")
     _reject_unknown(obj, _ORGANIC_PARAMETER_KEYS, "parameters")
@@ -2697,6 +3033,34 @@ def _validate_related_keywords_http_policy(value: object) -> dict[str, object]:
     }
 
 
+def _validate_ranked_keywords_http_policy(value: object) -> dict[str, object]:
+    obj = _object(value, "policy")
+    _reject_unknown(obj, _PAID_POLICY_KEYS, "policy")
+    cost = _json_int(
+        _require(obj, "max_authorized_cost_micro_usd", "policy"),
+        "policy.max_authorized_cost_micro_usd",
+    )
+    if cost != RANKED_KEYWORDS_AUTHORIZED_COST_MICRO_USD:
+        raise DocumentError("policy.max_authorized_cost_micro_usd must be exactly 50000")
+    mode = _exact_string(_require(obj, "mode", "policy"), "paid_probe", "policy.mode")
+    policy_version = _exact_string(
+        _require(obj, "policy_version", "policy"),
+        "dataforseo-labs-google-ranked-keywords-live-paid-probe-v1",
+        "policy.policy_version",
+    )
+    pricing_basis = _exact_string(
+        _require(obj, "pricing_basis", "policy"),
+        "dataforseo-labs-google-ranked-keywords-live-2026-09-01",
+        "policy.pricing_basis",
+    )
+    return {
+        "max_authorized_cost_micro_usd": cost,
+        "mode": mode,
+        "policy_version": policy_version,
+        "pricing_basis": pricing_basis,
+    }
+
+
 def _recognized_http_v2_adapter(value: object, name: str) -> str:
     if value == HTTP_ADAPTER_CONTRACT:
         return HTTP_ADAPTER_CONTRACT
@@ -2712,6 +3076,8 @@ def _recognized_http_v2_adapter(value: object, name: str) -> str:
         return HISTORICAL_ADAPTER_CONTRACT
     if value == RELATED_KEYWORDS_ADAPTER_CONTRACT:
         return RELATED_KEYWORDS_ADAPTER_CONTRACT
+    if value == RANKED_KEYWORDS_ADAPTER_CONTRACT:
+        return RANKED_KEYWORDS_ADAPTER_CONTRACT
     raise DocumentError(f"{name} adapter_contract is not a recognized event-v2 adapter")
 
 
@@ -2802,6 +3168,8 @@ def _validate_fingerprint_v2(obj: Mapping[str, object]) -> dict[str, object]:
         request = _validate_historical_http_request(raw_request)
     elif adapter == RELATED_KEYWORDS_ADAPTER_CONTRACT:
         request = _validate_related_keywords_http_request(raw_request)
+    elif adapter == RANKED_KEYWORDS_ADAPTER_CONTRACT:
+        request = _validate_ranked_keywords_http_request(raw_request)
     else:
         request = _validate_http_request(raw_request)
     return {
@@ -2975,6 +3343,11 @@ def _validate_attempt_v2(obj: Mapping[str, object]) -> dict[str, object]:
         parameters = _validate_related_keywords_http_parameters(raw_parameters)
         policy = _validate_related_keywords_http_policy(raw_policy)
         encoded_body = _related_keywords_http_request_body_bytes(parameters)
+    elif adapter == RANKED_KEYWORDS_ADAPTER_CONTRACT:
+        request = _validate_ranked_keywords_http_request(raw_request)
+        parameters = _validate_ranked_keywords_http_parameters(raw_parameters)
+        policy = _validate_ranked_keywords_http_policy(raw_policy)
+        encoded_body = _ranked_keywords_http_request_body_bytes(parameters)
     else:
         request = _validate_http_request(raw_request)
         parameters = _validate_http_parameters(raw_parameters)
@@ -3392,6 +3765,8 @@ def _validate_capture_v2(
         request = _validate_historical_http_request(raw_request)
     elif adapter == RELATED_KEYWORDS_ADAPTER_CONTRACT:
         request = _validate_related_keywords_http_request(raw_request)
+    elif adapter == RANKED_KEYWORDS_ADAPTER_CONTRACT:
+        request = _validate_ranked_keywords_http_request(raw_request)
     else:
         request = _validate_http_request(raw_request)
     request_fingerprint = _hex64(
