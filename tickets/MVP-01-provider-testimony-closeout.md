@@ -169,6 +169,38 @@ fixtures may be used for detailed read-only analysis only after byte identity wi
 accepted body hashes is independently confirmed; the fixtures do not become Evidence
 authority.
 
+## Seven-surface Evidence/fixture identity gate — accepted 2026-09-01
+
+After the legacy restore proof above, [CHAZ] independently compared each verify-first inspected
+provider body to its repository Conformance fixture. The three restored legacy bodies were
+byte-identical to their fixtures. The four currently local protected Evidence roots first
+opened as `format-2 ok` and scrubbed without reported failure; their exact accepted Captures
+were then inspected and compared byte-for-byte to their fixtures.
+
+All seven comparisons passed:
+
+- PF-03 Keyword Overview — 26,270 bytes, SHA-256
+  `d91fdc7ab8acf429f0ff9c00bd7cdb725be1ba9585481af35d14f7c4e79a6d1c`;
+- PF-10 Google Organic — 135,722 bytes, SHA-256
+  `7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f`;
+- AI-03 Search Mentions — 48,466 bytes, SHA-256
+  `8b3cd0fb0c9fa23c102696bfe6b7212396c0f7c110e9ca8ca5b8ee5af182e80a`;
+- AI-09 Target Metrics — 1,775 bytes, SHA-256
+  `7b6974704f73cff9687986a83ab14ba8ec942ccdbfde359ec7e8fde6bea8eee2`;
+- AI-14 Historical LLM Mentions — 5,246 bytes, SHA-256
+  `4419daf0b7076625129ab18c6bf3c83905b998c3b3332f2ba6d42c8879b50781`;
+- RK-02 Related Keywords — 177,120 bytes, SHA-256
+  `e128f2f81d51479237f1bd7e51feee3dfffcae4596558ebff67365f03cd1decb`;
+- RANK-03 Ranked Keywords — 390,955 bytes, SHA-256
+  `5b0e7cb6a03a921039a2845c62bd6a91eba9d61e2b54240e9af15414ba1fbc84`.
+
+`MVP01_ALL_7_EVIDENCE_FIXTURES: PASS` is accepted. This establishes that detailed semantic
+review may read the repository Conformance fixtures as exact copies of the already-verified
+provider bodies while Evidence remains the authority. It does not make fixtures authority,
+authorize provider transport, or prove that Observatory's interpretation of those bytes is
+correct; the per-surface fidelity passes below must still trace body → parser → Recipe /
+Derivation → typed persistence → API.
+
 ## Closure
 
 <!-- Project Steward fills after all seven passes and any earned remediation are complete. -->
