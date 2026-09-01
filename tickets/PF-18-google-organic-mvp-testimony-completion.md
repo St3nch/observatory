@@ -1,12 +1,13 @@
 # PF-18 — Google Organic MVP testimony completion
 
-**Status:** reconciled — ready for explicit implementation authorization  
+**Status:** implementation authorized  
 **Kind:** provider fidelity remediation  
 **Triggered by:** MVP-01 Class 4 Google Organic finding  
-**Blocked by:** [CHAZ] Writer designation and explicit implementation authorization  
-**Approved by:** Project Steward as implementation contract; implementation not yet authorized  
+**Blocked by:** none for the bounded PF-18 implementation  
+**Approved by:** [CHAZ] for bounded implementation on 2026-09-01  
 **Draft base:** `0465a5b6e3bb9c4e56aa613f5d61581620e46096`  
-**Implementation Writer:** not yet designated by [CHAZ]  
+**Implementation start:** `404d3bebce3755c33989e10fe63559bd8ac89616`  
+**Implementation Writer:** [CLAUDE]  
 
 ## Why this ticket exists
 
