@@ -1,6 +1,6 @@
 # RK-04 — DataForSEO Google Related Keywords Derivation Recipe and typed persistence
 
-**Status:** review — [CLAUDE] implementation complete; awaiting [GPT] Steward review and [CHAZ] closure  
+**Status:** closed — [GPT] Steward accepted after independent Grok `READY` and [CHAZ] full-suite approval on 2026-09-01  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
 **Blocked by:** none inside RK-04; implementation remains bounded to the accepted allowlist and no-network/provider boundary  
 **Draft base:** `1739147fadf5b666608d82cfa73b159781c323ea`  
@@ -1125,3 +1125,49 @@ credentials were read. The protected RK-02 Evidence root was never opened — te
 committed Conformance fixture and Evidence stores created under `tmp_path`. PostgreSQL use was
 limited to per-test disposable databases. No schema, Recipe, parser, or `capture_event` change.
 Nothing was amended and nothing was pushed.
+
+## Steward closure — 2026-09-01
+
+RK-04 is accepted and closed.
+
+Closure lineage:
+
+- accepted semantic contract: `fecc743a61ba36d87952d3184433f4be90b68bf8`;
+- authorization-only implementation base: `9eee309bda9111f6a6446189ac2bbb1a050574f6`;
+- [CLAUDE] implementation commit: `af83742a34b30b7cb1041d60ce8c2ed44ade3295`;
+- [CLAUDE] bounded remediation child: `ec3a60c1b2067e5e445df78cd6a55ccca8a778b0`.
+
+The Steward independently reviewed the implementation, found one bounded canonical-I-JSON
+noncharacter fail-closed defect plus one missing foreign-Attempt complete-set regression, and
+required remediation without changing Recipe identity or schema. The remediation child was
+then independently rechecked against its exact parent and accepted as clean.
+
+A fresh independent Grok implementation review of exact final HEAD
+`ec3a60c1b2067e5e445df78cd6a55ccca8a778b0` returned **`READY`** with no correctness blocker,
+no Product question, and no required additional Writer pass before closure validation. That
+review independently checked the three-kind semantic model, Evidence/Attempt authority chain,
+field-state and clock fidelity, twelve-relation schema, duplicate/occurrence semantics,
+complete-set and atomicity behavior, Unicode/JCS remediation, migration layering, frozen
+`81 + 972 + 477 = 1530` fixture grain, and the inherited mypy baseline.
+
+[CHAZ] supplied the final full-suite closure gate on exact HEAD
+`ec3a60c1b2067e5e445df78cd6a55ccca8a778b0`:
+
+    uv run pytest -q
+
+Result:
+
+    1910 passed, 1 skipped, 1 warning in 589.09s (0:09:49)
+
+The sole warning is the pre-existing Starlette/httpx deprecation from
+`.venv/lib/python3.12/site-packages/fastapi/testclient.py`; it is non-blocking for RK-04.
+[CHAZ] then explicitly approved closure.
+
+Writer verification remains recorded above: RK parser + derive suites green after remediation,
+Ruff clean, targeted mypy clean, and full configured mypy unchanged at the inherited **14
+errors in the same five unrelated files**. Grok independently confirmed that mypy baseline at
+the final reviewed HEAD. RK-04 adds no known typecheck regression.
+
+No additional provider request, credential use, protected-Evidence access, API/RK-05 work,
+Ranked Keywords work, Strategy work, schema change, Recipe change, amend, or push is part of
+this closure. RK-05 remains the next Related Keywords boundary.
