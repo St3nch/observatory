@@ -1,11 +1,13 @@
 # RK-05 — DataForSEO Google Related Keywords Recipe selection and admitted-history API
 
-**Status:** reconciled — final pre-implementation contract; awaiting explicit [CHAZ] implementation authorization  
+**Status:** implementation authorized — [CHAZ] explicitly authorized [CLAUDE] implementation from exact reconciled-ticket HEAD `ab42c0df1196fac8769eb272928da5ae0baf802a`  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
 **Blocked by:** none; RK-04 closed  
 **Draft base:** `be194e99573d6c6f8a9ecb12d23d35c563bce446`  
 **Pre-implementation reviewer:** [GROK] independent read-only code-first review  
 **Pre-implementation review result:** `RECONCILE` at exact review HEAD `e70d94b55cb2295f6fc5e6928859678137033e6b`  
+**Reconciled contract HEAD:** `ab42c0df1196fac8769eb272928da5ae0baf802a`  
+**Implementation authorization:** [CHAZ] explicitly authorized the reconciled RK-05 contract; this ticket-only authorization record authorizes no provider call, credentials, Evidence mutation, schema/Recipe/Derivation work, Outcomes/Holdings work, Ranked work, Strategy work, amend, or push  
 **Product direction:** complete the bounded Related Keywords MVP vertical slice without another provider call  
 
 ## Purpose
