@@ -1,6 +1,6 @@
 # RANK-06 — DataForSEO Google Ranked Keywords Recipe selection and admitted-history API
 
-**Status:** AUTHORIZED — [CLAUDE] Writer may implement the reconciled RANK-06 contract  
+**Status:** review — [CLAUDE] Writer implementation complete; awaiting [GPT] Steward review and [CHAZ] full-suite integration validation  
 **Owner:** [GPT] Steward review / [CLAUDE] designated and implementation-authorized Writer  
 **Blocked by:** none; RANK-05 closed  
 **Draft base:** `512525f78c20e49eb096b8ab98c0ed4ad2d64df0`  
@@ -8,6 +8,7 @@
 **Pre-implementation reviewer:** [GROK] independent read-only code-first review  
 **Pre-implementation recommendation:** `RECONCILE`; no Product question identified  
 **Implementation authorization base:** `659a93d4d58ed5090574fe309c4be46cf005a1c5`  
+**Implementation start SHA:** `dcbe91365d89e18d171ea929e3b7dd1595b1d261` — branch `main`, clean working tree, verified before any edit; the implementation commit is a direct child of this SHA  
 **[CHAZ] implementation authority:** [CLAUDE] may implement this reconciled ticket; no provider calls, credentials, Evidence mutation, spend, amend, or push  
 **Provider authority:** zero calls, zero spend, zero credentials, zero Evidence mutation; existing RANK-03 Evidence / RANK-04 Conformance fixture / RANK-05 rebuildable state only  
 
@@ -847,6 +848,137 @@ The question-resolution gate is therefore complete for RANK-06. Implementation r
 blocked until [CHAZ] separately designates the Writer and explicitly authorizes implementation
 from the exact clean reconciled-ticket HEAD. That authorization still grants no provider call,
 credentials, Evidence mutation, spend, amend, or push.
+
+## Implementation record — Writer lane
+
+[CHAZ] explicitly authorized [CLAUDE] to implement this reconciled ticket from
+`dcbe91365d89e18d171ea929e3b7dd1595b1d261`. The starting gate was verified before any edit:
+branch `main`, HEAD exactly that SHA, clean working tree. No authorization-only commit was
+made; the single implementation commit is a direct child of `dcbe913`.
+
+### Changed paths
+
+- `src/observatory/ranked_keywords_read.py` — new. Ranked-local typed models, applicable
+  state domains, complete-set verification, and the dedicated outer envelope.
+- `src/observatory/api.py` — Ranked history route, response-model import, and the exact
+  Ranked adapter added to `_PROVIDER_ATTEMPT_ADAPTERS`. No other route changed.
+- `tests/test_api_ranked_keywords.py` — new; 235 tests.
+- this ticket — Writer status and implementation report only.
+
+Nothing else was touched. `provider_history.py`, `provider_recipe_selection.py`,
+`google_ranked_keywords_derive.py`, `dataforseo_google_ranked_keywords.py`, `migrate.py`,
+the RANK-04 fixture bytes, `provider_outcomes.py`, `provider_holdings.py`, and every sibling
+provider reader are byte-identical to the start commit. No schema or migration changed, so
+no `PRE_*` migration baseline moved and no sibling test module needed a retarget.
+`tests/test_api_attempts.py` and `tests/test_provider_recipe_selection.py` were **not**
+edited: neither asserts an exhaustive route, path, or adapter set, and the Attempt-audit and
+selection-isolation proofs live in the new Ranked module.
+
+### Reconciled defects, as implemented
+
+1. **Verified subject authority.** Every semantic parent's stored `requested_target` is
+   compared to the verified Attempt target first, and identity is recomputed with
+   `observation_identity(..., RANKED_KEYWORDS_RECIPE)` from that verified target plus the
+   row's remaining axes. Rewriting a row's stored target *and* its identity together stays
+   internally consistent and is still 409.
+2. **Reverse subject-membership probe.** Distinct Capture ids carrying the queried
+   `requested_target` are collected from `ranked_keywords_corpus_metrics`,
+   `_ranked_results`, `_keyword_data`, and `_monthly_search_volume` and required to equal the
+   context-anchored candidate set before sorting or limiting. Deleting only the result-context
+   row is 409 rather than silent shrinkage of `total_matching`.
+3. **Envelope provenance.** Envelope `attempt_id`, `provider`, `adapter_contract`, and kind
+   are checked explicitly, with a duplicate-key guard. No foreign key constrains those columns.
+4. **Exact-one Capture Outcome.** A separate probe over `(Recipe v1, capture_id)` requires
+   exactly one row citing the verified Attempt. `outcomes_identity` is unique per Attempt, so
+   a second Outcome for the same Capture under a foreign Attempt is legal SQL and is proved
+   to fail.
+5. **Rank-group converse.** The schema CHECK constrains only the rank-absolute direction, so
+   the reader additionally requires `count_state = stated` and ETV/cost in
+   `stated|json_null|absent` under `rank_group`.
+6. **`se_type`.** Every stated `*_se_type` and every occurrence `item_se_type` must be
+   exactly `google`; the occurrence column has no SQL enum CHECK.
+7. **Stated-empty monthly series.** The monthly-to-keyword-data rule is one-way; a stated
+   `monthly_searches: []` yielding zero monthly facts reads normally.
+8. **Local outer-key closure.** A module-local twelve-key `RANKED_OUTER_HISTORY_KEYS` set is
+   asserted before model validation, preserving the guard the shared helper provides without
+   renaming the published `requested_keyword` contract.
+9. **Keyword-first presentation.** `ranked_results` presents by keyword, SERP item type, then
+   both rank axes, and a test proves the result differs from the frozen provider
+   `order_by=rank_group,asc`.
+10. **Attempt-audit behavior change.** Ranked in `_PROVIDER_ATTEMPT_ADAPTERS` moves a Ranked
+    Attempt from the fixture fall-through to the generic provider reader; with no selection
+    and no pin that is now 503 `provider_recipe_not_selected`. Selected and pinned success are
+    both proved.
+
+### Response shape
+
+One Capture document exposes verified request testimony, the admitted Capture Outcome,
+provider result context, and five sibling collections: `corpus_metrics[]`, `ranked_results[]`,
+`keyword_data[]`, `monthly_search_volume[]`, and `item_occurrences[]`. Monthly occurrences
+nest under their monthly fact; the returned-item bridge stays a sibling because one provider
+item names two semantic parents. `ranked_element` and `serp_item` are separate source-local
+objects, and `rank_changes`, `rank_info`, and `search_volume_trend` each expose their
+enclosing state beside their persisted members so the `inapplicable` coupling is visible.
+
+### Verification
+
+- `uv run pytest -q tests/test_api_ranked_keywords.py` — **235 passed, 1 warning** in
+  325.82s.
+- `uv run pytest -q tests/test_api.py tests/test_api_attempts.py
+  tests/test_api_related_keywords.py tests/test_provider_recipe_selection.py
+  tests/test_dataforseo_google_ranked_keywords_derive.py` — **320 passed, 1 warning** in
+  305.08s.
+- `uv run ruff check .` — all checks passed.
+- `uv run mypy` — **14 errors in 5 files (checked 96 source files)**, message-for-message and
+  file-for-file identical to the `dcbe913` baseline of 14 errors in 5 files across 94 files.
+  Zero new errors; only the checked-file count moved 94 → 96 for the two new modules. No
+  inherited error was repaired.
+
+The single warning in both runs is the inherited Starlette `TestClient`/`httpx` deprecation.
+
+The golden proof derives the frozen RANK-04 Conformance fixture on disposable PostgreSQL and
+compares the served document to an expected value built by this module's own projector, which
+discovers relations and columns from `information_schema` rather than from the reader's
+tuples. It confirms 10 corpus + 100 ranked results + 100 keyword-data + 1200 monthly = 1410
+Observation envelopes, 100 returned-item occurrences, 1200 monthly occurrences, provider
+`items_count=100` against `total_count=248`, request `limit=100`/`offset=0`, 57 unique URLs
+across 100 distinct placements, and the 248-versus-244 organic rank-system disagreement, none
+of which is encoded as a production invariant.
+
+### Candid assessment
+
+**Strongest parts.** The independent projector is the load-bearing proof: it is built from
+schema testimony and hard-coded grouping rules, so a shared bug between it and the reader is
+unlikely to manufacture a green. The state-domain enumeration and the two reconciled
+membership defects (verified-target anchoring, reverse subject probe) each have a dedicated
+adversarial test that fails without the corresponding guard.
+
+**Weakest parts.** (a) The reverse subject-membership probe closes the single-row context
+deletion, but the disclosed residual limit stands: deleting the context row *and* all four
+subject-bearing parent families leaves no subject-bearing row from which an exact-subject
+route could discover the Capture. That is the deferred Ranked Outcomes/Holdings boundary, not
+a RANK-06 defect. (b) The probe adds four unindexed `requested_target` scans per read; that is
+the same low-volume bridge posture D14 already accepts, and it will need an index before
+F12-scale volume. (c) `items_count == occurrence cardinality` rests entirely on the RANK-04
+parser rejecting `items_count != len(items)`; unlike Related Keywords there is no persisted
+`derived_returned_item_count` second witness, so a future parser change would silently break
+that equality's justification. (d) The `parent[0] != "stated"` monthly guard is unreachable in
+practice because the child-presence check fires first; it is retained as a cheap defense.
+
+**Deliberate duplication.** The ~25 lines of outer list math duplicated from
+`provider_history.history_list_response` are intentional. Ranked is the first non-keyword
+subject; if a third arrives, that helper should gain a subject-name parameter rather than
+accumulate a third local copy.
+
+**No false-green risk found in the URL test.** `test_url_is_content_not_identity` deliberately
+asserts a 200: rewriting a stored URL changes no identity and the reader cannot detect it.
+Same-identity URL contradiction is a RANK-05 derive-time whole-unit rejection and cross-Capture
+URL comparison is downstream analysis; neither is a read-time check. The test documents that
+boundary rather than pretending to enforce one.
+
+No provider call, credential access, public-network activity, Evidence mutation, fixture
+change, schema change, pagination, second acquisition, clickstream enablement, Measurement
+Outcomes, Holdings, Strategy behavior, amend, rebase, or push was performed.
 
 ## Explicit out of scope
 
