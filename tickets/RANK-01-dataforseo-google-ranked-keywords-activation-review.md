@@ -1,6 +1,6 @@
 # RANK-01 — DataForSEO Google Ranked Keywords activation review
 
-**Status:** provisional review — awaiting independent [GROK] read-only code-first/provider-contract review  
+**Status:** reconciliation — independent [GROK] review returned `RECONCILE`; technical contract is locked below, awaiting [CHAZ] Product target and Evidence-retention choices  
 **Owner:** [GPT] Steward reconciliation / [GROK] technical review  
 **Blocked by:** none; Related Keywords RK-01 through RK-05 are closed  
 **Draft base:** `0bb93ba49464a098088b138efebc5e593c53de4f`  
@@ -200,3 +200,198 @@ current provider documentation. If the review is reconciled, [GPT] will revise t
 cut the next bounded implementation/probe ticket and commit that accepted boundary. A real
 provider call remains a later, separately explicit [CHAZ] authorization after implementation,
 fresh pricing/contract recheck, and the accepted Evidence-protection sequence.
+
+## Steward reconciliation — 2026-09-01
+
+Independent [GROK] read-only review of exact HEAD
+`4172b55e6bbdae6121d94c8ca4730abccc2f857e` returned **`RECONCILE`**. The Steward
+independently rechecked the material findings against current official Ranked Keywords
+documentation/pricing and current repository authority/code. The technical findings below are
+accepted and supersede provisional alternatives elsewhere in this ticket. Two Product choices
+remain for [CHAZ] before the first probe implementation ticket is cut: the exact domain target
+and the explicit Evidence-retention acknowledgement described below.
+
+### Accepted first-probe contract shape
+
+The intended first adapter remains one bounded Live single-exchange contract:
+
+    dataforseo-labs-google-ranked-keywords-live-paid-probe-v1
+
+against:
+
+    POST /v3/dataforseo_labs/google/ranked_keywords/live
+
+The future request must contain exactly one task with this closed shape, except for the exact
+[CHAZ]-chosen domain string:
+
+    {
+      "target": "<CHAZ-chosen registrable domain>",
+      "location_code": 2840,
+      "language_code": "en",
+      "ignore_synonyms": false,
+      "item_types": [
+        "organic",
+        "paid",
+        "featured_snippet",
+        "local_pack",
+        "ai_overview_reference"
+      ],
+      "include_clickstream_data": false,
+      "limit": 100,
+      "offset": 0,
+      "load_rank_absolute": true,
+      "historical_serp_mode": "all",
+      "order_by": ["ranked_serp_element.serp_item.rank_group,asc"]
+    }
+
+No filters, `tag`, location/language names, caller-supplied ordering, caller-supplied item-type
+order, or additional task keys belong to this first contract.
+
+The target grammar is deliberately **domain-only** for the first Capture: one registrable
+domain string with no scheme, no `www.`, no path, query, fragment, port, credentials, or
+subdomain form. Current provider documentation explicitly states that domain/subdomain and
+webpage forms are parsed differently and that a webpage-looking value without `https://` or
+`www.` is treated as a domain request. The adapter must reject ambiguous/foreign forms rather
+than normalize them into a different provider subject. Exact-page and subdomain requests are
+later contracts, not aliases for this one.
+
+Location and language are mandatory in the closed request. Current provider documentation
+states that omitting them requests all available locations/languages, which is materially
+different testimony rather than a harmless provider default.
+
+`historical_serp_mode="all"` is selected because it is the richest documented one-call mode:
+the provider claims it returns both currently ranking and previously-ranking-but-lost keyword
+sets. This does **not** establish that the first returned page will contain a lost item. A
+second `lost`-only call is not currently justified. It becomes a D12 candidate only if the
+accepted first Evidence indicates a lost population while the returned prefix contains no
+item-level lost testimony and therefore does not reveal the lost-item shape.
+
+All five documented result types are requested with `organic` first. Current documentation
+states that when non-organic types are requested, returned ordering depends on the first item
+type in the array. Array order is therefore request/sample testimony, not cosmetic ordering.
+The first page may still be heavily organic-biased; absence of a rare requested type from the
+100 returned rows is not absence from the provider corpus.
+
+`load_rank_absolute=true` is accepted because item-level `rank_absolute` does not replace the
+separate result-level `metrics_absolute` distribution. `ignore_synonyms=false` preserves the
+provider's near-duplicate/core-keyword behavior for empirical review instead of suppressing it.
+Clickstream remains request-disabled for this MVP probe: it doubles current published request
+pricing, adds demographic/clickstream-normalized testimony with separate retention/modeling
+cost, and is not required to learn the Ranked Keywords ranking relationship grain.
+
+### Accepted semantic distinctions and traps
+
+The later parser/Recipe/API must keep these provider facts distinct unless real Evidence plus
+the claimed contract prove a narrower relationship:
+
+- requested domain subject, echoed result target, ranked SERP `domain`, `main_domain`, exact
+  `url`, and `relative_url`;
+- returned keyword text, any `core_keyword`, returned item occurrence, SERP result type, ranked
+  URL/page occurrence, `rank_group`, and `rank_absolute`;
+- item-level `ranked_serp_element.is_lost`;
+- item SERP `rank_changes.previous_rank_absolute` plus `is_new`/`is_up`/`is_down`;
+- result-level per-type integer `metrics.*.is_new`/`is_up`/`is_down`/`is_lost`;
+- ordinary `metrics` rank-group distributions versus optional `metrics_absolute` absolute-rank
+  distributions;
+- provider ETV / estimated-paid-traffic-cost testimony versus Observatory Capture history;
+- Ranked Keywords embedded `keyword_data` versus structurally similar Keyword Overview and
+  Related Keywords testimony.
+
+Provider movement/loss facts are comparison-to-provider-prior-check testimony. They are **not**
+Observatory Capture-to-Capture deltas, and the provider's comparison interval is not a named
+Observatory Data Period unless the response explicitly states one. Capture time, nested
+provider update times, `previous_updated_time`, monthly Data Periods, and the provider's weekly
+Labs-update claim remain separate time axes.
+
+Current documentation itself contains contradictory or suspicious copy that the future real
+Capture must arbitrate rather than the Recipe silently "repairing": `keyword_data.serp_info`
+is documented as an array while the provider example shows an object; `rank_changes.is_new`
+contains contradictory prose; and some ETV/clickstream/AI-Overview descriptions appear to
+reuse text from different grains. These are provider-documentation defects, not license to
+guess the wire contract.
+
+### Completeness and one-Capture limit
+
+`total_count`, `items_count`, aggregate metric counts, and returned item counts are different
+claims. The first request intentionally returns only the rank-group-sorted prefix with
+`limit=100`, `offset=0`. It is reconnaissance Evidence, not a complete corpus capture and not a
+representative sample of every requested SERP type or lost state. No continuation or automatic
+offset follow-up is authorized.
+
+One future Capture can establish existence and exact observed shapes only for its request. It
+cannot establish provider invariance, all nullability/state domains, all requested result-type
+shapes, lost-item shape if none is returned, device/OS of the Labs index, the provider's true
+prior-check interval, equivalence with Google Organic/Keyword Overview/Related Keywords/LLM
+Mentions, or any Strategy conclusion.
+
+### Transport and spend lock for the later probe ticket
+
+The first contract fits the existing HTTP event-v2 single-exchange Evidence spine. The future
+Ranked adapter must create its **own Ranked-local closure-owned issuance and consumption gate**
+from the modern provider-probe precedents; do not reuse another surface's private gate or
+introduce a generic capability framework. Reuse PF-09 bounded transport and the established
+Attempt-before-send / at-most-one-Capture / credential boundary.
+
+The current bounded transport proposal is:
+
+- timeout: connect 30 / read 120 / write 30 / pool 30 seconds;
+- response-body ceiling: 33,554,432 bytes (32 MiB);
+- one fresh Evidence root;
+- one POST, one task, no redirect/retry/poll/continuation/follow-up;
+- Evidence-only first implementation: no parser, Recipe, schema, Derivation, PostgreSQL, or
+  consumer API.
+
+Current official Labs Google pricing rechecked on 2026-09-01 lists "all other endpoints" at
+`$0.012` per Live task plus `$0.00012` per returned item. At the closed `limit=100`, the
+published arithmetic is approximately `$0.024` before any provider pricing change. The later
+probe ticket may use a conservative authorization ceiling of **50,000 micro-USD ($0.05)**,
+but current pricing and the exact closed request must be rechecked immediately before any
+real-call authorization. This record does not authorize spend.
+
+### F13 reconciliation relevant to Ranked
+
+The independent review correctly warned against reusing an older caller-visible transport
+capability gate, but its list of currently affected precedents was stale. `PF-16` already
+hardened Keyword Overview and `PF-17` already hardened Google Organic with surface-local
+closure-owned issuance/consumption and committed-Attempt revalidation. Search Mentions remains
+separately F13-gated if it is ever reused. Ranked Keywords does not need to fire F13 because it
+will be a new adapter born with its own closure-owned gate; it should use the modern pattern
+without importing another adapter's semantics.
+
+### Deferred acquisition from the first probe
+
+- **Clickstream** — omits that weekly snapshot's clickstream ETV/demographics/normalized
+  structures. Revisit only if a downstream consumer needs this provider's independent demand
+  model and the retention/privacy posture is explicitly accepted.
+- **Exact-page target** — omits page-as-request-subject corpus/aggregate testimony. Revisit
+  when a consumer needs page-scoped holdings/history rather than page URLs discovered inside a
+  domain request.
+- **Subdomain target** — omit until subdomain is an explicit consumer subject.
+- **Dedicated live/lost calls** — omit unless first `all` Evidence cannot expose the material
+  lost-item shape despite provider testimony that a lost population exists.
+- **`ignore_synonyms=true`** — omit because the first contract needs duplicate/near-duplicate
+  testimony; revisit only for a separately useful synonym-suppressed provider contract.
+- **filters/custom sorting/offset/limit 1000** — omit because they primarily change which
+  corpus prefix is sampled, not a currently proven material response branch. Revisit from
+  Evidence or later acquisition requirements, not curiosity.
+- **unscoped location/language** — not a future form of this adapter; mixed-locale testimony is
+  a materially different contract.
+
+### Remaining Product questions for [CHAZ]
+
+1. **Exact first domain target.** It should be a public, non-sensitive, stable registrable
+   domain with meaningful US/English ranking breadth, likely `total_count > 100`, and enough
+   ranking variety/volatility to give movement/lost and non-organic/AI-Overview testimony a
+   reasonable chance of appearing. Do not choose a domain merely because the provider example
+   uses it.
+2. **SERP-text Evidence retention acknowledgement.** Ranked Keywords may return titles,
+   descriptions/snippets, XPath and AI Overview reference text. Google Organic has already
+   established that equivalent SERP prose may be preserved as immutable provider Evidence
+   under an explicit retention/terms posture; serving or semantically promoting that text later
+   remains a separate Recipe/API decision. [CHAZ] must explicitly confirm that the Ranked probe
+   may preserve the exact provider response body containing this text before a real call is
+   authorized.
+
+After those two Product choices, the Steward may mark this activation review accepted/closed
+and cut the separate bounded first-probe implementation ticket. No provider call is authorized
+by RANK-01 itself.

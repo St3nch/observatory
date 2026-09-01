@@ -314,3 +314,11 @@ Search Mentions when no earlier affected gate fires the trigger.
 **Cost of forgetting:** A same-process caller with access to private seams could change
 what an already-authorized capability sends or replay it, breaking the Attempt-before-send
 and one-exchange claims even though ordinary attribute assignment remains blocked.
+
+**Current state — 2026-09-01:** PF-16 closed the Keyword Overview F13 hardening and PF-17
+closed the Google Organic F13 hardening, each with surface-local closure-owned issuance /
+consumption authority and immediate committed-Attempt revalidation before send. Search
+Mentions remains separately F13-gated if it is reused or substantively modified. New provider
+adapters should be born with the hardened closure-owned pattern rather than reusing an older
+caller-visible gate; doing so does not itself fire F13 or create a generic transport-capability
+framework.
