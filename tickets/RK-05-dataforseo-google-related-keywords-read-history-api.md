@@ -1,6 +1,8 @@
 # RK-05 — DataForSEO Google Related Keywords Recipe selection and admitted-history API
 
-**Status:** implementation authorized — [CHAZ] explicitly authorized [CLAUDE] implementation from exact reconciled-ticket HEAD `ab42c0df1196fac8769eb272928da5ae0baf802a`  
+**Status:** review — [CLAUDE] implementation complete; awaiting [GPT] Steward review, [GROK] adversarial review, and [CHAZ] full-suite closure  
+**Start commit:** `988e7b03cf788c51455ec59e8e5f46e884cf434f`  
+**Reconciled contract:** `ab42c0df1196fac8769eb272928da5ae0baf802a` — [CHAZ] explicitly authorized [CLAUDE] implementation from that reconciled ticket  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
 **Blocked by:** none; RK-04 closed  
 **Draft base:** `be194e99573d6c6f8a9ecb12d23d35c563bce446`  
@@ -793,3 +795,333 @@ Recipe-aware API as one complete subject-bound Capture document whose three sema
 field states, independent time axes, seed-vs-item locus, provider occurrences, frontier
 relationships, and provenance exactly match the accepted rebuildable RK-04 state — without
 inventing graph meaning, cross-surface equivalence, completeness, or Strategy interpretation.
+
+## Implementation report — [CLAUDE]
+
+### Parent and changed paths
+
+Implementation parent (exact start commit): `988e7b03cf788c51455ec59e8e5f46e884cf434f`.
+One implementation commit, not amended, not pushed.
+
+Changed paths, all inside the final allowlist:
+
+- `src/observatory/related_keywords_read.py` — new surface-local reader (Recipe v1
+  validation, strict typed models, context-anchored membership, capture-wide integrity
+  checks, lossless projection, deterministic presentation);
+- `src/observatory/api.py` — the exact history route plus the Related Keywords adapter in
+  the existing generic provider-Attempt routing set;
+- `tests/test_api_related_keywords.py` — new, 134 tests;
+- this ticket (Status and this report only).
+
+No other path was touched. `provider_history.py`, `provider_recipe_selection.py`,
+`migrate.py`, the RK-03 parser, the RK-04 Recipe/Derivation, fixtures, Evidence code,
+Outcomes/Holdings modules, sibling readers, README/spec/decision authority, Ranked, and
+Strategy files are unmodified. `tests/test_api_attempts.py` and
+`tests/test_provider_recipe_selection.py` were not edited: the Attempt-routing and
+selection-isolation proofs live in the new RK-05 suite, as the ticket preferred.
+
+### Route, query, and schema
+
+    GET /v1/providers/dataforseo/google/related-keywords/history
+
+Query is exactly `requested_keyword` (required, `Query(min_length=1)` only),
+`derivation_version_id` (optional pin), `limit` (default 20, 1..100), `order`
+(`asc`/`desc`, default `asc`). RK-01's 80-character operator bound and seed regex are
+deliberately absent: an impossible exact subject is a normal empty-history miss, proved by
+`test_long_operator_subject_is_an_empty_history_miss_not_422`. No depth, frontier, keyword,
+volume, cursor, offset, or continuation parameter exists; the generated OpenAPI parameter
+set is asserted to be exactly those four.
+
+The response model is a dedicated strict `RelatedKeywordsHistoryEnvelope`. Every nested
+model is `extra="forbid"`, `strict=True`, and fully typed; no nested Capture body is a
+generic dictionary. `history_list_response` supplies the outer twelve-key list math without
+changing `provider_history.py`. The outer envelope is validated once in the reader and once
+again by the route's response model.
+
+### Recipe selection and stored-Recipe verification
+
+`resolve_provider_recipe` is used unchanged for the exact Related Keywords adapter. No
+selection is ever written by production code.
+
+- no selection and no pin → 503 `provider_recipe_not_selected`;
+- selection → `recipe_resolution = "selected"`; accepted pin → `"pinned"`;
+- malformed, empty, uppercase, short, unknown, wrong-adapter, or registered-but-non-v1 pin →
+  404, including a second Recipe registered for this same adapter;
+- selecting a non-v1 Recipe for this adapter → 404.
+
+After resolution the reader independently re-validates the registered Recipe: UTF-8 JSON,
+`validate_recipe`, exact JCS re-canonicalisation, exact digest equal to
+`a85abbe1d9780a3a66cc9fe01adc539e8568144a067b0345ec06cec700dc2669`, provider `dataforseo`
+across the constant, the resolution, the column, and the document, the exact adapter across
+the same four sources, the exact ordered three-kind list, and the exact stored Capture
+taxonomy in its stored order (`no_response`, `observation_admitted`,
+`observation_admitted_empty`, `provider_envelope_rejected`, `provider_error`,
+`reconciliation_failed`, `response_partial`, `transport_complete_non_admissible`). Damage to
+any of those yields 409 `evidence_integrity_failure` with no history envelope. A taxonomy
+re-ordering that keeps the same members is proved to fail.
+
+### Membership and provenance
+
+Membership is context-anchored: `related_keywords_result_context` for the exact
+`requested_seed` and Recipe v1, LEFT JOINed to `outcomes` on the full
+`(derivation_version_id, attempt_id, capture_id)` tuple. A matching context with a missing
+Outcome, an Outcome citing a foreign Attempt, or any non-admitted classification is
+integrity damage and returns 409; it is never silently converted into empty history. The
+reader additionally requires exactly one Outcome row per matching `capture_id` and requires
+its Attempt, classification, and `observation_count` to agree, which closes the
+foreign-Attempt case from both directions.
+
+Every matching candidate is verified before any sort or limit: Recipe v1 → committed
+Attempt via `EvidenceStore.read_attempt` → provider/adapter on Attempt and Capture →
+`validate_related_keywords_http_parameters` → committed Capture via
+`EvidenceStore.read_capture` → exact parent identity → persisted `request_*` context
+agreement → the capture-wide PostgreSQL checks below. `total_matching` counts unique
+verified Capture documents; ordering is `(request_started_at, capture_id)` reversed whole
+for `desc`; `limit` applies to whole Capture documents only. Damage on a Capture outside
+`limit=1` still fails the entire read
+(`test_damage_outside_the_limit_still_fails_the_whole_read`).
+
+Result echo (`result_seed_keyword`, result location/language/se_type) is exposed as provider
+testimony and may disagree with the verified Attempt; only the `request_*` duplicates must
+agree. Proved with a body whose echo really disagrees, not with planted PostgreSQL damage.
+
+### Field-state projection
+
+The frozen projection is implemented exactly:
+
+1. value+state column pairs are always `{state, value}`; `value` is non-null exactly when
+   `state == "stated"`, enforced by a model validator on every wrapper. Stated-empty arrays
+   are `{"state": "stated", "value": []}`; stated-empty permitted strings survive exactly.
+2. Enclosing object states (`keyword_info`, `keyword_properties`, `avg_backlinks`,
+   `search_intent`, `serp_info`) are always `{state, value}` whose `value` is the fully typed
+   child object exactly when the state is `stated`, otherwise null. Child-row absence is
+   never read as a state signal: a missing row under a stated state is 409, and a present
+   row under a non-stated state is 409.
+3. State-only testimony (`monthly_searches_state`, `search_volume_trend_state`,
+   `related_keywords_state`, `bing_normalized_state`, `clickstream_normalized_state`,
+   `clickstream_keyword_info_state`, `seed_keyword_data_state`) is the exact lower-case
+   token with no fabricated value.
+4. Ordinary semantic and occurrence values (`keyword`, `locus`, `requested_seed`,
+   monthly `search_volume`, `data_period`, relationship strings, `item_index`, `depth`,
+   `item_se_type`, `source_item_index`, `source_depth`, `target_index`) are direct typed
+   values.
+
+`absent`, `json_null`, `stated`, `not_requested`, and `inapplicable` are never collapsed;
+`test_unstated_trend_members_stay_inapplicable` pins the Recipe-v1 rule that unstated trend
+members keep `inapplicable` while the enclosing `search_volume_trend_state` keeps the real
+provider state. Decimal-capable NUMERIC values serialize with `format(value, "f")`; the
+reader refuses any non-`Decimal` value in a NUMERIC position and
+`RelatedKeywordsDecimalField` refuses a binary float outright.
+
+Every persisted RK-04 content column across the eleven non-context relations is projected.
+`test_reader_projects_every_persisted_rk04_column` compares the reader's column tuples to
+`information_schema` and reconciles every context column against either the exposed
+`result_context`, the verified `request` block, or provenance — so nested `se_type`, trend
+member states, all five structure-local clocks, Bing and clickstream states, exact NUMERIC
+backlinks, ordered duplicate categories/foreign intents/SERP item types, and SERP result
+counts cannot be silently dropped.
+
+### Twelve-relation consistency
+
+For each `(capture_id, derivation_version_id)` before presentation:
+
+1. envelope keys loaded; kinds must be Recipe-v1 kinds; envelope `attempt_id`, provider, and
+   adapter must match the verified candidate; envelope cardinality must equal Outcome
+   `observation_count`;
+2. the union of the three semantic parent key sets must equal the envelope key set exactly,
+   with no missing, extra, duplicate, or cross-kind identity;
+3. every semantic identity is recomputed from persisted axes using the Recipe's exact axis
+   names — `requested_seed`, `locus`, `keyword` for keyword-data; those plus `year`, `month`
+   for monthly; `requested_seed`, `source_keyword`, `target_keyword` for relationship — and
+   must equal the stored digest. The outer API name `requested_keyword` is never substituted
+   into an identity document;
+4. each STATED child state requires exactly one child row; each non-STATED state requires
+   zero; orphan child rows are rejected;
+5. seed locus has zero item occurrences; every returned-item keyword-data parent has at
+   least one;
+6. the multiset of all keyword-data item-occurrence `item_index` values has size `n`, its
+   unique values are exactly `0..n-1`, and `n == items_count == derived_returned_item_count`.
+   Global, not per parent;
+7. every returned-item monthly parent has at least one monthly occurrence, every seed-locus
+   monthly fact has none, and every monthly occurrence resolves to a real returned item;
+8. every relationship parent has at least one relationship occurrence; every occurrence's
+   `source_item_index` resolves to a real item occurrence and its `source_depth` equals that
+   item's persisted depth;
+9. relationship target indexes are grouped **per `source_item_index` across all semantic
+   relationship parents** and must be unique and dense `0..m-1`; a non-STATED
+   `related_keywords_state` requires zero occurrences, and a STATED-empty array legitimately
+   has zero;
+10. `derived_relationship_occurrence_count` equals total stored relationship occurrences;
+11. `items_count == derived_returned_item_count` is required; `total_count == items_count`
+    is explicitly **not** required, and a disagreeing `total_count` is served as testimony;
+12. classification gating: `observation_admitted_empty` requires zero envelopes, zero
+    semantic parents, zero child rows, zero occurrences, and the one subject-bearing context;
+    `observation_admitted` requires a positive envelope count and a non-empty semantic set.
+
+Presentation uses an explicit locus rank (`seed_keyword_data` = 0, `returned_item` = 1) then
+keyword/period/identity; `test_presentation_ranks_seed_before_returned_item` asserts the
+result differs from lexical ordering. GET re-runs no parsing, no Derivation, and no repair.
+
+### Golden proof
+
+`test_golden_rk02_capture_matches_persisted_state_and_evidence` derives the accepted
+177,120-byte RK-02 fixture (SHA-256 verified in-test) into disposable PostgreSQL and
+compares the API response to an expected document built by this suite's **own** projector.
+That projector discovers each relation's columns from `information_schema`, groups
+value/state pairs by column naming alone, applies the five enclosing-state mappings, and
+sorts with the contract's explicit rank. It never calls `related_keywords_read` or
+`history_list_response`, so a shared bug cannot manufacture a green.
+
+The same test then re-proves, from the API projection alone: 81 keyword-data, 972 monthly,
+477 relationship facts and 1530 envelopes; 80 item, 960 monthly, and 477 relationship
+occurrences; child rows 81/81/60/81/63 both in PostgreSQL and as STATED structures in the
+projection; `conspiracy theories` present under both loci as two distinct identities with the
+seed locus carrying no occurrence and the depth-0 item carrying depth 0; the exact frontier
+target `conspiracy theories podcast - youtube` present as relationship testimony with no
+keyword-data or monthly node; the duplicated ordered category array `[10013, 10013, 10106,
+13566]`; all five exact depth-zero structure clocks; a stated year-1 SERP clock; and an
+independently recomputed current-vs-newest-monthly disagreement count of 63 across the 80
+returned items. All of these are asserted as fixture facts in the test module only — no
+production code contains them.
+
+### Adversarial proof map
+
+134 tests, all passing. Coverage against the ticket's required list:
+
+- selection/pin/404/503/409 Recipe cases, including registered non-v1 and taxonomy-order
+  damage;
+- Related Keywords Attempt audit routing through the existing generic provider reader, with
+  selected and pinned behaviour, no fixture `observations` field, and 404 for unknown or
+  non-hex identities;
+- duplicate returned keyword collapsing semantically while both item and monthly occurrences
+  survive; duplicate target collapsing while both edge occurrences survive; duplicate source
+  keyword at two item indexes with **unequal** related arrays producing one keyword-data
+  identity, three relatedness pairs, and per-source dense target indexes;
+- `related_keywords` ABSENT / JSON_NULL / STATED-empty / STATED-nonempty with correct
+  occurrence behaviour; monthly ABSENT / JSON_NULL / STATED-empty / STATED-zero remaining
+  distinguishable through keyword-info plus the monthly family;
+- seed-vs-depth-0 disagreement as two valid histories in one Capture (synthetic and golden);
+- frontier target with no invented node; admitted-empty with one subject-bearing context and
+  empty families; stated seed with `items: []` remaining ordinary `observation_admitted`;
+- missing, foreign-Attempt, and six non-admitted Outcome classifications behind a matching
+  context → 409;
+- missing Capture Evidence, missing Attempt Evidence, cross-linked Attempt provenance, a
+  context row planted over foreign-adapter (Historical) Evidence, and damage on a Capture
+  outside `limit=1` → 409;
+- missing / extra / wrong-kind / unknown-kind / cross-linked (attempt, provider, adapter)
+  envelopes → 409; missing and extra semantic parents → 409;
+- missing child row under a stated state and unexpected child row under a non-stated state →
+  409;
+- missing item occurrence, extra item occurrence breaking global density, missing monthly
+  occurrence, monthly occurrence without a returned item, missing relationship occurrence,
+  per-source target-index density violation, duplicate target index across two parents, and
+  non-stated `related_keywords` carrying occurrences → 409;
+- seven identity-axis tampers across all three families → 409; relationship `source_depth`
+  disagreement → 409;
+- wrong `observation_count` in both directions, wrong `items_count`,
+  `derived_returned_item_count`, and `derived_relationship_occurrence_count`, and an
+  admitted-empty classification over semantic rows → 409; `total_count` disagreement served
+  as testimony;
+- persisted `request_*` disagreement with the verified Attempt (ints, flags, `order_by`) →
+  409, while result echo disagreement is served;
+- xmin plus complete content snapshots preserved across `provider_recipes`,
+  `provider_recipe_selections`, `outcomes`, `observation_envelopes`, and all twelve RK-04
+  relations; Evidence file digests and the store operation log unchanged across history,
+  desc, empty-history, and Attempt-audit reads;
+- two independently derived disposable PostgreSQL databases returning byte-equal non-empty
+  history JSON;
+- the actual generated OpenAPI document: exact four parameters, `minLength: 1` with no
+  pattern or maxLength, limit bounds, closed schemas at every level, frozen request literals,
+  the three-kind `prefixItems`, typed nested structures rather than free-form objects, and
+  the required consumer distinctions present as text (with graph vocabulary appearing only
+  inside explicit denials);
+- isolation: sibling Keyword Overview, Organic, Search Mentions, Target Metrics, and
+  Historical history routes remain unselected 503 while Related Keywords serves 200; exactly
+  one new path is added; history is bound to its exact subject and does not case-fold;
+- fail-closed model proofs for malformed envelopes, state/value disagreement, classification
+  pairing, and binary floats in a decimal position.
+
+### Verification results
+
+- `uv run pytest -q tests/test_api_related_keywords.py` → **134 passed** (126s).
+- `uv run pytest -q tests/test_api_attempts.py tests/test_provider_recipe_selection.py
+  tests/test_api.py` → **24 passed**. Neither shared test file was modified; they were run
+  because `api.py` changed.
+- `uv run ruff check .` → clean.
+- Targeted `uv run mypy src/observatory/related_keywords_read.py src/observatory/api.py
+  tests/test_api_related_keywords.py` → **Success: no issues found in 3 source files**.
+- Full `uv run mypy` → **14 errors in 5 files (checked 88 source files)**, identical to the
+  inherited baseline measured at `988e7b03cf788c51455ec59e8e5f46e884cf434f` (14 errors, 5
+  files, 86 source files; the two added files are clean). RK-05 adds zero errors and repairs
+  none of the unrelated debt.
+- The full repository suite was deliberately **not** run; [CHAZ] owns that closure run.
+
+### Strongest and weakest seams
+
+Strongest: the golden proof's independent `information_schema`-driven projector, which makes
+a silently dropped column or a wrong wrapper shape a hard failure rather than a matching
+bug on both sides; the per-source-item relationship density and `source_depth` agreement
+checks, which are the rules most likely to be got wrong and are proved with duplicate
+sources carrying unequal arrays; and verify-all-before-limit, proved with real damage on a
+Capture the limit would have hidden.
+
+Weakest: `_capture_families` is one long function carrying most of the twelve-relation
+contract. It is heavily tested but it is the place a future Recipe change will be hardest to
+extend safely. The synthetic bodies duplicate RK-04's test builders rather than importing
+them; that duplication is deliberate (the allowlist forbids touching the RK-04 suite, and a
+cross-suite import would couple two independent proofs) but it is real duplication a later
+surface should consider hoisting only under an explicit Steward decision.
+
+### False-green risks
+
+- The reader's own `IntegrityError` messages are not asserted; every negative test asserts
+  only HTTP 409 with the `evidence_integrity_failure` detail. A check could fire for the
+  wrong reason and still look green. This is consistent with the accepted signal boundary but
+  it does weaken diagnosis.
+- Several damage cases legitimately trip more than one invariant at once (for example
+  deleting a relationship occurrence breaks both the parent-has-an-occurrence rule and
+  `derived_relationship_occurrence_count`). Where it mattered I chose an `UPDATE` that leaves
+  counts intact so the density and duplicate-target rules are proved in isolation.
+- PostgreSQL CHECK constraints survive `session_replication_role = replica`, so some damage
+  classes are unreachable from a test: a semantic row cannot be given a foreign
+  `observation_kind`, `depth` cannot exceed 4, a state token cannot leave the closed set, and
+  a value/state pair cannot be desynchronised in storage. The corresponding reader checks are
+  therefore defence in depth proved only at the model level, not end to end.
+- The synthetic Captures are small. Ordering, density, and duplicate rules are proved on two
+  or three items plus the 80-item golden Capture; no Capture with thousands of items was
+  exercised.
+
+### Honest limits and one item for Steward attention
+
+The ticket says a stored-Recipe "relational metadata disagreement" returns 409. One such
+disagreement is not reachable through the accepted resolution path: if
+`provider_recipes.adapter_contract` is rewritten to a foreign adapter, `resolve_provider_recipe`
+already refuses — the selection no longer resolves (503) and an explicit pin is a
+wrong-adapter miss (404). No history envelope is produced either way, so the fail-closed
+requirement holds, but the status code is the accepted provider-selection code rather than
+409. `test_recipe_adapter_column_damage_serves_no_history` documents this exactly, and the
+reader keeps its adapter-metadata check as defence in depth. This needs no contract change in
+my judgement, but the Steward should confirm the reading rather than expect a 409 there.
+
+Otherwise the ticket's stated limits stand unchanged. This implementation does not claim
+provider invariance behind 81/972/477/1530, `total_count` completeness or pagination,
+relationship traversal or tree behaviour, why frontier targets lack enrichment, cross-Capture
+graph identity, canonical identity from `core_keyword`, similarity/centrality/importance,
+monthly recurrence beyond stated Data Periods, a universal Provider Update Time, value
+equality to the raw body without re-Derivation, detection of coordinated internally
+consistent PostgreSQL value rewrites, prior Recipe-pointer history, production auth or
+non-loopback exposure, or recurring acquisition and concurrent capture writers.
+Verify-all-before-limit remains O(all matching Captures) and no outer cursor was added.
+
+### Boundary confirmation
+
+No provider call, no DataForSEO credentials, no DNS or public-network activity (every test
+module in this suite installs the loopback-only `socket.create_connection` guard and deletes
+provider credential environment variables), no protected Evidence-root access, no new or
+live Evidence, no schema or migration change, no Recipe or Derivation change, no Outcomes or
+Holdings work, no Ranked Keywords work, no Strategy work, no F12/F13 work, and no automatic
+operator Recipe selection. All Evidence in tests is created in `tmp_path`; all PostgreSQL is
+a disposable per-test database.
+
+One implementation commit whose parent is exactly
+`988e7b03cf788c51455ec59e8e5f46e884cf434f`. Not amended. Not pushed.
