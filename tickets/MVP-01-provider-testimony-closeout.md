@@ -1,6 +1,6 @@
 # MVP-01 — Seven-surface provider-testimony closeout
 
-**Status:** active  
+**Status:** blocked — Google Organic material-fidelity remediation required  
 **Kind:** read-only MVP milestone audit  
 **Blocked by:** none; RANK-06 and routine F6 are closed  
 **Approved by:** Project Steward  
@@ -201,6 +201,137 @@ authorize provider transport, or prove that Observatory's interpretation of thos
 correct; the per-surface fidelity passes below must still trace body → parser → Recipe /
 Derivation → typed persistence → API.
 
+## Seven-surface semantic fidelity review — 2026-09-01
+
+The Project Steward reviewed the exact Evidence-identical fixture bodies against the accepted
+strict parsers, Recipe/Derivation contracts, typed persistence, and current read APIs at exact
+repository commit `7946433600b93815c5f7a1976cbf8ba7c66fa5b2`. The fixture/body hashes above
+anchor the reviewed provider bytes; Git anchors the exact implementation. The review does not
+use LLM recollection as artifact identity.
+
+### PF-03 — Keyword Overview
+
+**Verdict:** Class 1 preserved correctly, with Class 2 / Class 5 bounded limits; no Class 4.
+
+The accepted extended Recipe carries exact requested/returned keyword reconciliation, coverage,
+current metrics, 441 nonuniform monthly Data-Period facts, provider trend testimony, keyword
+properties, average-backlink testimony, search intent, exact decimal semantics, field states,
+and the independently stated metrics/backlink/intent clocks. The real stated zero monthly point
+survives as zero. Request-disabled SERP/clickstream enrichment remains distinguishable from
+absence. Populated SERP/clickstream/Bing-normalized branches are unobserved or outside the
+accepted Recipe rather than guessed. The duplicated returned location/language echo agrees with
+the verified Attempt in PF-03; the accepted metrics contract deliberately serves the verified
+request context rather than inventing a second measurement-context identity from that agreeing
+echo.
+
+### PF-10 — Google Organic
+
+**Verdict:** Class 1 for the accepted six-kind Recipe, plus **Class 4 material fidelity defect**
+for provider testimony that is present in the exact body but unavailable to an API-only
+consumer.
+
+The accepted path correctly preserves 111 top-level SERP placements, 97 distinct organic
+placements, both rank systems, page/position, exact URLs without canonical Page identity, one
+AI Overview presence fact, 15 semantic AI Overview source relationships with all 18 source
+occurrences, four PAA question relationships with occurrence testimony, nine exact related
+queries, provider result time, result/corpus counts, and request context. Duplicate exact URLs
+at different placements remain separate facts; AIO top-level versus element source loci remain
+distinct.
+
+The exact PF-10 body also contains materially useful search-visibility testimony that PF-11
+explicitly left raw to keep the first Recipe bounded: a Top Stories block with child results
+carrying source/domain/title/URL/timestamp, a Video block with child results carrying
+source/title/URL/timestamp, organic-result publication timestamps on returned ranked results,
+and sitelink relationships under an organic result. The current parser/Recipe/API reduces the
+Top Stories and Video blocks to feature placement/presence and does not type or expose those
+child result relationships; it also omits the observed organic publication time and sitelink
+relationships. These are not speculative provider fields: they occur in the Evidence-identical
+PF-10 body. They are historically irrecoverable query → SERP result → URL / freshness
+relationships useful to downstream search-visibility reasoning, so raw-Evidence retention alone
+does not satisfy the MVP consumer-fidelity gate. This is one bounded Google Organic
+under-modeling defect, not a requirement to type every decorative/null provider field.
+
+Full AI Overview prose/markdown and PAA expansion content remain a separate Class 2 retention /
+redistribution boundary; rating, price, alternate right-rail behavior, populated related-result
+families, and other unobserved branches remain Class 5 rather than reasons for another provider
+call.
+
+### AI-03 — Search Mentions
+
+**Verdict:** Class 1 preserved correctly; no Class 4.
+
+The API preserves the five returned question/answer facts, exact Markdown answers, current AI
+search volume, web-search flag, first/last provider response clocks, sixty monthly Data-Period
+facts, forty-eight structured source facts with exact source metadata and per-item rank
+occurrences, and the explicit 5-of-3055 prefix context including offset and opaque continuation
+token. Current volume is not collapsed into the newest monthly point. The live-null
+`search_results`, `brand_entities`, and `fan_out_queries` families remain explicit null states;
+non-null shapes are Class 5 unproven branches.
+
+### AI-09 — Target Metrics
+
+**Verdict:** Class 1 for admitted-history testimony plus Class 2 known API limits; no Class 4.
+
+The accepted history exposes total mentions/search volume, all ten exact source-domain facts,
+provider lexical array positions without calling them rank, singleton location/language/platform
+groupings, explicit empty optional grouping families, result topology, request context, and the
+internal-list-limit completeness warning. No Provider Update Time or Data Period is invented.
+Measurement Outcomes and Holdings remain separately gated and are an explicit product/API
+limit, not hidden semantic loss in the admitted-history document.
+
+### AI-14 — Historical LLM Mentions
+
+**Verdict:** Class 1 preserved correctly; no Class 4.
+
+All twelve returned month facts preserve exact year/month Data Period, mentions, and AI search
+volume. The exact requested date window is served separately from the returned facts;
+unreturned requested periods are represented as unreturned periods rather than synthesized zero
+Observations; admitted-empty history remains distinct from failure/no-history. Capture time is
+not substituted for Data Period or a nonexistent Provider Update Time.
+
+### RK-02 — Related Keywords
+
+**Verdict:** Class 1 preserved correctly with already accepted bounded limits; no Class 4.
+
+The prior full-body review and final RK-05 contract remain aligned: seed versus returned-item
+loci stay distinct; current versus monthly demand stays distinct; the provider's multiple
+structure-local clocks remain independent; field states, exact decimal/array testimony,
+keyword properties/backlinks/intent/SERP detail, semantic relationships, and every provider
+relationship occurrence remain typed. Frontier relationship targets do not falsely require a
+returned keyword-data node. Provider `total_count`, `items_count`, derived returned-item count,
+and relationship-occurrence count remain separate grains. No tree/BFS/relevance/canonical
+keyword meaning is invented.
+
+### RANK-03 — Ranked Keywords
+
+**Verdict:** Class 1 for the accepted history document plus Class 2 known limits; no Class 4.
+
+The final RANK-06 read contract remains aligned with the prior full-body review: the provider's
+100-of-248 returned prefix is explicit; corpus aggregates remain separate from returned rows;
+the two provider rank systems remain unreconciled; exact placement URLs are content rather than
+canonical Page identity; Ranked-local keyword facts and monthly Data Period facts remain
+surface-local; provider item/monthly occurrence bridges preserve returned-array testimony; and
+all four time pillars remain distinct. Accepted Product Option 1 keeps certain provider SERP
+prose values Evidence-only while preserving their states. Ranked Measurement Outcomes and
+Holdings remain explicitly unimplemented, so empty Ranked history cannot be interpreted as
+unranked/never-measured; the API documents that limitation directly.
+
+### Closeout finding summary
+
+- Class 4 blockers: **one**, the bounded PF-10 Google Organic under-modeling described above.
+- Class 3 drift: `README.md` still describes the pre-AI-14 Historical checkpoint and omits the
+  completed Historical, Related Keywords, Ranked Keywords, and routine F6 state. Final README
+  reconciliation waits until the Class 4 remediation is accepted so it can describe one stable
+  MVP candidate rather than another transient checkpoint.
+- No review finding authorizes another provider request. The PF-10 exact protected body is
+  sufficient to design and prove the remediation with zero provider/network activity.
+
+MVP-01 therefore remains blocked. The Google Organic defect earns one separately bounded
+remediation ticket; production/parser/Recipe/schema/API code must not be opportunistically
+changed inside this audit ticket. After that remediation closes, MVP-01 must re-check the
+Google Organic consumer document, reconcile README/roadmap status, and only then may the
+Steward recommend final Observatory MVP closure to [CHAZ].
+
 ## Closure
 
-<!-- Project Steward fills after all seven passes and any earned remediation are complete. -->
+<!-- Project Steward fills after the Google Organic remediation and final reconciliation. -->
