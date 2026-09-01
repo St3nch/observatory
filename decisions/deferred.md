@@ -186,8 +186,8 @@ independent inventory/set comparison supplies the completeness witness for this 
 This manual proof is proportionate only to D10's first bounded probe. Routine paid capture
 requires a separately accepted automated snapshot, retention, and restore-drill policy.
 
-**Routine automation status — resumed 2026-09-01; automation still incomplete:** [CHAZ]
-resumed F6 commissioning and created the dedicated private Cloudflare R2 bucket
+**Routine F6 accepted — 2026-09-01:** [CHAZ] resumed F6 commissioning and created the
+dedicated private Cloudflare R2 bucket
 `vedaops-observatory-backups` with a bucket-scoped account-owned machine credential limited
 to R2 Bucket Item read/write. The encrypted restic repository at the R2 S3 endpoint was
 initialized as repository `1137afe0`; credentials remain outside the repository and are
@@ -219,12 +219,39 @@ Attempt/Capture inventories:
   `e9816316ceb76d7c574e8bd5e1ea995b1d7c5e19804721046c711065892d931a`, inventory SHA-256
   `6d6b229b2f5e1084c9bf753550364db226d7ab92c032a72da1fdf37809e23801`.
 
-The R2 repository check completed with no errors after all five snapshots. This proves the R2
-destination, migration path, and current real-Evidence restore fidelity, but does **not** yet
-complete routine F6. Remaining acceptance work is the separately reviewed systemd automation,
-retention policy, failure reporting, recurring restore-drill policy, and an end-to-end proof
-that unattended automation produces a recoverable snapshot. The existing Google Drive copies
-remain preserved as additional off-host protection.
+The R2 repository check completed with no errors after all five migration/rehearsal snapshots.
+Routine automation was then commissioned as owner-user systemd units with lingering enabled.
+`observatory-f6-r2-backup.timer` runs daily at 03:30 America/Detroit with `Persistent=true`
+and up to ten minutes of randomized delay. Its shared operation lock refuses overlap with
+another F6 operation; the backup wrapper validates and scrubs every discovered non-rehearsal
+Evidence root, records an exact aggregate inventory, creates an encrypted `f6-routine` restic
+snapshot, requires the post-backup inventory to remain byte-identical, revalidates the source,
+and writes a non-secret PASS/FAIL status receipt while systemd records process failure in the
+user journal. Retention is indefinite: no automated `forget`, `prune`, or other destructive
+repository operation is authorized.
+
+A forced systemd execution of the daily service exited successfully and created routine
+snapshot `1985deccf9e9bccfbf624297bf2514c0b6e13e887665089a4723e2e3b62291cb` over all four
+current provider Evidence roots. Its aggregate inventory SHA-256 is
+`a8eaee37e7d2ab7baaf334349cf8f70ce60856763e59d7075f2623159f18705c`; the persisted receipt
+reported `status=PASS`, `root_count=4`, and `retention=indefinite`.
+
+`observatory-f6-r2-restore-drill.timer` runs monthly on day 1 at 04:30 America/Detroit with
+`Persistent=true` and up to thirty minutes of randomized delay, using the same operation lock.
+The drill performs `restic check`, selects the newest `f6-routine` snapshot, restores it into a
+fresh temporary directory, opens and scrubs every restored Evidence root, independently
+recomputes the aggregate Attempt/Capture inventory, requires byte equality with the inventory
+stored inside that snapshot, writes a PASS/FAIL receipt, and removes the temporary restore.
+A forced systemd drill against snapshot `1985deccf9e9bccfbf624297bf2514c0b6e13e887665089a4723e2e3b62291cb`
+completed successfully: repository check PASS, restore PASS, inventory equality PASS, four
+roots, and the same aggregate inventory SHA-256
+`a8eaee37e7d2ab7baaf334349cf8f70ce60856763e59d7075f2623159f18705c`.
+
+The Project Steward accepts routine F6 as complete. Cloudflare R2 is the commissioned routine
+off-host Evidence destination with proven automated backup and automated recovery drill;
+retention is indefinite until separately changed. The existing Google Drive copies remain
+preserved as additional off-host protection. No provider call, Evidence deletion, repository
+pruning, or push is authorized by this acceptance.
 
 ## F7 — Multi-process capture authorization locking
 
