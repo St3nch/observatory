@@ -1,6 +1,6 @@
 # RANK-06 — DataForSEO Google Ranked Keywords Recipe selection and admitted-history API
 
-**Status:** review — [CLAUDE] Writer implementation complete; awaiting [GPT] Steward review and [CHAZ] full-suite integration validation  
+**Status:** remediation — [GPT] Steward review found one bounded Recipe-metadata status-code defect; [CLAUDE] remains Writer  
 **Owner:** [GPT] Steward review / [CLAUDE] designated and implementation-authorized Writer  
 **Blocked by:** none; RANK-05 closed  
 **Draft base:** `512525f78c20e49eb096b8ab98c0ed4ad2d64df0`  
@@ -979,6 +979,44 @@ boundary rather than pretending to enforce one.
 No provider call, credential access, public-network activity, Evidence mutation, fixture
 change, schema change, pagination, second acquisition, clickstream enablement, Measurement
 Outcomes, Holdings, Strategy behavior, amend, rebase, or push was performed.
+
+## Steward implementation review — remediation required
+
+Independent [GPT] Steward review of implementation commit
+`e7e883a856bdffff380048ac8c094d2ad6095cd8` against authorized parent
+`dcbe91365d89e18d171ea929e3b7dd1595b1d261` found one blocking contract mismatch and no
+second blocking defect in the reviewed load-bearing paths.
+
+The implementation correctly preserves the reconciled target/identity, reverse-membership,
+Outcome, envelope-provenance, corpus cross-product, state-domain, `se_type`, occurrence,
+monthly, zero-item, ordering, Recipe-kind/taxonomy, and Attempt-audit boundaries. The Writer's
+ticket-scoped checks are accepted as implementation evidence; the Steward did not execute
+repository tests through MCP.
+
+### Blocking finding — accepted-v1 Recipe adapter metadata damage must be 409
+
+The final ticket explicitly requires tampered accepted-v1 Recipe provider/adapter metadata to
+return HTTP 409 `evidence_integrity_failure`. Provider-column damage reaches the Ranked reader
+and is correctly rejected as 409. Adapter-column damage does not: generic
+`resolve_provider_recipe()` rejects the damaged registration before `_load_validated_v1_recipe`
+can inspect it, yielding 503 on the selected path or 404 on an explicit accepted-v1 pin.
+
+`tests/test_api_ranked_keywords.py::test_recipe_adapter_column_damage_serves_no_history`
+currently accepts `{404, 409, 503}`, which is a false green against the locked contract.
+
+Remediation is bounded to the Ranked reader/tests/ticket. Preserve generic Recipe-selection
+semantics for sibling surfaces. Add the smallest Ranked-local pre-resolution integrity guard
+needed so that when the exact accepted Ranked v1 registration is the selected Recipe, or the
+caller explicitly pins that exact accepted v1 digest, a present registration row whose
+stored adapter metadata disagrees with the accepted Ranked adapter is classified as
+`IntegrityError` and therefore HTTP 409. Wrong-adapter pins for other registered Recipes and
+registered same-adapter non-v1 Recipes must retain their accepted 404 behavior; true no-selection
+must retain 503.
+
+Replace the permissive adapter-damage proof with exact selected and pinned 409 proofs. Run only
+the bounded affected RANK-06 tests/checks required for remediation, create one child commit,
+do not amend, and do not push. Full-suite integration remains [CHAZ] closure evidence after
+Steward acceptance.
 
 ## Explicit out of scope
 
