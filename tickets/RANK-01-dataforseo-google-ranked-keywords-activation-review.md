@@ -1,6 +1,6 @@
 # RANK-01 — DataForSEO Google Ranked Keywords activation review
 
-**Status:** reconciliation — independent [GROK] review returned `RECONCILE`; technical contract is locked below, awaiting [CHAZ] Product target and Evidence-retention choices  
+**Status:** closed — [GPT] Steward accepted after independent Grok `RECONCILE`, technical reconciliation, and [CHAZ] Product resolution on 2026-09-01  
 **Owner:** [GPT] Steward reconciliation / [GROK] technical review  
 **Blocked by:** none; Related Keywords RK-01 through RK-05 are closed  
 **Draft base:** `0bb93ba49464a098088b138efebc5e593c53de4f`  
@@ -395,3 +395,27 @@ without importing another adapter's semantics.
 After those two Product choices, the Steward may mark this activation review accepted/closed
 and cut the separate bounded first-probe implementation ticket. No provider call is authorized
 by RANK-01 itself.
+
+## Product resolution and closure — 2026-09-01
+
+[CHAZ] accepted the Steward recommendations and resolved the two remaining Product choices:
+
+- first later live-capture candidate target: exact domain `theconspiratory.com`;
+- exact provider response-body Evidence retention is accepted even when the Ranked Keywords
+  response contains SERP titles, descriptions/snippets, XPath, or AI Overview reference text.
+
+The target is selected for contract-learning continuity with the existing conspiracy-themed
+provider reconnaissance rather than as a Strategy judgment. RANK-01 does not claim the domain
+will exercise every requested result type or lost/movement branch; that remains empirical.
+The implementation adapter should not silently generalize subdomain/page targets from this
+choice. A separate later activation ticket must freeze the exact live request again before
+credentials, spend, provider transport, or Evidence creation.
+
+The retention choice authorizes preservation of exact provider bytes only when a later live
+call is separately authorized. It does not authorize consumer API exposure, semantic promotion,
+Strategy use, redistribution decisions, or additional text acquisition beyond the exact bounded
+Ranked Keywords response.
+
+RANK-01 is accepted and closed. The next work unit is a separately reviewed, Evidence-only
+Ranked Keywords Live paid-probe adapter ticket. No provider call, credentials, spend, or new
+Evidence is authorized by this closure.
