@@ -1,7 +1,7 @@
 # RANK-04 — DataForSEO Google Ranked Keywords strict parser and RANK-03 Conformance fixture
 
-**Status:** provisional for adversarial review — no implementation authorization  
-**Owner:** [CHAZ] designates one Writer / [GPT] Steward review  
+**Status:** provisional for adversarial review — [CLAUDE] designated Writer; no implementation authorization  
+**Owner:** [CLAUDE] designated Writer / [GPT] Steward review / [GROK] independent reviewer  
 **Blocked by:** none; RANK-03 closed at `fbd53534aea47f114822e071c178b3ae1e378055`  
 **Draft base:** `fbd53534aea47f114822e071c178b3ae1e378055`  
 **Provider authority:** zero calls, zero spend; protected RANK-03 Evidence only  
@@ -24,10 +24,12 @@ canonical host/page identity, cross-surface normalization, competitor model, Str
 recommendation, recurring acquisition, pagination/offset continuation, or another provider
 exchange. Those remain separate later boundaries.
 
-No Writer is designated by this provisional ticket. [CHAZ] must explicitly designate the one
-implementation Writer and later authorize implementation from an exact clean accepted-ticket
-HEAD. Ticket review, fixture planning, and Steward edits authorize no source/test mutation by a
-Writer and no push.
+[CHAZ] designates [CLAUDE] as the one RANK-04 implementation Writer. [GROK] is the independent
+adversarial reviewer. This designation does **not** authorize implementation: [CLAUDE] must first
+perform the read-only code-first ticket review below, [GROK] must independently review the same
+clean ticket HEAD, and the Steward must reconcile both before [CHAZ] separately authorizes
+implementation from an exact clean accepted-ticket HEAD. Ticket review, fixture planning, and
+Steward edits authorize no source/test mutation by the Writer and no push.
 
 ## Authority and accepted foundation
 
