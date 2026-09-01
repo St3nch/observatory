@@ -1100,8 +1100,9 @@ already refuses — the selection no longer resolves (503) and an explicit pin i
 wrong-adapter miss (404). No history envelope is produced either way, so the fail-closed
 requirement holds, but the status code is the accepted provider-selection code rather than
 409. `test_recipe_adapter_column_damage_serves_no_history` documents this exactly, and the
-reader keeps its adapter-metadata check as defence in depth. This needs no contract change in
-my judgement, but the Steward should confirm the reading rather than expect a 409 there.
+reader keeps its adapter-metadata check as defence in depth. **Resolved:** the Steward
+accepted this reading; see the selector-error precedence recorded in the remediation report
+below. No code change was made.
 
 Otherwise the ticket's stated limits stand unchanged. This implementation does not claim
 provider invariance behind 81/972/477/1530, `total_count` completeness or pagination,
@@ -1125,3 +1126,192 @@ a disposable per-test database.
 
 One implementation commit whose parent is exactly
 `988e7b03cf788c51455ec59e8e5f46e884cf434f`. Not amended. Not pushed.
+
+## Remediation report — [CLAUDE], round 1
+
+### Parent and scope
+
+Remediation parent: `963969311731e224ac1a4d6095a3cb438e77e91f`. One direct child, not
+amended, not pushed. Changed paths are exactly the three allowed:
+
+- `src/observatory/related_keywords_read.py`
+- `tests/test_api_related_keywords.py`
+- this ticket
+
+`src/observatory/api.py` did **not** need to change: every gap was inside the reader's
+integrity contract and its typed models, and the route already surfaces `IntegrityError` as
+409. No schema, parser, Recipe, Derivation, fixture, Evidence, provider-selection, sibling
+reader, Outcomes/Holdings, Ranked, or Strategy file was touched. Healthy RK-05 semantics and
+the API shape are unchanged; this remediation only makes corrupted rebuildable PostgreSQL
+fail closed against testimony the accepted Recipe v1 already fixes.
+
+### R1 — occurrences are bound to their own returned keyword
+
+`_capture_families` previously proved only that a monthly `item_index` and a relationship
+`source_item_index` referred to *an existing* returned item. It now builds
+`identity_keyword` (keyword-data identity → exact provider keyword) during the keyword-data
+pass and derives `keyword_by_index` (returned-item position → the keyword that position
+actually carries). Two bindings are then required:
+
+- every returned-item monthly fact's occurrence positions must carry that fact's own exact
+  `keyword`;
+- every relationship occurrence's `source_item_index` must carry the semantic parent's exact
+  `source_keyword`.
+
+A returned-item occurrence whose identity is not a keyword-data fact is itself an integrity
+failure. Duplicate returned occurrences of the same semantic keyword remain valid: the check
+compares keywords, not positions. Relationship **targets** are deliberately not compared to
+keyword-data facts — frontier targets legitimately have no node, and
+`test_frontier_targets_have_no_invented_keyword_data_node` still passes unchanged.
+
+New PostgreSQL adversarial proofs, both of which were false greens at the parent commit:
+
+- `test_monthly_occurrence_must_cite_its_own_returned_keyword` — two returned keywords each
+  with monthly testimony; alpha's monthly occurrence is retargeted to beta's valid item
+  index. The parent row survives, the index exists, and `_counts_snapshot` asserts that no
+  relation cardinality and no Outcome moved. Re-read is exactly 409
+  `evidence_integrity_failure`.
+- `test_relationship_occurrence_must_cite_its_own_source_keyword` — two returned sources at
+  the same depth, one with an edge and one with stated-empty `related_keywords`. The edge
+  occurrence is retargeted to the wrong existing source item; depth still agrees, per-source
+  target-index density still holds (source 1 becomes dense `0..0`, source 0 becomes the
+  legitimate stated-empty case), the parent row survives, and counts are asserted unchanged.
+  Re-read is 409 specifically because `source_keyword` disagrees with the item's keyword.
+
+Positive proofs that the binding does not over-reject: the existing
+`test_duplicate_source_keyword_with_unequal_related_arrays` still returns 200, and two new
+tests, `test_duplicate_source_keyword_at_two_item_indexes_still_reads` and
+`test_duplicate_returned_keyword_monthly_occurrences_still_read`, pin the duplicate-occurrence
+behaviour explicitly.
+
+### R2 — cross-family seed and monthly state agreement
+
+`_capture_families` now receives the persisted `seed_keyword_data_state` and requires:
+
+- `stated` → exactly one `seed_keyword_data` locus keyword-data fact;
+- `absent` or `json_null` → zero seed-locus facts.
+
+More than one seed-locus fact is therefore invalid under any state.
+
+It also indexes each keyword-data fact by `(locus, keyword)` together with its
+`keyword_info` enclosing state and, when that child row exists, its persisted
+`monthly_searches_state`. Every monthly semantic fact must then find a matching keyword-data
+fact for the exact `(requested_seed, locus, keyword)`, that fact's `keyword_info` state must
+be `stated`, and its `monthly_searches_state` must be `stated`. The rule is deliberately
+one-directional: `monthly_searches_state = stated` with zero monthly facts remains valid
+stated-empty testimony.
+
+New proofs:
+
+- `test_non_stated_seed_state_with_a_seed_locus_fact_is_409`;
+- `test_stated_seed_state_without_a_seed_locus_fact_is_409`;
+- `test_more_than_one_seed_locus_fact_is_409` — plants a second seed-locus fact whose
+  identity genuinely recomputes, with its Observation envelope and a matching
+  `observation_count`, so the only broken rule is the seed-state agreement;
+- `test_monthly_facts_under_a_non_stated_monthly_searches_state_are_409` for both `absent`
+  and `json_null`;
+- `test_monthly_facts_under_a_non_stated_keyword_info_are_409`;
+- `test_stated_monthly_searches_with_no_monthly_facts_still_reads` for the valid direction.
+
+### R3 — applicable Recipe-v1 state domains
+
+The Recipe's five-token vocabulary is a superset; no RK-04 column admits all five. The reader
+and the typed models now carry the exact applicable domain per structure, matching RK-03's
+actual behaviour:
+
+| Field group | Domain |
+|---|---|
+| ordinary optional value/state fields and enclosing object states | `absent` / `json_null` / `stated` |
+| `monthly_searches_state`, `search_volume_trend_state`, `related_keywords_state`, `seed_keyword_data_state` | `absent` / `json_null` / `stated` |
+| `bing_normalized_state` | `absent` / `json_null` |
+| both clickstream states, under frozen `include_clickstream_data = false` | exactly `not_requested` |
+| trend members when `search_volume_trend_state != stated` | exactly `inapplicable`, value null |
+| trend members when `search_volume_trend_state == stated` | `absent` / `json_null` / `stated` |
+
+`_as_state` now takes the domain explicitly; `OptionalStateToken`, `TrendMemberStateToken`,
+`BingStateToken`, and `ClickstreamStateToken` replace the single five-token Literal, so the
+generated OpenAPI describes the applicable states rather than claiming all five everywhere.
+`RelatedKeywordsSignedField` became `RelatedKeywordsTrendMemberField` with the four-token
+domain, and the enclosing/member agreement is enforced twice: once in
+`_keyword_info` with a precise integrity message, and once as a model validator on
+`RelatedKeywordsKeywordInfo` so a malformed projection cannot escape through the model.
+
+New proofs, all using tokens the generic SQL `_FIELD_STATE_CHECK` accepts:
+
+- `test_clickstream_state_outside_not_requested_is_409` (2 columns × 4 tokens);
+- `test_bing_state_outside_absent_or_json_null_is_409` (3 tokens);
+- `test_related_keywords_state_outside_its_domain_is_409` on the no-edge returned item, which
+  satisfied every occurrence rule under the old enum;
+- `test_ordinary_optional_state_outside_its_domain_is_409` (4 columns × 2 tokens);
+- `test_enclosing_structure_state_outside_its_domain_is_409` (5 structures × 2 tokens) on a
+  bare returned item, so the state domain is the only rule the tamper breaks;
+- `test_monthly_searches_state_outside_its_domain_is_409`;
+- `test_seed_keyword_data_state_outside_its_domain_is_409`;
+- `test_stated_trend_with_an_inapplicable_member_is_409` (3 members);
+- `test_unstated_trend_with_an_applicable_member_is_409` (3 tokens).
+
+The OpenAPI proof was tightened accordingly: `_state_value` now takes the expected domain and
+`test_generated_openapi_is_fully_typed_and_closed` asserts the per-field enums, including the
+Bing pair, the clickstream singleton, the trend-member four, and the ordinary three.
+
+### R4 — closed Google se_type vocabulary
+
+`item_se_type` is now `Literal["google"]` in the typed model and is validated by
+`_require_se_type` in the reader. Every optional structure or result `se_type` is a dedicated
+`RelatedKeywordsSeTypeField` whose stated value is exactly `"google"`, with `absent` and
+`json_null` still possible where RK-03 makes the field optional. `_se_type_field` performs the
+same check in the reader so the failure is an `IntegrityError` with a precise message rather
+than only a model rejection. No Evidence is re-parsed and no unrelated provider text is
+revalidated.
+
+New proofs:
+
+- `test_item_se_type_outside_the_closed_vocabulary_is_409`;
+- `test_stated_se_type_outside_the_closed_vocabulary_is_409` across the keyword-data parent,
+  all four remaining structure tables, and the result context.
+
+### Steward disposition on Recipe adapter-column damage — recorded
+
+No code change was required or made. The accepted interpretation is:
+
+- if Recipe v1 successfully resolves for the Related Keywords adapter, any RK-05 metadata
+  disagreement is integrity failure and returns 409;
+- if corruption of `provider_recipes.adapter_contract` itself prevents generic Recipe
+  resolution, the existing selector's fail-closed precedence stands: `selected` → 503
+  `provider_recipe_not_selected`, `pinned` → 404.
+
+`resolve_provider_recipe`, `provider_recipe_selection.py`, and the generic error mapping were
+not bypassed or modified to force 409 for that unreachable-in-normal-state corruption.
+`test_recipe_adapter_column_damage_serves_no_history` documents the accepted precedence.
+
+### Verification
+
+- `uv run pytest -q tests/test_api_related_keywords.py` → **194 passed** (60 new tests).
+- False-green control: with the parent commit's `related_keywords_read.py` restored and the
+  new tests in place, the 27 selected R1/R2/R3/R4 integrity tests **all fail**, confirming
+  they were false greens before this remediation. The remediated reader was restored
+  immediately afterwards.
+- `uv run ruff check .` → clean.
+- Targeted `uv run mypy src/observatory/related_keywords_read.py
+  tests/test_api_related_keywords.py` → **Success: no issues found in 2 source files**.
+- Full `uv run mypy` → **14 errors in 5 files (checked 88 source files)**, identical to the
+  RK-05 start baseline. Zero added, zero repaired.
+- Full repository pytest remains [CHAZ]'s closure run and was not executed.
+
+### Remaining honest limits after remediation
+
+- The golden RK-02 proof passed unchanged under every narrowed domain and both new
+  cross-family bindings, which is good evidence that the domains match real provider
+  testimony rather than only the synthetic bodies. It is still one Capture: a future provider
+  body that legitimately produced, say, a stated Bing structure would now be a parser
+  rejection upstream rather than an API concern, but a future Recipe that changed these
+  domains would need this projection reviewed again. That is already the ticket's stated
+  Recipe-versioning boundary.
+- The relationship **target** side remains deliberately unbound to keyword-data facts. A
+  coordinated rewrite that changed a target keyword on both the relationship parent and its
+  recomputed identity would still be undetectable; that is the same coordinated-rewrite limit
+  already recorded, not a new one.
+- Negative tests still assert only HTTP 409 with the `evidence_integrity_failure` detail, so a
+  check firing for the wrong reason would still look green. The new tests reduce that risk by
+  asserting the healthy read first and by snapshotting relation cardinalities around each
+  tamper, but they do not assert the internal message.

@@ -97,9 +97,22 @@ V1_CAPTURE_OUTCOMES: Final[tuple[str, ...]] = (
 ADMITTED_CLASSIFICATIONS: Final[frozenset[str]] = frozenset(
     {"observation_admitted", "observation_admitted_empty"}
 )
+# The Recipe's global field-state vocabulary is five tokens, but no single RK-04 column
+# permits all five. Each read domain below is the exact applicable subset that RK-03 can
+# produce and RK-04 can persist for that structure; a token outside its own domain is
+# Recipe-v1 damage even though the generic SQL CHECK accepts it.
 FIELD_STATES: Final[frozenset[str]] = frozenset(
     {"absent", "inapplicable", "json_null", "not_requested", "stated"}
 )
+OPTIONAL_FIELD_STATES: Final[frozenset[str]] = frozenset(
+    {"absent", "json_null", "stated"}
+)
+TREND_MEMBER_STATES: Final[frozenset[str]] = frozenset(
+    {"absent", "inapplicable", "json_null", "stated"}
+)
+BING_STATES: Final[frozenset[str]] = frozenset({"absent", "json_null"})
+CLICKSTREAM_STATES: Final[frozenset[str]] = frozenset({"not_requested"})
+SE_TYPE: Final[str] = "google"
 
 # Presentation rank. Lexical locus ordering would place returned_item before
 # seed_keyword_data, so the rank is explicit and is presentation only, never identity.
@@ -459,10 +472,26 @@ _TIME: Final[str] = (
     "substitute for Data Period or for any structure-local provider clock."
 )
 _STATE: Final[str] = (
-    "Closed provider field state: stated, json_null, absent, not_requested, or "
-    "inapplicable. These are never collapsed into one another. value is non-null exactly "
+    "Closed provider field state. Ordinary optional provider testimony carries exactly "
+    "absent, json_null, or stated: the field was not present, was present as JSON null, or "
+    "carried a value. These are never collapsed into one another. value is non-null exactly "
     "when state is stated; a stated-empty array is {state: 'stated', value: []} and a "
-    "stated-empty string is exact testimony, not absence."
+    "stated-empty string is exact testimony, not absence. not_requested and inapplicable "
+    "are not applicable to ordinary optional fields under Recipe v1 and are reported as "
+    "integrity failure rather than served."
+)
+_TREND_MEMBER_STATE: Final[str] = (
+    "Signed provider trend member. When the enclosing search_volume_trend object is stated "
+    "the member carries an ordinary absent, json_null, or stated state. When the enclosing "
+    "object is not stated the member has no state of its own and is exactly inapplicable "
+    "with a null value; that is not the same as an absent or json_null member inside a "
+    "stated trend object."
+)
+_SE_TYPE_STATE: Final[str] = (
+    "Provider search-engine type. RK-03 admits only the exact value 'google' for this "
+    "closed adapter, so a stated se_type is exactly 'google'; absent and json_null remain "
+    "possible wherever the provider omits or nulls the field. Any other stored value is "
+    "integrity failure, not new provider vocabulary."
 )
 _ENCLOSING_STATE: Final[str] = (
     "Closed provider state of the enclosing provider object. value is the fully typed "
@@ -488,9 +517,10 @@ class UnsupportedRelatedKeywordsRecipe(ProviderRecipeSelectionError):
     """Resolved Recipe is not the accepted Related Keywords v1 identity."""
 
 
-FieldStateToken = Literal[
-    "absent", "inapplicable", "json_null", "not_requested", "stated"
-]
+OptionalStateToken = Literal["absent", "json_null", "stated"]
+TrendMemberStateToken = Literal["absent", "inapplicable", "json_null", "stated"]
+BingStateToken = Literal["absent", "json_null"]
+ClickstreamStateToken = Literal["not_requested"]
 
 
 def _agree(state: str, value: object) -> None:
@@ -503,7 +533,7 @@ class RelatedKeywordsTextField(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: FieldStateToken = Field(description=_STATE)
+    state: OptionalStateToken = Field(description=_STATE)
     value: str | None = Field(description=_STATE)
 
     @model_validator(mode="after")
@@ -517,7 +547,7 @@ class RelatedKeywordsCountField(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: FieldStateToken = Field(description=_STATE)
+    state: OptionalStateToken = Field(description=_STATE)
     value: int | None = Field(ge=0, le=IJSON_MAX, description=_STATE)
 
     @model_validator(mode="after")
@@ -526,13 +556,29 @@ class RelatedKeywordsCountField(BaseModel):
         return self
 
 
-class RelatedKeywordsSignedField(BaseModel):
-    """Signed provider integer testimony as a value/state pair."""
+class RelatedKeywordsTrendMemberField(BaseModel):
+    """Signed provider search-volume trend member as a value/state pair."""
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: FieldStateToken = Field(description=_STATE)
-    value: int | None = Field(ge=-IJSON_MAX, le=IJSON_MAX, description=_STATE)
+    state: TrendMemberStateToken = Field(description=_TREND_MEMBER_STATE)
+    value: int | None = Field(
+        ge=-IJSON_MAX, le=IJSON_MAX, description=_TREND_MEMBER_STATE
+    )
+
+    @model_validator(mode="after")
+    def _require_agreement(self) -> Self:
+        _agree(self.state, self.value)
+        return self
+
+
+class RelatedKeywordsSeTypeField(BaseModel):
+    """Closed provider se_type testimony as a value/state pair."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    state: OptionalStateToken = Field(description=_SE_TYPE_STATE)
+    value: Literal["google"] | None = Field(description=_SE_TYPE_STATE)
 
     @model_validator(mode="after")
     def _require_agreement(self) -> Self:
@@ -545,7 +591,7 @@ class RelatedKeywordsBoolField(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: FieldStateToken = Field(description=_STATE)
+    state: OptionalStateToken = Field(description=_STATE)
     value: bool | None = Field(description=_STATE)
 
     @model_validator(mode="after")
@@ -559,7 +605,7 @@ class RelatedKeywordsDecimalField(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: FieldStateToken = Field(description=_STATE)
+    state: OptionalStateToken = Field(description=_STATE)
     value: str | None = Field(
         description=(
             "Exact stored decimal rendered as a plain decimal string with no exponent and "
@@ -578,7 +624,7 @@ class RelatedKeywordsIntArrayField(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: FieldStateToken = Field(description=_STATE)
+    state: OptionalStateToken = Field(description=_STATE)
     value: list[int] | None = Field(
         description=(
             "Exact ordered provider array preserving duplicates. A stated-empty array is "
@@ -597,7 +643,7 @@ class RelatedKeywordsTextArrayField(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: FieldStateToken = Field(description=_STATE)
+    state: OptionalStateToken = Field(description=_STATE)
     value: list[str] | None = Field(
         description=(
             "Exact ordered provider array preserving duplicates. A stated-empty array is "
@@ -616,7 +662,7 @@ class RelatedKeywordsKeywordInfo(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    se_type: RelatedKeywordsTextField
+    se_type: RelatedKeywordsSeTypeField
     keyword_info_last_updated_time: RelatedKeywordsTextField = Field(description=_CLOCKS)
     competition: RelatedKeywordsDecimalField
     competition_level: RelatedKeywordsTextField
@@ -630,22 +676,38 @@ class RelatedKeywordsKeywordInfo(BaseModel):
             "taxonomy, a set, or an Observatory classification."
         )
     )
-    monthly_searches_state: FieldStateToken = Field(
+    monthly_searches_state: OptionalStateToken = Field(
         description=(
             "State of the provider monthly_searches array. The monthly points themselves "
-            "are the separate monthly_search_volume Observation family. " + _STATE_ONLY
+            "are the separate monthly_search_volume Observation family. A stated array may "
+            "legitimately be empty, so a stated state with no monthly facts is valid; "
+            "monthly facts under a non-stated state are integrity failure. " + _STATE_ONLY
         )
     )
-    search_volume_trend_state: FieldStateToken = Field(
+    search_volume_trend_state: OptionalStateToken = Field(
         description=(
             "State of the enclosing provider search_volume_trend object. When it is not "
             "stated its members carry the Recipe-v1 state 'inapplicable' rather than a "
             "collapsed absence. " + _STATE_ONLY
         )
     )
-    trend_monthly: RelatedKeywordsSignedField
-    trend_quarterly: RelatedKeywordsSignedField
-    trend_yearly: RelatedKeywordsSignedField
+    trend_monthly: RelatedKeywordsTrendMemberField
+    trend_quarterly: RelatedKeywordsTrendMemberField
+    trend_yearly: RelatedKeywordsTrendMemberField
+
+    @model_validator(mode="after")
+    def _require_trend_member_agreement(self) -> Self:
+        members = (self.trend_monthly, self.trend_quarterly, self.trend_yearly)
+        if self.search_volume_trend_state != "stated":
+            if any(member.state != "inapplicable" for member in members):
+                raise ValueError(
+                    "an unstated search_volume_trend has inapplicable members only"
+                )
+        elif any(member.state == "inapplicable" for member in members):
+            raise ValueError(
+                "a stated search_volume_trend has ordinary member states only"
+            )
+        return self
 
 
 class RelatedKeywordsKeywordProperties(BaseModel):
@@ -653,7 +715,7 @@ class RelatedKeywordsKeywordProperties(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    se_type: RelatedKeywordsTextField
+    se_type: RelatedKeywordsSeTypeField
     core_keyword: RelatedKeywordsTextField = Field(description=_CORE_KEYWORD)
     synonym_clustering_algorithm: RelatedKeywordsTextField = Field(
         description=(
@@ -671,7 +733,7 @@ class RelatedKeywordsAvgBacklinks(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    se_type: RelatedKeywordsTextField
+    se_type: RelatedKeywordsSeTypeField
     backlinks: RelatedKeywordsDecimalField
     dofollow: RelatedKeywordsDecimalField
     referring_pages: RelatedKeywordsDecimalField
@@ -692,7 +754,7 @@ class RelatedKeywordsSearchIntent(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    se_type: RelatedKeywordsTextField
+    se_type: RelatedKeywordsSeTypeField
     main_intent: RelatedKeywordsTextField = Field(
         description="Open provider intent vocabulary. Observatory adds no closed taxonomy."
     )
@@ -707,7 +769,7 @@ class RelatedKeywordsSerpInfo(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    se_type: RelatedKeywordsTextField
+    se_type: RelatedKeywordsSeTypeField
     check_url: RelatedKeywordsTextField = Field(
         description=(
             "Exact provider check_url string. Not normalized, resolved, fetched, or "
@@ -730,7 +792,7 @@ class RelatedKeywordsSerpInfo(BaseModel):
 class RelatedKeywordsKeywordInfoStructure(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: FieldStateToken = Field(description=_ENCLOSING_STATE)
+    state: OptionalStateToken = Field(description=_ENCLOSING_STATE)
     value: RelatedKeywordsKeywordInfo | None = Field(description=_ENCLOSING_STATE)
 
     @model_validator(mode="after")
@@ -742,7 +804,7 @@ class RelatedKeywordsKeywordInfoStructure(BaseModel):
 class RelatedKeywordsPropertiesStructure(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: FieldStateToken = Field(description=_ENCLOSING_STATE)
+    state: OptionalStateToken = Field(description=_ENCLOSING_STATE)
     value: RelatedKeywordsKeywordProperties | None = Field(description=_ENCLOSING_STATE)
 
     @model_validator(mode="after")
@@ -754,7 +816,7 @@ class RelatedKeywordsPropertiesStructure(BaseModel):
 class RelatedKeywordsBacklinksStructure(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: FieldStateToken = Field(description=_ENCLOSING_STATE)
+    state: OptionalStateToken = Field(description=_ENCLOSING_STATE)
     value: RelatedKeywordsAvgBacklinks | None = Field(description=_ENCLOSING_STATE)
 
     @model_validator(mode="after")
@@ -766,7 +828,7 @@ class RelatedKeywordsBacklinksStructure(BaseModel):
 class RelatedKeywordsIntentStructure(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: FieldStateToken = Field(description=_ENCLOSING_STATE)
+    state: OptionalStateToken = Field(description=_ENCLOSING_STATE)
     value: RelatedKeywordsSearchIntent | None = Field(description=_ENCLOSING_STATE)
 
     @model_validator(mode="after")
@@ -778,7 +840,7 @@ class RelatedKeywordsIntentStructure(BaseModel):
 class RelatedKeywordsSerpStructure(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: FieldStateToken = Field(description=_ENCLOSING_STATE)
+    state: OptionalStateToken = Field(description=_ENCLOSING_STATE)
     value: RelatedKeywordsSerpInfo | None = Field(description=_ENCLOSING_STATE)
 
     @model_validator(mode="after")
@@ -794,13 +856,15 @@ class RelatedKeywordsItemOccurrence(BaseModel):
 
     item_index: int = Field(ge=0, le=IJSON_MAX, description=_OCCURRENCE)
     depth: int = Field(ge=0, le=4, description=_OCCURRENCE)
-    item_se_type: str = Field(
+    item_se_type: Literal["google"] = Field(
         description=(
-            "Exact provider items[].se_type testimony for this placement. It is item-level "
-            "testimony and may differ from any structure-local se_type."
+            "Exact provider items[].se_type testimony for this placement. RK-03 admits only "
+            "the exact value 'google' for a returned item, and this field is required rather "
+            "than optional, so it is item-level testimony with a closed vocabulary. It is "
+            "still distinct from any structure-local se_type."
         )
     )
-    related_keywords_state: FieldStateToken = Field(
+    related_keywords_state: OptionalStateToken = Field(
         description=(
             "State of this item's related_keywords array. A non-stated state has zero "
             "relationship occurrences; a stated-empty array also has zero. " + _RELATEDNESS
@@ -867,30 +931,37 @@ class RelatedKeywordsKeywordDataFact(BaseModel):
     )
     location_code: RelatedKeywordsCountField
     language_code: RelatedKeywordsTextField
-    se_type: RelatedKeywordsTextField = Field(
-        description="Structure-local provider se_type, distinct from item-level se_type."
+    se_type: RelatedKeywordsSeTypeField = Field(
+        description=(
+            "Structure-local provider se_type, distinct from item-level se_type. "
+            + _SE_TYPE_STATE
+        )
     )
     keyword_info: RelatedKeywordsKeywordInfoStructure
     keyword_properties: RelatedKeywordsPropertiesStructure
     avg_backlinks: RelatedKeywordsBacklinksStructure
     search_intent: RelatedKeywordsIntentStructure
     serp_info: RelatedKeywordsSerpStructure
-    bing_normalized_state: FieldStateToken = Field(
+    bing_normalized_state: BingStateToken = Field(
         description=(
-            "State of provider keyword_info_normalized_with_bing. " + _STATE_ONLY
+            "State of provider keyword_info_normalized_with_bing. RK-03 does not support a "
+            "populated Bing structure, so this is exactly absent or json_null; it is never "
+            "stated and never request-disabled. " + _STATE_ONLY
         )
     )
-    clickstream_normalized_state: FieldStateToken = Field(
+    clickstream_normalized_state: ClickstreamStateToken = Field(
         description=(
-            "State of provider keyword_info_normalized_with_clickstream. The closed "
-            "adapter requests include_clickstream_data false, so a not-stated state here "
-            "is request-disabled testimony, not a provider failure. " + _STATE_ONLY
+            "State of provider keyword_info_normalized_with_clickstream. The closed adapter "
+            "freezes include_clickstream_data to false, so this is exactly not_requested: "
+            "request-disabled testimony, never a provider failure and never an absence. "
+            + _STATE_ONLY
         )
     )
-    clickstream_keyword_info_state: FieldStateToken = Field(
+    clickstream_keyword_info_state: ClickstreamStateToken = Field(
         description=(
-            "State of provider clickstream_keyword_info. The closed adapter requests "
-            "include_clickstream_data false. " + _STATE_ONLY
+            "State of provider clickstream_keyword_info. The closed adapter freezes "
+            "include_clickstream_data to false, so this is exactly not_requested. "
+            + _STATE_ONLY
         )
     )
     occurrences: list[RelatedKeywordsItemOccurrence] = Field(
@@ -1033,14 +1104,17 @@ class RelatedKeywordsResultContext(BaseModel):
     seed_keyword: str = Field(description=_ECHO)
     location_code: RelatedKeywordsCountField = Field(description=_ECHO + " " + _STATE)
     language_code: RelatedKeywordsTextField = Field(description=_ECHO + " " + _STATE)
-    se_type: RelatedKeywordsTextField = Field(description=_ECHO + " " + _STATE)
+    se_type: RelatedKeywordsSeTypeField = Field(
+        description=_ECHO + " " + _SE_TYPE_STATE
+    )
     total_count: int = Field(ge=0, le=IJSON_MAX, description=_PROVIDER_COUNTS)
     items_count: int = Field(ge=0, le=IJSON_MAX, description=_PROVIDER_COUNTS)
-    seed_keyword_data_state: FieldStateToken = Field(
+    seed_keyword_data_state: OptionalStateToken = Field(
         description=(
             "State of the provider result-level seed_keyword_data structure. A stated seed "
             "structure whose items array is empty is still ordinary admitted testimony. "
-            + _STATE_ONLY
+            "A stated state requires exactly one seed_keyword_data locus keyword-data fact "
+            "and a non-stated state requires none. " + _STATE_ONLY
         )
     )
     derived_returned_item_count: int = Field(
@@ -1196,9 +1270,13 @@ def _as_bool(value: object, name: str) -> bool:
     return value
 
 
-def _as_state(value: object, name: str) -> str:
-    if not isinstance(value, str) or value not in FIELD_STATES:
-        raise IntegrityError(f"{name} is not a closed field state")
+def _as_state(
+    value: object, name: str, domain: frozenset[str] = OPTIONAL_FIELD_STATES
+) -> str:
+    """Validate one stored state token against its own applicable Recipe-v1 domain."""
+
+    if not isinstance(value, str) or value not in domain:
+        raise IntegrityError(f"{name} is not an applicable Recipe v1 field state")
     return value
 
 
@@ -1260,11 +1338,32 @@ def _count_field(row: Mapping[str, object], column: str) -> dict[str, object]:
     }
 
 
-def _signed_field(row: Mapping[str, object], column: str) -> dict[str, object]:
+def _trend_member_field(row: Mapping[str, object], column: str) -> dict[str, object]:
     return {
-        "state": _as_state(row[f"{column}_state"], f"{column}_state"),
+        "state": _as_state(
+            row[f"{column}_state"], f"{column}_state", TREND_MEMBER_STATES
+        ),
         "value": _optional_int(row[column], column),
     }
+
+
+def _require_se_type(value: object, name: str) -> str:
+    """Required provider se_type. RK-03 admits only the exact closed value."""
+
+    text = _as_text(value, name)
+    if text != SE_TYPE:
+        raise IntegrityError(f"{name} is not the closed Recipe v1 se_type")
+    return text
+
+
+def _se_type_field(row: Mapping[str, object], column: str) -> dict[str, object]:
+    """Closed provider se_type pair. A stated value is exactly the RK-03 vocabulary."""
+
+    state = _as_state(row[f"{column}_state"], f"{column}_state")
+    value = _optional_text(row[column], column)
+    if value is not None and value != SE_TYPE:
+        raise IntegrityError(f"{column} is not the closed Recipe v1 se_type")
+    return {"state": state, "value": value}
 
 
 def _bool_field(row: Mapping[str, object], column: str) -> dict[str, object]:
@@ -1435,8 +1534,21 @@ def _rows(
 
 
 def _keyword_info(row: Mapping[str, object]) -> dict[str, object]:
+    trend_state = _as_state(
+        row["search_volume_trend_state"], "search_volume_trend_state"
+    )
+    members = {
+        column: _trend_member_field(row, column)
+        for column in ("trend_monthly", "trend_quarterly", "trend_yearly")
+    }
+    for column, member in members.items():
+        applicable = member["state"] != "inapplicable"
+        if applicable != (trend_state == "stated"):
+            raise IntegrityError(
+                f"{column} state disagrees with search_volume_trend_state"
+            )
     return {
-        "se_type": _text_field(row, "se_type"),
+        "se_type": _se_type_field(row, "se_type"),
         "keyword_info_last_updated_time": _text_field(
             row, "keyword_info_last_updated_time"
         ),
@@ -1450,18 +1562,14 @@ def _keyword_info(row: Mapping[str, object]) -> dict[str, object]:
         "monthly_searches_state": _as_state(
             row["monthly_searches_state"], "monthly_searches_state"
         ),
-        "search_volume_trend_state": _as_state(
-            row["search_volume_trend_state"], "search_volume_trend_state"
-        ),
-        "trend_monthly": _signed_field(row, "trend_monthly"),
-        "trend_quarterly": _signed_field(row, "trend_quarterly"),
-        "trend_yearly": _signed_field(row, "trend_yearly"),
+        "search_volume_trend_state": trend_state,
+        **members,
     }
 
 
 def _keyword_properties(row: Mapping[str, object]) -> dict[str, object]:
     return {
-        "se_type": _text_field(row, "se_type"),
+        "se_type": _se_type_field(row, "se_type"),
         "core_keyword": _text_field(row, "core_keyword"),
         "synonym_clustering_algorithm": _text_field(
             row, "synonym_clustering_algorithm"
@@ -1474,7 +1582,7 @@ def _keyword_properties(row: Mapping[str, object]) -> dict[str, object]:
 
 def _avg_backlinks(row: Mapping[str, object]) -> dict[str, object]:
     return {
-        "se_type": _text_field(row, "se_type"),
+        "se_type": _se_type_field(row, "se_type"),
         "backlinks": _decimal_field(row, "backlinks"),
         "dofollow": _decimal_field(row, "dofollow"),
         "referring_pages": _decimal_field(row, "referring_pages"),
@@ -1490,7 +1598,7 @@ def _avg_backlinks(row: Mapping[str, object]) -> dict[str, object]:
 
 def _search_intent(row: Mapping[str, object]) -> dict[str, object]:
     return {
-        "se_type": _text_field(row, "se_type"),
+        "se_type": _se_type_field(row, "se_type"),
         "main_intent": _text_field(row, "main_intent"),
         "foreign_intent": _text_array_field(row, "foreign_intent"),
         "search_intent_last_updated_time": _text_field(
@@ -1501,7 +1609,7 @@ def _search_intent(row: Mapping[str, object]) -> dict[str, object]:
 
 def _serp_info(row: Mapping[str, object]) -> dict[str, object]:
     return {
-        "se_type": _text_field(row, "se_type"),
+        "se_type": _se_type_field(row, "se_type"),
         "check_url": _text_field(row, "check_url"),
         "serp_item_types": _text_array_field(row, "serp_item_types"),
         "se_results_count": _count_field(row, "se_results_count"),
@@ -1558,6 +1666,7 @@ def _capture_families(
     seed: str,
     classification: str,
     observation_count: int,
+    seed_state: str,
     items_count: int,
     derived_items: int,
     derived_relationship_occurrences: int,
@@ -1598,7 +1707,7 @@ def _capture_families(
             {
                 "item_index": index,
                 "depth": depth,
-                "item_se_type": _as_any_text(row["item_se_type"], "item_se_type"),
+                "item_se_type": _require_se_type(row["item_se_type"], "item_se_type"),
                 "related_keywords_state": edge_state,
             }
         )
@@ -1610,6 +1719,12 @@ def _capture_families(
 
     keyword_data: list[dict[str, object]] = []
     keyword_data_keys: set[tuple[str, str]] = set()
+    # (locus, keyword) -> (keyword_info state, persisted monthly_searches state or None).
+    # Monthly facts are only admissible under a stated keyword_info whose monthly_searches
+    # array is itself stated, so the monthly family is bound to this index below.
+    keyword_data_index: dict[tuple[str, str], tuple[str, str | None]] = {}
+    identity_keyword: dict[str, str] = {}
+    seed_parents = 0
     for row in _rows(connection, KEYWORD_DATA_TABLE, KEYWORD_DATA_COLUMNS, capture_id):
         identity = _as_text(row["within_capture_identity"], "within_capture_identity")
         if _as_text(row["observation_kind"], "observation_kind") != KEYWORD_DATA_KIND:
@@ -1627,6 +1742,8 @@ def _capture_families(
         if recomputed != identity:
             raise IntegrityError("keyword-data identity axes do not recompute")
         structures: dict[str, object] = {}
+        info_child: Mapping[str, object] | None = None
+        info_state = _as_state(row["keyword_info_state"], "keyword_info_state")
         for name, _table, state_column, _columns in _CHILD_TABLES:
             state = _as_state(row[state_column], state_column)
             child = child_rows[name].pop(identity, None)
@@ -1641,6 +1758,21 @@ def _capture_families(
                 if child is not None:
                     raise IntegrityError(f"non-stated {name} has a persisted child row")
                 structures[name] = {"state": state, "value": None}
+            if name == "keyword_info":
+                info_child = child
+        monthly_state = (
+            None
+            if info_child is None
+            else _as_state(
+                info_child["monthly_searches_state"], "monthly_searches_state"
+            )
+        )
+        if (locus, keyword) in keyword_data_index:
+            raise IntegrityError("duplicate keyword-data locus and keyword")
+        keyword_data_index[(locus, keyword)] = (info_state, monthly_state)
+        identity_keyword[identity] = keyword
+        if locus == LOCUS_SEED:
+            seed_parents += 1
         occurrences = sorted(
             item_by_identity.pop(identity, []),
             key=lambda item: _as_int(item["item_index"], "item_index"),
@@ -1658,17 +1790,20 @@ def _capture_families(
                 "keyword": keyword,
                 "location_code": _count_field(row, "location_code"),
                 "language_code": _text_field(row, "language_code"),
-                "se_type": _text_field(row, "se_type"),
+                "se_type": _se_type_field(row, "se_type"),
                 **structures,
                 "bing_normalized_state": _as_state(
-                    row["bing_normalized_state"], "bing_normalized_state"
+                    row["bing_normalized_state"], "bing_normalized_state", BING_STATES
                 ),
                 "clickstream_normalized_state": _as_state(
-                    row["clickstream_normalized_state"], "clickstream_normalized_state"
+                    row["clickstream_normalized_state"],
+                    "clickstream_normalized_state",
+                    CLICKSTREAM_STATES,
                 ),
                 "clickstream_keyword_info_state": _as_state(
                     row["clickstream_keyword_info_state"],
                     "clickstream_keyword_info_state",
+                    CLICKSTREAM_STATES,
                 ),
                 "occurrences": occurrences,
             }
@@ -1681,6 +1816,24 @@ def _capture_families(
             raise IntegrityError(f"orphan {name} child row")
     if item_by_identity:
         raise IntegrityError("orphan returned-item occurrence")
+    if seed_state == "stated":
+        if seed_parents != 1:
+            raise IntegrityError(
+                "a stated seed_keyword_data requires exactly one seed-locus fact"
+            )
+    elif seed_parents:
+        raise IntegrityError(
+            "a non-stated seed_keyword_data requires no seed-locus fact"
+        )
+    # Which returned keyword each item position actually carries. Occurrence membership
+    # alone is not enough: a monthly point or a relatedness edge must cite an item that
+    # carries its own semantic keyword, not merely some existing item.
+    keyword_by_index: dict[int, str] = {}
+    for index, (occurrence_identity, _depth, _edge_state) in item_by_index.items():
+        occurrence_keyword = identity_keyword.get(occurrence_identity)
+        if occurrence_keyword is None:
+            raise IntegrityError("returned-item occurrence has no keyword-data fact")
+        keyword_by_index[index] = occurrence_keyword
 
     monthly_occurrences: dict[str, list[int]] = {}
     for row in _rows(
@@ -1720,11 +1873,23 @@ def _capture_families(
         )
         if recomputed != identity:
             raise IntegrityError("monthly identity axes do not recompute")
+        parent = keyword_data_index.get((locus, keyword))
+        if parent is None:
+            raise IntegrityError("monthly fact has no matching keyword-data fact")
+        if parent[0] != "stated":
+            raise IntegrityError("monthly fact under a non-stated keyword_info")
+        if parent[1] != "stated":
+            raise IntegrityError("monthly fact under a non-stated monthly_searches")
         indexes = sorted(monthly_occurrences.pop(identity, []))
         if locus == LOCUS_SEED and indexes:
             raise IntegrityError("seed-locus monthly fact must have no occurrence")
         if locus == LOCUS_ITEM and not indexes:
             raise IntegrityError("returned-item monthly fact must have an occurrence")
+        for index in indexes:
+            if keyword_by_index[index] != keyword:
+                raise IntegrityError(
+                    "monthly occurrence cites a different returned keyword"
+                )
         monthly.append(
             {
                 "observation_kind": MONTHLY_KIND,
@@ -1806,6 +1971,14 @@ def _capture_families(
         occurrences = relationship_occurrences.pop(identity, [])
         if not occurrences:
             raise IntegrityError("relationship parent has no occurrence")
+        for occurrence in occurrences:
+            source_index = _as_int(
+                occurrence["source_item_index"], "source_item_index"
+            )
+            if keyword_by_index[source_index] != source_keyword:
+                raise IntegrityError(
+                    "relationship occurrence cites a different returned source keyword"
+                )
         occurrences.sort(
             key=lambda item: (
                 _as_int(item["source_item_index"], "source_item_index"),
@@ -1938,26 +2111,9 @@ def _result_context(context: Mapping[str, object]) -> dict[str, object]:
         "seed_keyword": _as_any_text(
             context["result_seed_keyword"], "result_seed_keyword"
         ),
-        "location_code": {
-            "state": _as_state(
-                context["result_location_code_state"], "result_location_code_state"
-            ),
-            "value": _optional_int(
-                context["result_location_code"], "result_location_code"
-            ),
-        },
-        "language_code": {
-            "state": _as_state(
-                context["result_language_code_state"], "result_language_code_state"
-            ),
-            "value": _optional_text(
-                context["result_language_code"], "result_language_code"
-            ),
-        },
-        "se_type": {
-            "state": _as_state(context["result_se_type_state"], "result_se_type_state"),
-            "value": _optional_text(context["result_se_type"], "result_se_type"),
-        },
+        "location_code": _count_field(context, "result_location_code"),
+        "language_code": _text_field(context, "result_language_code"),
+        "se_type": _se_type_field(context, "result_se_type"),
         "total_count": _as_int(context["total_count"], "total_count"),
         "items_count": _as_int(context["items_count"], "items_count"),
         "seed_keyword_data_state": _as_state(
@@ -2032,6 +2188,9 @@ def _verify_capture(
         seed=requested_keyword,
         classification=token,
         observation_count=observation_count,
+        seed_state=_as_state(
+            candidate["seed_keyword_data_state"], "seed_keyword_data_state"
+        ),
         items_count=_as_int(candidate["items_count"], "items_count"),
         derived_items=_as_int(
             candidate["derived_returned_item_count"], "derived_returned_item_count"

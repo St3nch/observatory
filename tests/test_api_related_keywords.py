@@ -74,6 +74,9 @@ from observatory.google_related_keywords_derive import (
 )
 from observatory.migrate import apply_migrations, connect
 from observatory.provider_recipe import (
+    IDENTITY_SCHEMA,
+    IDENTITY_VERSION,
+    observation_identity,
     recipe_bytes,
     register_provider_recipe,
     validate_recipe,
@@ -2179,12 +2182,9 @@ def test_non_stated_structures_expose_state_without_a_value(
     for name in ("keyword_properties", "avg_backlinks", "search_intent", "serp_info"):
         assert beta[name] == {"state": "absent", "value": None}
     assert beta["keyword_info"]["state"] == "stated"
-    assert beta["clickstream_normalized_state"] in {
-        "absent",
-        "not_requested",
-        "inapplicable",
-        "json_null",
-    }
+    assert beta["clickstream_normalized_state"] == "not_requested"
+    assert beta["clickstream_keyword_info_state"] == "not_requested"
+    assert beta["bing_normalized_state"] in {"absent", "json_null"}
 
 
 # --------------------------------------------------------------------------------------
@@ -2516,17 +2516,34 @@ def _const(spec: dict[str, Any], schema: dict[str, Any], expected: object) -> No
     raise AssertionError(f"expected const {expected!r} in {schema!r}")
 
 
+_OPTIONAL_STATES: set[object] = {"absent", "json_null", "stated"}
+_TREND_MEMBER_STATES: set[object] = {"absent", "inapplicable", "json_null", "stated"}
+_BING_STATES: set[object] = {"absent", "json_null"}
+_CLICKSTREAM_STATES: set[object] = {"not_requested"}
+
+
+def _tokens(spec: dict[str, Any], schema: dict[str, Any]) -> set[object]:
+    found: set[object] = set()
+    for option in _nonnull(spec, schema):
+        found.update(option.get("enum", []))
+        if "const" in option:
+            found.add(option["const"])
+    return found
+
+
 def _state_value(
-    spec: dict[str, Any], schema: dict[str, Any]
+    spec: dict[str, Any],
+    schema: dict[str, Any],
+    *,
+    states: set[object] | None = None,
 ) -> dict[str, Any]:
+    """Assert one {state, value} wrapper and its applicable Recipe-v1 state domain."""
+
     resolved = _resolve(spec, schema)
     properties = _closed(resolved, {"state", "value"})
-    states = set()
-    for option in _nonnull(spec, properties["state"]):
-        states.update(option.get("enum", []))
-        if "const" in option:
-            states.add(option["const"])
-    assert states == {"absent", "inapplicable", "json_null", "not_requested", "stated"}
+    assert _tokens(spec, properties["state"]) == (
+        _OPTIONAL_STATES if states is None else states
+    ), resolved.get("title")
     return properties
 
 
@@ -2610,25 +2627,40 @@ def test_generated_openapi_is_fully_typed_and_closed(tmp_path: Path) -> None:
     assert classifications == {"observation_admitted", "observation_admitted_empty"}
 
     context = _closed(_resolve(spec, fields["result_context"]), RESULT_CONTEXT_KEYS)
-    for name in ("location_code", "language_code", "se_type"):
+    for name in ("location_code", "language_code"):
         _state_value(spec, context[name])
+    _const(spec, _state_value(spec, context["se_type"])["value"], "google")
+    assert _tokens(spec, context["seed_keyword_data_state"]) == _OPTIONAL_STATES
 
     keyword_data = _resolve(spec, _resolve(spec, fields["keyword_data"])["items"])
     fact = _closed(keyword_data, KEYWORD_DATA_FACT_KEYS)
     _const(spec, fact["observation_kind"], KEYWORD_DATA_KIND)
-    for name in ("location_code", "language_code", "se_type"):
+    for name in ("location_code", "language_code"):
         _state_value(spec, fact[name])
+    _const(spec, _state_value(spec, fact["se_type"])["value"], "google")
+    assert _tokens(spec, fact["bing_normalized_state"]) == _BING_STATES
+    assert _tokens(spec, fact["clickstream_normalized_state"]) == _CLICKSTREAM_STATES
+    assert _tokens(spec, fact["clickstream_keyword_info_state"]) == _CLICKSTREAM_STATES
     for name, expected_keys in _STRUCTURE_KEYS.items():
         structure = _state_value(spec, fact[name])
         child = _resolve(spec, _nonnull(spec, structure["value"])[0])
         child_fields = _closed(child, expected_keys)
         assert child.get("type") == "object"
         for child_name, child_schema in child_fields.items():
-            if child_name.endswith("_state"):
-                continue
-            _state_value(spec, child_schema)
+            if child_name in {"monthly_searches_state", "search_volume_trend_state"}:
+                assert _tokens(spec, child_schema) == _OPTIONAL_STATES, child_name
+            elif child_name.startswith("trend_"):
+                _state_value(spec, child_schema, states=_TREND_MEMBER_STATES)
+            elif child_name == "se_type":
+                _const(spec, _state_value(spec, child_schema)["value"], "google")
+            else:
+                _state_value(spec, child_schema)
     occurrence = _resolve(spec, _resolve(spec, fact["occurrences"])["items"])
-    _closed(occurrence, ITEM_OCCURRENCE_KEYS)
+    occurrence_fields = _closed(occurrence, ITEM_OCCURRENCE_KEYS)
+    _const(spec, occurrence_fields["item_se_type"], "google")
+    assert _tokens(spec, occurrence_fields["related_keywords_state"]) == (
+        _OPTIONAL_STATES
+    )
 
     monthly = _resolve(spec, _resolve(spec, fields["monthly_search_volume"])["items"])
     monthly_fields = _closed(monthly, MONTHLY_FACT_KEYS)
@@ -2667,6 +2699,10 @@ def test_generated_openapi_teaches_the_required_distinctions(tmp_path: Path) -> 
         "observation_admitted_empty",
         "observatory-derived",
         "requested_seed",
+        "not applicable to ordinary optional fields",
+        "exactly not_requested",
+        "only the exact value 'google'",
+        "exactly inapplicable with a null value",
     ):
         assert phrase in lowered, phrase
     # Graph vocabulary appears only inside explicit denials, never as a claim.
@@ -2982,3 +3018,529 @@ def test_history_is_bound_to_its_exact_subject(
     assert {fact["requested_seed"] for fact in second["keyword_data"]} == {OTHER_SEED}
     assert upper.status_code == 200
     _assert_envelope(upper.json(), total_matching=0, returned_count=0)
+
+
+# --------------------------------------------------------------------------------------
+# Remediation R1: occurrences are bound to their own returned keyword
+#
+# Each tamper below preserves every invariant the parent implementation checked — the cited
+# item index exists, depth agrees, target-index density holds, no parent row is deleted, and
+# no Outcome or derived count moves — so each of these would have been a false green.
+# --------------------------------------------------------------------------------------
+
+
+def _monthly_identity(dsn: str, keyword: str) -> str:
+    rows = _query(
+        dsn,
+        f"SELECT within_capture_identity FROM {MONTHLY_TABLE} WHERE keyword = %s",
+        (keyword,),
+    )
+    assert len(rows) == 1, keyword
+    return str(rows[0][0])
+
+
+def _counts_snapshot(dsn: str) -> tuple[Any, ...]:
+    return tuple(
+        _query(dsn, f"SELECT count(*) FROM {table}")[0][0]
+        for table in (
+            MONTHLY_TABLE,
+            MONTHLY_OCCURRENCES_TABLE,
+            RELATIONSHIP_TABLE,
+            RELATIONSHIP_OCCURRENCES_TABLE,
+            ITEM_OCCURRENCES_TABLE,
+            KEYWORD_DATA_TABLE,
+            "observation_envelopes",
+            "outcomes",
+        )
+    )
+
+
+def test_monthly_occurrence_must_cite_its_own_returned_keyword(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    body = simple_body(
+        [
+            item(
+                "alpha",
+                data=keyword_data(
+                    "alpha",
+                    keyword_info=keyword_info(
+                        monthly_searches=[
+                            {"year": 2026, "month": 7, "search_volume": 90}
+                        ]
+                    ),
+                ),
+            ),
+            item(
+                "beta",
+                data=keyword_data(
+                    "beta",
+                    keyword_info=keyword_info(
+                        monthly_searches=[
+                            {"year": 2026, "month": 6, "search_volume": 40}
+                        ]
+                    ),
+                ),
+            ),
+        ]
+    )
+    store, _attempt_id, _capture_id = _prepare(tmp_path, postgres_dsn, body=body)
+    with _app(store, postgres_dsn) as client:
+        healthy = _one_capture(client)
+        assert {fact["keyword"] for fact in healthy["monthly_search_volume"]} == {
+            "alpha",
+            "beta",
+        }
+        before = _counts_snapshot(postgres_dsn)
+        identity = _monthly_identity(postgres_dsn, "alpha")
+        # Retarget alpha's monthly point at beta's valid returned-item position. The index
+        # still exists, the parent still exists, and no count moves.
+        _damage(
+            postgres_dsn,
+            f"UPDATE {MONTHLY_OCCURRENCES_TABLE} SET item_index = 1"
+            " WHERE within_capture_identity = %s",
+            (identity,),
+        )
+        assert _counts_snapshot(postgres_dsn) == before
+        _assert_409(_history(client))
+
+
+def test_relationship_occurrence_must_cite_its_own_source_keyword(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    body = simple_body(
+        [
+            item("alpha", depth=1, related=["t"]),
+            item("beta", depth=1, related=[]),
+        ]
+    )
+    store, _attempt_id, _capture_id = _prepare(tmp_path, postgres_dsn, body=body)
+    with _app(store, postgres_dsn) as client:
+        healthy = _one_capture(client)
+        assert healthy["relationships"][0]["source_keyword"] == "alpha"
+        assert healthy["relationships"][0]["occurrences"] == [
+            {"source_item_index": 0, "source_depth": 1, "target_index": 0}
+        ]
+        before = _counts_snapshot(postgres_dsn)
+        identity = _relationship_identity(postgres_dsn, "alpha", "t")
+        # Retarget the edge at beta's item position. Depth still agrees (both items are
+        # depth 1), beta's related_keywords is stated so occurrences are permitted there,
+        # target indexes stay dense 0..0 for that source, and every count is unchanged.
+        _damage(
+            postgres_dsn,
+            f"UPDATE {RELATIONSHIP_OCCURRENCES_TABLE} SET source_item_index = 1"
+            " WHERE within_capture_identity = %s",
+            (identity,),
+        )
+        assert _counts_snapshot(postgres_dsn) == before
+        _assert_409(_history(client))
+
+
+def test_duplicate_source_keyword_at_two_item_indexes_still_reads(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    """The keyword binding must not reject legitimate duplicate returned occurrences."""
+
+    body = simple_body(
+        [
+            item("alpha", depth=1, related=["x", "y"]),
+            item("alpha", depth=2, related=["z"]),
+        ]
+    )
+    capture = _capture_for(tmp_path, postgres_dsn, body)
+    assert len(_by_keyword(capture["keyword_data"], "alpha")) == 1
+    assert len(capture["relationships"]) == 3
+    sources = {
+        occurrence["source_item_index"]
+        for fact in capture["relationships"]
+        for occurrence in fact["occurrences"]
+    }
+    assert sources == {0, 1}
+
+
+def test_duplicate_returned_keyword_monthly_occurrences_still_read(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    body = simple_body(
+        [
+            item("alpha", depth=1, data=keyword_data("alpha", keyword_info=keyword_info())),
+            item("alpha", depth=2, data=keyword_data("alpha", keyword_info=keyword_info())),
+        ]
+    )
+    capture = _capture_for(tmp_path, postgres_dsn, body)
+    monthly = _by_keyword(capture["monthly_search_volume"], "alpha")
+    assert len(monthly) == 1
+    assert [entry["item_index"] for entry in monthly[0]["occurrences"]] == [0, 1]
+
+
+# --------------------------------------------------------------------------------------
+# Remediation R2: cross-family seed and monthly state agreement
+# --------------------------------------------------------------------------------------
+
+
+def test_non_stated_seed_state_with_a_seed_locus_fact_is_409(
+    ready: tuple[TestClient, EvidenceStore, str, str], postgres_dsn: str
+) -> None:
+    client, _store, _attempt_id, _capture_id = ready
+    assert [
+        fact["locus"] for fact in _one_capture(client)["keyword_data"]
+    ].count(LOCUS_SEED) == 1
+    _damage(
+        postgres_dsn,
+        f"UPDATE {CONTEXT_TABLE} SET seed_keyword_data_state = 'absent'",
+    )
+    _assert_409(_history(client))
+
+
+def test_stated_seed_state_without_a_seed_locus_fact_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, _attempt_id, _capture_id = _prepare(
+        tmp_path, postgres_dsn, body=simple_body([item("alpha")])
+    )
+    with _app(store, postgres_dsn) as client:
+        assert _one_capture(client)["result_context"]["seed_keyword_data_state"] == (
+            "absent"
+        )
+        _damage(
+            postgres_dsn,
+            f"UPDATE {CONTEXT_TABLE} SET seed_keyword_data_state = 'stated'",
+        )
+        _assert_409(_history(client))
+
+
+def test_more_than_one_seed_locus_fact_is_409(
+    ready: tuple[TestClient, EvidenceStore, str, str], postgres_dsn: str
+) -> None:
+    client, _store, attempt_id, capture_id = ready
+    planted = observation_identity(
+        {
+            "axes": {"keyword": "planted seed", "locus": LOCUS_SEED, "requested_seed": SEED},
+            "observation_kind": KEYWORD_DATA_KIND,
+            "schema": IDENTITY_SCHEMA,
+            "version": IDENTITY_VERSION,
+        },
+        RELATED_KEYWORDS_RECIPE,
+    )
+    _damage(
+        postgres_dsn,
+        "INSERT INTO observation_envelopes (capture_id, attempt_id,"
+        " derivation_version_id, provider, adapter_contract, observation_kind,"
+        " within_capture_identity) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+        (
+            capture_id,
+            attempt_id,
+            RELATED_KEYWORDS_RECIPE_ID,
+            "dataforseo",
+            RELATED_KEYWORDS_ADAPTER_CONTRACT,
+            KEYWORD_DATA_KIND,
+            planted,
+        ),
+    )
+    _damage(
+        postgres_dsn,
+        f"INSERT INTO {KEYWORD_DATA_TABLE} (capture_id, derivation_version_id,"
+        " within_capture_identity, observation_kind, requested_seed, locus, keyword,"
+        " location_code_state, language_code_state, se_type_state, keyword_info_state,"
+        " keyword_properties_state, avg_backlinks_state, search_intent_state,"
+        " serp_info_state, bing_normalized_state, clickstream_normalized_state,"
+        " clickstream_keyword_info_state)"
+        " VALUES (%s, %s, %s, %s, %s, %s, %s, 'absent', 'absent', 'absent', 'absent',"
+        " 'absent', 'absent', 'absent', 'absent', 'absent', 'not_requested',"
+        " 'not_requested')",
+        (
+            capture_id,
+            RELATED_KEYWORDS_RECIPE_ID,
+            planted,
+            KEYWORD_DATA_KIND,
+            SEED,
+            LOCUS_SEED,
+            "planted seed",
+        ),
+    )
+    _damage(
+        postgres_dsn,
+        "UPDATE outcomes SET observation_count = observation_count + 1"
+        " WHERE derivation_version_id = %s AND capture_id = %s",
+        (RELATED_KEYWORDS_RECIPE_ID, capture_id),
+    )
+    _assert_409(_history(client))
+
+
+@pytest.mark.parametrize("state", ["absent", "json_null"])
+def test_monthly_facts_under_a_non_stated_monthly_searches_state_are_409(
+    ready: tuple[TestClient, EvidenceStore, str, str], postgres_dsn: str, state: str
+) -> None:
+    client, _store, _attempt_id, _capture_id = ready
+    identity = _keyword_identity(postgres_dsn, "alpha")
+    assert _query(
+        postgres_dsn,
+        f"SELECT count(*) FROM {MONTHLY_TABLE} WHERE keyword = 'alpha'",
+    )[0][0] == 1
+    _damage(
+        postgres_dsn,
+        f"UPDATE {KEYWORD_INFO_TABLE} SET monthly_searches_state = %s"
+        " WHERE within_capture_identity = %s",
+        (state, identity),
+    )
+    _assert_409(_history(client))
+
+
+def test_monthly_facts_under_a_non_stated_keyword_info_are_409(
+    ready: tuple[TestClient, EvidenceStore, str, str], postgres_dsn: str
+) -> None:
+    client, _store, _attempt_id, _capture_id = ready
+    identity = _keyword_identity(postgres_dsn, "alpha")
+    _damage(
+        postgres_dsn,
+        f"DELETE FROM {KEYWORD_INFO_TABLE} WHERE within_capture_identity = %s",
+        (identity,),
+    )
+    _damage(
+        postgres_dsn,
+        f"UPDATE {KEYWORD_DATA_TABLE} SET keyword_info_state = 'json_null'"
+        " WHERE within_capture_identity = %s",
+        (identity,),
+    )
+    _assert_409(_history(client))
+
+
+def test_stated_monthly_searches_with_no_monthly_facts_still_reads(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    """Stated-empty monthly testimony is valid; the agreement rule is one-directional."""
+
+    body = simple_body(
+        [
+            item(
+                "alpha",
+                data=keyword_data("alpha", keyword_info=keyword_info(monthly_searches=[])),
+            )
+        ]
+    )
+    capture = _capture_for(tmp_path, postgres_dsn, body)
+    info = _by_keyword(capture["keyword_data"], "alpha")[0]["keyword_info"]["value"]
+    assert info["monthly_searches_state"] == "stated"
+    assert capture["monthly_search_volume"] == []
+
+
+# --------------------------------------------------------------------------------------
+# Remediation R3: applicable Recipe-v1 state domains
+# --------------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "column", ["clickstream_normalized_state", "clickstream_keyword_info_state"]
+)
+@pytest.mark.parametrize("state", ["absent", "json_null", "stated", "inapplicable"])
+def test_clickstream_state_outside_not_requested_is_409(
+    ready: tuple[TestClient, EvidenceStore, str, str],
+    postgres_dsn: str,
+    column: str,
+    state: str,
+) -> None:
+    client, _store, _attempt_id, _capture_id = ready
+    _damage(postgres_dsn, f"UPDATE {KEYWORD_DATA_TABLE} SET {column} = %s", (state,))
+    _assert_409(_history(client))
+
+
+@pytest.mark.parametrize("state", ["not_requested", "stated", "inapplicable"])
+def test_bing_state_outside_absent_or_json_null_is_409(
+    ready: tuple[TestClient, EvidenceStore, str, str], postgres_dsn: str, state: str
+) -> None:
+    client, _store, _attempt_id, _capture_id = ready
+    _damage(
+        postgres_dsn,
+        f"UPDATE {KEYWORD_DATA_TABLE} SET bing_normalized_state = %s",
+        (state,),
+    )
+    _assert_409(_history(client))
+
+
+@pytest.mark.parametrize("state", ["not_requested", "inapplicable"])
+def test_related_keywords_state_outside_its_domain_is_409(
+    ready: tuple[TestClient, EvidenceStore, str, str], postgres_dsn: str, state: str
+) -> None:
+    """The no-edge returned item would satisfy every occurrence rule under the old enum."""
+
+    client, _store, _attempt_id, _capture_id = ready
+    assert _query(
+        postgres_dsn,
+        f"SELECT count(*) FROM {RELATIONSHIP_OCCURRENCES_TABLE}"
+        " WHERE source_item_index = 1",
+    )[0][0] == 0
+    _damage(
+        postgres_dsn,
+        f"UPDATE {ITEM_OCCURRENCES_TABLE} SET related_keywords_state = %s"
+        " WHERE item_index = 1",
+        (state,),
+    )
+    _assert_409(_history(client))
+
+
+@pytest.mark.parametrize(
+    ("table", "column"),
+    [
+        (KEYWORD_DATA_TABLE, "language_code"),
+        (KEYWORD_DATA_TABLE, "location_code"),
+        (KEYWORD_INFO_TABLE, "competition"),
+        (PROPERTIES_TABLE, "core_keyword"),
+    ],
+)
+@pytest.mark.parametrize("state", ["not_requested", "inapplicable"])
+def test_ordinary_optional_state_outside_its_domain_is_409(
+    ready: tuple[TestClient, EvidenceStore, str, str],
+    postgres_dsn: str,
+    table: str,
+    column: str,
+    state: str,
+) -> None:
+    client, _store, _attempt_id, _capture_id = ready
+    _damage(
+        postgres_dsn,
+        f"UPDATE {table} SET {column} = NULL, {column}_state = %s",
+        (state,),
+    )
+    _assert_409(_history(client))
+
+
+@pytest.mark.parametrize(
+    "column",
+    [
+        "keyword_info_state",
+        "keyword_properties_state",
+        "avg_backlinks_state",
+        "search_intent_state",
+        "serp_info_state",
+    ],
+)
+@pytest.mark.parametrize("state", ["not_requested", "inapplicable"])
+def test_enclosing_structure_state_outside_its_domain_is_409(
+    tmp_path: Path, postgres_dsn: str, column: str, state: str
+) -> None:
+    """A bare returned item has every enclosing state absent and no child rows, so the
+    only rule this tamper breaks is the applicable state domain."""
+
+    store, _attempt_id, _capture_id = _prepare(
+        tmp_path, postgres_dsn, body=simple_body([item("alpha")])
+    )
+    with _app(store, postgres_dsn) as client:
+        healthy = _one_capture(client)
+        fact = _by_keyword(healthy["keyword_data"], "alpha")[0]
+        assert fact[column.removesuffix("_state")]["state"] == "absent"
+        _damage(
+            postgres_dsn,
+            f"UPDATE {KEYWORD_DATA_TABLE} SET {column} = %s",
+            (state,),
+        )
+        _assert_409(_history(client))
+
+
+@pytest.mark.parametrize("state", ["not_requested", "inapplicable"])
+def test_monthly_searches_state_outside_its_domain_is_409(
+    ready: tuple[TestClient, EvidenceStore, str, str], postgres_dsn: str, state: str
+) -> None:
+    client, _store, _attempt_id, _capture_id = ready
+    _damage(
+        postgres_dsn,
+        f"UPDATE {KEYWORD_INFO_TABLE} SET monthly_searches_state = %s",
+        (state,),
+    )
+    _assert_409(_history(client))
+
+
+@pytest.mark.parametrize("state", ["not_requested", "inapplicable"])
+def test_seed_keyword_data_state_outside_its_domain_is_409(
+    ready: tuple[TestClient, EvidenceStore, str, str], postgres_dsn: str, state: str
+) -> None:
+    client, _store, _attempt_id, _capture_id = ready
+    _damage(
+        postgres_dsn,
+        f"UPDATE {CONTEXT_TABLE} SET seed_keyword_data_state = %s",
+        (state,),
+    )
+    _assert_409(_history(client))
+
+
+@pytest.mark.parametrize("member", ["trend_monthly", "trend_quarterly", "trend_yearly"])
+def test_stated_trend_with_an_inapplicable_member_is_409(
+    ready: tuple[TestClient, EvidenceStore, str, str], postgres_dsn: str, member: str
+) -> None:
+    client, _store, _attempt_id, _capture_id = ready
+    identity = _keyword_identity(postgres_dsn, "alpha")
+    assert _query(
+        postgres_dsn,
+        f"SELECT search_volume_trend_state FROM {KEYWORD_INFO_TABLE}"
+        " WHERE within_capture_identity = %s",
+        (identity,),
+    )[0][0] == "stated"
+    _damage(
+        postgres_dsn,
+        f"UPDATE {KEYWORD_INFO_TABLE} SET {member} = NULL,"
+        f" {member}_state = 'inapplicable' WHERE within_capture_identity = %s",
+        (identity,),
+    )
+    _assert_409(_history(client))
+
+
+@pytest.mark.parametrize("state", ["absent", "json_null", "not_requested"])
+def test_unstated_trend_with_an_applicable_member_is_409(
+    ready: tuple[TestClient, EvidenceStore, str, str], postgres_dsn: str, state: str
+) -> None:
+    client, _store, _attempt_id, _capture_id = ready
+    identity = _keyword_identity(postgres_dsn, "beta")
+    assert _query(
+        postgres_dsn,
+        f"SELECT search_volume_trend_state FROM {KEYWORD_INFO_TABLE}"
+        " WHERE within_capture_identity = %s",
+        (identity,),
+    )[0][0] == "json_null"
+    _damage(
+        postgres_dsn,
+        f"UPDATE {KEYWORD_INFO_TABLE} SET trend_monthly_state = %s"
+        " WHERE within_capture_identity = %s",
+        (state, identity),
+    )
+    _assert_409(_history(client))
+
+
+# --------------------------------------------------------------------------------------
+# Remediation R4: closed Google se_type vocabulary
+# --------------------------------------------------------------------------------------
+
+
+def test_item_se_type_outside_the_closed_vocabulary_is_409(
+    ready: tuple[TestClient, EvidenceStore, str, str], postgres_dsn: str
+) -> None:
+    client, _store, _attempt_id, _capture_id = ready
+    _damage(
+        postgres_dsn,
+        f"UPDATE {ITEM_OCCURRENCES_TABLE} SET item_se_type = 'bing' WHERE item_index = 0",
+    )
+    _assert_409(_history(client))
+
+
+@pytest.mark.parametrize(
+    ("table", "column"),
+    [
+        (KEYWORD_DATA_TABLE, "se_type"),
+        (KEYWORD_INFO_TABLE, "se_type"),
+        (PROPERTIES_TABLE, "se_type"),
+        (BACKLINKS_TABLE, "se_type"),
+        (INTENT_TABLE, "se_type"),
+        (SERP_TABLE, "se_type"),
+        (CONTEXT_TABLE, "result_se_type"),
+    ],
+)
+def test_stated_se_type_outside_the_closed_vocabulary_is_409(
+    ready: tuple[TestClient, EvidenceStore, str, str],
+    postgres_dsn: str,
+    table: str,
+    column: str,
+) -> None:
+    client, _store, _attempt_id, _capture_id = ready
+    _damage(
+        postgres_dsn,
+        f"UPDATE {table} SET {column} = 'bing', {column}_state = 'stated'",
+    )
+    _assert_409(_history(client))
