@@ -43,6 +43,25 @@ PARSER_CONTRACT: Final[str] = (
 )
 SE_TYPE: Final[str] = "google"
 
+# RANK-05 Recipe-v1 Observation kinds. They are declared here beside the parser contract
+# they interpret, but this module builds no Recipe document, computes no identity, and
+# touches no persistence: the RANK-05 Derivation owns all of that.
+CORPUS_METRICS_KIND: Final[str] = (
+    "dataforseo.google.ranked_keywords.corpus_metrics.v1"
+)
+RANKED_RESULT_KIND: Final[str] = "dataforseo.google.ranked_keywords.ranked_result.v1"
+KEYWORD_DATA_KIND: Final[str] = "dataforseo.google.ranked_keywords.keyword_data.v1"
+MONTHLY_KIND: Final[str] = (
+    "dataforseo.google.ranked_keywords.monthly_search_volume.v1"
+)
+
+# The two independently stated rank-system loci. `metrics` and `metrics_absolute` answer on
+# different rank systems and are never reconciled against each other, so the locus is an
+# identity axis of the corpus-metrics kind rather than two sibling structures in one row.
+RANK_SYSTEM_GROUP: Final[str] = "rank_group"
+RANK_SYSTEM_ABSOLUTE: Final[str] = "rank_absolute"
+RANK_SYSTEMS: Final[tuple[str, ...]] = (RANK_SYSTEM_GROUP, RANK_SYSTEM_ABSOLUTE)
+
 # Calendar bound for provider clocks and monthly Data Periods. Keyword Overview's narrower
 # 2000..2100 window is that surface's own Recipe rule and is not imported here.
 YEAR_MIN: Final[int] = 1

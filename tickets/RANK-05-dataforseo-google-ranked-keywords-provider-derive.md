@@ -1,11 +1,12 @@
 # RANK-05 — DataForSEO Google Ranked Keywords Derivation Recipe and typed persistence
 
-**Status:** accepted after code-first [CLAUDE] `RECONCILE`, independent [GROK] `RECONCILE`, [CHAZ] Product resolution, and [GPT] Steward reconciliation; awaiting separate [CHAZ] implementation authorization  
+**Status:** implemented under the Steward reconciliation lock; awaiting Steward review, independent implementation review, and the [CHAZ] full-suite integration gate  
 **Owner:** [CLAUDE] designated Writer / [GPT] Steward / [GROK] independent reviewer  
 **Blocked by:** no technical blocker; RANK-04 closed at `ecfd6cfb90e7162081f64ae02e410e0cf056eaf4`  
 **Draft base:** `ecfd6cfb90e7162081f64ae02e410e0cf056eaf4`  
 **Dual-review base:** `8827fb7a71e0d4bb5d03c57fd0fa213eee6fed4e`  
-**Implementation authorization:** not yet granted  
+**Implementation authorization:** granted by [CHAZ] from the exact accepted ticket HEAD `b8f52d6841e1e734233c15d43b9ac9c060bac429`  
+**Implementation start SHA:** `b8f52d6841e1e734233c15d43b9ac9c060bac429` — branch `main`, clean working tree, verified before any edit; the implementation commit is a direct child of this SHA  
 **Provider authority:** zero calls, zero spend; existing protected RANK-03 Evidence and frozen RANK-04 Conformance fixture only  
 
 ## Purpose
@@ -686,3 +687,66 @@ Ranked-local keyword enrichment, and monthly Data-Period testimony**, while pres
 movement/loss testimony, URLs/hosts, field states, and structure-local clocks — without
 inventing completeness, canonical pages, cross-surface equivalence, longitudinal change, or
 Strategy meaning.
+
+## Implementation record — Writer lane
+
+[CHAZ] explicitly authorized implementation from the exact accepted ticket HEAD
+`b8f52d6841e1e734233c15d43b9ac9c060bac429`. The starting gate was verified before any edit:
+branch `main`, HEAD exactly that SHA, clean working tree. No authorization-only commit was
+made; the single implementation commit is a direct child of `b8f52d...`.
+
+### Changed paths
+
+- `src/observatory/dataforseo_google_ranked_keywords.py` — four Recipe kind constants plus the
+  two rank-system locus constants. No parser admission change, no new import, and the frozen
+  seam test still holds (`provider_recipe` absent, exactly two `from observatory.` imports).
+- `src/observatory/google_ranked_keywords_derive.py` — new. Recipe document, planning,
+  classification, typed persistence, and complete-set assertion.
+- `src/observatory/migrate.py` — `PRE_RANK05_SCHEMA_STATEMENTS` layering and exactly twelve
+  Ranked relations.
+- `tests/test_dataforseo_google_ranked_keywords_derive.py` — new; 101 tests.
+- `tests/test_dataforseo_google_related_keywords_derive.py` — migration-baseline retarget only.
+- this ticket.
+
+`tests/test_dataforseo_google_ranked_keywords.py` was **not** edited: no IR addition was
+needed.
+
+### Recipe
+
+The Recipe document lives in the derive module rather than the parser module. The accepted
+RANK-04 boundary gives the Ranked parser a frozen seam test forbidding a `provider_recipe`
+import, so the Recipe belongs on the Derivation side; only the plain kind/locus string
+constants sit beside the parser contract they interpret.
+
+- canonical JCS byte length: **2825**
+- `derivation_version_id` (SHA-256 of those bytes):
+  `c7573695db7ecaa0f5dfdc2fc3658e84b1673eec005a0d8003093e57408294a8`
+
+### Frozen-fixture consequences
+
+Independently recomputed from the committed body by the test suite, never hard-coded in
+production: 10 corpus metrics + 100 ranked results + 100 keyword data + 1200 monthly =
+**1410** semantic Observation envelopes, plus 100 item-occurrence rows, 1200
+monthly-occurrence rows, one result-context row, and `outcomes.observation_count = 1410`.
+
+### Verification
+
+- `uv run pytest -q tests/test_dataforseo_google_ranked_keywords.py
+  tests/test_dataforseo_google_ranked_keywords_derive.py` — 365 passed.
+- `uv run pytest -q tests/test_dataforseo_google_related_keywords_derive.py` — 117 passed,
+  with the RK-04 delta equality and `len(added) == 12` assertion preserved exactly.
+- `uv run ruff check .` — all checks passed.
+- targeted mypy over `src` plus both changed test modules — no issues in 47 source files.
+- configured `uv run mypy` — 14 errors in 5 files, message-for-message and file-for-file
+  identical to the `b8f52d...` baseline; only the checked-file count moved 92 → 94. Zero new
+  errors, and no unrelated inherited error was repaired.
+
+No provider call, credential access, Evidence mutation, fixture change, pagination, second
+acquisition, clickstream enablement, Recipe selection, API, Strategy, or RANK-06 work was
+performed. No amend, rebase, or push.
+
+The other frozen `PRE_*` migration-baseline suites were checked statically and need no
+retarget: every one of them measures its delta against a frozen `PRE_*` layer, and the two
+generic table-set assertions elsewhere use `issubset`/membership rather than exact equality.
+The Related Keywords suite was the only direct consumer of the generic `SCHEMA_STATEMENTS`,
+exactly as the reconciliation lock predicted.

@@ -1910,6 +1910,751 @@ RK04_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
 )
 
 
+# --------------------------------------------------------------------------------------
+# RANK-05 — DataForSEO Google Ranked Keywords typed relations
+#
+# Exactly twelve relations on top of the generic Recipe/Outcome/envelope/diagnostic
+# substrate. Four are kind-bound semantic parents, five are keyword-data children, two are
+# provider occurrence relations, and one is the admitted result context.
+#
+# No relation exposes a generic `provider_update_time` or universal `last_updated`. The four
+# time pillars stay separate: acquisition provenance never enters these tables, monthly
+# `(year, month)` is a Data Period, the SERP/placement clocks keep `ranked_element_*` and
+# `keyword_serp_*` source-local names, and each enrichment clock is named for the exact
+# structure that stated it.
+# --------------------------------------------------------------------------------------
+
+RANKED_KEYWORDS_CORPUS_METRICS_KIND: Final[str] = (
+    "dataforseo.google.ranked_keywords.corpus_metrics.v1"
+)
+RANKED_KEYWORDS_RANKED_RESULT_KIND: Final[str] = (
+    "dataforseo.google.ranked_keywords.ranked_result.v1"
+)
+RANKED_KEYWORDS_KEYWORD_DATA_KIND: Final[str] = (
+    "dataforseo.google.ranked_keywords.keyword_data.v1"
+)
+RANKED_KEYWORDS_MONTHLY_KIND: Final[str] = (
+    "dataforseo.google.ranked_keywords.monthly_search_volume.v1"
+)
+
+_RANK05_FAMILY_CHECK: Final[str] = (
+    "IN ('organic', 'paid', 'featured_snippet', 'local_pack', "
+    "'ai_overview_reference')"
+)
+_RANK05_RANK_SYSTEM_CHECK: Final[str] = "IN ('rank_group', 'rank_absolute')"
+_RANK05_BUCKET_COLUMNS: Final[tuple[str, ...]] = (
+    "pos_1",
+    "pos_2_3",
+    "pos_4_10",
+    "pos_11_20",
+    "pos_21_30",
+    "pos_31_40",
+    "pos_41_50",
+    "pos_51_60",
+    "pos_61_70",
+    "pos_71_80",
+    "pos_81_90",
+    "pos_91_100",
+)
+_RANK05_MOVEMENT_COLUMNS: Final[tuple[str, ...]] = (
+    "is_new",
+    "is_up",
+    "is_down",
+    "is_lost",
+)
+
+
+def _rank05_consistency(name: str, column: str) -> str:
+    """Short-named state/value consistency CHECK for one RANK-05 column pair.
+
+    Same reason as RK-04: `_state_value_consistency` derives its constraint name from the
+    table name, and several Ranked table names would push a generated constraint name past
+    PostgreSQL's 63-byte identifier limit and be silently truncated.
+    """
+
+    return (
+        f"CONSTRAINT {name} "
+        f"CHECK (({column}_state = 'stated' AND {column} IS NOT NULL) "
+        f"OR ({column}_state <> 'stated' AND {column} IS NULL))"
+    )
+
+
+def _rank05_clock(column: str, name: str) -> str:
+    """One structure-local provider clock column pair.
+
+    Each Ranked clock carries the name of the exact provider structure that stated it. The
+    Ranked-element and keyword-SERP loci agree in the frozen fixture; that agreement is
+    testimony, so they still get two independent columns that may disagree.
+    """
+
+    return (
+        f"{column} TEXT\n"
+        f"        CHECK ({column} IS NULL OR {column} ~ '{_CLOCK_RE}'),\n"
+        f"    {column}_state TEXT NOT NULL\n"
+        f"        CHECK ({column}_state {_FIELD_STATE_CHECK}),\n"
+        f"    {_rank05_consistency(name, column)}"
+    )
+
+
+def _rank05_nonneg(column: str) -> str:
+    return f"CHECK ({column} IS NULL OR ({column} >= 0 AND {column} <= {_IJSON_MAX}))"
+
+
+def _rank05_signed(column: str) -> str:
+    return (
+        f"CHECK ({column} IS NULL OR "
+        f"({column} >= -{_IJSON_MAX} AND {column} <= {_IJSON_MAX}))"
+    )
+
+
+def _rank05_state_only(column: str) -> str:
+    """A Field state persisted without any value column.
+
+    Used for the five parser-v1 null-only unsupported SERP children and for the three
+    [CHAZ] Option 1 prose fields, whose ABSENT/JSON_NULL/STATED distinction is preserved
+    while the text itself stays Evidence-only under Recipe v1.
+    """
+
+    return (
+        f"{column}_state TEXT NOT NULL\n"
+        f"        CHECK ({column}_state {_FIELD_STATE_CHECK})"
+    )
+
+
+_RANK05_SEMANTIC_KEY: Final[str] = f"""capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL"""
+
+
+def _rank05_keyword_child_fk(constraint: str) -> str:
+    return f"""CONSTRAINT {constraint}
+        FOREIGN KEY (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+        REFERENCES ranked_keywords_keyword_data (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )"""
+
+
+_RANK05_BUCKETS_SQL: Final[str] = ",\n    ".join(
+    f"{column} BIGINT NOT NULL\n"
+    f"        CHECK ({column} >= 0 AND {column} <= {_IJSON_MAX})"
+    for column in _RANK05_BUCKET_COLUMNS
+)
+_RANK05_MOVEMENT_SQL: Final[str] = ",\n    ".join(
+    f"{column} BIGINT NOT NULL\n"
+    f"        CHECK ({column} >= 0 AND {column} <= {_IJSON_MAX})"
+    for column in _RANK05_MOVEMENT_COLUMNS
+)
+
+RANKED_KEYWORDS_CORPUS_METRICS_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS ranked_keywords_corpus_metrics (
+    {_RANK05_SEMANTIC_KEY},
+    requested_target TEXT NOT NULL
+        CHECK (char_length(requested_target) >= 1),
+    aggregate_family TEXT NOT NULL
+        CHECK (aggregate_family {_RANK05_FAMILY_CHECK}),
+    rank_system TEXT NOT NULL
+        CHECK (rank_system {_RANK05_RANK_SYSTEM_CHECK}),
+    {_RANK05_BUCKETS_SQL},
+    {_RANK05_MOVEMENT_SQL},
+    count BIGINT
+        {_rank05_nonneg("count")},
+    count_state TEXT NOT NULL
+        CHECK (count_state {_FIELD_STATE_CHECK}),
+    etv NUMERIC,
+    etv_state TEXT NOT NULL
+        CHECK (etv_state {_FIELD_STATE_CHECK}),
+    estimated_paid_traffic_cost NUMERIC,
+    estimated_paid_traffic_cost_state TEXT NOT NULL
+        CHECK (estimated_paid_traffic_cost_state {_FIELD_STATE_CHECK}),
+    {_rank05_state_only("clickstream_etv")},
+    {_rank05_state_only("clickstream_gender_distribution")},
+    {_rank05_state_only("clickstream_age_distribution")},
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rank05_corpus_kind
+        CHECK (observation_kind = '{RANKED_KEYWORDS_CORPUS_METRICS_KIND}'),
+    CONSTRAINT rank05_corpus_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    CONSTRAINT rank05_corpus_absolute_locus
+        CHECK (
+            rank_system = 'rank_group'
+            OR (count_state = 'inapplicable'
+                AND etv_state = 'inapplicable'
+                AND estimated_paid_traffic_cost_state = 'inapplicable')
+        ),
+    {_rank05_consistency("rank05_cm_count_ck", "count")},
+    {_rank05_consistency("rank05_cm_etv_ck", "etv")},
+    {_rank05_consistency("rank05_cm_cost_ck", "estimated_paid_traffic_cost")},
+    {_ENVELOPE_FK}
+)
+"""
+
+RANKED_KEYWORDS_RANKED_RESULTS_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS ranked_keywords_ranked_results (
+    {_RANK05_SEMANTIC_KEY},
+    requested_target TEXT NOT NULL
+        CHECK (char_length(requested_target) >= 1),
+    keyword TEXT NOT NULL
+        CHECK (char_length(keyword) >= 1),
+    serp_item_type TEXT NOT NULL
+        CHECK (char_length(serp_item_type) >= 1),
+    rank_group BIGINT NOT NULL
+        CHECK (rank_group >= 0 AND rank_group <= {_IJSON_MAX}),
+    rank_absolute BIGINT NOT NULL
+        CHECK (rank_absolute >= 0 AND rank_absolute <= {_IJSON_MAX}),
+    ranked_element_se_type TEXT,
+    ranked_element_se_type_state TEXT NOT NULL
+        CHECK (ranked_element_se_type_state {_FIELD_STATE_CHECK}),
+    ranked_element_check_url TEXT,
+    ranked_element_check_url_state TEXT NOT NULL
+        CHECK (ranked_element_check_url_state {_FIELD_STATE_CHECK}),
+    ranked_element_se_results_count BIGINT
+        {_rank05_nonneg("ranked_element_se_results_count")},
+    ranked_element_se_results_count_state TEXT NOT NULL
+        CHECK (ranked_element_se_results_count_state {_FIELD_STATE_CHECK}),
+    ranked_element_keyword_difficulty BIGINT
+        {_rank05_nonneg("ranked_element_keyword_difficulty")},
+    ranked_element_keyword_difficulty_state TEXT NOT NULL
+        CHECK (ranked_element_keyword_difficulty_state {_FIELD_STATE_CHECK}),
+    ranked_element_is_lost BOOLEAN,
+    ranked_element_is_lost_state TEXT NOT NULL
+        CHECK (ranked_element_is_lost_state {_FIELD_STATE_CHECK}),
+    ranked_element_serp_item_types TEXT[],
+    ranked_element_serp_item_types_state TEXT NOT NULL
+        CHECK (ranked_element_serp_item_types_state {_FIELD_STATE_CHECK}),
+    {_rank05_clock("ranked_element_last_updated_time", "rank05_rr_el_last_ck")},
+    {_rank05_clock("ranked_element_previous_updated_time", "rank05_rr_el_prev_ck")},
+    serp_item_se_type TEXT,
+    serp_item_se_type_state TEXT NOT NULL
+        CHECK (serp_item_se_type_state {_FIELD_STATE_CHECK}),
+    url TEXT NOT NULL
+        CHECK (char_length(url) >= 1),
+    position TEXT,
+    position_state TEXT NOT NULL
+        CHECK (position_state {_FIELD_STATE_CHECK}),
+    xpath TEXT,
+    xpath_state TEXT NOT NULL
+        CHECK (xpath_state {_FIELD_STATE_CHECK}),
+    domain TEXT,
+    domain_state TEXT NOT NULL
+        CHECK (domain_state {_FIELD_STATE_CHECK}),
+    main_domain TEXT,
+    main_domain_state TEXT NOT NULL
+        CHECK (main_domain_state {_FIELD_STATE_CHECK}),
+    website_name TEXT,
+    website_name_state TEXT NOT NULL
+        CHECK (website_name_state {_FIELD_STATE_CHECK}),
+    relative_url TEXT,
+    relative_url_state TEXT NOT NULL
+        CHECK (relative_url_state {_FIELD_STATE_CHECK}),
+    title TEXT,
+    title_state TEXT NOT NULL
+        CHECK (title_state {_FIELD_STATE_CHECK}),
+    description TEXT,
+    description_state TEXT NOT NULL
+        CHECK (description_state {_FIELD_STATE_CHECK}),
+    {_rank05_state_only("breadcrumb")},
+    {_rank05_state_only("pre_snippet")},
+    {_rank05_state_only("highlighted")},
+    is_image BOOLEAN,
+    is_image_state TEXT NOT NULL
+        CHECK (is_image_state {_FIELD_STATE_CHECK}),
+    is_video BOOLEAN,
+    is_video_state TEXT NOT NULL
+        CHECK (is_video_state {_FIELD_STATE_CHECK}),
+    is_featured_snippet BOOLEAN,
+    is_featured_snippet_state TEXT NOT NULL
+        CHECK (is_featured_snippet_state {_FIELD_STATE_CHECK}),
+    is_malicious BOOLEAN,
+    is_malicious_state TEXT NOT NULL
+        CHECK (is_malicious_state {_FIELD_STATE_CHECK}),
+    amp_version BOOLEAN,
+    amp_version_state TEXT NOT NULL
+        CHECK (amp_version_state {_FIELD_STATE_CHECK}),
+    etv NUMERIC,
+    etv_state TEXT NOT NULL
+        CHECK (etv_state {_FIELD_STATE_CHECK}),
+    estimated_paid_traffic_cost NUMERIC,
+    estimated_paid_traffic_cost_state TEXT NOT NULL
+        CHECK (estimated_paid_traffic_cost_state {_FIELD_STATE_CHECK}),
+    {_rank05_state_only("clickstream_etv")},
+    rank_changes_state TEXT NOT NULL
+        CHECK (rank_changes_state {_FIELD_STATE_CHECK}),
+    rank_changes_is_new BOOLEAN,
+    rank_changes_is_new_state TEXT NOT NULL
+        CHECK (rank_changes_is_new_state {_FIELD_STATE_CHECK}),
+    rank_changes_is_up BOOLEAN,
+    rank_changes_is_up_state TEXT NOT NULL
+        CHECK (rank_changes_is_up_state {_FIELD_STATE_CHECK}),
+    rank_changes_is_down BOOLEAN,
+    rank_changes_is_down_state TEXT NOT NULL
+        CHECK (rank_changes_is_down_state {_FIELD_STATE_CHECK}),
+    rank_changes_previous_rank_absolute BIGINT
+        {_rank05_nonneg("rank_changes_previous_rank_absolute")},
+    rank_changes_previous_rank_absolute_state TEXT NOT NULL
+        CHECK (rank_changes_previous_rank_absolute_state {_FIELD_STATE_CHECK}),
+    rank_info_state TEXT NOT NULL
+        CHECK (rank_info_state {_FIELD_STATE_CHECK}),
+    rank_info_page_rank BIGINT
+        {_rank05_nonneg("rank_info_page_rank")},
+    rank_info_page_rank_state TEXT NOT NULL
+        CHECK (rank_info_page_rank_state {_FIELD_STATE_CHECK}),
+    rank_info_main_domain_rank BIGINT
+        {_rank05_nonneg("rank_info_main_domain_rank")},
+    rank_info_main_domain_rank_state TEXT NOT NULL
+        CHECK (rank_info_main_domain_rank_state {_FIELD_STATE_CHECK}),
+    {_rank05_state_only("about_this_result")},
+    {_rank05_state_only("backlinks_info")},
+    {_rank05_state_only("extended_snippet")},
+    {_rank05_state_only("links")},
+    {_rank05_state_only("rating")},
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rank05_ranked_result_kind
+        CHECK (observation_kind = '{RANKED_KEYWORDS_RANKED_RESULT_KIND}'),
+    CONSTRAINT rank05_ranked_result_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_rank05_consistency("rank05_rr_el_se_type_ck", "ranked_element_se_type")},
+    {_rank05_consistency("rank05_rr_el_check_url_ck", "ranked_element_check_url")},
+    {_rank05_consistency("rank05_rr_el_results_ck", "ranked_element_se_results_count")},
+    {_rank05_consistency("rank05_rr_el_kd_ck", "ranked_element_keyword_difficulty")},
+    {_rank05_consistency("rank05_rr_el_lost_ck", "ranked_element_is_lost")},
+    {_rank05_consistency("rank05_rr_el_types_ck", "ranked_element_serp_item_types")},
+    {_rank05_consistency("rank05_rr_si_se_type_ck", "serp_item_se_type")},
+    {_rank05_consistency("rank05_rr_position_ck", "position")},
+    {_rank05_consistency("rank05_rr_xpath_ck", "xpath")},
+    {_rank05_consistency("rank05_rr_domain_ck", "domain")},
+    {_rank05_consistency("rank05_rr_main_domain_ck", "main_domain")},
+    {_rank05_consistency("rank05_rr_website_ck", "website_name")},
+    {_rank05_consistency("rank05_rr_relative_ck", "relative_url")},
+    {_rank05_consistency("rank05_rr_title_ck", "title")},
+    {_rank05_consistency("rank05_rr_description_ck", "description")},
+    {_rank05_consistency("rank05_rr_is_image_ck", "is_image")},
+    {_rank05_consistency("rank05_rr_is_video_ck", "is_video")},
+    {_rank05_consistency("rank05_rr_is_fs_ck", "is_featured_snippet")},
+    {_rank05_consistency("rank05_rr_is_malicious_ck", "is_malicious")},
+    {_rank05_consistency("rank05_rr_amp_ck", "amp_version")},
+    {_rank05_consistency("rank05_rr_etv_ck", "etv")},
+    {_rank05_consistency("rank05_rr_cost_ck", "estimated_paid_traffic_cost")},
+    {_rank05_consistency("rank05_rr_rc_new_ck", "rank_changes_is_new")},
+    {_rank05_consistency("rank05_rr_rc_up_ck", "rank_changes_is_up")},
+    {_rank05_consistency("rank05_rr_rc_down_ck", "rank_changes_is_down")},
+    {_rank05_consistency("rank05_rr_rc_prev_ck", "rank_changes_previous_rank_absolute")},
+    {_rank05_consistency("rank05_rr_ri_page_ck", "rank_info_page_rank")},
+    {_rank05_consistency("rank05_rr_ri_main_ck", "rank_info_main_domain_rank")},
+    {_ENVELOPE_FK}
+)
+"""
+
+RANKED_KEYWORDS_KEYWORD_DATA_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS ranked_keywords_keyword_data (
+    {_RANK05_SEMANTIC_KEY},
+    requested_target TEXT NOT NULL
+        CHECK (char_length(requested_target) >= 1),
+    keyword TEXT NOT NULL
+        CHECK (char_length(keyword) >= 1),
+    location_code BIGINT
+        {_rank05_nonneg("location_code")},
+    location_code_state TEXT NOT NULL
+        CHECK (location_code_state {_FIELD_STATE_CHECK}),
+    language_code TEXT,
+    language_code_state TEXT NOT NULL
+        CHECK (language_code_state {_FIELD_STATE_CHECK}),
+    se_type TEXT,
+    se_type_state TEXT NOT NULL
+        CHECK (se_type_state {_FIELD_STATE_CHECK}),
+    keyword_info_state TEXT NOT NULL
+        CHECK (keyword_info_state {_FIELD_STATE_CHECK}),
+    keyword_properties_state TEXT NOT NULL
+        CHECK (keyword_properties_state {_FIELD_STATE_CHECK}),
+    avg_backlinks_state TEXT NOT NULL
+        CHECK (avg_backlinks_state {_FIELD_STATE_CHECK}),
+    search_intent_state TEXT NOT NULL
+        CHECK (search_intent_state {_FIELD_STATE_CHECK}),
+    keyword_serp_info_state TEXT NOT NULL
+        CHECK (keyword_serp_info_state {_FIELD_STATE_CHECK}),
+    bing_normalized_state TEXT NOT NULL
+        CHECK (bing_normalized_state {_FIELD_STATE_CHECK}),
+    clickstream_normalized_state TEXT NOT NULL
+        CHECK (clickstream_normalized_state {_FIELD_STATE_CHECK}),
+    clickstream_keyword_info_state TEXT NOT NULL
+        CHECK (clickstream_keyword_info_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rank05_keyword_data_kind
+        CHECK (observation_kind = '{RANKED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    CONSTRAINT rank05_keyword_data_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_rank05_consistency("rank05_kd_location_ck", "location_code")},
+    {_rank05_consistency("rank05_kd_language_ck", "language_code")},
+    {_rank05_consistency("rank05_kd_se_type_ck", "se_type")},
+    {_ENVELOPE_FK}
+)
+"""
+
+RANKED_KEYWORDS_KEYWORD_INFO_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS ranked_keywords_keyword_info (
+    {_RANK05_SEMANTIC_KEY},
+    se_type TEXT,
+    se_type_state TEXT NOT NULL
+        CHECK (se_type_state {_FIELD_STATE_CHECK}),
+    {_rank05_clock("keyword_info_last_updated_time", "rank05_ki_clock_ck")},
+    competition NUMERIC,
+    competition_state TEXT NOT NULL
+        CHECK (competition_state {_FIELD_STATE_CHECK}),
+    competition_level TEXT,
+    competition_level_state TEXT NOT NULL
+        CHECK (competition_level_state {_FIELD_STATE_CHECK}),
+    cpc NUMERIC,
+    cpc_state TEXT NOT NULL
+        CHECK (cpc_state {_FIELD_STATE_CHECK}),
+    search_volume BIGINT
+        {_rank05_nonneg("search_volume")},
+    search_volume_state TEXT NOT NULL
+        CHECK (search_volume_state {_FIELD_STATE_CHECK}),
+    low_top_of_page_bid NUMERIC,
+    low_top_of_page_bid_state TEXT NOT NULL
+        CHECK (low_top_of_page_bid_state {_FIELD_STATE_CHECK}),
+    high_top_of_page_bid NUMERIC,
+    high_top_of_page_bid_state TEXT NOT NULL
+        CHECK (high_top_of_page_bid_state {_FIELD_STATE_CHECK}),
+    categories BIGINT[],
+    categories_state TEXT NOT NULL
+        CHECK (categories_state {_FIELD_STATE_CHECK}),
+    monthly_searches_state TEXT NOT NULL
+        CHECK (monthly_searches_state {_FIELD_STATE_CHECK}),
+    search_volume_trend_state TEXT NOT NULL
+        CHECK (search_volume_trend_state {_FIELD_STATE_CHECK}),
+    trend_monthly BIGINT
+        {_rank05_signed("trend_monthly")},
+    trend_monthly_state TEXT NOT NULL
+        CHECK (trend_monthly_state {_FIELD_STATE_CHECK}),
+    trend_quarterly BIGINT
+        {_rank05_signed("trend_quarterly")},
+    trend_quarterly_state TEXT NOT NULL
+        CHECK (trend_quarterly_state {_FIELD_STATE_CHECK}),
+    trend_yearly BIGINT
+        {_rank05_signed("trend_yearly")},
+    trend_yearly_state TEXT NOT NULL
+        CHECK (trend_yearly_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rank05_keyword_info_kind
+        CHECK (observation_kind = '{RANKED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    {_rank05_consistency("rank05_ki_se_type_ck", "se_type")},
+    {_rank05_consistency("rank05_ki_competition_ck", "competition")},
+    {_rank05_consistency("rank05_ki_comp_level_ck", "competition_level")},
+    {_rank05_consistency("rank05_ki_cpc_ck", "cpc")},
+    {_rank05_consistency("rank05_ki_volume_ck", "search_volume")},
+    {_rank05_consistency("rank05_ki_low_bid_ck", "low_top_of_page_bid")},
+    {_rank05_consistency("rank05_ki_high_bid_ck", "high_top_of_page_bid")},
+    {_rank05_consistency("rank05_ki_categories_ck", "categories")},
+    {_rank05_consistency("rank05_ki_trend_m_ck", "trend_monthly")},
+    {_rank05_consistency("rank05_ki_trend_q_ck", "trend_quarterly")},
+    {_rank05_consistency("rank05_ki_trend_y_ck", "trend_yearly")},
+    {_rank05_keyword_child_fk("rank05_keyword_info_parent")}
+)
+"""
+
+RANKED_KEYWORDS_KEYWORD_PROPERTIES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS ranked_keywords_keyword_properties (
+    {_RANK05_SEMANTIC_KEY},
+    se_type TEXT,
+    se_type_state TEXT NOT NULL
+        CHECK (se_type_state {_FIELD_STATE_CHECK}),
+    core_keyword TEXT,
+    core_keyword_state TEXT NOT NULL
+        CHECK (core_keyword_state {_FIELD_STATE_CHECK}),
+    synonym_clustering_algorithm TEXT,
+    synonym_clustering_algorithm_state TEXT NOT NULL
+        CHECK (synonym_clustering_algorithm_state {_FIELD_STATE_CHECK}),
+    keyword_difficulty BIGINT
+        {_rank05_nonneg("keyword_difficulty")},
+    keyword_difficulty_state TEXT NOT NULL
+        CHECK (keyword_difficulty_state {_FIELD_STATE_CHECK}),
+    detected_language TEXT,
+    detected_language_state TEXT NOT NULL
+        CHECK (detected_language_state {_FIELD_STATE_CHECK}),
+    is_another_language BOOLEAN,
+    is_another_language_state TEXT NOT NULL
+        CHECK (is_another_language_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rank05_properties_kind
+        CHECK (observation_kind = '{RANKED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    {_rank05_consistency("rank05_kp_se_type_ck", "se_type")},
+    {_rank05_consistency("rank05_kp_core_ck", "core_keyword")},
+    {_rank05_consistency("rank05_kp_algorithm_ck", "synonym_clustering_algorithm")},
+    {_rank05_consistency("rank05_kp_difficulty_ck", "keyword_difficulty")},
+    {_rank05_consistency("rank05_kp_language_ck", "detected_language")},
+    {_rank05_consistency("rank05_kp_another_ck", "is_another_language")},
+    {_rank05_keyword_child_fk("rank05_properties_parent")}
+)
+"""
+
+RANKED_KEYWORDS_AVG_BACKLINKS_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS ranked_keywords_avg_backlinks (
+    {_RANK05_SEMANTIC_KEY},
+    se_type TEXT,
+    se_type_state TEXT NOT NULL
+        CHECK (se_type_state {_FIELD_STATE_CHECK}),
+    backlinks NUMERIC,
+    backlinks_state TEXT NOT NULL
+        CHECK (backlinks_state {_FIELD_STATE_CHECK}),
+    dofollow NUMERIC,
+    dofollow_state TEXT NOT NULL
+        CHECK (dofollow_state {_FIELD_STATE_CHECK}),
+    referring_pages NUMERIC,
+    referring_pages_state TEXT NOT NULL
+        CHECK (referring_pages_state {_FIELD_STATE_CHECK}),
+    referring_domains NUMERIC,
+    referring_domains_state TEXT NOT NULL
+        CHECK (referring_domains_state {_FIELD_STATE_CHECK}),
+    referring_main_domains NUMERIC,
+    referring_main_domains_state TEXT NOT NULL
+        CHECK (referring_main_domains_state {_FIELD_STATE_CHECK}),
+    rank NUMERIC,
+    rank_state TEXT NOT NULL
+        CHECK (rank_state {_FIELD_STATE_CHECK}),
+    main_domain_rank NUMERIC,
+    main_domain_rank_state TEXT NOT NULL
+        CHECK (main_domain_rank_state {_FIELD_STATE_CHECK}),
+    {_rank05_clock("avg_backlinks_last_updated_time", "rank05_bl_clock_ck")},
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rank05_backlinks_kind
+        CHECK (observation_kind = '{RANKED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    {_rank05_consistency("rank05_bl_se_type_ck", "se_type")},
+    {_rank05_consistency("rank05_bl_backlinks_ck", "backlinks")},
+    {_rank05_consistency("rank05_bl_dofollow_ck", "dofollow")},
+    {_rank05_consistency("rank05_bl_ref_pages_ck", "referring_pages")},
+    {_rank05_consistency("rank05_bl_ref_domains_ck", "referring_domains")},
+    {_rank05_consistency("rank05_bl_ref_main_ck", "referring_main_domains")},
+    {_rank05_consistency("rank05_bl_rank_ck", "rank")},
+    {_rank05_consistency("rank05_bl_main_rank_ck", "main_domain_rank")},
+    {_rank05_keyword_child_fk("rank05_backlinks_parent")}
+)
+"""
+
+RANKED_KEYWORDS_SEARCH_INTENT_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS ranked_keywords_search_intent (
+    {_RANK05_SEMANTIC_KEY},
+    se_type TEXT,
+    se_type_state TEXT NOT NULL
+        CHECK (se_type_state {_FIELD_STATE_CHECK}),
+    main_intent TEXT,
+    main_intent_state TEXT NOT NULL
+        CHECK (main_intent_state {_FIELD_STATE_CHECK}),
+    foreign_intent TEXT[],
+    foreign_intent_state TEXT NOT NULL
+        CHECK (foreign_intent_state {_FIELD_STATE_CHECK}),
+    {_rank05_clock("search_intent_last_updated_time", "rank05_si_clock_ck")},
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rank05_intent_kind
+        CHECK (observation_kind = '{RANKED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    {_rank05_consistency("rank05_si_se_type_ck", "se_type")},
+    {_rank05_consistency("rank05_si_main_ck", "main_intent")},
+    {_rank05_consistency("rank05_si_foreign_ck", "foreign_intent")},
+    {_rank05_keyword_child_fk("rank05_intent_parent")}
+)
+"""
+
+RANKED_KEYWORDS_KEYWORD_SERP_INFO_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS ranked_keywords_keyword_serp_info (
+    {_RANK05_SEMANTIC_KEY},
+    se_type TEXT,
+    se_type_state TEXT NOT NULL
+        CHECK (se_type_state {_FIELD_STATE_CHECK}),
+    check_url TEXT,
+    check_url_state TEXT NOT NULL
+        CHECK (check_url_state {_FIELD_STATE_CHECK}),
+    serp_item_types TEXT[],
+    serp_item_types_state TEXT NOT NULL
+        CHECK (serp_item_types_state {_FIELD_STATE_CHECK}),
+    se_results_count BIGINT
+        {_rank05_nonneg("se_results_count")},
+    se_results_count_state TEXT NOT NULL
+        CHECK (se_results_count_state {_FIELD_STATE_CHECK}),
+    {_rank05_clock("keyword_serp_last_updated_time", "rank05_kserp_last_ck")},
+    {_rank05_clock("keyword_serp_previous_updated_time", "rank05_kserp_prev_ck")},
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rank05_keyword_serp_kind
+        CHECK (observation_kind = '{RANKED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    {_rank05_consistency("rank05_kserp_se_type_ck", "se_type")},
+    {_rank05_consistency("rank05_kserp_url_ck", "check_url")},
+    {_rank05_consistency("rank05_kserp_types_ck", "serp_item_types")},
+    {_rank05_consistency("rank05_kserp_count_ck", "se_results_count")},
+    {_rank05_keyword_child_fk("rank05_keyword_serp_parent")}
+)
+"""
+
+RANKED_KEYWORDS_MONTHLY_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS ranked_keywords_monthly_search_volume (
+    {_RANK05_SEMANTIC_KEY},
+    requested_target TEXT NOT NULL
+        CHECK (char_length(requested_target) >= 1),
+    keyword TEXT NOT NULL
+        CHECK (char_length(keyword) >= 1),
+    year BIGINT NOT NULL
+        CHECK (year >= 1 AND year <= 9999),
+    month BIGINT NOT NULL
+        CHECK (month >= 1 AND month <= 12),
+    search_volume BIGINT NOT NULL
+        CHECK (search_volume >= 0 AND search_volume <= {_IJSON_MAX}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rank05_monthly_kind
+        CHECK (observation_kind = '{RANKED_KEYWORDS_MONTHLY_KIND}'),
+    CONSTRAINT rank05_monthly_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_ENVELOPE_FK}
+)
+"""
+
+RANKED_KEYWORDS_ITEM_OCCURRENCES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS ranked_keywords_item_occurrences (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    item_index BIGINT NOT NULL
+        CHECK (item_index >= 0 AND item_index <= {_IJSON_MAX}),
+    ranked_result_identity TEXT NOT NULL
+        CHECK (ranked_result_identity ~ '{_HEX64}'),
+    ranked_result_kind TEXT NOT NULL,
+    keyword_data_identity TEXT NOT NULL
+        CHECK (keyword_data_identity ~ '{_HEX64}'),
+    keyword_data_kind TEXT NOT NULL,
+    item_se_type TEXT NOT NULL,
+    PRIMARY KEY (capture_id, derivation_version_id, item_index),
+    CONSTRAINT rank05_item_occ_result_kind
+        CHECK (ranked_result_kind = '{RANKED_KEYWORDS_RANKED_RESULT_KIND}'),
+    CONSTRAINT rank05_item_occ_keyword_kind
+        CHECK (keyword_data_kind = '{RANKED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    CONSTRAINT rank05_item_occ_result_parent
+        FOREIGN KEY (
+            capture_id, derivation_version_id,
+            ranked_result_identity, ranked_result_kind
+        )
+        REFERENCES ranked_keywords_ranked_results (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    CONSTRAINT rank05_item_occ_keyword_parent
+        FOREIGN KEY (
+            capture_id, derivation_version_id,
+            keyword_data_identity, keyword_data_kind
+        )
+        REFERENCES ranked_keywords_keyword_data (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+)
+"""
+
+RANKED_KEYWORDS_MONTHLY_OCCURRENCES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS ranked_keywords_monthly_item_occurrences (
+    {_RANK05_SEMANTIC_KEY},
+    item_index BIGINT NOT NULL
+        CHECK (item_index >= 0 AND item_index <= {_IJSON_MAX}),
+    PRIMARY KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, item_index
+    ),
+    CONSTRAINT rank05_monthly_occ_kind
+        CHECK (observation_kind = '{RANKED_KEYWORDS_MONTHLY_KIND}'),
+    CONSTRAINT rank05_monthly_occ_parent
+        FOREIGN KEY (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+        REFERENCES ranked_keywords_monthly_search_volume (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+)
+"""
+
+RANKED_KEYWORDS_CONTEXT_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS ranked_keywords_result_context (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL
+        REFERENCES provider_recipes (derivation_version_id),
+    attempt_id TEXT NOT NULL
+        CHECK (attempt_id ~ '{_HEX64}'),
+    requested_target TEXT NOT NULL
+        CHECK (char_length(requested_target) >= 1),
+    request_location_code BIGINT NOT NULL
+        CHECK (request_location_code >= 0
+               AND request_location_code <= {_IJSON_MAX}),
+    request_language_code TEXT NOT NULL,
+    request_item_types TEXT[] NOT NULL,
+    request_ignore_synonyms BOOLEAN NOT NULL,
+    request_include_clickstream_data BOOLEAN NOT NULL,
+    request_limit BIGINT NOT NULL
+        CHECK (request_limit >= 0 AND request_limit <= {_IJSON_MAX}),
+    request_offset BIGINT NOT NULL
+        CHECK (request_offset >= 0 AND request_offset <= {_IJSON_MAX}),
+    request_load_rank_absolute BOOLEAN NOT NULL,
+    request_historical_serp_mode TEXT NOT NULL,
+    request_order_by TEXT[] NOT NULL,
+    result_target TEXT,
+    result_target_state TEXT NOT NULL
+        CHECK (result_target_state {_FIELD_STATE_CHECK}),
+    result_location_code BIGINT
+        {_rank05_nonneg("result_location_code")},
+    result_location_code_state TEXT NOT NULL
+        CHECK (result_location_code_state {_FIELD_STATE_CHECK}),
+    result_language_code TEXT,
+    result_language_code_state TEXT NOT NULL
+        CHECK (result_language_code_state {_FIELD_STATE_CHECK}),
+    result_se_type TEXT,
+    result_se_type_state TEXT NOT NULL
+        CHECK (result_se_type_state {_FIELD_STATE_CHECK}),
+    total_count BIGINT NOT NULL
+        CHECK (total_count >= 0 AND total_count <= {_IJSON_MAX}),
+    items_count BIGINT NOT NULL
+        CHECK (items_count >= 0 AND items_count <= {_IJSON_MAX}),
+    PRIMARY KEY (capture_id, derivation_version_id),
+    CONSTRAINT rank05_context_outcome
+        FOREIGN KEY (derivation_version_id, attempt_id, capture_id)
+        REFERENCES outcomes (derivation_version_id, attempt_id, capture_id),
+    {_rank05_consistency("rank05_ctx_target_ck", "result_target")},
+    {_rank05_consistency("rank05_ctx_location_ck", "result_location_code")},
+    {_rank05_consistency("rank05_ctx_language_ck", "result_language_code")},
+    {_rank05_consistency("rank05_ctx_se_type_ck", "result_se_type")}
+)
+"""
+
+RANK05_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
+    RANKED_KEYWORDS_CORPUS_METRICS_SQL,
+    RANKED_KEYWORDS_RANKED_RESULTS_SQL,
+    RANKED_KEYWORDS_KEYWORD_DATA_SQL,
+    RANKED_KEYWORDS_KEYWORD_INFO_SQL,
+    RANKED_KEYWORDS_KEYWORD_PROPERTIES_SQL,
+    RANKED_KEYWORDS_AVG_BACKLINKS_SQL,
+    RANKED_KEYWORDS_SEARCH_INTENT_SQL,
+    RANKED_KEYWORDS_KEYWORD_SERP_INFO_SQL,
+    RANKED_KEYWORDS_MONTHLY_SQL,
+    RANKED_KEYWORDS_ITEM_OCCURRENCES_SQL,
+    RANKED_KEYWORDS_MONTHLY_OCCURRENCES_SQL,
+    RANKED_KEYWORDS_CONTEXT_SQL,
+)
+
+
+
 PRE_PF12_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     DERIVATION_VERSIONS_SQL,
     OUTCOMES_SQL,
@@ -1965,8 +2710,12 @@ PRE_RK04_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_AI16_SCHEMA_STATEMENTS 
     LLM_MENTIONS_HISTORICAL_UNRETURNED_SQL,
 )
 
-SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
+PRE_RANK05_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     PRE_RK04_SCHEMA_STATEMENTS + RK04_SCHEMA_STATEMENTS
+)
+
+SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
+    PRE_RANK05_SCHEMA_STATEMENTS + RANK05_SCHEMA_STATEMENTS
 )
 
 WIDEN_IJSON_COLUMNS: Final[tuple[tuple[str, str], ...]] = (

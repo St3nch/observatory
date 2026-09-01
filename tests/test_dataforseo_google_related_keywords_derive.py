@@ -63,12 +63,12 @@ from observatory.google_related_keywords_derive import (
 )
 from observatory.migrate import (
     PRE_AI16_SCHEMA_STATEMENTS,
+    PRE_RANK05_SCHEMA_STATEMENTS,
     PRE_RK04_SCHEMA_STATEMENTS,
     RELATED_KEYWORDS_KEYWORD_DATA_KIND,
     RELATED_KEYWORDS_MONTHLY_KIND,
     RELATED_KEYWORDS_RELATIONSHIP_KIND,
     RK04_SCHEMA_STATEMENTS,
-    SCHEMA_STATEMENTS,
     apply_migrations,
     connect,
 )
@@ -525,9 +525,12 @@ def test_pre_rk04_layering_is_additive_and_preserves_the_historical_delta() -> N
     ]
     assert len(historical) == 3
     assert "related_keywords_" not in "\n".join(PRE_RK04_SCHEMA_STATEMENTS)
+    # Retargeted at RANK-05: the generic `SCHEMA_STATEMENTS` now also carries the twelve
+    # Ranked relations, so the RK-04 delta is measured against the frozen pre-RANK-05
+    # layer instead. The exact equality and length below are unchanged.
     added = [
         statement
-        for statement in SCHEMA_STATEMENTS
+        for statement in PRE_RANK05_SCHEMA_STATEMENTS
         if statement not in PRE_RK04_SCHEMA_STATEMENTS
     ]
     assert added == list(RK04_SCHEMA_STATEMENTS)
