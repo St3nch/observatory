@@ -1,6 +1,6 @@
 # RANK-06 — DataForSEO Google Ranked Keywords Recipe selection and admitted-history API
 
-**Status:** review — final [GROK] read-only adversarial review returned `READY`; awaiting [CHAZ] full-suite integration validation  
+**Status:** closed — [CHAZ] full-suite integration passed at the exact reviewed closure candidate; [GPT] Steward accepted RANK-06 as complete  
 **Owner:** [GPT] Steward review / [CLAUDE] designated and implementation-authorized Writer  
 **Blocked by:** none; RANK-05 closed  
 **Draft base:** `512525f78c20e49eb096b8ab98c0ed4ad2d64df0`  
@@ -1160,6 +1160,20 @@ Evidence rather than the production assembler.
 [GROK] reported no mutation, provider/network call, credential access, Evidence mutation,
 spend, amend, rebase, reset, or push. Final repository-wide integration remains [CHAZ]
 evidence at the exact closure-candidate commit produced by recording this review.
+
+## Final integration and closure
+
+[CHAZ] ran the full repository suite at exact clean closure candidate
+`e9600d674d8bcc5c939823854f0e909325adceff` on branch `main`:
+
+- `uv run pytest -q` — **2830 passed, 1 skipped, 1 warning** in **1263.36s (0:21:03)**;
+- the sole warning is the inherited Starlette `TestClient` / `httpx` deprecation warning;
+- no failure or unexpected skip was reported.
+
+This satisfies the final integration gate after [GPT] Steward acceptance and the mandatory final
+[GROK] adversarial review (`READY`). RANK-06 is therefore accepted and closed. This closure
+records no provider call, credential access, Evidence mutation, spend, amend, rebase, reset, or
+push. The closure commit is ticket-only and does not alter the tested production/test tree.
 
 ## Explicit out of scope
 
