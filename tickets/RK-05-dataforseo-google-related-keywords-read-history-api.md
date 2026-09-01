@@ -1,10 +1,11 @@
 # RK-05 — DataForSEO Google Related Keywords Recipe selection and admitted-history API
 
-**Status:** draft — independent read-only technical review required before implementation  
+**Status:** reconciled — final pre-implementation contract; awaiting explicit [CHAZ] implementation authorization  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
 **Blocked by:** none; RK-04 closed  
 **Draft base:** `be194e99573d6c6f8a9ecb12d23d35c563bce446`  
 **Pre-implementation reviewer:** [GROK] independent read-only code-first review  
+**Pre-implementation review result:** `RECONCILE` at exact review HEAD `e70d94b55cb2295f6fc5e6928859678137033e6b`  
 **Product direction:** complete the bounded Related Keywords MVP vertical slice without another provider call  
 
 ## Purpose
@@ -61,6 +62,161 @@ Exact Observation kinds, in Recipe order:
 2. `dataforseo.google.related_keywords.monthly_search_volume.v1`
 3. `dataforseo.google.related_keywords.relationship.v1`
 
+## Steward reconciliation lock — 2026-09-01
+
+Grok independently reviewed this draft at exact clean HEAD
+`e70d94b55cb2295f6fc5e6928859678137033e6b` and returned `RECONCILE`. The Steward independently
+verified the material findings against the current Recipe, RK-04 schema, derive logic, D14,
+and the newer typed reader precedents. The rules below are final RK-05 design authority and
+supersede every provisional challenge/question later in this draft. No Product question
+remains.
+
+### Exact Recipe-v1 and query boundary
+
+- RK-05 serves only exact Recipe v1
+  `a85abbe1d9780a3a66cc9fe01adc539e8568144a067b0345ec06cec700dc2669`.
+- Selected or pinned non-v1 identity returns the accepted provider-selection 404 path.
+  Tampered/non-canonical/digest-disagreeing v1 bytes or provider/adapter/kind/taxonomy
+  disagreement returns HTTP 409 `evidence_integrity_failure`.
+- Validate stored Recipe bytes as UTF-8 JSON, accepted closed Recipe, exact JCS, exact digest,
+  provider `dataforseo`, exact Related Keywords adapter, exact ordered three-kind list, and
+  exact stored Capture taxonomy in this order:
+  `no_response`, `observation_admitted`, `observation_admitted_empty`,
+  `provider_envelope_rejected`, `provider_error`, `reconciliation_failed`,
+  `response_partial`, `transport_complete_non_admissible`.
+- `requested_keyword` is `Query(min_length=1)` only. Do not apply RK-01's 80-character
+  operator bound or seed regex to the history query. An impossible exact subject is an empty
+  history miss under a valid Recipe, not a 422. Do not apply RK-01 seed constraints to inner
+  returned keyword, source/target, `core_keyword`, or URL testimony.
+
+### Exact membership and Evidence boundary
+
+- Candidate membership is anchored on `related_keywords_result_context` and LEFT JOINed to
+  `outcomes` by the full `(derivation_version_id, attempt_id, capture_id)` tuple.
+- `context.attempt_id` is the candidate Attempt. It must equal the verified Capture parent and
+  the matching Outcome/Envelope provenance.
+- Matching context with a missing, foreign-Attempt, or non-admitted Outcome is integrity
+  disagreement and returns 409; it is never silently converted into empty history.
+- Verify every matching candidate before sort/limit: resolved Recipe → verified Attempt →
+  `validate_related_keywords_http_parameters` → verified Capture/full bodies → exact
+  provider/adapter/parent → persisted request-context agreement → capture-wide PostgreSQL
+  consistency. Damage outside `limit=1` still fails the whole read.
+- Result echo testimony (`result_seed_keyword`, result location/language/se_type) may disagree
+  with verified Attempt testimony and remains API-visible provider result context. Only the
+  persisted `request_*` context columns must agree with the verified Attempt.
+
+### Exact lossless state/value projection
+
+RK-05 uses a dedicated fully typed Related-Keywords-local envelope with strict models and
+`extra="forbid"`. It does not expose generic/untyped JSON. Freeze these projection rules:
+
+1. A scalar/array persisted as `<value column> + <state column>` is always exposed as
+   `{state, value}`. `value` is non-null exactly when state is `stated`; stated-empty arrays
+   are `{state: "stated", value: []}`. Stated-empty strings remain exact testimony where
+   RK-04 permits them.
+2. An enclosing object state plus optional 1:1 child row is always exposed as
+   `{state, value}` where `value` is the fully typed child object exactly when the enclosing
+   state is `stated`, otherwise null. Child-row absence is never itself interpreted as state.
+3. State-only testimony such as `monthly_searches_state`, `search_volume_trend_state`,
+   `related_keywords_state`, Bing-normalized state, and clickstream states is exposed as the
+   closed lower-case state token without a fake value.
+4. Ordinary typed testimony such as monthly `search_volume`, relationship strings,
+   item/depth/index occurrence values, and immutable identity axes is exposed directly.
+
+The closed state vocabulary is the applicable subset of `stated`, `json_null`, `absent`,
+`not_requested`, and `inapplicable`. Do not collapse unstated trend members:
+`search_volume_trend_state` preserves the enclosing provider state while its unstated member
+states remain Recipe-v1 `inapplicable`.
+
+The keyword-data projection must account for **every persisted RK-04 column** across the
+semantic parent and all five 1:1 child relations, including structure-local `se_type`, current
+metrics/bids/categories, monthly/trend states and signed trend members, properties and
+`core_keyword`, exact NUMERIC backlinks, intent and ordered foreign intents, SERP URL/
+item-types/result-count, all structure-local clock strings, Bing state, and clickstream
+states. Decimal values serialize with `format(value, "f")`, never binary float.
+
+### Exact identity, occurrence, and presentation rules
+
+- Recompute semantic identities from persisted axes using the Recipe's exact axis names:
+  `requested_seed`, `locus`, `keyword`, `year`, `month`, `source_keyword`, and
+  `target_keyword` as applicable. Outer API `requested_keyword` is the same exact Attempt seed
+  under API-01 naming; do not substitute that name inside Recipe identity documents.
+- Seed locus has zero item/monthly occurrence rows. Every returned-item keyword-data parent
+  has at least one item occurrence; every returned-item monthly parent has at least one
+  monthly occurrence; every relationship parent has at least one relationship occurrence.
+- Returned-item indexes are globally complete across the Capture: collect the **multiset** of
+  all keyword-data item-occurrence `item_index` values. Its size is `n` and its unique values
+  are exactly `0..n-1`, where `n == items_count == derived_returned_item_count`. This is a
+  Recipe-v1/parser invariant, not an RK-02 coincidence. Never require `total_count == n`.
+- Relationship `target_index` density is checked **per `source_item_index` across all
+  relationship parents for that source occurrence**, never per semantic relationship parent.
+  For each source item whose `related_keywords_state` is `stated`, target indexes are the
+  unique dense set `0..m-1`; absent/json-null/stated-empty states have zero relationship
+  occurrences. This explicitly permits duplicate semantic source keywords at different item
+  indexes with different related arrays.
+- Every relationship occurrence `source_depth` must equal the keyword-data item-occurrence
+  depth for the same `source_item_index`.
+- Returned-item monthly occurrence `item_index` and relationship `source_item_index` must
+  resolve to an existing returned-item occurrence in the same Capture/Recipe.
+- Inner presentation uses explicit locus rank: `seed_keyword_data` first, then
+  `returned_item`, then keyword/period/identity tie-breaks. Never rely on lexical locus order.
+  Ordering is presentation only, never semantic identity.
+
+### Exact classification and admitted-empty rules
+
+- `observation_admitted` requires a positive semantic envelope set and exact count agreement.
+- `observation_admitted_empty` requires one subject-bearing result-context row,
+  `observation_count == 0`, zero semantic parent/detail/occurrence rows, and no invented facts.
+- A stated seed `KeywordData` with `items=[]` remains ordinary admitted testimony, not
+  admitted-empty.
+- Empty outer history, admitted-empty Capture history, failure, never-measured, and "no
+  related keywords" are distinct states and must be described separately in OpenAPI.
+
+### Golden facts versus Recipe-v1 invariants
+
+The RK-02 values `81`, `972`, `477`, `1530`, the `63/80` current-vs-monthly disagreement,
+`167` frontier targets, value-equal seed path versus depth-0 item in that Capture, and exact
+category duplicates are golden test facts only. Do not turn them into production validation.
+
+Recipe-v1 read invariants include `items_count == derived_returned_item_count`, the global
+returned-item occurrence index set, structure-child presence matching enclosing state,
+source-depth agreement, semantic-parent/envelope complete-set equality, occurrence-parent
+requirements, and the classification-gated admitted/admitted-empty rules above.
+
+### Final implementation and proof boundary
+
+Production changes are limited to new `src/observatory/related_keywords_read.py` plus the
+Related Keywords history route and Attempt-adapter routing addition in `src/observatory/api.py`.
+Tests are new `tests/test_api_related_keywords.py`, with bounded edits to
+`tests/test_api_attempts.py` and/or `tests/test_provider_recipe_selection.py` only if needed
+for routing/selection proof. Prefer proving selection isolation in the new RK-05 test module.
+This ticket may carry Writer status/report updates.
+
+Do not modify `provider_history.py`, `provider_recipe_selection.py`, RK parser/Recipe/
+Derivation, migrate/schema, fixtures, Evidence, Outcomes/Holdings modules, or sibling readers.
+Use a dedicated strict `RelatedKeywordsHistoryEnvelope`; `history_list_response` may supply
+outer list math but nested Capture bodies remain fully Related-Keywords typed.
+
+The golden test must independently project persisted PostgreSQL rows plus verified Evidence
+into expected JSON without calling the production reader/assembler to construct expected
+values. Add synthetic proofs for duplicate source keyword with unequal related arrays,
+duplicate semantic target occurrences, duplicate keyword occurrences, admitted-empty, all
+relevant absent/null/stated-empty states, foreign/missing/non-admitted Outcome, missing child
+rows, missing/extra occurrence rows, identity-axis tamper, source-depth disagreement,
+result-echo disagreement, and read damage outside limit. Read-only proof snapshots
+`provider_recipes`, `provider_recipe_selections`, `outcomes`, `observation_envelopes`, all
+twelve RK-04 tables, and Evidence operation logs. Two independently derived disposable
+PostgreSQL databases must return equal non-empty history JSON.
+
+Reserve full RK-02 PostgreSQL derivation for bounded golden/content proofs; use small synthetic
+Captures for most adversarial tests. Current inherited mypy baseline at the review HEAD is
+14 errors in five unrelated files. RK-05 must add zero errors: targeted mypy over changed
+files is clean and full configured mypy matches the exact review/start baseline. Do not repair
+that inherited debt.
+
+No Product question remains. Failure-aware activity remains a future Outcomes concern;
+subject inventory remains Holdings. Neither is RK-05 scope.
+
 ## Existing persistence facts
 
 RK-04 already owns all persistence required by this ticket. RK-05 must not add another table,
@@ -110,7 +266,7 @@ Under Recipe v1 that Capture derives to:
 These are frozen-Capture consequences only. API code must not use them as production
 constants or provider invariants.
 
-## Proposed exact route and query contract
+## Exact route and query contract
 
 Implement exactly:
 
@@ -128,10 +284,9 @@ relationship target as the requested subject. Add no depth filter, frontier filt
 filter, current-volume filter, relationship cursor, outer offset/cursor, continuation token,
 or undeclared query parameter.
 
-The independent technical review must challenge whether `requested_keyword` should also carry
-the adapter's 80-character upper bound at the HTTP schema. Do not add the RK-01 seed regex to
-the query unless review proves that rejecting an impossible subject is preferable to an exact
-empty-history miss.
+`requested_keyword` carries only `min_length=1`. It intentionally does not carry RK-01's
+80-character operator bound or seed regex; impossible exact subjects remain normal empty-history
+misses under a valid Recipe rather than HTTP-schema rejection.
 
 ## Recipe selection and stored-Recipe verification
 
@@ -154,13 +309,13 @@ canonical JCS bytes, digest, exact ordered three-kind list, and exact accepted C
 classification vocabulary:
 
 - `no_response`;
-- `response_partial`;
-- `transport_complete_non_admissible`;
-- `provider_error`;
-- `provider_envelope_rejected`;
-- `reconciliation_failed`;
 - `observation_admitted`;
-- `observation_admitted_empty`.
+- `observation_admitted_empty`;
+- `provider_envelope_rejected`;
+- `provider_error`;
+- `reconciliation_failed`;
+- `response_partial`;
+- `transport_complete_non_admissible`.
 
 ## Membership and provenance
 
@@ -230,7 +385,7 @@ The API/OpenAPI may use Literals for frozen request fields, but the reader must 
 accepted Attempt parameter validator. Literals document the closed adapter; they do not
 replace Evidence validation.
 
-## Proposed fully typed Capture document
+## Fully typed Capture document
 
 Use a dedicated strict Related Keywords history envelope in a new surface-local reader. Do
 not expose nested Capture bodies merely as `dict[str, Any]` and do not create one universal
@@ -307,11 +462,11 @@ Each semantic keyword-data parent contains at minimum:
 - complete ordered returned-item `occurrences` for `returned_item` locus; seed locus has an
   empty occurrence list because it is not an item-array occurrence.
 
-The independent review must challenge the exact JSON wrapping convention for enclosing
-object states. The semantic requirement is fixed: consumers must be able to distinguish
-ABSENT, JSON null, STATED-empty/value, NOT_REQUESTED, and Recipe-defined INAPPLICABLE wherever
-RK-04 persists those distinctions, and the API must not use child-row absence by itself as a
-state signal.
+The exact JSON wrapping convention is frozen by the Steward reconciliation lock above:
+state/value columns use always-present `{state, value}` wrappers; enclosing object states use
+always-present `{state, value}` wrappers whose value is the fully typed child only when stated;
+state-only testimony remains a closed lower-case state token. Child-row absence is never
+interpreted as a state signal.
 
 `keyword_info` preserves exact current metrics, exact ordered/duplicate categories,
 `monthly_searches_state`, `search_volume_trend_state`, signed trend member state/values, and
@@ -388,15 +543,18 @@ For each exact `(capture_id, derivation_version_id)` before presentation:
    and each non-STATED enclosing state to have zero child rows;
 6. require seed locus has zero item occurrences and every returned-item semantic parent has at
    least one item occurrence;
-7. require item occurrence `item_index` values collectively form the exact dense
-   `0..items_count-1` returned array and equal `derived_returned_item_count`;
+7. require the multiset of item-occurrence `item_index` values has size `items_count`, its
+   unique values are exactly dense `0..items_count-1`, and `items_count` equals
+   `derived_returned_item_count`;
 8. require every returned-item monthly semantic parent has at least one monthly occurrence,
    every seed-locus monthly fact has zero item occurrences, and every monthly occurrence refers
    to a valid returned item index;
 9. require every relationship semantic parent has at least one relationship occurrence;
-10. require every relationship occurrence source item index exists; for each source item,
-    `related_keywords_state` ABSENT/JSON_NULL implies zero relationship occurrences, while
-    STATED permits zero or more and any present target indexes must be exact dense `0..n-1`;
+10. require every relationship occurrence source item index exists and its `source_depth`
+    equals that item's persisted depth; group relationship occurrences across all semantic
+    relationship parents by `source_item_index`; ABSENT/JSON_NULL/STATED-empty
+    `related_keywords_state` requires zero occurrences, while STATED-nonempty requires the
+    unique target indexes for that source occurrence to be exact dense `0..n-1`;
 11. require `derived_relationship_occurrence_count` equals total stored relationship occurrence
     rows;
 12. require `items_count == derived_returned_item_count` but do not infer completeness from
@@ -406,9 +564,9 @@ For each exact `(capture_id, derivation_version_id)` before presentation:
     one valid subject-bearing context; `observation_admitted` means a positive envelope count
     and a nonempty exact semantic set.
 
-The technical review must challenge checks 4–10 against the actual RK-04 schema and duplicate
-semantics. Do not add an API invariant merely because it holds in RK-02 if RK-04 does not make
-it authoritative.
+Checks 4–10 are frozen by the Steward reconciliation lock and must be implemented against the
+actual RK-04 duplicate/occurrence semantics. No additional read invariant may be inferred merely
+because it holds in RK-02 unless repository authority makes it Recipe-v1 behavior.
 
 GET must not re-run RK-03 parsing or RK-04 Derivation, repair rows, or compare typed values to
 raw provider JSON. Accepted read integrity is verified Evidence plus complete rebuildable-state
@@ -421,15 +579,17 @@ Outer Capture ordering is `(request_started_at, capture_id)`.
 
 Inside one Capture, presentation order is deterministic but never identity:
 
-- keyword-data: `locus`, `keyword`, `within_capture_identity`;
+- keyword-data: explicit locus rank (`seed_keyword_data` first, `returned_item` second), then
+  `keyword`, `within_capture_identity`;
 - keyword-data occurrences: `item_index`;
-- monthly facts: `locus`, `keyword`, `year`, `month`, `within_capture_identity`;
+- monthly facts: the same explicit locus rank, then `keyword`, `year`, `month`,
+  `within_capture_identity`;
 - monthly occurrences: `item_index`;
 - relationships: `source_keyword`, `target_keyword`, `within_capture_identity`;
 - relationship occurrences: `source_item_index`, `target_index`.
 
-The reviewer must challenge whether seed locus should sort before returned-item locus explicitly
-rather than relying on lexical string order. Whichever rule is chosen must be stated and tested.
+Lexical locus ordering is forbidden because it would put `returned_item` before
+`seed_keyword_data`. The explicit presentation rank must be stated and tested.
 
 ## Shared outer history envelope semantics
 
@@ -559,7 +719,7 @@ Do not claim:
 
 Verify-all-before-limit remains O(all matching Captures). No outer cursor is added.
 
-## Proposed changed-path allowlist
+## Final changed-path allowlist
 
 Production:
 
@@ -581,8 +741,8 @@ Ticket:
 
 Do not change `provider_history.py`, `provider_recipe_selection.py`, `migrate.py`, RK-03 parser,
 RK-04 Derivation/Recipe, fixtures, Evidence code, Outcomes/Holdings modules, another provider
-reader, README/spec/decision authority, or any Strategy/Ranked file. If review proves another
-path is necessary, reconcile the allowlist before implementation.
+reader, README/spec/decision authority, or any Strategy/Ranked file. If implementation proves another
+path is necessary, stop and reconcile the allowlist before widening scope.
 
 ## Verification boundary
 
@@ -596,35 +756,18 @@ must add zero errors and must not repair unrelated inherited debt.
 review/remediation. Do not spend that full-suite run before the implementation is accepted as
 the closure candidate.
 
-## Required pre-implementation review
+## Pre-implementation review — completed
 
-[GROK] must perform an independent code-first read-only review from the exact committed draft
-HEAD before [CHAZ] implementation authorization. Treat this ticket as provisional where it
-explicitly asks for a challenge.
+Grok completed the required independent code-first read-only review from exact clean HEAD
+`e70d94b55cb2295f6fc5e6928859678137033e6b` and returned `RECONCILE`. The Steward independently
+checked and accepted the material findings into the reconciliation lock above: v1 taxonomy
+order, exact state/value projection, per-source-item target-index density, global item-index
+multiset completeness, source-depth agreement, explicit seed-first locus presentation, complete
+RK-04 column projection, query min-length-only behavior, and the final proof/allowlist boundary.
 
-At minimum review:
-
-- exact route/query and whether subject max-length belongs in HTTP validation;
-- v1-only Recipe verification and selection/pinning error mapping;
-- context-before-classification membership and admitted-empty behavior;
-- full Attempt/Capture verify-before-limit chain;
-- whether the proposed nested state/value JSON shape is the clearest lossless API projection;
-- all identity recomputation rules;
-- item/monthly/relationship occurrence completeness rules under duplicate semantic identities;
-- whether dense target indexes are provable per source occurrence from RK-04 rows;
-- child-row presence checks relative to enclosing states;
-- context count equalities that are true Recipe-v1 invariants versus one-Capture coincidences;
-- deterministic family ordering, especially locus ordering;
-- exact strict OpenAPI model shape and Decimal serialization;
-- Attempt-audit routing and adapter isolation;
-- read-only/xmin proof coverage for all twelve relations;
-- two-database equality and independent-projection false-green risk;
-- exact changed-path allowlist;
-- inherited mypy baseline at the draft HEAD;
-- any assumption imported from Keyword Overview, Search Mentions, Target Metrics, or Historical
-  that is not actually valid for Related Keywords.
-
-Return `READY`, `RECONCILE`, or `NOT_READY`. Do not implement during this review.
+No additional pre-implementation review is required unless implementation exposes a genuine
+contradiction with repository authority. This ticket is not implementation-authorized until
+[CHAZ] separately authorizes the exact reconciled-ticket HEAD.
 
 ## Out of scope
 
