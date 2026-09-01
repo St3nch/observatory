@@ -1,6 +1,6 @@
 # RANK-02 — DataForSEO Google Ranked Keywords Live paid-probe adapter
 
-**Status:** provisional review — awaiting independent [GROK] read-only pre-implementation review  
+**Status:** accepted — independent [GROK] review returned `RECONCILE`; [GPT] Steward reconciled the bounded corrections below on 2026-09-01; awaiting explicit [CHAZ] Writer designation and implementation authorization  
 **Owner:** [GPT] Steward reconciliation; implementation Writer not yet designated  
 **Blocked by:** none; RANK-01 closed at `d10349bb036905daf9dd53eeac0cffbe2c1e7118`  
 **Draft base:** `d10349bb036905daf9dd53eeac0cffbe2c1e7118`  
@@ -332,3 +332,141 @@ Before acceptance, [GROK] must inspect actual authority/code/tests and challenge
 
 Return `RECOMMENDATION: READY | RECONCILE | STOP`. Do not implement or mutate anything during
 the review.
+
+## Steward reconciliation — 2026-09-01
+
+Independent [GROK] read-only pre-implementation review of exact HEAD
+`9579dac2391f092686c557084bc2f59041292886` returned **`RECONCILE`**. The Steward
+independently checked the material findings against current repository authority and the
+closed Related Keywords / PF-16 / PF-17 transport precedents. The four-path implementation
+allowlist remains sufficient and minimal. No new architecture or Product question is required.
+The corrections in this section are final RANK-02 implementation authority and supersede any
+looser provisional wording above.
+
+### Public CLI and endpoint seam
+
+The public module CLI is exact:
+
+- `capture --evidence-root <path> --target <domain> --authorize-max-micro-usd 50000`;
+- `inspect --evidence-root <path> --capture-id <capture_id>`.
+
+The capture command exposes **`--target`** only for the subject. It must not accept `--keyword`,
+`--domain`, `--url`, or other subject aliases. `max_response_body_bytes` remains an internal
+test seam only and is never a CLI option.
+
+The production endpoint is fixed to:
+
+    https://api.dataforseo.com/v3/dataforseo_labs/google/ranked_keywords/live
+
+A private test-only endpoint override may target only:
+
+    http://127.0.0.1:<port>/v3/dataforseo_labs/google/ranked_keywords/live
+
+No hostname alias, IPv6 loopback, alternate path, query, HTTPS loopback, caller-supplied public
+host, or other URL shape is accepted. Endpoint validation occurs before closure-owned
+consumption; refusal performs zero HTTP handler calls and leaves that issuance reusable.
+This seam exists only for deterministic local tests and must not become a generic endpoint
+runner.
+
+### Final target grammar
+
+Keep the deliberately narrow **Observatory two-label ASCII domain restriction**. It is not a
+public-suffix-list check, not registrable-domain validation, and must not be named or documented
+as such in code/tests.
+
+Accepted grammar:
+
+- exactly two labels separated by one dot;
+- each label length 1..63 ASCII characters;
+- lowercase `a-z` / `0-9` at each label edge;
+- interior characters limited to lowercase `a-z`, `0-9`, and `-`;
+- second label must begin with `a-z`;
+- first label must not equal `www`;
+- neither label may begin with the ASCII IDNA/punycode prefix `xn--`;
+- no scheme, slash/path, port, query, fragment, credentials, whitespace, uppercase, Unicode,
+  trailing dot, underscore, empty label, subdomain/third label, IP literal, or single-label
+  hostname.
+
+Because two labels of at most 63 characters plus one dot can reach only 127 characters, the
+provisional 253-character whole-name cap is redundant and must not be presented as a meaningful
+proof.
+
+Required acceptance examples include `theconspiratory.com`, `example.com`, and `a1-b.com`.
+Required rejection examples include `www.com`, `www.theconspiratory.com`,
+`blog.theconspiratory.com`, `example.co.uk`, `xn--fsq.com`, `127.0.0.1`, `localhost`, uppercase
+forms, Unicode input, schemes, `//` prefix, paths/trailing slash, ports, query/fragment,
+userinfo, trailing dot, whitespace, underscore, empty labels, leading/trailing hyphens, and
+malformed label lengths. Reject rather than lowercase, strip, IDNA-encode, peel `www`, or
+otherwise normalize the provider subject.
+
+### Closure-owned authority and adversarial proofs
+
+The Ranked-local issuance record, not caller-visible capability mirrors, is transport authority.
+In addition to the provisional tamper cases, implementation tests must prove:
+
+- substituting the closure-owned issuance `store` with another `EvidenceStore` cannot redirect
+  validation/send/Capture parentage;
+- resetting closure-owned issuance `consumed` cannot authorize replay; the implementation must
+  make replay safety derive from non-caller-authoritative state rather than a mutable visible
+  `_used` mirror or an externally replaceable record;
+- a capability issued by another provider gate cannot satisfy Ranked capability validation;
+- post-exchange mutation of visible `attempt_id`, Attempt document, or request body cannot
+  redirect Capture parentage or the returned `attempt_id`, including a hostile case where the
+  replacement Attempt is itself valid and committed.
+
+Ordinary attribute assignment should remain blocked where current gate patterns do so; hostile
+private-seam tests may use `object.__setattr__` only to prove closure authority. Do not expose a
+new caller-visible authority seam merely to make these tests convenient.
+
+### One-shot root scan must fail closed on damaged committed Attempts
+
+The one-Ranked-Attempt-per-Evidence-root scan must not copy the Related Keywords behavior that
+silently skips an enumerated committed Attempt when `read_attempt(...)` returns no verified
+Attempt document. Every commitment discovered while deciding whether the root is reusable must
+be verified sufficiently to classify it as either this Ranked adapter or a valid foreign
+neighbor. A commitment that cannot be verified/classified fails the new capture before a new
+Attempt is created or any transport capability is issued. Valid Keyword Overview, Organic,
+Related Keywords, and other foreign-adapter Attempts may coexist and do not consume the Ranked
+one-shot.
+
+The Ranked one-shot remains consumed by the first Ranked Attempt regardless of whether that
+Attempt later yields complete response testimony, PF-09 `response_partial` (including a body
+ceiling event), `no_response`, credential-echo refusal before Capture commit, transport
+exception after consumption, or remains authorized/unresolved.
+
+### PF-09 state naming and body-ceiling proof
+
+Do not invent a separate transport classification named `over_limit`. A response-body ceiling
+hit is proved through the existing PF-09 `response_partial` semantics. The ticket may describe
+"body-ceiling partial" as a test scenario, but stored transport state remains the accepted PF-09
+state. Tests should use the private/internal response-size override to force that branch and
+prove one handler call plus the expected partial Capture testimony.
+
+### Derivation-skip regression is allowed without widening implementation scope
+
+Although RANK-02 remains Evidence-only and adds no PostgreSQL/schema/Derivation production
+work, the new Ranked test module may include a bounded regression proving existing provider
+Derivations skip Ranked Evidence that they do not own. Such a test may import existing derive
+helpers and use the repository's disposable PostgreSQL fixture. It must not modify `derive.py`,
+provider derive modules, migration/schema files, or add Ranked derivation semantics. This is a
+compatibility proof, not RANK-03 work.
+
+### Final false-green locks
+
+Tests must prove exact list equality and JCS bytes for `item_types`; set comparison is
+insufficient because order is provider-significant. Domain tests must prove rejection, not
+normalization. Authorization tests must exercise the library boundary directly with `bool`,
+string, float, `Decimal`, lower, and higher values rather than relying only on argparse
+`type=int`. The one-shot matrix must include unresolved and credential-echo paths, and the
+neighbor-root proof must include the closest Labs sibling (Related Keywords). Inspect must
+include verified wrong-adapter and response-body-tamper refusals. Mock transport assertions must
+check exact URL/path/body/headers rather than only handler-call count.
+
+### Final review disposition
+
+No Product question remains before implementation. The exact live target, locale, request
+shape, SERP-text Evidence retention, clickstream choice, one-call boundary, and later activation
+gate are already settled by RANK-01. RANK-02 may proceed only after [CHAZ] explicitly designates
+one Writer and authorizes implementation from the exact final accepted-ticket commit issued by
+the Steward. This acceptance still authorizes **zero provider calls, zero spend, zero live
+Evidence, and no parser/Recipe/schema/API/Strategy work**.
