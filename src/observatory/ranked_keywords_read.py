@@ -2952,6 +2952,57 @@ def _history_response(
     return payload
 
 
+def _require_accepted_v1_registration(
+    connection: Connection[Any], pinned_version: str | None
+) -> None:
+    """Ranked-local integrity guard that must run before generic Recipe resolution.
+
+    `resolve_provider_recipe()` compares the requested adapter against the registration's
+    stored `adapter_contract` and refuses a disagreement as a selection miss: 503 on the
+    selected path, 404 on an explicit pin. That is correct for an unrelated or genuinely
+    wrong-adapter Recipe, but the accepted contract classifies damaged accepted-v1 Recipe
+    metadata as rebuildable-state integrity failure, not as absence.
+
+    So when the exact accepted Ranked v1 digest is the thing being resolved -- pinned
+    explicitly, or named by this adapter's current selection -- a present registration row
+    whose stored adapter disagrees is raised as `IntegrityError` here instead. Every other
+    Recipe, a true missing selection, and a missing registration keep their generic
+    behaviour. Damaged `provider` metadata already reaches `_load_validated_v1_recipe`
+    unchanged and needs no guard.
+    """
+
+    if pinned_version is None:
+        selected = connection.execute(
+            """
+            SELECT derivation_version_id
+            FROM provider_recipe_selections
+            WHERE adapter_contract = %s
+            """,
+            (HISTORY_ADAPTER,),
+        ).fetchone()
+        if selected is None:
+            return
+        referenced = str(selected[0])
+    else:
+        referenced = pinned_version
+    if referenced != RANKED_KEYWORDS_RECIPE_ID:
+        return
+    row = connection.execute(
+        """
+        SELECT adapter_contract
+        FROM provider_recipes
+        WHERE derivation_version_id = %s
+        """,
+        (RANKED_KEYWORDS_RECIPE_ID,),
+    ).fetchone()
+    if row is None:
+        return
+    if str(row[0]) != HISTORY_ADAPTER:
+        raise IntegrityError(
+            "registered accepted Recipe adapter metadata disagrees with this route"
+        )
+
+
 def load_ranked_keywords_history(
     store: EvidenceStore,
     connection: Connection[Any],
@@ -2963,6 +3014,7 @@ def load_ranked_keywords_history(
 ) -> dict[str, object]:
     """Assemble surface-explicit Ranked Keywords history for one exact requested target."""
 
+    _require_accepted_v1_registration(connection, pinned_version)
     resolved = resolve_provider_recipe(connection, HISTORY_ADAPTER, pinned_version)
     recipe = _load_validated_v1_recipe(connection, resolved)
     rows = connection.execute(

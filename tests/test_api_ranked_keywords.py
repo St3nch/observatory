@@ -1260,10 +1260,10 @@ def test_recipe_provider_column_damage_is_409(
     _assert_409(_history(client))
 
 
-def test_recipe_adapter_column_damage_serves_no_history(
+def test_selected_accepted_v1_adapter_metadata_damage_is_409(
     ready: tuple[TestClient, EvidenceStore, str, str], postgres_dsn: str
 ) -> None:
-    """A damaged adapter column breaks selection first, so the accepted 404 path wins."""
+    """Damaged accepted-v1 adapter metadata is integrity failure, never a selection miss."""
 
     client, _store, _attempt_id, _capture_id = ready
     _damage(
@@ -1272,9 +1272,60 @@ def test_recipe_adapter_column_damage_serves_no_history(
         " WHERE derivation_version_id = %s",
         ("other-adapter", RANKED_KEYWORDS_RECIPE_ID),
     )
-    response = _history(client)
-    assert response.status_code in {404, 409, 503}
-    assert "captures" not in response.json()
+    _assert_409(_history(client))
+
+
+def test_pinned_accepted_v1_adapter_metadata_damage_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    """The pinned path reaches the same guard with no current selection at all."""
+
+    store, _attempt_id, _capture_id = _prepare(tmp_path, postgres_dsn, select=False)
+    _damage(
+        postgres_dsn,
+        "UPDATE provider_recipes SET adapter_contract = %s"
+        " WHERE derivation_version_id = %s",
+        ("other-adapter", RANKED_KEYWORDS_RECIPE_ID),
+    )
+    with _app(store, postgres_dsn) as client:
+        _assert_409(
+            _history(client, derivation_version_id=RANKED_KEYWORDS_RECIPE_ID)
+        )
+
+
+def test_adapter_metadata_guard_is_scoped_to_the_exact_accepted_digest(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    """Another registered Recipe keeps its generic 404 even beside the damaged row."""
+
+    store, _attempt_id, _capture_id = _prepare(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        register_provider_recipe(connection, RELATED_KEYWORDS_RECIPE)
+    _damage(
+        postgres_dsn,
+        "UPDATE provider_recipes SET adapter_contract = %s"
+        " WHERE derivation_version_id = %s",
+        ("other-adapter", RANKED_KEYWORDS_RECIPE_ID),
+    )
+    with _app(store, postgres_dsn) as client:
+        wrong_adapter = _history(
+            client, derivation_version_id=RELATED_KEYWORDS_RECIPE_ID
+        )
+        unknown = _history(client, derivation_version_id="f" * 64)
+    assert wrong_adapter.status_code == 404
+    assert unknown.status_code == 404
+
+
+def test_true_no_selection_is_still_503_with_an_undamaged_registration(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    """The guard must not turn a genuine missing selection into integrity failure."""
+
+    store, _attempt_id, _capture_id = _prepare(tmp_path, postgres_dsn, select=False)
+    with _app(store, postgres_dsn) as client:
+        response = _history(client)
+    assert response.status_code == 503
+    assert response.json() == {"detail": NOT_SELECTED_SIGNAL}
 
 
 def test_derive_registers_the_recipe_without_selecting_it(

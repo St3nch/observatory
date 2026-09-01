@@ -1,6 +1,6 @@
 # RANK-06 — DataForSEO Google Ranked Keywords Recipe selection and admitted-history API
 
-**Status:** remediation — [GPT] Steward review found one bounded Recipe-metadata status-code defect; [CLAUDE] remains Writer  
+**Status:** review — [CLAUDE] Writer completed the bounded Steward-directed Recipe-metadata remediation; awaiting [GPT] Steward review and [CHAZ] full-suite integration validation  
 **Owner:** [GPT] Steward review / [CLAUDE] designated and implementation-authorized Writer  
 **Blocked by:** none; RANK-05 closed  
 **Draft base:** `512525f78c20e49eb096b8ab98c0ed4ad2d64df0`  
@@ -9,6 +9,7 @@
 **Pre-implementation recommendation:** `RECONCILE`; no Product question identified  
 **Implementation authorization base:** `659a93d4d58ed5090574fe309c4be46cf005a1c5`  
 **Implementation start SHA:** `dcbe91365d89e18d171ea929e3b7dd1595b1d261` — branch `main`, clean working tree, verified before any edit; the implementation commit is a direct child of this SHA  
+**Remediation start SHA:** `e7392f91edfc94e5578b23dff6d5f7291f2e48f3` — branch `main`, clean working tree, verified before any edit; the remediation commit is a direct child of this SHA  
 **[CHAZ] implementation authority:** [CLAUDE] may implement this reconciled ticket; no provider calls, credentials, Evidence mutation, spend, amend, or push  
 **Provider authority:** zero calls, zero spend, zero credentials, zero Evidence mutation; existing RANK-03 Evidence / RANK-04 Conformance fixture / RANK-05 rebuildable state only  
 
@@ -1035,6 +1036,83 @@ RANK-06 must not close immediately after the remediation commit. The required fi
 The final Grok review performs no mutation, provider/network call, credential access, Evidence
 mutation, spend, amend, or push. Full-suite integration remains [CHAZ] closure evidence, not a
 Writer or Grok task.
+
+## Remediation record — Writer lane
+
+Bounded remediation of the single blocking Steward finding, implemented from
+`e7392f91edfc94e5578b23dff6d5f7291f2e48f3` on branch `main` with a verified clean tree. The
+remediation commit is a direct child of that SHA. No other RANK-06 design question was
+reopened.
+
+### Changed paths
+
+- `src/observatory/ranked_keywords_read.py` — new `_require_accepted_v1_registration()` guard
+  plus its single call site at the top of `load_ranked_keywords_history()`.
+- `tests/test_api_ranked_keywords.py` — the permissive adapter-damage proof replaced by four
+  exact proofs.
+- this ticket — remediation report only.
+
+`src/observatory/api.py` did not need to change: the guard raises `IntegrityError`, which the
+existing Ranked route already maps to HTTP 409 `evidence_integrity_failure`.
+`provider_recipe_selection.py` is untouched, so sibling surfaces keep their generic selection
+semantics exactly.
+
+### The fix
+
+`resolve_provider_recipe()` compares the requested adapter against the registration's stored
+`adapter_contract` and treats a disagreement as a selection miss — 503 on the selected path,
+404 on an explicit pin. That is right for an unrelated or genuinely wrong-adapter Recipe, but
+the accepted contract classifies damaged accepted-v1 Recipe metadata as rebuildable-state
+integrity failure rather than absence.
+
+A Ranked-local guard therefore runs before generic resolution. It fires only when the exact
+accepted digest
+`c7573695db7ecaa0f5dfdc2fc3658e84b1673eec005a0d8003093e57408294a8`
+is the thing being resolved — pinned explicitly, or named by this adapter's current selection
+row — and only when that registration row is present and its stored `adapter_contract`
+disagrees with the accepted Ranked adapter. It then raises `IntegrityError`.
+
+Every other path returns early and keeps its generic behaviour: a different pinned digest, a
+malformed or unknown pin, a true missing selection, and a missing registration row. Damaged
+`provider` metadata already reached `_load_validated_v1_recipe` and was already 409, so no
+guard was added for it.
+
+### Tests
+
+`test_recipe_adapter_column_damage_serves_no_history`, which accepted `{404, 409, 503}` and
+was the false green the Steward identified, is deleted. Four exact proofs replace it:
+
+- `test_selected_accepted_v1_adapter_metadata_damage_is_409` — selection present, no pin;
+- `test_pinned_accepted_v1_adapter_metadata_damage_is_409` — explicit accepted-v1 pin with no
+  current selection at all, so the pinned path is isolated from the selected path;
+- `test_adapter_metadata_guard_is_scoped_to_the_exact_accepted_digest` — with the Ranked row
+  damaged, pinning another registered Recipe and pinning an unknown digest both stay 404;
+- `test_true_no_selection_is_still_503_with_an_undamaged_registration` — the guard never
+  converts a genuine missing selection into integrity failure.
+
+The pre-existing 503/404/success proofs are retained unchanged and re-ran green:
+`test_unselected_adapter_without_pin_is_503`, `test_malformed_or_unknown_pin_is_404`,
+`test_wrong_adapter_pin_is_404`, `test_registered_non_v1_ranked_recipe_pin_is_404`,
+`test_selecting_a_non_v1_recipe_for_this_adapter_is_404`,
+`test_recipe_provider_column_damage_is_409`, `test_selected_recipe_serves_admitted_history`,
+and `test_explicit_pin_reports_pinned_resolution`.
+
+### Verification
+
+- `uv run pytest -q tests/test_api_ranked_keywords.py -k "recipe or pin or selection or
+  selected or adapter or 503 or unselected or serves_admitted"` — **35 passed, 203 deselected,
+  1 warning** in 44.36s. The module now holds 238 tests (235 - 1 removed + 4 added).
+- `uv run ruff check .` — all checks passed.
+- `uv run mypy src/observatory/ranked_keywords_read.py src/observatory/api.py
+  tests/test_api_ranked_keywords.py` — Success: no issues found in 3 source files.
+
+The full 238-test module and the configured repository mypy were not re-run for this
+remediation; the change is confined to one pre-resolution guard on the Recipe-resolution path,
+and no test outside the bounded selection set exercises it. Full-suite integration remains
+[CHAZ] closure evidence after Steward acceptance.
+
+No provider call, credential access, public-network activity, Evidence mutation, fixture
+change, schema change, spend, amend, or push was performed.
 
 ## Explicit out of scope
 
