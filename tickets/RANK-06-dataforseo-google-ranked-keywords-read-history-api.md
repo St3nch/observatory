@@ -1,6 +1,6 @@
 # RANK-06 — DataForSEO Google Ranked Keywords Recipe selection and admitted-history API
 
-**Status:** review — [CLAUDE] Writer completed the bounded Steward-directed Recipe-metadata remediation; awaiting [GPT] Steward review and [CHAZ] full-suite integration validation  
+**Status:** review — [GPT] Steward accepted the bounded remediation; awaiting final [GROK] read-only adversarial review before [CHAZ] full-suite integration validation  
 **Owner:** [GPT] Steward review / [CLAUDE] designated and implementation-authorized Writer  
 **Blocked by:** none; RANK-05 closed  
 **Draft base:** `512525f78c20e49eb096b8ab98c0ed4ad2d64df0`  
@@ -9,7 +9,7 @@
 **Pre-implementation recommendation:** `RECONCILE`; no Product question identified  
 **Implementation authorization base:** `659a93d4d58ed5090574fe309c4be46cf005a1c5`  
 **Implementation start SHA:** `dcbe91365d89e18d171ea929e3b7dd1595b1d261` — branch `main`, clean working tree, verified before any edit; the implementation commit is a direct child of this SHA  
-**Remediation start SHA:** `e7392f91edfc94e5578b23dff6d5f7291f2e48f3` — branch `main`, clean working tree, verified before any edit; the remediation commit is a direct child of this SHA  
+**Remediation work start SHA:** `e7392f91edfc94e5578b23dff6d5f7291f2e48f3` — branch `main`, clean working tree, verified before any edit; while [CLAUDE] was implementing, Steward ticket-only closure-gate commit `98ddbaed2b471192e39c1c75de218f7496658a55` landed, so remediation implementation commit `1ded4c3d974b0d948f33974e3163206907b641e1` is a direct child of `98ddbae`, not of the work-start SHA  
 **[CHAZ] implementation authority:** [CLAUDE] may implement this reconciled ticket; no provider calls, credentials, Evidence mutation, spend, amend, or push  
 **Provider authority:** zero calls, zero spend, zero credentials, zero Evidence mutation; existing RANK-03 Evidence / RANK-04 Conformance fixture / RANK-05 rebuildable state only  
 
@@ -1039,10 +1039,13 @@ Writer or Grok task.
 
 ## Remediation record — Writer lane
 
-Bounded remediation of the single blocking Steward finding, implemented from
-`e7392f91edfc94e5578b23dff6d5f7291f2e48f3` on branch `main` with a verified clean tree. The
-remediation commit is a direct child of that SHA. No other RANK-06 design question was
-reopened.
+Bounded remediation of the single blocking Steward finding began from
+`e7392f91edfc94e5578b23dff6d5f7291f2e48f3` on branch `main` with a verified clean tree. While
+[CLAUDE] was implementing, [GPT] committed the ticket-only final-Grok-review gate as
+`98ddbaed2b471192e39c1c75de218f7496658a55`. [CLAUDE] correctly preserved that intervening
+commit without reset/rebase/amend and committed remediation as
+`1ded4c3d974b0d948f33974e3163206907b641e1`, a direct child of `98ddbae`. No other RANK-06
+design question was reopened.
 
 ### Changed paths
 
@@ -1113,6 +1116,27 @@ and no test outside the bounded selection set exercises it. Full-suite integrati
 
 No provider call, credential access, public-network activity, Evidence mutation, fixture
 change, schema change, spend, amend, or push was performed.
+
+## Steward remediation review — accepted; final Grok review pending
+
+[GPT] independently reviewed remediation commit
+`1ded4c3d974b0d948f33974e3163206907b641e1` against its actual direct parent
+`98ddbaed2b471192e39c1c75de218f7496658a55` and the original blocking finding. The parentage
+change is accepted and expected: `98ddbae` is a Steward ticket-only closure-gate commit that
+landed while [CLAUDE] was implementing from the verified clean `e7392f9` work-start state.
+No reparenting, rebase, amend, or reset is required.
+
+The Ranked-local pre-resolution guard is accepted. It is limited to the exact accepted v1
+digest, converts only present accepted-v1 adapter-registration disagreement to
+`IntegrityError`/HTTP 409, and leaves true no-selection at 503 plus unrelated/wrong/non-v1
+Recipe pins on the existing 404 taxonomy. The new tests replace the previous permissive
+`{404,409,503}` false green with exact selected and pinned 409 proofs and retain scoped 404/503
+controls. No second code blocker was identified in this remediation review.
+
+The Writer's bounded remediation checks are accepted as implementation evidence. The Steward
+did not execute repository tests through MCP. RANK-06 is now ready for the mandatory final
+[GROK] read-only adversarial review of the complete implementation and remediation. [CHAZ]
+full-suite integration remains downstream of that review and any Steward reconciliation.
 
 ## Explicit out of scope
 
