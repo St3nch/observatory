@@ -1,9 +1,11 @@
 # RANK-05 — DataForSEO Google Ranked Keywords Derivation Recipe and typed persistence
 
-**Status:** provisional Steward draft — [CHAZ] designated [CLAUDE] as Writer; awaiting code-first [CLAUDE] review, independent [GROK] review, and Steward reconciliation; no implementation authorization  
+**Status:** accepted after code-first [CLAUDE] `RECONCILE`, independent [GROK] `RECONCILE`, [CHAZ] Product resolution, and [GPT] Steward reconciliation; awaiting separate [CHAZ] implementation authorization  
 **Owner:** [CLAUDE] designated Writer / [GPT] Steward / [GROK] independent reviewer  
 **Blocked by:** no technical blocker; RANK-04 closed at `ecfd6cfb90e7162081f64ae02e410e0cf056eaf4`  
 **Draft base:** `ecfd6cfb90e7162081f64ae02e410e0cf056eaf4`  
+**Dual-review base:** `8827fb7a71e0d4bb5d03c57fd0fa213eee6fed4e`  
+**Implementation authorization:** not yet granted  
 **Provider authority:** zero calls, zero spend; existing protected RANK-03 Evidence and frozen RANK-04 Conformance fixture only  
 
 ## Purpose
@@ -336,10 +338,256 @@ migration-baseline tests would need a minimal retarget. Current Related Keywords
 compare `SCHEMA_STATEMENTS` directly against the RK-04 delta and are a known likely affected
 precedent; do not widen other tests speculatively.
 
-## Required pre-implementation code-first questions
+## Steward reconciliation lock — 2026-09-01
 
-The designated Writer must inspect authority/code/schema/tests/fixture and return a read-only
-review that answers at least:
+The designated Writer and independent reviewer both returned `RECONCILE` from the same clean
+review HEAD `8827fb7a71e0d4bb5d03c57fd0fa213eee6fed4e`. The Steward checked their load-bearing
+claims against the Ranked parser, RANK-03/RANK-04 fixture, D11-D14, Related Keywords,
+Google Organic, Target Metrics, migration layering, and current AGENTS command authority.
+[CHAZ] resolved the one remaining Product question on SERP prose. The rules in this section
+are **final RANK-05 semantic/persistence authority** and supersede every provisional candidate,
+question, or recommendation above where they differ.
+
+### Future-us mental model
+
+Ranked Keywords mixes several grains in one provider result. Do not simplify it later by
+collapsing a 100-row returned prefix into the 248-row provider corpus, treating URL as canonical
+Page identity, reconciling rank-group against absolute rank, treating provider movement as an
+Observatory history delta, or copying unlike provider clocks into one generic `last_updated`.
+
+The durable four-family testimony model is:
+
+1. **corpus testimony** — target-level provider aggregate facts;
+2. **placement testimony** — one target ranking placement for one keyword and SERP item type;
+3. **keyword-enrichment testimony** — Ranked-local keyword facts returned because the target
+   ranked for that keyword;
+4. **monthly Data-Period testimony** — keyword-by-calendar-period search-volume facts.
+
+Strategy may later compare these families. Observatory must first preserve them independently.
+
+### Final Observation kinds and identities
+
+Recipe v1 defines exactly four kinds:
+
+    dataforseo.google.ranked_keywords.corpus_metrics.v1
+    dataforseo.google.ranked_keywords.ranked_result.v1
+    dataforseo.google.ranked_keywords.keyword_data.v1
+    dataforseo.google.ranked_keywords.monthly_search_volume.v1
+
+`corpus_metrics.v1` identity axes are exact requested target + exact aggregate family + exact
+rank-system locus. Family is one of
+`organic|paid|featured_snippet|local_pack|ai_overview_reference`; rank system is exactly
+`rank_group|rank_absolute`. Emit all five families under both systems: ten semantic corpus
+Observations for every Recipe-admitted successful result, including all-zero families.
+
+`rank_group` preserves the twelve `metrics` buckets plus provider count, ETV, estimated paid
+traffic cost, movement counts, and clickstream states. `rank_absolute` preserves the twelve
+`metrics_absolute` buckets, movement counts, and clickstream states. Count/ETV/cost are
+recipe-defined `INAPPLICABLE` with SQL NULL under `rank_absolute`; do not synthesize them or
+mislabel the structural absence as JSON null. No arithmetic may reconcile either rank system
+with the other, with `total_count`, with `items_count`, or with returned rows. The frozen
+248-versus-244 organic bucket behavior is valid testimony and a required anti-invariant test.
+
+`ranked_result.v1` uses **placement identity A**: exact requested target + exact
+`keyword_data.keyword` + exact open `serp_item.type` + exact `rank_group` + exact
+`rank_absolute`. Exact URL is semantic content, not identity. `provider_array_index` is
+occurrence/order testimony only. Parser-valid same-keyword/same-URL rows with different ranks
+are two legitimate placement facts; a URL-based identity would falsely reject them. Conversely,
+same target + keyword + type + both rank axes with different URLs is a same-placement semantic
+contradiction and rejects the whole Capture-stage unit. URL matching across Captures remains
+downstream analysis, not Page identity.
+
+`keyword_data.v1` identity is exact requested target + exact provider keyword. Requested target
+is testimony scope, not a claim that search volume/CPC/intent intrinsically depends on the
+target. Identical duplicate same-keyword enrichment collapses to one semantic Observation while
+every returned-item occurrence survives; conflicting same-identity enrichment rejects the
+whole unit. Monthly point values are excluded structurally from the keyword-data conflict tuple
+because monthly is a separate kind, while `monthly_searches_state` remains part of keyword-info
+content so STATED-vs-null still conflicts. `keyword_data.serp_info` remains a keyword-data
+child and may disagree with the overlapping Ranked-element path.
+
+`monthly_search_volume.v1` identity is exact requested target + exact keyword + provider year +
+provider month. Equal overlapping duplicate-keyword periods collapse while preserving every
+occurrence; conflicting overlap rejects the unit; non-overlapping windows union. `(year, month)`
+is Data Period only. Current `keyword_info.search_volume` is never derived from the newest
+monthly point.
+
+### Item reachability and whole-unit admission
+
+RANK-04 requires the item member names `se_type`, `keyword_data`, and
+`ranked_serp_element`; item-level ABSENT is therefore unreachable for the two nested
+structures. Item `se_type` must be stated `google`. `keyword_data` and `ranked_serp_element`
+may each be JSON null under parser v1.
+
+Recipe admission requires both nested structures STATED for every returned item because the
+accepted keyword and placement identities cannot otherwise be formed. JSON-null
+`keyword_data` or JSON-null `ranked_serp_element` therefore rejects the **whole Capture-stage
+unit** as `provider_envelope_rejected`. Do not keep corpus metrics while silently dropping a
+malformed returned row. Missing item keys remain parser `missing_field`; do not implement a
+Recipe ABSENT branch that cannot be reached.
+
+### Result context and reachable Outcomes
+
+Persist one result-context row per admitted Capture + Recipe containing the exact cited
+Attempt, verified request target/location/language, ordered requested item types,
+`ignore_synonyms`, `include_clickstream_data`, `limit`, `offset`, `load_rank_absolute`,
+`historical_serp_mode`, exact `order_by`, provider result target/location/language/`se_type`
+field states/values, and exact provider `total_count` and `items_count`.
+
+Task echo, provider version/status text, root/task costs and durations, UUID, and task path stay
+in Evidence/parser IR. Attempt parameters remain request authority. Result/echo disagreement is
+provider testimony, not reconciliation failure. Never persist fabricated `complete`,
+`truncated`, `first_page`, `coverage_percent`, or `corpus_exhausted` flags.
+
+Attempt stage remains `authorized_unresolved`. Recipe v1 declares/emits exactly six
+Capture-stage classes:
+
+- `no_response`
+- `response_partial`
+- `transport_complete_non_admissible`
+- `provider_error`
+- `provider_envelope_rejected`
+- `observation_admitted`
+
+Do not include `reconciliation_failed`: Ranked v1 has one requested target and one successful
+result, and result target/locale/`se_type` disagreement remains typed testimony. Do not include
+`observation_admitted_empty`: every parser-success carries required aggregate objects and the
+Recipe emits ten corpus-metric Observations. A successful `items=[]`, `items_count=0` therefore
+writes ten corpus envelopes, one context row, zero placement/keyword/monthly rows,
+`observation_admitted`, and `observation_count=10`.
+
+Evidence/citation/Attempt/body integrity failure is not a provider Outcome; count it as a
+Derivation integrity failure and write no Capture-stage provider rows. Body/parser drift,
+JSON-null required item structures, inadmissible persisted text, or same-identity semantic
+conflict becomes whole-unit `provider_envelope_rejected`; parser `PROVIDER_ERROR` becomes
+repository `provider_error`.
+
+### Four-pillar time model — no universal `last_updated`
+
+D11 already owns the global multi-axis time doctrine. This is the Ranked-specific durable
+instantiation. Think in **four pillars**, not four literal timestamps:
+
+1. **Acquisition provenance** — Capture/acquisition time answers *when Observatory obtained the
+   bytes*. It is Evidence provenance only and never fills provider clocks or Data Periods.
+2. **Data Period** — monthly `(year, month)` answers *which calendar month a search-volume point
+   describes*. It is not a timestamp and never inherits Capture time.
+3. **SERP/placement clocks** — Ranked-element current/previous clocks and keyword `serp_info`
+   current/previous clocks are separately stated provider paths. Even when the fixture agrees,
+   they remain distinct source-local columns and may disagree.
+4. **Enrichment clocks** — keyword-info, avg-backlinks, and search-intent update clocks belong
+   only to their own enrichment structures. One enrichment clock never updates/fills another.
+
+No RANK-05 relation may expose a single generic `provider_update_time` or universal
+`last_updated` column. Provider root/task `time` strings are durations, not timestamps.
+`pre_snippet` is text even when date-looking. Aggregate movement counts, Ranked-element
+`is_lost`, `rank_changes` members, `previous_rank_absolute`, and all clocks are independent
+provider comparison testimony; none is an Observatory Capture-to-Capture delta.
+
+### [CHAZ] Product lock — Option 1 SERP prose
+
+[CHAZ] selected **Option 1** after dual review.
+
+Persist exact typed state/value testimony for `title` and `description`, consistent with the
+existing Google Organic ranked-result precedent. For richer Google-rendered SERP prose/chrome,
+persist the **Field state** but keep the actual text value Evidence-only in Recipe v1 for
+`breadcrumb`, `pre_snippet`, and `highlighted`. This preserves ABSENT/JSON_NULL/STATED
+information without treating parser retention as automatic semantic promotion or later API
+redistribution permission. A future Recipe may promote those values only through an explicit
+retention/terms/redistribution decision and new Recipe identity where semantics change.
+
+`xpath` is layout testimony rather than prose and remains eligible for typed persistence.
+
+For parser-v1 null-only `about_this_result`, `backlinks_info`, `extended_snippet`, `links`, and
+`rating`, preserve **state only** (`ABSENT` versus `JSON_NULL`) on the ranked-result row. Do not
+create value columns or child schemas. Populated shapes remain a parser-version drift trigger.
+
+### Final twelve-relation PostgreSQL model
+
+Add exactly twelve Ranked relations on top of generic Recipe/Outcome/envelope/diagnostic
+substrate:
+
+1. `ranked_keywords_corpus_metrics` — semantic target + family + rank-system parent;
+2. `ranked_keywords_ranked_results` — wide semantic placement parent under identity A;
+3. `ranked_keywords_keyword_data` — semantic keyword parent and nested-object states;
+4. `ranked_keywords_keyword_info` — stated keyword-info child;
+5. `ranked_keywords_keyword_properties` — stated properties child;
+6. `ranked_keywords_avg_backlinks` — stated backlink-average child;
+7. `ranked_keywords_search_intent` — stated intent child;
+8. `ranked_keywords_keyword_serp_info` — stated keyword-SERP child with source-local duplicated
+   members/clocks;
+9. `ranked_keywords_monthly_search_volume` — semantic target + keyword + period fact;
+10. `ranked_keywords_item_occurrences` — one provider item-index occurrence structurally bound
+    to both its ranked-result and keyword-data parents;
+11. `ranked_keywords_monthly_item_occurrences` — monthly semantic-parent occurrence by returned
+    item index;
+12. `ranked_keywords_result_context` — one admitted Capture + Recipe context row.
+
+Relations 1, 2, 3, and 9 are kind-bound to matching generic Observation envelopes. Child
+relations bind to the exact keyword parent; occurrence rows bind to semantic parents rather
+than arbitrary envelopes. No JSONB provider dump, canonical Page/domain entity, cross-surface
+FK, or URL normalization relation is allowed.
+
+`rank_changes` and `rank_info` remain inline object-state/member-state/value columns on the
+wide ranked-result row. Ranked-element fields share the same admitted placement grain and stay
+on that row under `ranked_element_*` source-local names rather than creating a thirteenth
+relation. The five unsupported null-only children and the three Product-held prose fields add
+state-only columns as described above.
+
+### Migration, rebuild, and golden lock
+
+Introduce:
+
+    PRE_RANK05_SCHEMA_STATEMENTS = PRE_RK04_SCHEMA_STATEMENTS + RK04_SCHEMA_STATEMENTS
+    RANK05_SCHEMA_STATEMENTS = (...exact twelve Ranked statements...)
+    SCHEMA_STATEMENTS = PRE_RANK05_SCHEMA_STATEMENTS + RANK05_SCHEMA_STATEMENTS
+
+The Related Keywords derive suite is the current direct consumer that computes RK-04's delta
+from generic `SCHEMA_STATEMENTS`; retarget that comparison to `PRE_RANK05_SCHEMA_STATEMENTS`
+without weakening the existing equality/length assertion. Older frozen `PRE_*` migration tests
+need no speculative widening.
+
+Same Evidence + same Recipe must be exact-content and complete-set consistent. Prove extra
+semantic/occurrence/context rows fail, conflicting stored content fails, missing rebuildable
+planned rows restore only to the exact set, `outcomes.observation_count` equals planned/stored
+envelope cardinality, and two fresh PostgreSQL rebuilds are logically equivalent.
+
+For the frozen fixture, independently recompute and prove 10 corpus + 100 ranked-result + 100
+keyword-data + 1200 monthly = **1410 semantic Observation envelopes**, plus 100 item-occurrence
+rows, 1200 monthly-occurrence rows, and one result-context row. These counts are fixture
+consequences only. Required golden/adversarial proof also covers the 100-of-248 prefix, all-zero
+families, 248-vs-244 rank systems, duplicate ranks, repeated URLs, apex/`www`, two monthly
+windows, current/newest-month disagreement, SERP composition versus target participation,
+source-local SERP disagreement, duplicate-keyword collapse/conflict/union, zero-item success,
+JSON-null required item structures, invalid persisted text, occurrence reorder, complete-set
+tamper, and unrelated-Attempt isolation.
+
+### Final implementation boundary
+
+After a **separate explicit [CHAZ] implementation authorization**, [CLAUDE] may modify only:
+
+- `src/observatory/dataforseo_google_ranked_keywords.py` — Recipe/kind/locus constants only;
+  no RANK-04 parser admission change is expected;
+- new `src/observatory/google_ranked_keywords_derive.py`;
+- `src/observatory/migrate.py` — `PRE_RANK05` layering + exactly twelve Ranked relations;
+- new `tests/test_dataforseo_google_ranked_keywords_derive.py`;
+- `tests/test_dataforseo_google_related_keywords_derive.py` — only the migration-baseline
+  retarget above;
+- `tests/test_dataforseo_google_ranked_keywords.py` — only if a genuinely necessary reviewed
+  IR addition is discovered; expected not to be needed and any parser-admission change requires
+  STOP + Steward reconciliation;
+- this RANK-05 ticket — implementation start/status/report only.
+
+Do not edit `AGENTS.md`, `capture_event.py`, `provider_recipe.py`, `derive.py`, fixtures,
+API/Recipe-selection modules, another provider surface, or Strategy code. Current AGENTS does
+not enumerate every derive entrypoint, so a Ranked derive `main()` does not itself widen Writer
+scope. No provider call, credential access, Evidence mutation, pagination, recurring
+acquisition, canonical Page identity, cross-surface equivalence, recommendation, scoring, or
+RANK-06 work is authorized.
+
+## Pre-implementation code-first questions — completed review record
+
+The following checklist is retained as the historical code-first review record. [CLAUDE]
+completed it from the dual-review base before the reconciliation lock above was written: 
 
 1. Which ranked-result identity candidate (A, B, or a third exact alternative) is faithful,
    and what synthetic duplicate case disproves the rejected candidate(s)?
@@ -368,14 +616,14 @@ review that answers at least:
 The Writer must also report Product questions, if any. No Product question should be invented
 for a code/authority answer that can be resolved read-only.
 
-## Independent adversarial review requirement
+## Independent adversarial review — completed review record
 
-After the designated Writer's review, [GROK] must independently review the same clean ticket
-HEAD without reading the Writer report. The Steward then reconciles both reports into one final
-semantic/persistence contract. Only after that reconciliation may [CHAZ] separately authorize
-implementation from an exact clean accepted-ticket HEAD.
+This gate is complete. [GROK] independently reviewed the same clean
+`8827fb7a71e0d4bb5d03c57fd0fa213eee6fed4e` ticket HEAD after the Writer review lane and also
+returned `RECONCILE`. The Steward reconciled both reports above. [CHAZ] must still separately
+authorize implementation from the exact clean accepted-ticket HEAD.
 
-## Provisional changed-path ceiling
+## Original provisional changed-path ceiling — superseded by reconciliation lock
 
 No path is implementation-authorized yet. The expected maximum implementation surface is:
 
