@@ -498,10 +498,41 @@ future billing formula, 32 MiB headroom, device/OS of the Labs index, a fixed pr
 interval, or any Strategy conclusion. Missing item types or `is_lost=true` rows in the first
 100-row prefix are not evidence that those branches do not exist.
 
+## [CHAZ] one-shot live authorization — 2026-09-01
+
+[CHAZ] explicitly authorizes exactly one RANK-03 DataForSEO Labs Google Ranked Keywords Live
+provider invocation under the frozen activation contract above, with:
+
+- exact target `theconspiratory.com`;
+- exact `location_code=2840` and `language_code="en"`;
+- exact five-item `item_types` order already frozen by RANK-02;
+- `ignore_synonyms=false`, `include_clickstream_data=false`, `limit=100`, `offset=0`,
+  `load_rank_absolute=true`, and `historical_serp_mode="all"`;
+- exact ordering `ranked_serp_element.serp_item.rank_group,asc`;
+- filters/tag absent;
+- exact operator acknowledgement `50000` micro-USD;
+- exactly one invocation of the frozen public capture command and at most one provider POST;
+- no retry, replacement Evidence root, pagination, offset follow-up, continuation, polling,
+  changed target/request shape, or second provider exchange.
+
+[CHAZ] also explicitly authorizes the Git push needed to synchronize the durable authorization
+record to `origin/main`. This is push authorization for the authorization-record synchronization
+only; it does not create standing push authority for later work.
+
+The authorization was issued while `main` was clean at
+`04f352b9990b8884ed6075b62aa3585323c43b0d`. It is **not consumed** by this ticket edit,
+its governed commit, the authorized synchronization push, or any failed no-spend preflight
+before the frozen capture command starts. The first invocation of that frozen capture process
+consumes the one-shot live authorization regardless of exit code or provider/transport result.
+After process start, no failure class authorizes retry or a replacement root.
+
+The clean commit containing this durable authorization record becomes the RANK-03 activation
+HEAD once it is synchronized to `origin/main`. Record that concrete HEAD in the operator
+preflight/output and later closure. Any repository mutation after synchronization invalidates
+the activation preflight and requires Steward reconciliation before the paid process starts.
+
 ## Next gate
 
-RANK-03 is now an accepted **activation boundary**, but no live provider/spend authorization
-has been granted by this reconciliation. [CHAZ] must separately and explicitly authorize
-exactly one invocation of the frozen command from a named clean activation HEAD. That durable
-authorization must be committed, and the exact required synchronization/preflight must pass,
-before the paid process starts.
+Commit this durable authorization record, synchronize that exact commit to `origin/main` under
+the explicit [CHAZ] push authorization above, and verify the final no-spend preflight from that
+clean synchronized activation HEAD. Only then may the single frozen capture process start.
