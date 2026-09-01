@@ -1,6 +1,6 @@
 # RANK-04 — DataForSEO Google Ranked Keywords strict parser and RANK-03 Conformance fixture
 
-**Status:** accepted after dual adversarial review and Steward reconciliation — awaiting separate [CHAZ] implementation authorization  
+**Status:** implemented by the designated Writer from the authorized base; awaiting Steward review and [CHAZ] full-suite integration validation  
 **Owner:** [CLAUDE] designated Writer / [GPT] Steward review / [GROK] independent reviewer  
 **Blocked by:** none; RANK-03 closed at `fbd53534aea47f114822e071c178b3ae1e378055`  
 **Draft base:** `fbd53534aea47f114822e071c178b3ae1e378055`  
@@ -973,3 +973,83 @@ semantic identities, corpus-summary relations, Ranked-local enrichment relations
 proof. A later separately reviewed ticket exposes the admitted read/history API.
 
 No additional provider call, Strategy implementation, or push is authorized by RANK-04.
+
+## Implementation record — 2026-09-01
+
+[CHAZ] explicitly authorized [CLAUDE], the designated Writer, to implement RANK-04 from the
+exact clean accepted-ticket HEAD `7149bc58f520a87ef609747c706e1c79da29b41a`. Verified before
+editing: branch `main`, HEAD exactly that commit, working tree clean. The implementation is one
+direct child commit of that base containing only the accepted four-path allowlist. No amend, no
+rebase, no push.
+
+### Fixture promotion
+
+Promoted once through the existing read-only inspector using the accepted fail-closed command,
+with `set -euo pipefail`, the temporary-file cleanup trap, and the pre-`mv` length/digest guard.
+The committed fixture is inspector stdout bytes exactly — not copied from a temporary directory,
+reserialized, pretty-printed, canonicalized, regenerated, or hand-edited.
+
+- `tests/fixtures/dataforseo_google_ranked_keywords_rank03.json`;
+- exact byte count `390955`;
+- exact SHA-256 `5b0e7cb6a03a921039a2845c62bd6a91eba9d61e2b54240e9af15414ba1fbc84`.
+
+Ordinary tests read only the committed fixture. A test asserts the parser and test sources
+contain no operator Evidence-root, temporary-directory, or Evidence-path token.
+
+### Implemented boundary
+
+`parse_ranked_keywords(body: bytes, parameters: Mapping[str, object]) -> RankedKeywordsIR` in
+`src/observatory/dataforseo_google_ranked_keywords.py`. The module imports exactly
+`RANKED_KEYWORDS_ADAPTER_CONTRACT` from `capture_event` and `Field`/`FieldState`/
+`ParseClassification` from `dataforseo_keyword_overview`; every key set, dataclass, grammar, and
+decode/type/timestamp helper is Ranked-local and deliberately duplicated. No production helper
+outside the allowlist required modification.
+
+Reconciliation-lock rules implemented as accepted: closed v1 member vocabularies for root, task,
+echo, result, item, `ranked_serp_element`, the 31-key `serp_item`, `rank_changes`, `rank_info`,
+the Ranked keyword-data family, and the 22-key `metrics` / 19-key `metrics_absolute` family
+shapes; five required aggregate families with no arithmetic reconciliation; complete
+request-disabled clickstream lock at every accepted locus; Bing kept independent of that flag;
+nonnegative rank typing without uniqueness, monotonicity, or ordering equations; the narrow
+non-canonicalizing HTTP(S) check on `serp_item.url` only; six duplicated provider paths and both
+keyword-difficulty paths independently addressable; monthly duplicate `(year, month)` fail-closed
+while duplicate keyword/URL/rank occurrences are preserved; and all structure-local clocks kept
+on their own axes.
+
+Two Writer typing decisions inside the lock, recorded for Steward review: the structural spine
+members whose absence makes an object uninterpretable are required (root, task, the result
+topology and both aggregate objects, item, `serp_item.type`/`rank_group`/`rank_absolute`/`url`,
+and every member of the 22/19-key aggregate family shapes), while every other known member keeps
+an explicit `Field` state; and `se_type` is closed to `google` at every locus, following the
+Related Keywords precedent, since the ticket leaves it out of the open-vocabulary list.
+
+### Verification performed
+
+- bounded RANK-04 parser tests: 264 passed;
+- `uv run ruff check .`: clean;
+- targeted mypy on the new parser and test module: clean;
+- configured repository `uv run mypy`: 14 errors in 5 files, byte-identical to the baseline
+  captured at the authorized base before any edit. All are inherited defects in pre-existing
+  test modules outside the allowlist; none were introduced and none were repaired;
+- the suite was mutation-checked: fourteen deliberate parser mutations were applied to a scratch
+  copy and reverted, confirming the duplicate-period, rank-typing, clickstream, unsupported-shape,
+  `total_count` independence, item-order, aggregate-family, serp-item-spine, punycode, and
+  target-grammar locks are load-bearing rather than vacuous. One shadowed rule was found this
+  way: deleting the `www` first-label check changed nothing, because the two-label arity check
+  already refuses `www.theconspiratory.com`. A reachable `www.com` / `wwx.com` proof now pins
+  that rule, and a test-only differential over a 35-target corpus proves the duplicated grammar
+  agrees with the RANK-02 adapter validator in both directions — it catches both widening and
+  narrowing. That differential is the only call to the adapter validator anywhere in RANK-04 and
+  is not parser logic. The explicit 1..63 label-length check is likewise defensive in both the
+  adapter and the parser, since the grammar already caps a label at 63 characters; both bounds
+  are duplicated so the two stay aligned.
+
+The full pytest suite was deliberately not run from the Writer lane, per the accepted
+verification boundary. [CHAZ] supplies final full-suite integration validation.
+
+### Authority confirmation
+
+No provider call, provider request, credential access, public network, Evidence mutation,
+PostgreSQL activity, Recipe, Derivation, Observation kind, schema/migration, read/history API,
+Strategy, pagination, or parser-framework refactor. The only Evidence access was the single
+read-only inspector fixture promotion frozen above.
