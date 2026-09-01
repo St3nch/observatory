@@ -186,13 +186,45 @@ independent inventory/set comparison supplies the completeness witness for this 
 This manual proof is proportionate only to D10's first bounded probe. Routine paid capture
 requires a separately accepted automated snapshot, retention, and restore-drill policy.
 
-**Routine automation status — deferred 2026-08-16:** The accepted manual D10 protection
-path remains available, but unattended backup automation is not yet accepted. The intended
-long-term destination is Cloudflare R2 with a dedicated project backup bucket and scoped
-machine credentials. R2 onboarding, bucket creation, credentials, migration rehearsal,
-systemd automation, retention, and restore-drill policy remain deferred until the Product
-Owner explicitly resumes this work. The existing Google Drive rehearsal copy is preserved
-meanwhile.
+**Routine automation status — resumed 2026-09-01; automation still incomplete:** [CHAZ]
+resumed F6 commissioning and created the dedicated private Cloudflare R2 bucket
+`vedaops-observatory-backups` with a bucket-scoped account-owned machine credential limited
+to R2 Bucket Item read/write. The encrypted restic repository at the R2 S3 endpoint was
+initialized as repository `1137afe0`; credentials remain outside the repository and are
+stored locally under owner-only permissions, with recovery copies retained in Bitwarden.
+
+The replaceable-Evidence migration rehearsal passed end to end. Fresh fixture-panel-v1
+Evidence containing one Attempt and one Capture opened as format 2 and scrubbed clean; restic
+snapshot `8f51ae5135b21b885702e11a77291bf71d5d54e749125ebd8f6648926ac5e168`
+was restored into a fresh directory; the restored store opened and scrubbed clean; and both
+the independently recomputed restored Attempt/Capture inventory and the snapshotted
+outside-root inventory were byte-identical to the source inventory, SHA-256
+`a41cfefb0c02283fb30686f54095fa923ffb800c837ceac6af3e7fedbe709a6c`.
+
+All four irreplaceable provider Evidence roots present on the VPS were then snapshotted to R2
+without deleting or altering the existing Google Drive copies. Fresh restores of all four
+opened as format 2, scrubbed clean, and exactly reproduced their independently recorded
+Attempt/Capture inventories:
+
+- AI-09 Target Metrics — R2 snapshot
+  `b6ece774b2ec837c9098c4d029b7936c32e3f4abd2ed36c4c1e8dc931825ff5d`, inventory SHA-256
+  `c9b236dbfb7bf12b2764fb6d28e5e697aa5ff300b8b042739c2c8c166d7386a5`;
+- AI-14 Historical LLM Mentions — R2 snapshot
+  `774c913177db5f37b92a6438fe3d8cfa47b4c82027b798034421907fc4652324`, inventory SHA-256
+  `86be371907404b4903ad5bb73ce70e71ffdaf1328d60d645e5638e6486c3d07e`;
+- RANK-03 Ranked Keywords — R2 snapshot
+  `171f08450a682af6647fe2521d4402bd214de61403eb3a8e4046329c897f8394`, inventory SHA-256
+  `9fb185b668675f8ee6fe7d39085e93558d5728e2f03d17f0fc1371f2b40a0830`;
+- RK-02 Related Keywords — R2 snapshot
+  `e9816316ceb76d7c574e8bd5e1ea995b1d7c5e19804721046c711065892d931a`, inventory SHA-256
+  `6d6b229b2f5e1084c9bf753550364db226d7ab92c032a72da1fdf37809e23801`.
+
+The R2 repository check completed with no errors after all five snapshots. This proves the R2
+destination, migration path, and current real-Evidence restore fidelity, but does **not** yet
+complete routine F6. Remaining acceptance work is the separately reviewed systemd automation,
+retention policy, failure reporting, recurring restore-drill policy, and an end-to-end proof
+that unattended automation produces a recoverable snapshot. The existing Google Drive copies
+remain preserved as additional off-host protection.
 
 ## F7 — Multi-process capture authorization locking
 
