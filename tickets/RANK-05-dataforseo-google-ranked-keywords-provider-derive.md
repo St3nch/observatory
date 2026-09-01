@@ -1,6 +1,6 @@
 # RANK-05 — DataForSEO Google Ranked Keywords Derivation Recipe and typed persistence
 
-**Status:** implemented under the Steward reconciliation lock; awaiting Steward review, independent implementation review, and the [CHAZ] full-suite integration gate  
+**Status:** CLOSED — implementation accepted after Steward review, independent [GROK] `READY`, and [CHAZ] full-suite integration validation  
 **Owner:** [CLAUDE] designated Writer / [GPT] Steward / [GROK] independent reviewer  
 **Blocked by:** no technical blocker; RANK-04 closed at `ecfd6cfb90e7162081f64ae02e410e0cf056eaf4`  
 **Draft base:** `ecfd6cfb90e7162081f64ae02e410e0cf056eaf4`  
@@ -750,3 +750,67 @@ retarget: every one of them measures its delta against a frozen `PRE_*` layer, a
 generic table-set assertions elsewhere use `issubset`/membership rather than exact equality.
 The Related Keywords suite was the only direct consumer of the generic `SCHEMA_STATEMENTS`,
 exactly as the reconciliation lock predicted.
+
+## Closure — 2026-09-01
+
+RANK-05 is **CLOSED**.
+
+Accepted implementation commit:
+
+`3364a5926a7977ec84f904a10412048743a5827e`
+
+Exact implementation parent / accepted ticket HEAD:
+
+`b8f52d6841e1e734233c15d43b9ac9c060bac429`
+
+[GPT] Steward review confirmed the direct-child/six-path boundary and found the implementation
+aligned with the accepted reconciliation lock: exactly four Observation kinds, placement
+identity A, five aggregate families under two independent rank systems, Ranked-local keyword
+enrichment, monthly Data-Period testimony, twelve Ranked relations, whole-unit fail-closed
+semantic conflict handling, Product Option 1 prose retention, and the four-pillar time model
+with no universal provider update clock.
+
+[GROK] independently reviewed the committed implementation and returned
+`RECOMMENDATION: READY`. The review found no blocking defect and no bounded remediation
+required before acceptance. It independently recomputed the Recipe as **2825 canonical JCS
+bytes** with derivation version
+`c7573695db7ecaa0f5dfdc2fc3658e84b1673eec005a0d8003093e57408294a8`, confirmed the frozen
+fixture at 390955 bytes / SHA-256
+`5b0e7cb6a03a921039a2845c62bd6a91eba9d61e2b54240e9af15414ba1fbc84`, and accepted the
+1410-envelope golden consequence and complete-set/idempotency model.
+
+[CHAZ]'s final full repository integration run at
+`3364a5926a7977ec84f904a10412048743a5827e` collected 2593 tests and produced:
+
+`2592 passed, 1 skipped, 1 warning`
+
+Runtime was `936.93s (0:15:36)`. The single warning is the inherited Starlette TestClient
+`httpx` deprecation warning.
+
+### Nonblocking hardening retained for future-us
+
+These are explicitly **not RANK-05 closure blockers** and do not reopen the accepted Recipe:
+
+1. Pin `len(RANKED_KEYWORDS_RECIPE_BYTES) == 2825` and independently hash the bytes against the
+   accepted literal digest, matching the stronger Related Keywords false-green guard.
+2. Optional PostgreSQL hardening may narrow Recipe-known state domains, especially frozen
+   clickstream `not_requested`, unsupported-child `absent|json_null`, and enclosing-object →
+   member-`inapplicable` coupling. Current Evidence → parser → planner → exact-content rebuild
+   remains the accepted integrity boundary.
+3. Optional coverage may add a persisted zero-item proof for `observation_count=10` and a
+   dedicated stored `item_se_type` tamper test; current behavior is already mechanically
+   covered by the planner and `_write_closed_row` path.
+4. RANK-06 should import `RANKED_KEYWORDS_RECIPE` from
+   `google_ranked_keywords_derive.py`; do not move the Recipe document into the parser merely
+   for symmetry because the frozen RANK-04 parser seam intentionally forbids that dependency.
+
+No provider call, credential access, public-network acquisition, Evidence mutation, fixture
+change, pagination, second acquisition, clickstream enablement, Recipe selection, read/history
+API, Strategy feature, amend, rebase, or push is part of this closure.
+
+The next Ranked Keywords boundary is **RANK-06 — Recipe selection and read/history API**. It
+must consume the accepted RANK-05 Recipe/persistence contract without changing provider
+semantics, inventing completeness, canonicalizing Page/URL identity, collapsing the four time
+pillars, or moving Strategy interpretation into Observatory. After RANK-06, Ranked Keywords
+joins the MVP provider-testimony deep closeout review and downstream Strategy-consumer handoff
+work before final Observatory MVP closure.

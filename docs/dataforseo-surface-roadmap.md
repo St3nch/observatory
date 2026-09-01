@@ -497,12 +497,21 @@ clocks, Ranked-local keyword/page occurrence testimony, and no justified second 
 RANK-04 closed on 2026-09-01 with the exact protected body frozen as Conformance testimony, a
 strict Ranked-local parser, independent Steward/Grok acceptance, and [CHAZ] final integration
 validation of `2491 passed, 1 skipped, 1 warning`. A bounded credential-isolation test-harness
-remediation changed no parser semantics or fixture bytes. The next Ranked boundary is a
-separately reviewed Recipe/Derivation/persistence ticket; the later read/history API remains a
-separate review. Neither boundary moves Strategy, scoring, recommendations, canonical page
-policy, or cross-surface semantic equivalence into Observatory. The retro-review checkpoint
-must be completed and any material findings reconciled before the Product Owner and Steward
-record final MVP closure.
+remediation changed no parser semantics or fixture bytes. RANK-05 then closed the separately
+reviewed Recipe/Derivation/typed-persistence boundary at implementation commit
+`3364a5926a7977ec84f904a10412048743a5827e`: exactly four Observation kinds, placement identity
+A, ten target corpus metrics across two unreconciled rank systems, Ranked-local keyword and
+monthly testimony, twelve typed Ranked relations, complete-set rebuild proof, Product Option 1
+SERP prose retention, and the Ranked-specific four-pillar time model. [GROK] independently
+returned `READY`, and [CHAZ]'s final integration suite produced `2592 passed, 1 skipped,
+1 warning` across 2593 collected tests. Nonblocking Recipe-digest/state-CHECK/coverage hardening
+is retained in the RANK-05 closure record rather than reopening the accepted implementation.
+The next Ranked boundary is **RANK-06 — Recipe selection and read/history API**. It must consume
+RANK-05 without changing provider semantics, inventing completeness, canonical Page identity,
+or Strategy interpretation. After RANK-06, Ranked joins the MVP provider-testimony deep review
+and Strategy-consumer handoff work. The retro-review checkpoint and any material fidelity or
+exposure findings must be reconciled before the Product Owner and Steward record final MVP
+closure.
 
 ## Dependency-based sequencing direction
 
