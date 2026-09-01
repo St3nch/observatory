@@ -1,6 +1,6 @@
 # RANK-02 — DataForSEO Google Ranked Keywords Live paid-probe adapter
 
-**Status:** review — [CLAUDE] implementation delivered in one commit on 2026-09-01; awaiting [GPT] Steward review  
+**Status:** closed — [GPT] Steward accepted after committed-diff review and [CHAZ] full-suite approval on 2026-09-01  
 **Start commit:** `6869dab7c617e53e66446e6bad3e5e6e948e74d3`  
 **Owner:** [CLAUDE] implementation / [GPT] Steward review  
 **Blocked by:** none; RANK-01 closed at `d10349bb036905daf9dd53eeac0cffbe2c1e7118`  
@@ -704,3 +704,32 @@ the parts whose independence makes each adapter's published bytes separately rev
   contact is the allowed read-only compatibility regression against the disposable test
   fixture.
 - **No amend. No push.** One commit on `main`, local only.
+
+## Steward closure — 2026-09-01
+
+[GPT] independently reviewed the committed implementation at
+`8f074ce1eb4fbacd0d4a91737459258bda28a01b`, direct child of exact implementation start
+commit `6869dab7c617e53e66446e6bad3e5e6e948e74d3`. The implementation changed exactly the
+accepted four paths and preserved the closed Evidence-only boundary.
+
+The Steward review accepted the Ranked-local closure-owned gate, fail-closed one-shot scan,
+exact frozen request vector, strict two-label ASCII target restriction, loopback-only test
+endpoint seam, credential boundary, PF-09 complete/partial/no-response behavior, byte-exact
+inspect path, and explicit refusal to encode provider response semantics before live Evidence.
+No second Grok review was required: Grok had already adversarially reviewed the RANK-02 ticket,
+Claude implemented the reconciled contract, and the Steward directly reviewed the resulting
+committed code/tests.
+
+[CHAZ] then ran the full repository suite on exact implementation HEAD
+`8f074ce1eb4fbacd0d4a91737459258bda28a01b` and explicitly approved closure:
+
+- `2227 passed, 1 skipped, 1 warning in 762.84s (0:12:42)`;
+- sole warning: inherited `StarletteDeprecationWarning` from FastAPI/Starlette TestClient using
+  deprecated `httpx`; non-blocking and unrelated to RANK-02.
+
+RANK-02 is closed. It authorizes no provider call by itself. The next Ranked Keywords boundary
+is a separately reviewed one-shot Evidence activation for exact candidate target
+`theconspiratory.com`, fresh pricing/contract recheck, explicit [CHAZ] live authorization, one
+fresh Evidence root, no retry, local inspect/scrub, and the accepted bounded F6 off-host
+protection/restore proof. Parser, Conformance fixture, Recipe, Derivation, schema, API, and
+Strategy work remain downstream of verified live Evidence.

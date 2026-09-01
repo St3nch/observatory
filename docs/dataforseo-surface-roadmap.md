@@ -490,7 +490,9 @@ Additional live acquisition remains separately gated under D12.
 
 This is an **MVP closeout gate, not a pause on current feature sequencing**. The Related
 Keywords parser/Derivation/API vertical slice closed with RK-05 on 2026-08-31. Ranked Keywords
-remains the next planned feature slice under its normal reviewed tickets. The retro-review
+activation review RANK-01 and Evidence-only adapter RANK-02 closed on 2026-09-01; the next
+Ranked boundary is one separately gated live Evidence activation for the accepted
+`theconspiratory.com` domain contract before any parser/Recipe/schema/API work. The retro-review
 checkpoint must be completed and any material findings reconciled before the Product Owner and
 Steward record final MVP closure.
 
