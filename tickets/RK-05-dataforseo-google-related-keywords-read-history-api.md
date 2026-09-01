@@ -1315,3 +1315,68 @@ not bypassed or modified to force 409 for that unreachable-in-normal-state corru
   check firing for the wrong reason would still look green. The new tests reduce that risk by
   asserting the healthy read first and by snapshotting relation cardinalities around each
   tamper, but they do not assert the internal message.
+
+## Remediation report — [CLAUDE], round 2 (OpenAPI documentation micro-remediation)
+
+Parent: `83f5c0105e0b4f8496cad44020403bd936ceb735`. One direct child, not amended, not pushed.
+Grok's whole-final review returned READY with no behavioral blocker; this corrects the one
+accepted OpenAPI documentation false-green before closure.
+
+Changed paths: `src/observatory/related_keywords_read.py`,
+`tests/test_api_related_keywords.py`, this ticket. `api.py` did not need to change.
+
+### The defect
+
+`RelatedKeywordsMonthlyFact.search_volume` appended `_CURRENT_VOLUME` to its description.
+That copy — "Current provider search_volume testimony from keyword_info. It is never computed
+from, equal to, or replaceable by a monthly Data Period point…" — is correct on
+`RelatedKeywordsKeywordInfo.search_volume` and self-contradictory on the monthly field. The
+generated OpenAPI therefore described the same field as both a monthly Data Period fact and
+the current keyword_info value, which is exactly the cross-grain confusion RK-05 exists to
+prevent.
+
+`test_generated_openapi_teaches_the_required_distinctions` did not catch it because it
+searches the whole OpenAPI dump for phrases such as "never computed" rather than proving
+which schema field carries the distinction.
+
+### The correction
+
+- `_CURRENT_VOLUME` stays on `RelatedKeywordsKeywordInfo.search_volume`, unchanged.
+- The monthly field now carries a new `_MONTHLY_VOLUME` constant that teaches only its own
+  grain: the exact provider search volume for that fact's own stated `{year, month}` Data
+  Period; explicitly not current testimony, with the current value named as a separate
+  keyword_info field that may legitimately disagree with any monthly point including the
+  newest; and a stated zero as an ordinary monthly fact, not absence, not a gap, and not a
+  synthesized value.
+
+Description text only. No runtime read semantics, no integrity rule, no membership or
+ordering behaviour, no model type, and no public data shape changed. `_MONTHLY_VOLUME` is a
+new description constant; no field was added, removed, retyped, or renamed.
+
+### The strengthened proof
+
+New `test_generated_openapi_separates_current_and_monthly_search_volume` resolves the actual
+`RelatedKeywordsKeywordInfo.search_volume` and `RelatedKeywordsMonthlyFact.search_volume`
+property schemas out of the generated document (through a `_description` helper that reads a
+`$ref` sibling description and falls back to the target) and asserts:
+
+- the keyword-info field teaches current provider testimony and "never computed";
+- the monthly field teaches its Data Period grain and "it is not current testimony";
+- the monthly field does **not** carry "Current provider search_volume testimony from
+  keyword_info" or "never computed";
+- the two descriptions differ, and `data_period` still carries the Data Period copy.
+
+False-green control: with the defective description restored, the new test fails while the
+existing whole-document phrase test still passes — the exact gap it was written to close. The
+corrected description was restored immediately afterwards.
+
+### Verification
+
+- `uv run pytest -q tests/test_api_related_keywords.py` → **195 passed** (194 + 1 new).
+- `uv run ruff check .` → clean.
+- Targeted `uv run mypy src/observatory/related_keywords_read.py src/observatory/api.py
+  tests/test_api_related_keywords.py` → **Success: no issues found in 3 source files**.
+- Full `uv run mypy` → **14 errors in 5 files (checked 88 source files)**, still the exact
+  inherited RK-05 baseline. Zero added, zero repaired.
+- Full repository pytest not run; it remains [CHAZ]'s closure run.
+- No provider call, no credentials, no network, no Evidence mutation, no push.

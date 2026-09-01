@@ -457,6 +457,13 @@ _CURRENT_VOLUME: Final[str] = (
     "from, equal to, or replaceable by a monthly Data Period point, and may legitimately "
     "disagree with the newest monthly point."
 )
+_MONTHLY_VOLUME: Final[str] = (
+    "Exact provider search volume for this monthly fact's own stated {year, month} Data "
+    "Period. It is not current testimony: the current value is a separate keyword_info "
+    "field and may legitimately disagree with any monthly point, including the newest one. "
+    "A stated zero is an ordinary monthly fact, not absence, not a gap, and not a "
+    "synthesized value."
+)
 _PERIOD: Final[str] = (
     "Provider-stated Data Period. It is not Capture time, Attempt time, a structure-local "
     "provider clock, or a recurrence claim beyond the exact stated periods."
@@ -993,14 +1000,7 @@ class RelatedKeywordsMonthlyFact(BaseModel):
     locus: Literal["seed_keyword_data", "returned_item"] = Field(description=_LOCUS)
     keyword: str = Field(min_length=1)
     data_period: RelatedKeywordsDataPeriod = Field(description=_PERIOD)
-    search_volume: int = Field(
-        ge=0,
-        le=IJSON_MAX,
-        description=(
-            "Exact provider monthly search volume for this Data Period. A stated zero is "
-            "an ordinary fact, not absence. " + _CURRENT_VOLUME
-        ),
-    )
+    search_volume: int = Field(ge=0, le=IJSON_MAX, description=_MONTHLY_VOLUME)
     occurrences: list[RelatedKeywordsMonthlyOccurrence] = Field(
         description=(
             "Returned-item placements that stated this Data Period. Empty exactly for the "

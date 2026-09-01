@@ -2509,6 +2509,16 @@ def _closed(schema: dict[str, Any], keys: set[str]) -> dict[str, Any]:
     return properties
 
 
+def _description(spec: dict[str, Any], schema: dict[str, Any]) -> str:
+    """Description carried by one property schema, or by its $ref target as a fallback."""
+
+    text = schema.get("description")
+    if not isinstance(text, str):
+        text = _resolve(spec, schema).get("description")
+    assert isinstance(text, str) and text, schema
+    return text
+
+
 def _const(spec: dict[str, Any], schema: dict[str, Any], expected: object) -> None:
     for option in _nonnull(spec, schema):
         if option.get("const") == expected or option.get("enum") == [expected]:
@@ -2677,6 +2687,52 @@ def test_generated_openapi_is_fully_typed_and_closed(tmp_path: Path) -> None:
     _closed(
         _resolve(spec, _resolve(spec, relationship_fields["occurrences"])["items"]),
         RELATIONSHIP_OCCURRENCE_KEYS,
+    )
+
+
+def test_generated_openapi_separates_current_and_monthly_search_volume(
+    tmp_path: Path,
+) -> None:
+    """The current-vs-monthly distinction must live on the right field, not merely
+    somewhere in the document. A whole-document phrase search cannot tell the two apart."""
+
+    spec = _spec(tmp_path)
+    route = spec["paths"][HISTORY]["get"]
+    envelope = _resolve(
+        spec, route["responses"]["200"]["content"]["application/json"]["schema"]
+    )
+    fields = _closed(
+        _resolve(spec, _resolve(spec, _closed(envelope, HISTORY_KEYS)["captures"])["items"]),
+        CAPTURE_KEYS,
+    )
+    fact = _closed(
+        _resolve(spec, _resolve(spec, fields["keyword_data"])["items"]),
+        KEYWORD_DATA_FACT_KEYS,
+    )
+    info = _resolve(
+        spec, _nonnull(spec, _state_value(spec, fact["keyword_info"])["value"])[0]
+    )
+    current = _description(
+        spec, _closed(info, KEYWORD_INFO_JSON_KEYS)["search_volume"]
+    ).lower()
+    monthly_fields = _closed(
+        _resolve(spec, _resolve(spec, fields["monthly_search_volume"])["items"]),
+        MONTHLY_FACT_KEYS,
+    )
+    monthly = _description(spec, monthly_fields["search_volume"]).lower()
+
+    assert "current provider search_volume testimony from keyword_info" in current
+    assert "never computed" in current
+    assert "monthly data period point" in current
+
+    assert "current provider search_volume testimony from keyword_info" not in monthly
+    assert "never computed" not in monthly
+    assert "data period" in monthly
+    assert "it is not current testimony" in monthly
+    assert "a stated zero is an ordinary monthly fact, not absence" in monthly
+    assert current != monthly
+    assert _description(spec, monthly_fields["data_period"]).lower().startswith(
+        "provider-stated data period"
     )
 
 
