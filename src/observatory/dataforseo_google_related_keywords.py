@@ -19,11 +19,35 @@ from typing import Final
 
 from observatory.capture_event import RELATED_KEYWORDS_ADAPTER_CONTRACT
 from observatory.dataforseo_keyword_overview import Field, FieldState, ParseClassification
+from observatory.provider_recipe import (
+    IDENTITY_SCHEMA,
+    IDENTITY_VERSION,
+    SCHEMA,
+    SCHEMA_VERSION,
+    recipe_bytes,
+    recipe_derivation_version_id,
+    validate_recipe,
+)
 
 SUCCESS_STATUS: Final[int] = 20000
 PROVIDER: Final[str] = "dataforseo"
 PARSER_CONTRACT: Final[str] = "dataforseo-labs-google-related-keywords-live-parser-v1"
 SE_TYPE: Final[str] = "google"
+
+# RK-04 Recipe-v1 Observation kinds. Related Keywords is its own provider surface: these are
+# deliberately not `dataforseo.google.keyword_overview.*` kinds, because subject grain, locus,
+# relationship context, SERP testimony, and parser year bounds all differ.
+KEYWORD_DATA_KIND: Final[str] = "dataforseo.google.related_keywords.keyword_data.v1"
+MONTHLY_KIND: Final[str] = (
+    "dataforseo.google.related_keywords.monthly_search_volume.v1"
+)
+RELATIONSHIP_KIND: Final[str] = "dataforseo.google.related_keywords.relationship.v1"
+
+# Closed provider locus. `seed_keyword_data` and the depth-0 returned item are two provider
+# paths that RK-02 observed to agree; locus keeps them independently attributable so a
+# synthetic disagreement is testimony rather than a same-identity conflict.
+LOCUS_SEED: Final[str] = "seed_keyword_data"
+LOCUS_ITEM: Final[str] = "returned_item"
 
 # Calendar bound for monthly Data Periods and provider clocks. Keyword Overview's
 # 2000..2100 window is a Recipe rule for its own monthly series and is not imported here.
@@ -1196,3 +1220,122 @@ def _require_decimal(value: object, path: str) -> Decimal:
 
 def _escape(key: str) -> str:
     return key.replace("~", "~0").replace("/", "~1")
+
+
+def related_keywords_recipe() -> dict[str, object]:
+    """Return the first Related Keywords Derivation Recipe document.
+
+    Recipe v1 fixes three Observation kinds. `locus` is a keyword-data and monthly identity
+    axis but is absent from relationship identity because `related_keywords` exists only on
+    returned items. `core_keyword` stays a typed properties field, not a fourth kind.
+    """
+
+    kinds = [
+        {
+            "axes": {
+                "keyword": "string",
+                "locus": "string",
+                "requested_seed": "string",
+            },
+            "observation_kind": KEYWORD_DATA_KIND,
+        },
+        {
+            "axes": {
+                "keyword": "string",
+                "locus": "string",
+                "month": "integer",
+                "requested_seed": "string",
+                "year": "integer",
+            },
+            "observation_kind": MONTHLY_KIND,
+        },
+        {
+            "axes": {
+                "requested_seed": "string",
+                "source_keyword": "string",
+                "target_keyword": "string",
+            },
+            "observation_kind": RELATIONSHIP_KIND,
+        },
+    ]
+    return validate_recipe(
+        {
+            "adapter_contract": RELATED_KEYWORDS_ADAPTER_CONTRACT,
+            "admission": {
+                "capture_outcomes": [
+                    "no_response",
+                    "observation_admitted",
+                    "observation_admitted_empty",
+                    "provider_envelope_rejected",
+                    "provider_error",
+                    "reconciliation_failed",
+                    "response_partial",
+                    "transport_complete_non_admissible",
+                ],
+                "rule": "recipe_closed_classifications",
+            },
+            "data_period": {
+                "inheritance": "never_from_capture",
+                "rule": "provider_stated_year_month_1_9999",
+            },
+            "extension_policy": {
+                "closed_objects": [
+                    "/",
+                    "/tasks",
+                    "/tasks/data",
+                    "/tasks/result",
+                    "/tasks/result/seed_keyword_data",
+                    "/tasks/result/items",
+                    "/tasks/result/items/keyword_data",
+                    "/tasks/result/items/keyword_data/keyword_info",
+                    "/tasks/result/items/keyword_data/keyword_info/monthly_searches",
+                    "/tasks/result/items/keyword_data/keyword_info/search_volume_trend",
+                    "/tasks/result/items/keyword_data/keyword_properties",
+                    "/tasks/result/items/keyword_data/avg_backlinks_info",
+                    "/tasks/result/items/keyword_data/search_intent_info",
+                    "/tasks/result/items/keyword_data/serp_info",
+                ],
+                "extension_permitted_objects": [],
+                "unknown_closed_field": "fail_closed",
+                "unknown_extension_field": "fail_closed",
+            },
+            "field_state": {
+                "states": [
+                    "absent",
+                    "inapplicable",
+                    "json_null",
+                    "not_requested",
+                    "stated",
+                ]
+            },
+            "numeric": {"normalization": "exact_decimal"},
+            "observation_identity": {
+                "document_schema": IDENTITY_SCHEMA,
+                "document_version": IDENTITY_VERSION,
+                "kinds": kinds,
+            },
+            "observation_kinds": [
+                KEYWORD_DATA_KIND,
+                MONTHLY_KIND,
+                RELATIONSHIP_KIND,
+            ],
+            "parser_contract": PARSER_CONTRACT,
+            "provider": PROVIDER,
+            "provider_update_time": {
+                "inheritance": "never_from_capture_or_sibling",
+                "rule": "structure_local_clocks_no_universal_update_time",
+            },
+            "reconciliation": {
+                "rule": "verified_attempt_authority_result_echo_is_testimony"
+            },
+            "schema": SCHEMA,
+            "version": SCHEMA_VERSION,
+        }
+    )
+
+
+RELATED_KEYWORDS_RECIPE: Final[dict[str, object]] = related_keywords_recipe()
+RELATED_KEYWORDS_RECIPE_BYTES: Final[bytes] = recipe_bytes(RELATED_KEYWORDS_RECIPE)
+RELATED_KEYWORDS_RECIPE_ID: Final[str] = recipe_derivation_version_id(
+    RELATED_KEYWORDS_RECIPE
+)

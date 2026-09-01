@@ -49,7 +49,7 @@ from observatory.migrate import (
     PRE_AI11_SCHEMA_STATEMENTS,
     PRE_AI16_SCHEMA_STATEMENTS,
     PRE_PF12_SCHEMA_STATEMENTS,
-    SCHEMA_STATEMENTS,
+    PRE_RK04_SCHEMA_STATEMENTS,
     WIDEN_IJSON_COLUMNS_SQL,
     apply_migrations,
     apply_schema,
@@ -1610,7 +1610,7 @@ def test_populated_current_schema_then_target_metrics_derive(
     assert any("target_metrics_result_context" in item for item in tm_statements)
     historical_statements = [
         statement
-        for statement in SCHEMA_STATEMENTS
+        for statement in PRE_RK04_SCHEMA_STATEMENTS
         if statement not in PRE_AI16_SCHEMA_STATEMENTS
     ]
     assert len(historical_statements) == 3

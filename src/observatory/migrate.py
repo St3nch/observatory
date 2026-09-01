@@ -1399,6 +1399,517 @@ CREATE TABLE IF NOT EXISTS llm_mentions_historical_unreturned_requested_periods 
 )
 """
 
+RELATED_KEYWORDS_KEYWORD_DATA_KIND: Final[str] = (
+    "dataforseo.google.related_keywords.keyword_data.v1"
+)
+RELATED_KEYWORDS_MONTHLY_KIND: Final[str] = (
+    "dataforseo.google.related_keywords.monthly_search_volume.v1"
+)
+RELATED_KEYWORDS_RELATIONSHIP_KIND: Final[str] = (
+    "dataforseo.google.related_keywords.relationship.v1"
+)
+_RK04_LOCUS_CHECK: Final[str] = "IN ('seed_keyword_data', 'returned_item')"
+
+
+def _rk04_consistency(name: str, column: str) -> str:
+    """Short-named state/value consistency CHECK.
+
+    `_state_value_consistency` derives its constraint name from the table name, which would
+    exceed PostgreSQL's 63-byte identifier limit for several RK-04 relations and be silently
+    truncated. RK-04 therefore names each constraint explicitly.
+    """
+
+    return (
+        f"CONSTRAINT {name} "
+        f"CHECK (({column}_state = 'stated' AND {column} IS NOT NULL) "
+        f"OR ({column}_state <> 'stated' AND {column} IS NULL))"
+    )
+
+
+def _rk04_clock(column: str, name: str) -> str:
+    """Structure-specific provider clock column pair.
+
+    RK-04 exposes no generic `provider_update_time`. Each clock keeps the name of the exact
+    provider structure that stated it, and the exact lexical value survives — including the
+    year-1 SERP string, which acquires no sentinel meaning here.
+    """
+
+    return (
+        f"{column} TEXT\n"
+        f"        CHECK ({column} IS NULL OR {column} ~ '{_CLOCK_RE}'),\n"
+        f"    {column}_state TEXT NOT NULL\n"
+        f"        CHECK ({column}_state {_FIELD_STATE_CHECK}),\n"
+        f"    {_rk04_consistency(name, column)}"
+    )
+
+
+def _rk04_nonneg(column: str) -> str:
+    return f"CHECK ({column} IS NULL OR ({column} >= 0 AND {column} <= {_IJSON_MAX}))"
+
+
+def _rk04_signed(column: str) -> str:
+    return (
+        f"CHECK ({column} IS NULL OR "
+        f"({column} >= -{_IJSON_MAX} AND {column} <= {_IJSON_MAX}))"
+    )
+
+
+_RK04_SEMANTIC_KEY: Final[str] = f"""capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL"""
+
+
+def _rk04_child_fk(constraint: str) -> str:
+    return f"""CONSTRAINT {constraint}
+        FOREIGN KEY (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+        REFERENCES related_keywords_keyword_data (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )"""
+
+
+RELATED_KEYWORDS_KEYWORD_DATA_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS related_keywords_keyword_data (
+    {_RK04_SEMANTIC_KEY},
+    requested_seed TEXT NOT NULL
+        CHECK (char_length(requested_seed) >= 1),
+    locus TEXT NOT NULL
+        CHECK (locus {_RK04_LOCUS_CHECK}),
+    keyword TEXT NOT NULL
+        CHECK (char_length(keyword) >= 1),
+    location_code BIGINT
+        {_rk04_nonneg("location_code")},
+    location_code_state TEXT NOT NULL
+        CHECK (location_code_state {_FIELD_STATE_CHECK}),
+    language_code TEXT,
+    language_code_state TEXT NOT NULL
+        CHECK (language_code_state {_FIELD_STATE_CHECK}),
+    se_type TEXT,
+    se_type_state TEXT NOT NULL
+        CHECK (se_type_state {_FIELD_STATE_CHECK}),
+    keyword_info_state TEXT NOT NULL
+        CHECK (keyword_info_state {_FIELD_STATE_CHECK}),
+    keyword_properties_state TEXT NOT NULL
+        CHECK (keyword_properties_state {_FIELD_STATE_CHECK}),
+    avg_backlinks_state TEXT NOT NULL
+        CHECK (avg_backlinks_state {_FIELD_STATE_CHECK}),
+    search_intent_state TEXT NOT NULL
+        CHECK (search_intent_state {_FIELD_STATE_CHECK}),
+    serp_info_state TEXT NOT NULL
+        CHECK (serp_info_state {_FIELD_STATE_CHECK}),
+    bing_normalized_state TEXT NOT NULL
+        CHECK (bing_normalized_state {_FIELD_STATE_CHECK}),
+    clickstream_normalized_state TEXT NOT NULL
+        CHECK (clickstream_normalized_state {_FIELD_STATE_CHECK}),
+    clickstream_keyword_info_state TEXT NOT NULL
+        CHECK (clickstream_keyword_info_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rk04_keyword_data_kind
+        CHECK (observation_kind = '{RELATED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    CONSTRAINT rk04_keyword_data_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_rk04_consistency("rk04_kd_location_ck", "location_code")},
+    {_rk04_consistency("rk04_kd_language_ck", "language_code")},
+    {_rk04_consistency("rk04_kd_se_type_ck", "se_type")},
+    {_ENVELOPE_FK}
+)
+"""
+
+RELATED_KEYWORDS_KEYWORD_INFO_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS related_keywords_keyword_info (
+    {_RK04_SEMANTIC_KEY},
+    se_type TEXT,
+    se_type_state TEXT NOT NULL
+        CHECK (se_type_state {_FIELD_STATE_CHECK}),
+    {_rk04_clock("keyword_info_last_updated_time", "rk04_ki_clock_ck")},
+    competition NUMERIC,
+    competition_state TEXT NOT NULL
+        CHECK (competition_state {_FIELD_STATE_CHECK}),
+    competition_level TEXT,
+    competition_level_state TEXT NOT NULL
+        CHECK (competition_level_state {_FIELD_STATE_CHECK}),
+    cpc NUMERIC,
+    cpc_state TEXT NOT NULL
+        CHECK (cpc_state {_FIELD_STATE_CHECK}),
+    search_volume BIGINT
+        {_rk04_nonneg("search_volume")},
+    search_volume_state TEXT NOT NULL
+        CHECK (search_volume_state {_FIELD_STATE_CHECK}),
+    low_top_of_page_bid NUMERIC,
+    low_top_of_page_bid_state TEXT NOT NULL
+        CHECK (low_top_of_page_bid_state {_FIELD_STATE_CHECK}),
+    high_top_of_page_bid NUMERIC,
+    high_top_of_page_bid_state TEXT NOT NULL
+        CHECK (high_top_of_page_bid_state {_FIELD_STATE_CHECK}),
+    categories BIGINT[],
+    categories_state TEXT NOT NULL
+        CHECK (categories_state {_FIELD_STATE_CHECK}),
+    monthly_searches_state TEXT NOT NULL
+        CHECK (monthly_searches_state {_FIELD_STATE_CHECK}),
+    search_volume_trend_state TEXT NOT NULL
+        CHECK (search_volume_trend_state {_FIELD_STATE_CHECK}),
+    trend_monthly BIGINT
+        {_rk04_signed("trend_monthly")},
+    trend_monthly_state TEXT NOT NULL
+        CHECK (trend_monthly_state {_FIELD_STATE_CHECK}),
+    trend_quarterly BIGINT
+        {_rk04_signed("trend_quarterly")},
+    trend_quarterly_state TEXT NOT NULL
+        CHECK (trend_quarterly_state {_FIELD_STATE_CHECK}),
+    trend_yearly BIGINT
+        {_rk04_signed("trend_yearly")},
+    trend_yearly_state TEXT NOT NULL
+        CHECK (trend_yearly_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rk04_keyword_info_kind
+        CHECK (observation_kind = '{RELATED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    {_rk04_consistency("rk04_ki_se_type_ck", "se_type")},
+    {_rk04_consistency("rk04_ki_competition_ck", "competition")},
+    {_rk04_consistency("rk04_ki_comp_level_ck", "competition_level")},
+    {_rk04_consistency("rk04_ki_cpc_ck", "cpc")},
+    {_rk04_consistency("rk04_ki_volume_ck", "search_volume")},
+    {_rk04_consistency("rk04_ki_low_bid_ck", "low_top_of_page_bid")},
+    {_rk04_consistency("rk04_ki_high_bid_ck", "high_top_of_page_bid")},
+    {_rk04_consistency("rk04_ki_categories_ck", "categories")},
+    {_rk04_consistency("rk04_ki_trend_m_ck", "trend_monthly")},
+    {_rk04_consistency("rk04_ki_trend_q_ck", "trend_quarterly")},
+    {_rk04_consistency("rk04_ki_trend_y_ck", "trend_yearly")},
+    {_rk04_child_fk("rk04_keyword_info_parent")}
+)
+"""
+
+RELATED_KEYWORDS_KEYWORD_PROPERTIES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS related_keywords_keyword_properties (
+    {_RK04_SEMANTIC_KEY},
+    se_type TEXT,
+    se_type_state TEXT NOT NULL
+        CHECK (se_type_state {_FIELD_STATE_CHECK}),
+    core_keyword TEXT,
+    core_keyword_state TEXT NOT NULL
+        CHECK (core_keyword_state {_FIELD_STATE_CHECK}),
+    synonym_clustering_algorithm TEXT,
+    synonym_clustering_algorithm_state TEXT NOT NULL
+        CHECK (synonym_clustering_algorithm_state {_FIELD_STATE_CHECK}),
+    keyword_difficulty BIGINT
+        {_rk04_nonneg("keyword_difficulty")},
+    keyword_difficulty_state TEXT NOT NULL
+        CHECK (keyword_difficulty_state {_FIELD_STATE_CHECK}),
+    detected_language TEXT,
+    detected_language_state TEXT NOT NULL
+        CHECK (detected_language_state {_FIELD_STATE_CHECK}),
+    is_another_language BOOLEAN,
+    is_another_language_state TEXT NOT NULL
+        CHECK (is_another_language_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rk04_properties_kind
+        CHECK (observation_kind = '{RELATED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    {_rk04_consistency("rk04_kp_se_type_ck", "se_type")},
+    {_rk04_consistency("rk04_kp_core_ck", "core_keyword")},
+    {_rk04_consistency("rk04_kp_algorithm_ck", "synonym_clustering_algorithm")},
+    {_rk04_consistency("rk04_kp_difficulty_ck", "keyword_difficulty")},
+    {_rk04_consistency("rk04_kp_language_ck", "detected_language")},
+    {_rk04_consistency("rk04_kp_another_ck", "is_another_language")},
+    {_rk04_child_fk("rk04_properties_parent")}
+)
+"""
+
+RELATED_KEYWORDS_AVG_BACKLINKS_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS related_keywords_avg_backlinks (
+    {_RK04_SEMANTIC_KEY},
+    se_type TEXT,
+    se_type_state TEXT NOT NULL
+        CHECK (se_type_state {_FIELD_STATE_CHECK}),
+    backlinks NUMERIC,
+    backlinks_state TEXT NOT NULL
+        CHECK (backlinks_state {_FIELD_STATE_CHECK}),
+    dofollow NUMERIC,
+    dofollow_state TEXT NOT NULL
+        CHECK (dofollow_state {_FIELD_STATE_CHECK}),
+    referring_pages NUMERIC,
+    referring_pages_state TEXT NOT NULL
+        CHECK (referring_pages_state {_FIELD_STATE_CHECK}),
+    referring_domains NUMERIC,
+    referring_domains_state TEXT NOT NULL
+        CHECK (referring_domains_state {_FIELD_STATE_CHECK}),
+    referring_main_domains NUMERIC,
+    referring_main_domains_state TEXT NOT NULL
+        CHECK (referring_main_domains_state {_FIELD_STATE_CHECK}),
+    rank NUMERIC,
+    rank_state TEXT NOT NULL
+        CHECK (rank_state {_FIELD_STATE_CHECK}),
+    main_domain_rank NUMERIC,
+    main_domain_rank_state TEXT NOT NULL
+        CHECK (main_domain_rank_state {_FIELD_STATE_CHECK}),
+    {_rk04_clock("avg_backlinks_last_updated_time", "rk04_bl_clock_ck")},
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rk04_backlinks_kind
+        CHECK (observation_kind = '{RELATED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    {_rk04_consistency("rk04_bl_se_type_ck", "se_type")},
+    {_rk04_consistency("rk04_bl_backlinks_ck", "backlinks")},
+    {_rk04_consistency("rk04_bl_dofollow_ck", "dofollow")},
+    {_rk04_consistency("rk04_bl_ref_pages_ck", "referring_pages")},
+    {_rk04_consistency("rk04_bl_ref_domains_ck", "referring_domains")},
+    {_rk04_consistency("rk04_bl_ref_main_ck", "referring_main_domains")},
+    {_rk04_consistency("rk04_bl_rank_ck", "rank")},
+    {_rk04_consistency("rk04_bl_main_rank_ck", "main_domain_rank")},
+    {_rk04_child_fk("rk04_backlinks_parent")}
+)
+"""
+
+RELATED_KEYWORDS_SEARCH_INTENT_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS related_keywords_search_intent (
+    {_RK04_SEMANTIC_KEY},
+    se_type TEXT,
+    se_type_state TEXT NOT NULL
+        CHECK (se_type_state {_FIELD_STATE_CHECK}),
+    main_intent TEXT,
+    main_intent_state TEXT NOT NULL
+        CHECK (main_intent_state {_FIELD_STATE_CHECK}),
+    foreign_intent TEXT[],
+    foreign_intent_state TEXT NOT NULL
+        CHECK (foreign_intent_state {_FIELD_STATE_CHECK}),
+    {_rk04_clock("search_intent_last_updated_time", "rk04_si_clock_ck")},
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rk04_intent_kind
+        CHECK (observation_kind = '{RELATED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    {_rk04_consistency("rk04_si_se_type_ck", "se_type")},
+    {_rk04_consistency("rk04_si_main_ck", "main_intent")},
+    {_rk04_consistency("rk04_si_foreign_ck", "foreign_intent")},
+    {_rk04_child_fk("rk04_intent_parent")}
+)
+"""
+
+RELATED_KEYWORDS_SERP_INFO_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS related_keywords_serp_info (
+    {_RK04_SEMANTIC_KEY},
+    se_type TEXT,
+    se_type_state TEXT NOT NULL
+        CHECK (se_type_state {_FIELD_STATE_CHECK}),
+    check_url TEXT,
+    check_url_state TEXT NOT NULL
+        CHECK (check_url_state {_FIELD_STATE_CHECK}),
+    serp_item_types TEXT[],
+    serp_item_types_state TEXT NOT NULL
+        CHECK (serp_item_types_state {_FIELD_STATE_CHECK}),
+    se_results_count BIGINT
+        {_rk04_nonneg("se_results_count")},
+    se_results_count_state TEXT NOT NULL
+        CHECK (se_results_count_state {_FIELD_STATE_CHECK}),
+    {_rk04_clock("serp_last_updated_time", "rk04_serp_last_ck")},
+    {_rk04_clock("serp_previous_updated_time", "rk04_serp_prev_ck")},
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rk04_serp_kind
+        CHECK (observation_kind = '{RELATED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    {_rk04_consistency("rk04_serp_se_type_ck", "se_type")},
+    {_rk04_consistency("rk04_serp_url_ck", "check_url")},
+    {_rk04_consistency("rk04_serp_types_ck", "serp_item_types")},
+    {_rk04_consistency("rk04_serp_count_ck", "se_results_count")},
+    {_rk04_child_fk("rk04_serp_parent")}
+)
+"""
+
+RELATED_KEYWORDS_MONTHLY_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS related_keywords_monthly_search_volume (
+    {_RK04_SEMANTIC_KEY},
+    requested_seed TEXT NOT NULL
+        CHECK (char_length(requested_seed) >= 1),
+    locus TEXT NOT NULL
+        CHECK (locus {_RK04_LOCUS_CHECK}),
+    keyword TEXT NOT NULL
+        CHECK (char_length(keyword) >= 1),
+    year BIGINT NOT NULL
+        CHECK (year >= 1 AND year <= 9999),
+    month BIGINT NOT NULL
+        CHECK (month >= 1 AND month <= 12),
+    search_volume BIGINT NOT NULL
+        CHECK (search_volume >= 0 AND search_volume <= {_IJSON_MAX}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rk04_monthly_kind
+        CHECK (observation_kind = '{RELATED_KEYWORDS_MONTHLY_KIND}'),
+    CONSTRAINT rk04_monthly_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_ENVELOPE_FK}
+)
+"""
+
+RELATED_KEYWORDS_RELATIONSHIP_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS related_keywords_relationship (
+    {_RK04_SEMANTIC_KEY},
+    requested_seed TEXT NOT NULL
+        CHECK (char_length(requested_seed) >= 1),
+    source_keyword TEXT NOT NULL
+        CHECK (char_length(source_keyword) >= 1),
+    target_keyword TEXT NOT NULL
+        CHECK (char_length(target_keyword) >= 1),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT rk04_relationship_kind
+        CHECK (observation_kind = '{RELATED_KEYWORDS_RELATIONSHIP_KIND}'),
+    CONSTRAINT rk04_relationship_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_ENVELOPE_FK}
+)
+"""
+
+RELATED_KEYWORDS_ITEM_OCCURRENCES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS related_keywords_keyword_data_item_occurrences (
+    {_RK04_SEMANTIC_KEY},
+    item_index BIGINT NOT NULL
+        CHECK (item_index >= 0 AND item_index <= {_IJSON_MAX}),
+    depth BIGINT NOT NULL
+        CHECK (depth >= 0 AND depth <= 4),
+    item_se_type TEXT NOT NULL,
+    related_keywords_state TEXT NOT NULL
+        CHECK (related_keywords_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, item_index
+    ),
+    CONSTRAINT rk04_item_occ_kind
+        CHECK (observation_kind = '{RELATED_KEYWORDS_KEYWORD_DATA_KIND}'),
+    {_rk04_child_fk("rk04_item_occ_parent")}
+)
+"""
+
+RELATED_KEYWORDS_MONTHLY_OCCURRENCES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS related_keywords_monthly_item_occurrences (
+    {_RK04_SEMANTIC_KEY},
+    item_index BIGINT NOT NULL
+        CHECK (item_index >= 0 AND item_index <= {_IJSON_MAX}),
+    PRIMARY KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, item_index
+    ),
+    CONSTRAINT rk04_monthly_occ_kind
+        CHECK (observation_kind = '{RELATED_KEYWORDS_MONTHLY_KIND}'),
+    CONSTRAINT rk04_monthly_occ_parent
+        FOREIGN KEY (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+        REFERENCES related_keywords_monthly_search_volume (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+)
+"""
+
+RELATED_KEYWORDS_RELATIONSHIP_OCCURRENCES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS related_keywords_relationship_occurrences (
+    {_RK04_SEMANTIC_KEY},
+    source_item_index BIGINT NOT NULL
+        CHECK (source_item_index >= 0 AND source_item_index <= {_IJSON_MAX}),
+    target_index BIGINT NOT NULL
+        CHECK (target_index >= 0 AND target_index <= {_IJSON_MAX}),
+    source_depth BIGINT NOT NULL
+        CHECK (source_depth >= 0 AND source_depth <= 4),
+    PRIMARY KEY (
+        capture_id, derivation_version_id, within_capture_identity,
+        source_item_index, target_index
+    ),
+    CONSTRAINT rk04_rel_occ_kind
+        CHECK (observation_kind = '{RELATED_KEYWORDS_RELATIONSHIP_KIND}'),
+    CONSTRAINT rk04_rel_occ_parent
+        FOREIGN KEY (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+        REFERENCES related_keywords_relationship (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+)
+"""
+
+RELATED_KEYWORDS_CONTEXT_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS related_keywords_result_context (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL
+        REFERENCES provider_recipes (derivation_version_id),
+    attempt_id TEXT NOT NULL
+        CHECK (attempt_id ~ '{_HEX64}'),
+    requested_seed TEXT NOT NULL
+        CHECK (char_length(requested_seed) >= 1),
+    request_location_code BIGINT NOT NULL
+        CHECK (request_location_code >= 0
+               AND request_location_code <= {_IJSON_MAX}),
+    request_language_code TEXT NOT NULL,
+    request_depth BIGINT NOT NULL
+        CHECK (request_depth >= 0 AND request_depth <= {_IJSON_MAX}),
+    request_limit BIGINT NOT NULL
+        CHECK (request_limit >= 0 AND request_limit <= {_IJSON_MAX}),
+    request_offset BIGINT NOT NULL
+        CHECK (request_offset >= 0 AND request_offset <= {_IJSON_MAX}),
+    request_order_by TEXT[] NOT NULL,
+    request_include_seed_keyword BOOLEAN NOT NULL,
+    request_include_serp_info BOOLEAN NOT NULL,
+    request_include_clickstream_data BOOLEAN NOT NULL,
+    request_ignore_synonyms BOOLEAN NOT NULL,
+    request_replace_with_core_keyword BOOLEAN NOT NULL,
+    result_seed_keyword TEXT NOT NULL,
+    result_location_code BIGINT
+        {_rk04_nonneg("result_location_code")},
+    result_location_code_state TEXT NOT NULL
+        CHECK (result_location_code_state {_FIELD_STATE_CHECK}),
+    result_language_code TEXT,
+    result_language_code_state TEXT NOT NULL
+        CHECK (result_language_code_state {_FIELD_STATE_CHECK}),
+    result_se_type TEXT,
+    result_se_type_state TEXT NOT NULL
+        CHECK (result_se_type_state {_FIELD_STATE_CHECK}),
+    total_count BIGINT NOT NULL
+        CHECK (total_count >= 0 AND total_count <= {_IJSON_MAX}),
+    items_count BIGINT NOT NULL
+        CHECK (items_count >= 0 AND items_count <= {_IJSON_MAX}),
+    seed_keyword_data_state TEXT NOT NULL
+        CHECK (seed_keyword_data_state {_FIELD_STATE_CHECK}),
+    derived_returned_item_count BIGINT NOT NULL
+        CHECK (derived_returned_item_count >= 0
+               AND derived_returned_item_count <= {_IJSON_MAX}),
+    derived_relationship_occurrence_count BIGINT NOT NULL
+        CHECK (derived_relationship_occurrence_count >= 0
+               AND derived_relationship_occurrence_count <= {_IJSON_MAX}),
+    PRIMARY KEY (capture_id, derivation_version_id),
+    CONSTRAINT rk04_context_outcome
+        FOREIGN KEY (derivation_version_id, attempt_id, capture_id)
+        REFERENCES outcomes (derivation_version_id, attempt_id, capture_id),
+    {_rk04_consistency("rk04_ctx_location_ck", "result_location_code")},
+    {_rk04_consistency("rk04_ctx_language_ck", "result_language_code")},
+    {_rk04_consistency("rk04_ctx_se_type_ck", "result_se_type")}
+)
+"""
+
+RK04_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
+    RELATED_KEYWORDS_KEYWORD_DATA_SQL,
+    RELATED_KEYWORDS_KEYWORD_INFO_SQL,
+    RELATED_KEYWORDS_KEYWORD_PROPERTIES_SQL,
+    RELATED_KEYWORDS_AVG_BACKLINKS_SQL,
+    RELATED_KEYWORDS_SEARCH_INTENT_SQL,
+    RELATED_KEYWORDS_SERP_INFO_SQL,
+    RELATED_KEYWORDS_MONTHLY_SQL,
+    RELATED_KEYWORDS_RELATIONSHIP_SQL,
+    RELATED_KEYWORDS_ITEM_OCCURRENCES_SQL,
+    RELATED_KEYWORDS_MONTHLY_OCCURRENCES_SQL,
+    RELATED_KEYWORDS_RELATIONSHIP_OCCURRENCES_SQL,
+    RELATED_KEYWORDS_CONTEXT_SQL,
+)
+
+
 PRE_PF12_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     DERIVATION_VERSIONS_SQL,
     OUTCOMES_SQL,
@@ -1448,10 +1959,14 @@ PRE_AI16_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_AI11_SCHEMA_STATEMENTS 
     TARGET_METRICS_CONTEXT_SQL,
 )
 
-SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_AI16_SCHEMA_STATEMENTS + (
+PRE_RK04_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = PRE_AI16_SCHEMA_STATEMENTS + (
     LLM_MENTIONS_HISTORICAL_MONTHLY_SQL,
     LLM_MENTIONS_HISTORICAL_CONTEXT_SQL,
     LLM_MENTIONS_HISTORICAL_UNRETURNED_SQL,
+)
+
+SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
+    PRE_RK04_SCHEMA_STATEMENTS + RK04_SCHEMA_STATEMENTS
 )
 
 WIDEN_IJSON_COLUMNS: Final[tuple[tuple[str, str], ...]] = (
