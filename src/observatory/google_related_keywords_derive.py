@@ -954,12 +954,29 @@ def _require_text(value: str) -> str:
     The RK-01 adapter constrains only the seed. Returned keywords and relationship targets are
     unrequested provider strings, so this is the boundary that keeps a hostile string a clean
     `provider_envelope_rejected` instead of an escaping JCS or psycopg exception.
+
+    Two distinct boundaries are enforced in one pass:
+
+    - PostgreSQL `TEXT` cannot store U+0000. Canonical JSON accepts it, so this is the wider
+      of the two rules for that one code point.
+    - Observatory's accepted canonical-I-JSON boundary in `capture_event` rejects surrogates
+      and Unicode noncharacters (U+FDD0..U+FDEF and any code point whose low 16 bits are
+      0xFFFE or 0xFFFF). Those reach JCS through `observation_identity`, so they must fail
+      closed here.
+
+    The noncharacter predicate is duplicated deliberately rather than imported: it is three
+    comparisons, and reaching into a private `capture_event` helper would create a seam this
+    ticket does not authorize. `test_require_text_matches_the_canonical_ijson_boundary` pins
+    the duplicate against the real `canonical_json` behaviour so the two cannot drift.
     """
 
-    if "\x00" in value:
-        raise SemanticDisagreement
     for character in value:
-        if "\ud800" <= character <= "\udfff":
+        code = ord(character)
+        if code == 0:
+            raise SemanticDisagreement
+        if 0xD800 <= code <= 0xDFFF:
+            raise SemanticDisagreement
+        if 0xFDD0 <= code <= 0xFDEF or code & 0xFFFE == 0xFFFE:
             raise SemanticDisagreement
     return value
 

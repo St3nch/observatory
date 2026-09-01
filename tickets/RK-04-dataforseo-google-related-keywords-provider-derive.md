@@ -970,3 +970,158 @@ under `tmp_path`. No Evidence was created, mutated, or deleted outside those tem
 PostgreSQL use was limited to per-test disposable databases from the existing `postgres_dsn` /
 `postgres_second_dsn` fixtures. No restic, rclone, or backup operation ran. Nothing was amended
 and nothing was pushed.
+
+## Remediation report — [CLAUDE], 2026-09-01
+
+### Commit boundary
+
+- Remediation parent: `af83742a34b30b7cb1041d60ce8c2ed44ade3295` (the RK-04 implementation
+  commit), clean `main`. Not amended.
+- Child: one remediation commit carrying this section. No amend, no push.
+
+### Changed paths
+
+Exactly two, inside the accepted remediation allowlist, plus this ticket:
+
+| Path | Change |
+|---|---|
+| `src/observatory/google_related_keywords_derive.py` | `_require_text` only: +23/-6 lines |
+| `tests/test_dataforseo_google_related_keywords_derive.py` | +232/-20 lines of adversarial proof |
+| this ticket | this remediation section |
+
+No schema statement, Recipe document, parser, migration, `capture_event.py`, or any other
+module was touched.
+
+### Unchanged identities
+
+- Recipe canonical JCS byte length: **2398** (unchanged).
+- `derivation_version_id`:
+  **`a85abbe1d9780a3a66cc9fe01adc539e8568144a067b0345ec06cec700dc2669`** (unchanged, verified
+  by fresh `hashlib.sha256` recomputation after the change).
+- Schema statement counts unchanged: `PRE_RK04_SCHEMA_STATEMENTS` 40, `RK04_SCHEMA_STATEMENTS`
+  12, `SCHEMA_STATEMENTS` 52. Twelve relations, no DDL edit.
+
+Remediation changed admission behaviour for a previously-crashing input class only. No Recipe
+semantic rule changed, so no new Recipe identity is required: the pre-remediation code did not
+have a *different* rule for noncharacters, it had a **defect** that let the accepted rule
+escape as an uncaught exception.
+
+### R1 — canonical-I-JSON noncharacters now reject deterministically
+
+**Confirmed as a real defect before fixing.** With the parent commit, a returned keyword
+containing U+FDD0 or U+FFFF parses cleanly through RK-03 and through the previous
+`_require_text` (which checked only U+0000 and surrogates), then raises
+`observatory.capture_event.DocumentError: noncharacter code points are forbidden` out of
+`observation_identity` — escaping `plan_related_keywords_capture` uncaught and aborting the
+whole derive run, exactly what the accepted ticket forbids.
+
+Repository canonical JSON authority (`capture_event._is_noncharacter`, read-only) rejects
+`0xFDD0..0xFDEF` and any code point where `code & 0xFFFE == 0xFFFE`.
+
+`_require_text` now walks the string once and rejects, as `SemanticDisagreement`:
+
+- U+0000 — PostgreSQL `TEXT` cannot store it (canonical JSON *can*, so this stays the one
+  deliberate place where RK-04 is stricter than JCS);
+- U+D800..U+DFFF surrogates;
+- U+FDD0..U+FDEF and any code point whose low 16 bits are 0xFFFE or 0xFFFF.
+
+`capture_event.py` was not edited and no private `capture_event` helper is imported. The
+three-comparison predicate is duplicated locally and **pinned against real `canonical_json`
+behaviour** by `test_require_text_matches_the_canonical_ijson_boundary`, which walks 17
+boundary code points (U+FDCF/FDD0/FDD1/FDEE/FDEF/FDF0, U+FFFD/FFFE/FFFF,
+U+1FFFD/1FFFE/1FFFF/20000, U+10FFFE/10FFFF, U+D7FF/E000) and asserts RK-04 admits exactly what
+`canonical_json` admits, then asserts the single documented U+0000 asymmetry. That test fails
+if either side ever drifts.
+
+Preserved behaviour, all re-asserted: empty identity keyword/target rejects; U+0000 rejects;
+lone surrogate rejects; and `core_keyword=""` remains exact stated non-identity testimony
+(`test_empty_core_keyword_remains_exact_non_identity_testimony`, unchanged and still passing).
+
+### R1 adversarial coverage added
+
+A shared `INADMISSIBLE_TEXT` table drives every case: `nul`, `lone_surrogate`,
+`noncharacter_fdd0`, `noncharacter_fdef`, `noncharacter_fffe`, `noncharacter_ffff`, and
+`noncharacter_supplementary` (U+1FFFE, proving the `& 0xFFFE` rule reaches beyond the BMP).
+Both required classes — U+FDD0 and U+FFFF — are covered explicitly.
+
+| Surface | Test |
+|---|---|
+| returned keyword identity | `test_inadmissible_identity_keyword_rejects_without_a_crash` |
+| relationship target identity | `test_inadmissible_relationship_target_rejects_without_a_crash` |
+| seed-locus keyword identity | `test_inadmissible_seed_locus_keyword_rejects_without_a_crash` |
+| persisted non-identity text (SERP `check_url`) | `test_inadmissible_non_identity_check_url_also_rejects` |
+| persisted non-identity array member (`foreign_intent`) | `test_inadmissible_non_identity_array_member_also_rejects` |
+| duplicated predicate vs. real JCS | `test_require_text_matches_the_canonical_ijson_boundary` |
+
+Every case asserts a planned `provider_envelope_rejected` unit through the new
+`_assert_rejected_with_no_rows` helper: zero envelopes, `context is None`, zero item / monthly
+/ relationship occurrences, and zero rows in all eight detail relations. Because these run as
+ordinary `plan_related_keywords_capture` calls, any `DocumentError`, `UnicodeEncodeError`, or
+psycopg error would surface as a test error rather than a pass — the previous behaviour is
+what the tests would now catch.
+
+### R2 — foreign-Attempt Outcome complete-set rejection proved
+
+`test_planted_foreign_attempt_outcome_fails_complete_set` (real PostgreSQL): derive a valid
+small RK-04 Capture, read the accepted Outcome and its actual `observation_count` from the
+database rather than hard-coding one, then plant a second Outcome for the **same**
+`capture_id` and `derivation_version_id` under a foreign `attempt_id`, identical in
+classification and count. Re-running derivation raises
+`DerivationError("complete-set mismatch: outcome")`.
+
+This is a genuine gap-closer rather than a restatement: `outcomes_identity` is
+`UNIQUE NULLS NOT DISTINCT (derivation_version_id, attempt_id, capture_id)`, so a foreign
+`attempt_id` is a different key and the database accepts the row without complaint; and
+`_write_outcome` matches on all three columns, so it also sees no conflict. Only the
+`(capture_id, derivation_version_id)`-scoped complete-set assertion catches it.
+
+The test additionally proves the contaminated set is **not** silently treated as valid: after
+the refusal both Outcome rows are still present for an operator to resolve, and once the
+foreign row is deleted the next derivation succeeds and restores exactly the original accepted
+row set.
+
+`test_conflicting_stored_outcome_classification_fails_closed` was added alongside it to keep
+the neighbouring `_write_outcome` branch honest: tampering with the accepted Outcome's
+classification raises `DerivationError("conflicting provider outcome")`.
+
+**No production logic changed for R2.** The existing `_assert_complete_set` already enforced
+the contract; the regression that PF-12 established was simply absent from the RK-04 module.
+
+### Verification results
+
+- `uv run pytest -q tests/test_dataforseo_google_related_keywords.py
+  tests/test_dataforseo_google_related_keywords_derive.py` → **318 passed** (74.79s).
+  The derive module grew from 84 to **117** collected tests (75 test functions; the increase is
+  mostly parametrised inadmissible-text cases).
+- `uv run ruff check .` → **All checks passed!**
+- Targeted mypy over `src` plus both changed RK-04 test files → **Success: no issues found in
+  43 source files**.
+- Full configured `uv run mypy` → **14 errors in 5 files (checked 86 source files)**, compared
+  sorted and message-for-message against the same `9eee309bda9111f6a6446189ac2bbb1a050574f6`
+  archive baseline used at implementation: the two lists are **identical**. The five files are
+  unchanged and none is an RK-04 path. Zero new errors; no inherited error repaired.
+- Recipe bytes/digest and all three schema statement counts re-verified unchanged after the
+  edit (recorded above).
+
+### Residual limits from this remediation
+
+- The noncharacter predicate remains a deliberate local duplicate of repository canonical-JSON
+  authority. `test_require_text_matches_the_canonical_ijson_boundary` is the only thing
+  preventing drift; if `capture_event._is_noncharacter` ever changes, that test fails rather
+  than RK-04 silently diverging. A shared public predicate would be a better long-term home,
+  but creating one is outside this remediation's allowlist and is a Steward call.
+- `_require_text` is applied to every persisted provider string, so an inadmissible code point
+  anywhere in a Capture rejects the entire unit. That is the accepted fail-closed rule, but it
+  means one hostile character in one SERP URL discards 1530 otherwise-valid Observations. Raw
+  Evidence remains intact and re-derivable under a future Recipe if that trade is ever revisited.
+- No real provider Capture has ever exhibited any of these code points; all R1 coverage is
+  synthetic, as D12 intends for a branch a bounded real corpus cannot economically exhibit.
+
+### Zero provider / network / credential / Evidence confirmation
+
+No provider request, DNS, or public-network I/O occurred; the module's autouse guard fails any
+non-loopback `socket.create_connection` and deletes both DataForSEO credential variables. No
+credentials were read. The protected RK-02 Evidence root was never opened — tests read only the
+committed Conformance fixture and Evidence stores created under `tmp_path`. PostgreSQL use was
+limited to per-test disposable databases. No schema, Recipe, parser, or `capture_event` change.
+Nothing was amended and nothing was pushed.

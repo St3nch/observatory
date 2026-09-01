@@ -18,6 +18,7 @@ from observatory.capture_event import (
     RELATED_KEYWORDS_ADAPTER_CONTRACT,
     DocumentError,
     body_ref,
+    canonical_json,
     related_keywords_http_attempt_document,
     related_keywords_http_capture_document,
 )
@@ -55,6 +56,8 @@ from observatory.google_related_keywords_derive import (
     RELATIONSHIP_TABLE,
     RK04_TABLES,
     SERP_TABLE,
+    SemanticDisagreement,
+    _require_text,
     derive_google_related_keywords,
     plan_related_keywords_capture,
 )
@@ -1312,40 +1315,128 @@ def test_item_without_stated_keyword_data_rejects_the_whole_unit(missing: Any) -
     assert planned.context is None
 
 
+# Every string a provider can put in an identity axis or a persisted column. The two
+# noncharacter classes are the exact canonical-I-JSON boundary that `capture_event` enforces
+# inside `canonical_json`: U+FDD0..U+FDEF, and any code point whose low 16 bits are 0xFFFE or
+# 0xFFFF. Before RK-04 remediation these parsed cleanly through RK-03 and `_require_text`, then
+# escaped the derive run as an uncaught `DocumentError` from `observation_identity`.
+INADMISSIBLE_TEXT: tuple[tuple[str, str], ...] = (
+    ("nul", "bad\x00value"),
+    ("lone_surrogate", "lone\ud800value"),
+    ("noncharacter_fdd0", "bad\ufdd0value"),
+    ("noncharacter_fdef", "bad\ufdefvalue"),
+    ("noncharacter_fffe", "bad\ufffevalue"),
+    ("noncharacter_ffff", "bad\uffffvalue"),
+    ("noncharacter_supplementary", "bad\U0001fffevalue"),
+)
+_INADMISSIBLE_IDS = [name for name, _value in INADMISSIBLE_TEXT]
+_INADMISSIBLE_VALUES = [value for _name, value in INADMISSIBLE_TEXT]
+
+
+def _assert_rejected_with_no_rows(planned: Any) -> None:
+    assert planned is not None
+    assert planned.classification == "provider_envelope_rejected"
+    assert planned.envelopes == ()
+    assert planned.context is None
+    assert planned.item_occurrences == ()
+    assert planned.monthly_occurrences == ()
+    assert planned.relationship_occurrences == ()
+    for table in _detail_tables():
+        assert planned.details[table] == ()
+
+
 @pytest.mark.parametrize(
-    "keyword",
-    ["", "bad\x00keyword", "lone\ud800surrogate"],
+    "keyword", ["", *_INADMISSIBLE_VALUES], ids=["empty", *_INADMISSIBLE_IDS]
 )
 def test_inadmissible_identity_keyword_rejects_without_a_crash(keyword: str) -> None:
-    planned = _plan(simple_body([item(keyword)]))
-    assert planned is not None
-    assert planned.classification == "provider_envelope_rejected"
-    assert planned.envelopes == ()
+    _assert_rejected_with_no_rows(_plan(simple_body([item(keyword)])))
 
 
-@pytest.mark.parametrize("target", ["", "bad\x00target", "lone\ud800target"])
+@pytest.mark.parametrize(
+    "target", ["", *_INADMISSIBLE_VALUES], ids=["empty", *_INADMISSIBLE_IDS]
+)
 def test_inadmissible_relationship_target_rejects_without_a_crash(target: str) -> None:
-    planned = _plan(simple_body([item("alpha", related=[target])]))
-    assert planned is not None
-    assert planned.classification == "provider_envelope_rejected"
-    assert planned.envelopes == ()
+    _assert_rejected_with_no_rows(_plan(simple_body([item("alpha", related=[target])])))
 
 
-def test_inadmissible_non_identity_text_also_rejects() -> None:
-    planned = _plan(
-        simple_body(
-            [
-                item(
-                    "alpha",
-                    data=keyword_data(
-                        "alpha", serp_info={"check_url": "https://example.test/\x00"}
-                    ),
-                )
-            ]
+@pytest.mark.parametrize("value", _INADMISSIBLE_VALUES, ids=_INADMISSIBLE_IDS)
+def test_inadmissible_seed_locus_keyword_rejects_without_a_crash(value: str) -> None:
+    _assert_rejected_with_no_rows(
+        _plan(simple_body([item("alpha")], seed_data=keyword_data(value)))
+    )
+
+
+def test_require_text_matches_the_canonical_ijson_boundary() -> None:
+    """Pin the duplicated noncharacter predicate against real `canonical_json` behaviour.
+
+    `_require_text` restates capture_event's rule rather than importing a private helper. This
+    walks the whole boundary so the duplicate cannot drift: every code point canonical_json
+    refuses must be refused here, and admissible neighbours must still pass.
+    """
+
+    boundary = [
+        0xFDCF, 0xFDD0, 0xFDD1, 0xFDEE, 0xFDEF, 0xFDF0,
+        0xFFFD, 0xFFFE, 0xFFFF,
+        0x1FFFD, 0x1FFFE, 0x1FFFF, 0x20000,
+        0x10FFFE, 0x10FFFF,
+        0xD7FF, 0xE000,
+    ]
+    for code in boundary:
+        text = chr(code)
+        try:
+            canonical_json({"k": text})
+        except DocumentError:
+            jcs_admits = False
+        else:
+            jcs_admits = True
+        try:
+            _require_text(text)
+        except SemanticDisagreement:
+            rk04_admits = False
+        else:
+            rk04_admits = True
+        assert rk04_admits == jcs_admits, f"U+{code:04X} disagrees with canonical_json"
+    # U+0000 is the one deliberate asymmetry: canonical JSON escapes it, PostgreSQL TEXT
+    # cannot store it, so RK-04 is stricter than JCS for exactly that code point.
+    canonical_json({"k": "\x00"})
+    with pytest.raises(SemanticDisagreement):
+        _require_text("\x00")
+
+
+@pytest.mark.parametrize("value", _INADMISSIBLE_VALUES, ids=_INADMISSIBLE_IDS)
+def test_inadmissible_non_identity_check_url_also_rejects(value: str) -> None:
+    _assert_rejected_with_no_rows(
+        _plan(
+            simple_body(
+                [
+                    item(
+                        "alpha",
+                        data=keyword_data(
+                            "alpha", serp_info={"check_url": f"https://example.test/{value}"}
+                        ),
+                    )
+                ]
+            )
         )
     )
-    assert planned is not None
-    assert planned.classification == "provider_envelope_rejected"
+
+
+@pytest.mark.parametrize("value", _INADMISSIBLE_VALUES, ids=_INADMISSIBLE_IDS)
+def test_inadmissible_non_identity_array_member_also_rejects(value: str) -> None:
+    _assert_rejected_with_no_rows(
+        _plan(
+            simple_body(
+                [
+                    item(
+                        "alpha",
+                        data=keyword_data(
+                            "alpha", search_intent_info={"foreign_intent": ["ok", value]}
+                        ),
+                    )
+                ]
+            )
+        )
+    )
 
 
 def test_empty_core_keyword_remains_exact_non_identity_testimony() -> None:
@@ -1868,6 +1959,101 @@ def test_planted_extra_envelope_fails_complete_set(
     connection.commit()
     with pytest.raises(DerivationError, match="complete-set mismatch: envelopes"):
         derive_google_related_keywords(store, connection)
+
+
+def test_planted_foreign_attempt_outcome_fails_complete_set(
+    derived: tuple[Any, EvidenceStore, str, str],
+) -> None:
+    """A second Outcome for this Capture and Recipe under a foreign Attempt is not valid.
+
+    The complete-set contract is scoped to `(capture_id, derivation_version_id)`, so an extra
+    Outcome row must fail even though it collides with nothing: `outcomes_identity` is UNIQUE
+    on `(derivation_version_id, attempt_id, capture_id)` and a foreign `attempt_id` is a
+    different key. Only the scoped complete-set assertion catches this.
+    """
+
+    connection, store, attempt_id, capture_id = derived
+    foreign_attempt = "fe" * 32
+    assert foreign_attempt != attempt_id
+    accepted = connection.execute(
+        """
+        SELECT attempt_id, classification, observation_count FROM outcomes
+        WHERE derivation_version_id = %s AND capture_id = %s
+        """,
+        (RELATED_KEYWORDS_RECIPE_ID, capture_id),
+    ).fetchall()
+    assert len(accepted) == 1
+    assert accepted[0][0] == attempt_id
+    assert accepted[0][1] == "observation_admitted"
+    admitted_count = int(accepted[0][2])
+    assert admitted_count > 0
+
+    # The planted row is a perfect copy apart from the Attempt, so nothing but the scoped
+    # complete-set assertion can distinguish it.
+    connection.execute(
+        """
+        INSERT INTO outcomes (
+            attempt_id, capture_id, derivation_version_id,
+            classification, observation_count
+        ) VALUES (%s, %s, %s, %s, %s)
+        """,
+        (
+            foreign_attempt,
+            capture_id,
+            RELATED_KEYWORDS_RECIPE_ID,
+            "observation_admitted",
+            admitted_count,
+        ),
+    )
+    connection.commit()
+
+    with pytest.raises(DerivationError, match="complete-set mismatch: outcome"):
+        derive_google_related_keywords(store, connection)
+    connection.rollback()
+
+    # The planted row is not silently accepted: the contaminated set survives for the operator
+    # to resolve, and the derivation refuses to certify it.
+    after = connection.execute(
+        """
+        SELECT attempt_id FROM outcomes
+        WHERE derivation_version_id = %s AND capture_id = %s
+        ORDER BY attempt_id
+        """,
+        (RELATED_KEYWORDS_RECIPE_ID, capture_id),
+    ).fetchall()
+    assert sorted(row[0] for row in after) == sorted([attempt_id, foreign_attempt])
+
+    # Removing the foreign Outcome restores an exactly-equal accepted set.
+    connection.execute(
+        "DELETE FROM outcomes WHERE derivation_version_id = %s AND capture_id = %s"
+        " AND attempt_id = %s",
+        (RELATED_KEYWORDS_RECIPE_ID, capture_id, foreign_attempt),
+    )
+    connection.commit()
+    derive_google_related_keywords(store, connection)
+    connection.commit()
+    assert connection.execute(
+        """
+        SELECT attempt_id, classification, observation_count FROM outcomes
+        WHERE derivation_version_id = %s AND capture_id = %s
+        """,
+        (RELATED_KEYWORDS_RECIPE_ID, capture_id),
+    ).fetchall() == accepted
+
+
+def test_conflicting_stored_outcome_classification_fails_closed(
+    derived: tuple[Any, EvidenceStore, str, str],
+) -> None:
+    connection, store, attempt_id, capture_id = derived
+    connection.execute(
+        "UPDATE outcomes SET classification = 'provider_error'"
+        " WHERE derivation_version_id = %s AND capture_id = %s AND attempt_id = %s",
+        (RELATED_KEYWORDS_RECIPE_ID, capture_id, attempt_id),
+    )
+    connection.commit()
+    with pytest.raises(DerivationError, match="conflicting provider outcome"):
+        derive_google_related_keywords(store, connection)
+    connection.rollback()
 
 
 def test_conflicting_stored_detail_content_fails_closed(
