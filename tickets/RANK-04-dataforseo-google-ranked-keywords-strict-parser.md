@@ -1053,3 +1053,53 @@ No provider call, provider request, credential access, public network, Evidence 
 PostgreSQL activity, Recipe, Derivation, Observation kind, schema/migration, read/history API,
 Strategy, pagination, or parser-framework refactor. The only Evidence access was the single
 read-only inspector fixture promotion frozen above.
+
+## Credential-isolation remediation — 2026-09-01
+
+[CHAZ]'s final full-suite integration run at the implementation commit
+`e40344a98bc61d10b1da8a37829c654e955193af` produced `2489 passed, 2 failed, 1 skipped,
+1 warning`. Both failures were the same credential-environment assertion:
+
+- `tests/test_dataforseo_google_ranked_keywords.py::test_no_credentials_in_environment`;
+- `tests/test_dataforseo_google_related_keywords.py::test_no_credentials_in_environment`.
+
+Root cause: the RK-03 and RANK-04 autouse `_no_public_network` fixtures omitted the AI-15
+`monkeypatch.delenv(...)` credential-isolation setup. Both assertions therefore tested whether
+the **operator environment itself** was credential-free rather than proving the parser test
+module executes independently of credentials. The operator VPS legitimately carries
+`OBSERVATORY_DATAFORSEO_LOGIN` in its shell, so the assertion failed for the right environment
+and the wrong reason. This is a test-harness defect only: no Ranked or Related Keywords parser
+defect is implicated, and no parser semantics changed.
+
+[CHAZ] explicitly authorized this bounded remediation from
+`e40344a98bc61d10b1da8a37829c654e955193af`.
+
+Remediation, applied identically to both modules using the accepted AI-15 precedent: after the
+existing network guard is installed and without altering its semantics, the autouse fixture now
+removes both provider credential variables with `monkeypatch.delenv(..., raising=False)`. The
+existing `test_no_credentials_in_environment` tests are retained and now prove that the whole
+parser test module runs with credentials deliberately removed, even when the operator shell
+legitimately contains them.
+
+Exact remediation paths:
+
+- `tests/test_dataforseo_google_ranked_keywords.py`;
+- `tests/test_dataforseo_google_related_keywords.py`;
+- this ticket.
+
+No production source, parser behaviour, or fixture byte changed.
+
+Verification. The failure was first reproduced at the base commit with a synthetic sentinel
+value — never a real credential — and both named tests failed exactly as [CHAZ] reported. After
+the remediation, every check below was run twice: once with a clean shell and once with both
+credential variables set to that sentinel, to prove the isolation actually holds under the
+condition that caused the failure.
+
+- targeted two-test run: 2 passed under both conditions;
+- both parser modules: 465 passed under both conditions;
+- `uv run ruff check .`: clean;
+- configured repository `uv run mypy`: 14 errors in 5 files, byte-identical to the baseline
+  captured at the authorized base. All inherited, all outside the allowlist, none introduced.
+
+The full repository suite was deliberately not run from the Writer lane. [CHAZ] still owns the
+final full-suite rerun before Steward closure.

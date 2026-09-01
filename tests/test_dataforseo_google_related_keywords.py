@@ -111,6 +111,11 @@ def _no_public_network(monkeypatch: pytest.MonkeyPatch) -> None:
         return real(address, *args, **kwargs)
 
     monkeypatch.setattr(socket, "create_connection", guarded)
+    # The operator shell legitimately carries provider credentials. Remove them for every
+    # test in this module so the parser's credential independence is proved by execution
+    # rather than by asserting something about the operator environment. AI-15 precedent.
+    monkeypatch.delenv("OBSERVATORY_DATAFORSEO_LOGIN", raising=False)
+    monkeypatch.delenv("OBSERVATORY_DATAFORSEO_PASSWORD", raising=False)
 
 
 def _fixture() -> bytes:
