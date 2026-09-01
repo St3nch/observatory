@@ -1,6 +1,6 @@
 # RANK-04 — DataForSEO Google Ranked Keywords strict parser and RANK-03 Conformance fixture
 
-**Status:** provisional for adversarial review — [CLAUDE] designated Writer; no implementation authorization  
+**Status:** accepted after dual adversarial review and Steward reconciliation — awaiting separate [CHAZ] implementation authorization  
 **Owner:** [CLAUDE] designated Writer / [GPT] Steward review / [GROK] independent reviewer  
 **Blocked by:** none; RANK-03 closed at `fbd53534aea47f114822e071c178b3ae1e378055`  
 **Draft base:** `fbd53534aea47f114822e071c178b3ae1e378055`  
@@ -49,6 +49,11 @@ Steward edits authorize no source/test mutation by the Writer and no push.
   closest Labs keyword-enrichment value shapes; Search Mentions supplies returned-prefix and
   occurrence precedent. Neither surface supplies Ranked Keywords Observation identity or
   reconciliation semantics.
+- PF-11 Google Organic is a structural **negative precedent** for Ranked SERP items. Do not
+  import its closed item-type/position vocabularies, placement-uniqueness rules, keyword/text
+  normalization, or placement identity. RANK-03 proves repeated `rank_group` and
+  `rank_absolute`, open SERP-feature vocabulary, exact near-duplicate keyword strings, and
+  apex/`www` host testimony that those Organic rules would reject or collapse.
 
 RANK-04 authorizes no provider, DNS, account, credential, restic, rclone, pricing, public-network,
 Evidence mutation, or PostgreSQL activity.
@@ -77,23 +82,28 @@ The one-time fixture promotion command is frozen to inspector stdout and must re
 temporary-file/length/hash guard:
 
 ```bash
+set -euo pipefail
+
 FIXTURE=tests/fixtures/dataforseo_google_ranked_keywords_rank03.json
 TMP="${FIXTURE}.tmp"
+
 test ! -e "$FIXTURE"
 rm -f "$TMP"
-if uv run python -m observatory.dataforseo_google_ranked_keywords_paid_probe inspect \
+trap 'rm -f "$TMP"' EXIT
+
+uv run python -m observatory.dataforseo_google_ranked_keywords_paid_probe inspect \
   --evidence-root "$HOME/.local/share/observatory/rank03-ranked-keywords-theconspiratory-2026-09-01" \
   --capture-id cd5152c65e27b24610606b545ce014121a72562328df27f3d91e3ce33cf6c3f1 \
-  > "$TMP"; then
-  test "$(wc -c < "$TMP")" -eq 390955
-  test "$(sha256sum "$TMP" | awk '{print $1}')" = \
-    5b0e7cb6a03a921039a2845c62bd6a91eba9d61e2b54240e9af15414ba1fbc84
-  mv "$TMP" "$FIXTURE"
-else
-  rc=$?
-  rm -f "$TMP"
-  exit "$rc"
-fi
+  > "$TMP"
+
+test "$(wc -c < "$TMP")" -eq 390955
+test "$(sha256sum "$TMP" | awk '{print $1}')" = \
+  5b0e7cb6a03a921039a2845c62bd6a91eba9d61e2b54240e9af15414ba1fbc84
+
+mv "$TMP" "$FIXTURE"
+trap - EXIT
+
+test ! -e "$TMP"
 wc -c "$FIXTURE"
 sha256sum "$FIXTURE"
 ```
@@ -591,6 +601,356 @@ Challenge especially:
 Return `READY`, `RECONCILE`, or `NOT_READY` with concrete code/ticket references and explicit
 questions. No implementation begins until the Steward reconciles the reviews and [CHAZ]
 authorizes the exact implementation start commit.
+
+## Completed dual review and Steward reconciliation lock — 2026-09-01
+
+[CLAUDE], the designated Writer, independently returned `RECONCILE`. [GROK] independently
+returned `RECONCILE` from the same clean review HEAD without reading Claude's report. Both
+accepted the parser-only architecture and four-path allowlist, found no need for another
+provider call, and converged on the same load-bearing corrections: repair the fixture-promotion
+guard; treat PF-11 Organic as a negative structural precedent; freeze explicit v1 object/state
+contracts rather than leaving them to Writer discretion; cover every clickstream-controlled
+locus; preserve all structure-local clocks; and prevent URL/rank/host helpers from collapsing
+real Ranked testimony.
+
+The rules below supersede conflicting provisional wording above. They are parser/Conformance
+rules only. They do not define Recipe admission, Observation identity, PostgreSQL schema,
+canonical pages, cross-surface equivalence, longitudinal change, or Strategy meaning.
+
+### 1. Fixture promotion is fail-closed
+
+The guarded command above, with `set -euo pipefail` and the temporary-file cleanup trap, is the
+accepted one-time promotion procedure. A pre-existing fixture, inspector failure, wrong byte
+count, or wrong digest must stop before `mv`. The committed fixture must remain exactly
+`390955` bytes with SHA-256
+`5b0e7cb6a03a921039a2845c62bd6a91eba9d61e2b54240e9af15414ba1fbc84`.
+Ordinary tests may read only the committed fixture and must not depend on the operator Evidence
+root or `/tmp`.
+
+### 2. Safe reuse boundary
+
+RANK-04 may import only:
+
+- `RANKED_KEYWORDS_ADAPTER_CONTRACT` from `capture_event`; and
+- `Field`, `FieldState`, and `ParseClassification` from
+  `dataforseo_keyword_overview`.
+
+All Ranked parsing/IR helpers and dataclasses remain Ranked-local. Do not import Related
+Keywords Recipe/Observation-kind constants or parsing functions, Keyword Overview closed
+intent/competition vocabularies, or Google Organic placement/normalization helpers. The
+Related Keywords module now contains later Recipe symbols and is not a parser-only dependency.
+Small decode/type/timestamp/value helper logic may be duplicated locally deliberately.
+
+PF-11 Organic is explicitly a **negative precedent**: do not import its closed item-type set,
+closed `{left,right}` position set, placement uniqueness, keyword normalization, or placement
+identity. RANK-03 contains repeated `rank_group` and `rank_absolute` values, exact
+near-duplicate keywords, open SERP-feature strings, and real apex/`www` host divergence.
+
+### 3. Exact verified Attempt contract
+
+Validate exactly the closed RANK-02 parameter key set and values already listed in this ticket.
+Only the adapter-valid `target` varies. Duplicate the exact bounded target grammar locally so
+parser failures use parser-local deterministic error semantics; do not call the Attempt-document
+validator as the parser implementation and do not edit `capture_event.py` merely for reuse.
+The local grammar must remain byte-for-byte semantically aligned with RANK-02, including:
+
+- two ASCII labels only;
+- lower-case adapter grammar;
+- exact `\A...\Z`/full-match behavior, so a trailing newline is rejected;
+- no `www` first label;
+- no `xn--` label;
+- label-length bounds already enforced by RANK-02.
+
+A verified Attempt target `www.theconspiratory.com` therefore fails even though provider result
+`domain=www.theconspiratory.com` is valid returned testimony. Request target grammar and provider
+host testimony are different contracts.
+
+### 4. Status/topology and successful-empty rules
+
+Follow the newer strict parser topology:
+
+- exactly one task; `tasks_count` equals task-array length;
+- root/task success disagreement fails;
+- with exactly one task, `tasks_error=0` iff that task is provider-success, otherwise `1`;
+- `result_count` is a nonnegative JSON integer on every declared branch; booleans fail;
+- consistent provider non-success returns parser-local `PROVIDER_ERROR` only after typing
+  verified Attempt context, required task echo/envelope/task testimony, and `result_count`; do
+  not inspect result/items on that branch;
+- provider success requires a result array containing exactly one object and
+  `result_count == 1`;
+- successful `result` null/absent/wrong-type/empty/multiple fails;
+- successful `items` must be an array. `items=null` or absent fails closed in v1 because that
+  branch is unobserved and no claimed null-empty semantics is accepted here;
+- `items_count` must equal actual array length;
+- `items=[]` with `items_count=0` is valid empty parser IR only and creates no admitted-empty
+  Observation meaning;
+- `total_count` is an independent nonnegative provider fact. Deliberately unlike the older
+  Search Mentions rule, RANK-04 imposes no `total_count >= items_count` equation.
+
+No `total_count`, aggregate count, bucket-sum, movement-count, or returned-prefix arithmetic is
+a parser consistency equation merely because some values agree in this Capture.
+
+### 5. Closed-member policy and known v1 object families
+
+Every parsed object has a closed known-member vocabulary: unknown member names fail
+`unknown_field`. Open provider **values** remain open where typed below. Structural outer
+objects require their known v1 members; explicitly nullable/request-controlled/unsupported
+nested fields retain the field-state rules below rather than being silently defaulted.
+
+The v1 known key sets are frozen from the reviewed contract/Evidence:
+
+- root: `cost`, `status_code`, `status_message`, `tasks`, `tasks_count`, `tasks_error`, `time`,
+  `version`;
+- task: `cost`, `data`, `id`, `path`, `result`, `result_count`, `status_code`,
+  `status_message`, `time`;
+- task echo: `api`, `function`, `historical_serp_mode`, `ignore_synonyms`,
+  `include_clickstream_data`, `item_types`, `language_code`, `limit`, `load_rank_absolute`,
+  `location_code`, `offset`, `order_by`, `se_type`, `target`;
+- result: `items`, `items_count`, `language_code`, `location_code`, `metrics`,
+  `metrics_absolute`, `se_type`, `target`, `total_count`;
+- item: `keyword_data`, `ranked_serp_element`, `se_type`;
+- `ranked_serp_element`: `check_url`, `is_lost`, `keyword_difficulty`,
+  `last_updated_time`, `previous_updated_time`, `se_results_count`, `se_type`, `serp_item`,
+  `serp_item_types`;
+- `serp_item`: `about_this_result`, `amp_version`, `backlinks_info`, `breadcrumb`,
+  `clickstream_etv`, `description`, `domain`, `estimated_paid_traffic_cost`, `etv`,
+  `extended_snippet`, `highlighted`, `is_featured_snippet`, `is_image`, `is_malicious`,
+  `is_video`, `links`, `main_domain`, `position`, `pre_snippet`, `rank_absolute`,
+  `rank_changes`, `rank_group`, `rank_info`, `rating`, `relative_url`, `se_type`, `title`,
+  `type`, `url`, `website_name`, `xpath`;
+- `rank_changes`: `is_down`, `is_new`, `is_up`, `previous_rank_absolute`;
+- `rank_info`: `main_domain_rank`, `page_rank`;
+- Ranked `keyword_data`, `keyword_info`, `keyword_properties`, `avg_backlinks_info`,
+  `search_intent_info`, `serp_info`, monthly-row, and trend key vocabularies match the exact
+  reviewed RANK-03 family shapes already recorded above;
+- each `metrics.<requested_type>` object has the 12 `pos_*` buckets plus `count`, `etv`,
+  `estimated_paid_traffic_cost`, `is_new`, `is_up`, `is_down`, `is_lost`,
+  `clickstream_etv`, `clickstream_gender_distribution`, and
+  `clickstream_age_distribution` (22 members);
+- each `metrics_absolute.<requested_type>` object has the same members except `count`, `etv`,
+  and `estimated_paid_traffic_cost` (19 members).
+
+The parser must not import documentation copy/paste mistakes into these Evidence-backed v1
+shapes. In particular, `metrics_absolute` does not gain count/ETV/cost because a mutable docs
+example happens to show them on some family.
+
+### 6. Aggregate family lock
+
+On provider success under this frozen Attempt, `metrics` and `metrics_absolute` are both
+required objects with exactly the five requested family keys:
+`organic`, `paid`, `featured_snippet`, `local_pack`, `ai_overview_reference`.
+They are required because the verified Attempt requests exactly those five families and the
+reviewed v1 contract returns those five aggregate loci, not because one Capture proves a
+universal provider invariant. A missing family or sixth family fails closed in v1.
+
+`metrics` and `metrics_absolute` remain distinct typed structures. Never synthesize the three
+fields absent from `metrics_absolute`. Position buckets, `count`, and movement values are
+nonnegative JSON integers with booleans rejected. ETV/cost values are Decimal-capable and
+preserve JSON null versus stated numeric zero/value. No parser rule requires:
+
+- bucket sum = aggregate count;
+- aggregate count = `total_count`;
+- sum of family counts = `total_count`;
+- `is_new` = count;
+- `metrics` and `metrics_absolute` bucket sums to agree.
+
+The fixture's 248 versus 244 arithmetic is golden testimony only.
+
+### 7. Complete request-disabled clickstream lock
+
+The verified Attempt has `include_clickstream_data=false`. Therefore absent or JSON-null at
+**every** clickstream-controlled locus below is represented as `NOT_REQUESTED`; any populated
+value fails deterministically as `request_disabled_populated`:
+
+- `keyword_data.clickstream_keyword_info`;
+- `keyword_data.keyword_info_normalized_with_clickstream`;
+- `serp_item.clickstream_etv`;
+- every `metrics.<requested_type>.clickstream_etv`;
+- every `metrics.<requested_type>.clickstream_gender_distribution`;
+- every `metrics.<requested_type>.clickstream_age_distribution`;
+- every corresponding `metrics_absolute.<requested_type>.clickstream_*` field.
+
+The non-null shapes of the gender/age distribution objects remain intentionally unsupported.
+`keyword_info_normalized_with_bing` remains independent of the request flag, matching the
+accepted RK parser boundary: absent and JSON null remain distinguishable field states;
+populated content fails `unsupported_shape` until separately reviewed. This is an explicit
+v1 drift trigger, not silent data loss.
+
+### 8. Ranked SERP item/rank lock
+
+`serp_item.type` and layout `position` are open provider strings. Do not import Organic closed
+enums. `rank_group`, `rank_absolute`, and a stated `rank_changes.previous_rank_absolute` are
+**nonnegative JSON integers** with booleans rejected. RANK-04 deliberately does not infer a
+semantic prohibition on rank zero from one positive-only fixture; zero meaning is an unproven
+provider branch for later review. Negative values fail.
+
+`rank_info.page_rank` and `rank_info.main_domain_rank` are separately named nonnegative integer
+provider scores. Real fixture zero is valid (`page_rank=0` on all 100; `main_domain_rank=0` on
+99 and `36` on one). No generic “rank fields are positive” helper is allowed.
+
+Duplicate rank values are valid occurrences. No uniqueness, monotonicity, relation
+`rank_group < rank_absolute`, equality, page-number inference, or Organic placement identity is
+imposed. Provider item order and zero-based array index are retained without resorting.
+
+### 9. URL/host/text fidelity lock
+
+Only `serp_item.url` receives a narrow syntax check: exact string retained; scheme must be
+`http` or `https`; netloc must be nonempty; ASCII space is rejected. Query, fragment, case,
+`www`, path, and trailing slash are not normalized or stripped, and URL host is not required to
+match `domain`, `main_domain`, or Attempt target.
+
+All other URL-like/layout/text fields are exact strings with no URL canonicalization:
+`relative_url`, `domain`, `main_domain`, `website_name`, `breadcrumb`, both `check_url` paths,
+`xpath`, `title`, `description`, and `pre_snippet`. Do not apply Attempt target grammar to
+provider `domain`; that would reject the 25 real `www` rows. `pre_snippet` is free provider
+text and is never timestamp-validated; the fixture includes both relative prose and the
+string `07/08/2026 00:00:00`.
+
+Synthetic tests must prove that provider `website_name`, `domain`, `main_domain`, URL host, and
+relative path may disagree without parser reconciliation, while exact strings survive.
+
+### 10. Null-only unsupported SERP children
+
+For `serp_item.about_this_result`, `backlinks_info`, `extended_snippet`, `links`, and `rating`,
+RANK-03 observes JSON null only and no Ranked-local non-null contract was empirically learned.
+Absent and JSON-null remain explicit states; any populated value fails `unsupported_shape` in
+v1. Do not import Organic nested schemas. This intentional fail-closed boundary is a named
+revisit trigger if a later Capture populates one of these fields.
+
+Other nullable value fields such as `pre_snippet`, `highlighted`, CPC/bids, categories,
+foreign intents, `core_keyword`, clustering algorithm, and estimated paid-traffic cost retain
+field-stateful null/stated behavior according to their reviewed scalar/array types. Their
+fixture co-nullability is not an invariant.
+
+### 11. Duplicated provider paths stay independently addressable
+
+The six overlapping paths between `ranked_serp_element` and `keyword_data.serp_info` are:
+`check_url`, `se_results_count`, `last_updated_time`, `previous_updated_time`,
+`serp_item_types`, and `se_type`. They agree 100/100 in the fixture but parser correctness must
+not require equality. Synthetic disagreement must survive on both paths.
+
+Likewise, `ranked_serp_element.keyword_difficulty` and
+`keyword_properties.keyword_difficulty` remain separate; fixture equality is golden testimony
+only. `rank_info.main_domain_rank` is not `avg_backlinks_info.main_domain_rank`; the fixture's
+very different values/scales are an explicit anti-collapse proof. `serp_item` paid-cost
+nullability is not derived from keyword CPC even where their fixture states correlate.
+
+### 12. Ranked-local keyword-data lock
+
+Reuse only the low-level value vocabulary, not another surface's semantic identity.
+
+- current and monthly `search_volume` are nonnegative JSON integers and independent facts;
+- monthly rows retain provider order/index and explicit `(year, month)`; no length,
+  newest-first, shared-window, or current-volume equation;
+- duplicate `(year, month)` within one item's monthly series fails `duplicate_period` because
+  this is keyed Data-Period testimony; duplicate item/keyword/URL occurrences remain valid;
+- calendar month is `1..12`, year `1..9999`; negative monthly/current volume fails;
+- search-volume-trend members are signed JSON integers; real negative fixture values must be
+  preserved;
+- competition/CPC/bids/backlink metrics are Decimal-capable where the provider supplies
+  decimal numerics; never route through binary float;
+- categories are ordered integer occurrences and may contain duplicates; null, stated empty,
+  and stated nonempty are distinct where the field-state contract permits them;
+- foreign-intent and highlighted arrays preserve provider order/multiplicity;
+- `main_intent`, competition level, clustering algorithm, detected language, SERP feature
+  names, item type, and layout position are open provider-native strings;
+- `core_keyword` remains an independent clustering/reference string, not a foreign key;
+- detected language may disagree with request/result language without reconciliation.
+
+Golden fixture language testimony is exactly `en:94`, `nl:3`, `hu:1`, `de:1`, `es:1`.
+Golden clustering testimony is `text_processing:55`, `keyword_metrics:1`, null:44. These are
+fixture facts, not enum closure.
+
+### 13. Structure-local clocks
+
+When stated, provider timestamps use exact lexical form `YYYY-MM-DD HH:MM:SS +00:00`, must be
+real UTC calendar datetimes with year `1..9999`, and retain the exact input string. The parser
+must preserve all separately stated time paths, including:
+
+- `ranked_serp_element.last_updated_time`;
+- `ranked_serp_element.previous_updated_time`;
+- `keyword_data.serp_info.last_updated_time`;
+- `keyword_data.serp_info.previous_updated_time`;
+- `keyword_info.last_updated_time`;
+- `search_intent_info.last_updated_time`;
+- `avg_backlinks_info.last_updated_time`;
+- monthly `(year, month)` Data Periods as a different time axis.
+
+The two `serp_info` clocks agree with the ranked-element clocks in this fixture only. Capture
+time remains provenance outside this parser input, provider duration strings remain durations,
+and `pre_snippet` remains ordinary text.
+
+### 14. SERP composition versus target participation
+
+`serp_item_types` is an ordered, multiplicity-preserving, open provider list about the query
+SERP. It is independent from `serp_item.type`, booleans such as `is_featured_snippet`, and
+result aggregate family participation. Golden proofs must include:
+
+- `ai_overview` on 80 returned SERP-composition lists with target
+  `ai_overview_reference` aggregate zero;
+- `featured_snippet` in four SERP-composition lists while target featured-snippet aggregate is
+  zero and those four returned organic `serp_item.is_featured_snippet` values remain false.
+
+No parser inference connects these paths.
+
+### 15. Strengthened golden and adversarial proofs
+
+In addition to the existing required proofs, the implementation tests must pin enough exact
+fixture testimony that normalization/reordering cannot false-green:
+
+- exact duplicate-category row for keyword `yuba county 5 map`:
+  `[10007,10108,10108,10756,10756,11500,13418,13600,13600,13601]`;
+- exact near-duplicate keyword pairs including `tb test lam elisa` / `tb test lam-elisa` and
+  `project sea spray` / `project sea-spray`;
+- at least one provider string containing punctuation/nontrivial text retained exactly;
+- `website_name=theconspiratory.com` retained on the 25 rows whose `domain` is
+  `www.theconspiratory.com`;
+- both mixed-host relative paths remain host-specific absolute-URL occurrences;
+- `rank_info.page_rank=0` on all 100 and `main_domain_rank` distribution `0:99, 36:1`;
+- duplicated `rank_group` and `rank_absolute` values remain valid occurrence testimony;
+- rank-group provider order is nondecreasing in this fixture while `rank_absolute` is not;
+  neither becomes a universal parser ordering equation;
+- the six duplicated ranked-element/SERP-info paths and duplicated difficulty are independently
+  retained and synthetically allowed to disagree;
+- CPC versus bid presence proves independent nullability, including CPC-only, bids-only, both,
+  and neither fixture rows;
+- real negative search-volume-trend values survive;
+- exact detected-language and clustering distributions above;
+- the `pre_snippet` date-looking string remains unparsed text;
+- every aggregate/item/keyword-data clickstream locus is proved `NOT_REQUESTED` in the golden
+  fixture and a synthetic populated locus fails;
+- the five null-only unsupported SERP children are proved null/unsupported separately;
+- all six prior provider Conformance fixtures remain byte-identical: Keyword Overview PF-03,
+  Organic PF-10, Search Mentions AI-03, Target Metrics AI-09, Historical AI-14, and Related
+  Keywords RK-02.
+
+Synthetic tests must additionally prove: Attempt `www` target rejection while returned `www`
+domain is allowed; `rank_group=0`, `rank_absolute=0`, and stated previous rank zero remain
+well-typed while negatives fail; `rank_info` zero remains valid; two tasks cannot be rescued by
+`tasks_error=2`; successful `items=null` fails; a sixth aggregate family fails; adding
+`count`/ETV/cost to `metrics_absolute` fails; a populated clickstream distribution fails;
+query/fragment/trailing-slash URL text survives; `breadcrumb` is never URL-validated; and exact
+duplicate keyword/URL occurrences retain distinct provider indexes.
+
+Golden counts/ranges/order are one-Capture testimony and must not be implemented as parser
+invariants unless explicitly locked above.
+
+### 16. Allowlist and remaining questions
+
+Both independent reviews conclude the four-path implementation allowlist is sufficient. No
+existing production helper needs modification. If [CLAUDE] discovers otherwise during later
+authorized implementation, stop and report instead of widening scope.
+
+The dual review leaves **no Product question** and no justification for another provider call.
+The technical questions raised by reviewers are resolved by this lock: Bing remains separate;
+`position` remains open; only `serp_item.url` receives the narrow non-canonicalizing HTTP(S)
+check; successful null `items` fails; rank fields use nonnegative typing without Organic
+uniqueness; null-only Ranked SERP child objects are unsupported when populated; and all five
+aggregate families are required because of this frozen Attempt/v1 result contract.
+
+RANK-04 is therefore ticket-ready but still **not implementation-authorized**. [CHAZ] must
+separately authorize [CLAUDE] to implement from the exact clean accepted-ticket HEAD created by
+the Steward reconciliation commit.
 
 ## Implementation verification boundary
 
