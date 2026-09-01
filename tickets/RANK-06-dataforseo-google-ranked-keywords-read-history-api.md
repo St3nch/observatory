@@ -1,6 +1,6 @@
 # RANK-06 — DataForSEO Google Ranked Keywords Recipe selection and admitted-history API
 
-**Status:** review — [GPT] Steward accepted the bounded remediation; awaiting final [GROK] read-only adversarial review before [CHAZ] full-suite integration validation  
+**Status:** review — final [GROK] read-only adversarial review returned `READY`; awaiting [CHAZ] full-suite integration validation  
 **Owner:** [GPT] Steward review / [CLAUDE] designated and implementation-authorized Writer  
 **Blocked by:** none; RANK-05 closed  
 **Draft base:** `512525f78c20e49eb096b8ab98c0ed4ad2d64df0`  
@@ -1137,6 +1137,29 @@ The Writer's bounded remediation checks are accepted as implementation evidence.
 did not execute repository tests through MCP. RANK-06 is now ready for the mandatory final
 [GROK] read-only adversarial review of the complete implementation and remediation. [CHAZ]
 full-suite integration remains downstream of that review and any Steward reconciliation.
+
+## Final Grok adversarial review — READY
+
+[GROK] performed the mandatory final independent read-only adversarial review at exact clean
+HEAD `a792cbc92094bf6c82ddcad07d0310d910191ab0` on branch `main` and returned `READY`.
+
+The reviewer independently rechecked the complete RANK-06 implementation rather than only the
+latest remediation. It confirmed the implementation path ceiling, the Ranked-local scope of
+`_require_accepted_v1_registration()`, the exact selected/pinned accepted-v1 adapter-metadata
+409 behavior, preservation of true no-selection 503 and unrelated/wrong/non-v1 404 selection
+taxonomy, and unchanged generic `provider_recipe_selection.py` semantics.
+
+The review found no remaining false green that admits a contract-violating production path and
+no unresolved Product question. It specifically accepted the locked candidate-membership,
+verify-before-limit, exact-one Outcome, envelope provenance, verified-Attempt identity,
+Recipe-v1 state-domain, exact `se_type=google`, ten-element corpus cross-product, occurrence,
+stated-empty monthly, Evidence-only prose, deterministic presentation, and zero-item
+boundaries. The independent projector remains based on `information_schema` plus verified
+Evidence rather than the production assembler.
+
+[GROK] reported no mutation, provider/network call, credential access, Evidence mutation,
+spend, amend, rebase, reset, or push. Final repository-wide integration remains [CHAZ]
+evidence at the exact closure-candidate commit produced by recording this review.
 
 ## Explicit out of scope
 
