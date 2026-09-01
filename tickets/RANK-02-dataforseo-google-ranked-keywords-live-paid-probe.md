@@ -1,9 +1,11 @@
 # RANK-02 — DataForSEO Google Ranked Keywords Live paid-probe adapter
 
-**Status:** accepted — independent [GROK] review returned `RECONCILE`; [GPT] Steward reconciled the bounded corrections below on 2026-09-01; awaiting explicit [CHAZ] Writer designation and implementation authorization  
-**Owner:** [GPT] Steward reconciliation; implementation Writer not yet designated  
+**Status:** implementation authorized — [CHAZ] explicitly designated [CLAUDE] as sole Writer on 2026-09-01; implementation only, no provider call authorized  
+**Owner:** [CLAUDE] implementation / [GPT] Steward review  
 **Blocked by:** none; RANK-01 closed at `d10349bb036905daf9dd53eeac0cffbe2c1e7118`  
 **Draft base:** `d10349bb036905daf9dd53eeac0cffbe2c1e7118`  
+**Accepted-ticket HEAD:** `65d307e018c33f5ddd09a17dc16aa2d85672b9cc`  
+**Implementation authorization:** [CHAZ] explicitly designated [CLAUDE] as the sole RANK-02 Writer; authorization is limited to the accepted four-path implementation allowlist and authorizes no provider call, real credentials, spend, live Evidence, parser/Recipe/schema/API/Strategy work, amend, or push  
 **Product direction:** implement the bounded Evidence-only Ranked Keywords transport/inspect adapter; no provider call is authorized  
 
 ## Purpose
