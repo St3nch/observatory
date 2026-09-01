@@ -1,7 +1,7 @@
 # RANK-05 — DataForSEO Google Ranked Keywords Derivation Recipe and typed persistence
 
-**Status:** provisional Steward draft — awaiting explicit [CHAZ] Writer designation, code-first Writer review, independent [GROK] review, and Steward reconciliation; no implementation authorization  
-**Owner:** [TBD] designated Writer / [GPT] Steward / [GROK] independent reviewer  
+**Status:** provisional Steward draft — [CHAZ] designated [CLAUDE] as Writer; awaiting code-first [CLAUDE] review, independent [GROK] review, and Steward reconciliation; no implementation authorization  
+**Owner:** [CLAUDE] designated Writer / [GPT] Steward / [GROK] independent reviewer  
 **Blocked by:** no technical blocker; RANK-04 closed at `ecfd6cfb90e7162081f64ae02e410e0cf056eaf4`  
 **Draft base:** `ecfd6cfb90e7162081f64ae02e410e0cf056eaf4`  
 **Provider authority:** zero calls, zero spend; existing protected RANK-03 Evidence and frozen RANK-04 Conformance fixture only  
