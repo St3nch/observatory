@@ -1,6 +1,6 @@
 # PF-18 — Google Organic MVP testimony completion
 
-**Status:** review  
+**Status:** review — bounded integrity remediation required  
 **Kind:** provider fidelity remediation  
 **Triggered by:** MVP-01 Class 4 Google Organic finding  
 **Blocked by:** none for the bounded PF-18 implementation  
@@ -700,6 +700,97 @@ paid API was called. No Evidence was mutated: the PF-10 fixture is byte-identica
 live Evidence was created. Nothing was pushed, amended, rebased, reset, or stashed. The
 implementation is one commit whose parent is `a1db7449456a06afe1eee5dc8535ff92ce51e683`.
 
+## Steward implementation review — 2026-09-01
+
+The Project Steward reviewed implementation commit
+`a4f83474bd3721617e80c87974a52bfa207d297a` against exact authorized parent
+`a1db7449456a06afe1eee5dc8535ff92ce51e683`. The implementation is one direct child, the
+working tree was clean, changed paths were bounded to PF-18 plus two directly consequential
+test retargets, and the Writer's reported focused PostgreSQL/test/lint/typecheck evidence is
+accepted as implementation handoff evidence pending the final [CHAZ] full-suite gate.
+
+The parser/Recipe split, frozen expanded Recipe identity
+`2704ff82a175be7bacfd601cf7f0e684ca1cc85f9e8cfc93f520b603bcb29d04`, exact PF-10
+248-envelope cardinality, v1 coexistence, no automatic Recipe-selection mutation, explicit
+item-time semantics, links-family preservation, and the three new child families match the
+reconciled PF-18 design. No Product redesign is required.
+
+The review found three bounded integrity defects that must be remediated before independent
+Grok review or a final full-suite closure run.
+
+### R1 — read-side extra-occurrence integrity is incomplete
+
+PF-18 frozen rules 12, 19, 21, and 25 require missing, extra, and orphan subordinate child
+occurrences to be integrity damage and require read-side complete-set agreement before the outer
+history limit. The Derivation complete-set gate detects an extra occurrence on the next
+same-Recipe derive, but `_assert_history_candidates_consistent()` only proves that each semantic
+Top Stories/Video/sitelink parent has **at least one** occurrence. A hand-inserted additional
+FK-valid `child_index` under an existing semantic parent therefore survives the read integrity
+gate and is returned by `_child_occurrences()` as ordinary API testimony.
+
+Remediation must make the expanded read path independently reject extra/spurious occurrence
+rows, not merely rely on a future Derivation rerun. The check must run across every matching
+candidate Capture before outer limiting. Add a decisive API tamper regression that inserts an
+additional valid-parent occurrence index and requires HTTP 409 `evidence_integrity_failure`.
+Do this for the child-occurrence contract generally (at minimum proving one family and shared
+logic), while keeping accepted pinned-v1 behavior unchanged.
+
+### R2 — duplicated child parent-placement axes are not structurally tied to the cited parent
+
+The new Top Stories and Video tables FK
+`(capture_id, derivation_version_id, parent_within_capture_identity, parent_item_type)` to the
+SERP feature parent, and sitelinks FK the parent identity to ranked-result-v2. But each child row
+also stores and serves `parent_page`, `parent_position`, `parent_rank_group`, and
+`parent_rank_absolute`; those duplicated axes are not part of the parent FK and the read path
+does not compare them with the cited parent row.
+
+Consequently a positive but false child `parent_page`/rank value can be updated while the real
+parent identity and FK remain valid; envelope/detail key checks still agree and the API can
+serve contradictory parent-placement testimony as HTTP 200. That violates the frozen semantic
+identity axes and the requirement that children be structurally bound to the **exact parent
+placement**.
+
+Remediation must structurally or deterministically prove agreement between every served child
+parent axis and its cited parent placement. Prefer database-enforced composite parent binding
+where it remains additive and local: a suitable UNIQUE parent key containing identity/type plus
+page/position/rank axes and matching child FK columns; sitelinks analogously bind to the full
+ranked-result-v2 parent placement. A read-side equality check may additionally defend existing
+rows, but string/hash convention alone is not enough. Add PostgreSQL tamper tests showing a
+mismatched duplicated parent axis cannot be committed or is rejected as integrity damage, plus
+an API-level regression if the chosen design permits persisted legacy damage.
+
+### R3 — new ordinary field-state domains are widened beyond PF-18 semantics
+
+PF-18 item timestamps and parent `links` are ordinary provider fields whose applicable states
+are exactly `absent`, `json_null`, or `stated`. The implementation uses the repository-wide
+`_FIELD_STATE_CHECK` (`stated/json_null/absent/not_requested/inapplicable`) for the new
+`organic_item_timestamp_state`, Top Stories/Video timestamp states, and `links_state`; the
+expanded Pydantic `_FIELD_STATES` likewise admits all five tokens. Thus a tampered
+`not_requested` or `inapplicable` item timestamp/links state with NULL value can satisfy the new
+DB/API shape even though that state is impossible under the PF-18 field contract.
+
+Remediation must close the applicable state domain for the new ordinary PF-18 fields to
+`absent | json_null | stated` in persistence and read/API validation. At minimum this applies
+to organic/Top-Stories/Video item timestamps and `links`; review the newly introduced sitelink
+optional description state for the same ordinary-field rule rather than inheriting an
+inapplicable/request-disabled domain accidentally. Do not mutate accepted v1 semantics merely
+to make the checks uniform. Add DB/API tamper regressions proving `not_requested` and
+`inapplicable` are refused rather than served.
+
+### Review disposition
+
+These findings are bounded integrity remediation, not a Recipe-identity or Product redesign.
+The accepted expanded Recipe bytes/kinds/semantic axes do not need to change unless the Writer
+finds that a required normative semantic change is unavoidable; if so, stop and return for
+Steward reconciliation rather than silently changing the Recipe digest.
+
+The Writer should produce one direct remediation child of
+`a4f83474bd3721617e80c87974a52bfa207d297a`, update this ticket with exact focused validation,
+and leave the tree clean. No provider request, credentials, spend, Evidence mutation,
+automatic Recipe-selection change, amend, rebase, reset, or push is authorized.
+
+**Steward implementation verdict:** `REMEDIATION_REQUIRED`.
+
 ## Closure
 
-<!-- Project Steward fills after implementation, independent review, and final validation. -->
+<!-- Project Steward fills after remediation, independent review, and final validation. -->
