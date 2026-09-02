@@ -1,9 +1,9 @@
 # PF-18 — Google Organic MVP testimony completion
 
-**Status:** review — R1–R3 bounded integrity remediation delivered  
+**Status:** review — R1–R3 accepted; R4 ranked-result-v2 read-integrity remediation required  
 **Kind:** provider fidelity remediation  
 **Triggered by:** MVP-01 Class 4 Google Organic finding  
-**Blocked by:** none for the bounded PF-18 remediation  
+**Blocked by:** explicit [CHAZ] authorization for bounded R4 implementation  
 **Approved by:** [CHAZ] for bounded implementation on 2026-09-01 and R1–R3 remediation on 2026-09-02  
 **Draft base:** `0465a5b6e3bb9c4e56aa613f5d61581620e46096`  
 **Implementation start:** `404d3bebce3755c33989e10fe63559bd8ac89616`  
@@ -1056,6 +1056,117 @@ this remediation. Nothing was pushed, amended, rebased, reset, or stashed. The r
 is one commit whose parent is `10d3b2f7c368bbf534c88ad7d2ffc13be2bcff41`, and the working
 tree is clean.
 
+## Steward remediation review — 2026-09-02
+
+The Project Steward reviewed the delivered R1–R3 remediation at
+`3aed452fc6ba2a34d84ccd84e3ac78d74fced177` against the authorized remediation parent
+`10d3b2f7c368bbf534c88ad7d2ffc13be2bcff41`. The later commit
+`eecd96a305a794744c0040685f00d4d4a8b85d0c` is ticket-only Writer-authority governance:
+[CHAZ] revoked further [CLAUDE] write authority and designated [GROK] as the current Writer for
+future PF-18 code changes. No production change is attributed retroactively to [GROK].
+
+The R1–R3 remediation is **accepted**:
+
+- **R1 accepted.** Expanded-history reads now reconstruct the three PF-18 child families from
+  verified Evidence for every matching candidate before the outer history limit and compare
+  exact semantic-child and occurrence sets. This closes extra/spurious/moved occurrence rows
+  without requiring a Derivation rerun and preserves pinned-v1 behavior.
+- **R2 accepted.** PostgreSQL now binds Top Stories/Video children and sitelinks to the full
+  cited parent placement through additive composite UNIQUE/FK constraints. Existing persisted
+  disagreement fails migration closed, and read-side Evidence comparison provides defence in
+  depth for the three child families.
+- **R3 accepted.** PF-18-local ordinary field states are narrowed to exactly `stated`,
+  `json_null`, or `absent` for organic/Top-Stories/Video item timestamps, ranked-result-v2
+  `links`, and sitelink description, while inherited v1 state domains remain unchanged.
+
+The Writer report records focused real-PostgreSQL validation of **114 passed** for the three
+PF-18 files, **201 passed** for the directly affected inherited set, `ruff` clean, and targeted
+`mypy` clean. The Project Steward did not rerun repository tests through MCP; these are accepted
+as Writer handoff evidence pending independent review and the final [CHAZ] full-suite gate.
+
+### R4 — ranked-result-v2 read-side content can still disagree with verified Evidence
+
+The remediation's own residual note correctly states that parent rows are not reconstructed, but
+for `google_organic_ranked_results_v2` this is not merely adjacent inherited-v1 posture.
+`dataforseo.google.organic.ranked_result.v2` is a **new PF-18 Observation kind** and carries two
+of the four material testimony families that caused PF-18: exact organic item-timestamp
+state/value and exact parent `links` family state/count. It also serves the placement axes and
+exact URL/domain/title/content inherited into the v2 document.
+
+Current `_assert_history_candidates_consistent()` proves ranked-result-v2 envelope/detail key
+membership and `observation_count`, while `_assert_expanded_children_match_evidence()` rebuilds
+and compares only Top Stories, Video, and sitelink child/detail-occurrence relations. It does not
+compare persisted `google_organic_ranked_results_v2` rows with the rows planned from the verified
+Capture body.
+
+Therefore database damage using otherwise-valid values can still survive the expanded read gate
+without a Derivation rerun. Examples include:
+
+- changing an organic item timestamp from `json_null` to `absent`, or replacing one valid stated
+  timestamp with another valid UTC timestamp;
+- changing the sitelink parent from `links_state='stated', links_count=4` to
+  `links_state='json_null', links_count=NULL`, leaving child rows present;
+- changing URL/domain/title/description/website-name content on a ranked-result-v2 row; or
+- changing placement axes on a ranked-result-v2 row with no sitelinks while retaining its
+  original `within_capture_identity`/envelope key.
+
+The R3 domain constraints correctly reject impossible `not_requested`/`inapplicable` tokens but
+cannot detect a false value that remains inside the permitted three-state domain. The R2
+composite sitelink FK proves child/parent **placement agreement** when sitelinks exist, but does
+not prove the ranked-result-v2 parent row itself agrees with Evidence, and 96 of the 97 PF-10
+ranked rows have no sitelink children.
+
+This conflicts with the PF-18 acceptance checklist requiring complete-set persistence/read
+integrity to detect missing/extra/**conflicting new rows**, and frozen rule 21 requiring
+read-side integrity to know every expanded kind/table and validate all matching candidates before
+the outer limit. It is also directly material to the API-only Strategy consumer because the
+ranked-result-v2 timestamp/links facts are new PF-18 testimony.
+
+### R4 bounded remediation contract
+
+R4 does **not** require Product redesign, parser-v3, a new Observation kind, or a Recipe digest
+change. The smallest safe fix is to extend the existing Evidence-strength expanded read check so
+that, for every matching expanded candidate before limiting, persisted
+`google_organic_ranked_results_v2` rows are compared exactly against the
+`plan_google_organic_expanded_capture()` intended ranked-v2 detail rows across all persisted and
+served v2 content columns, including:
+
+- `within_capture_identity` and `observation_kind`;
+- requested keyword and placement axes;
+- exact URL/domain/title;
+- description and website-name state/value;
+- organic item-timestamp state/value; and
+- `links_state` / `links_count`.
+
+The comparison must reject missing, extra, or conflicting ranked-result-v2 rows as the existing
+HTTP 409 `evidence_integrity_failure`, must run over every matching candidate before outer
+limiting, and must leave selected/pinned v1 behavior untouched.
+
+Decisive regressions must include at minimum:
+
+1. mutate one ranked-result-v2 timestamp from one **valid** PF-18 state/value to another valid
+   state/value without rerunning Derivation; expanded history must 409;
+2. mutate a valid stated timestamp string to a different valid UTC string; expanded history must
+   409;
+3. mutate the PF-10 populated links parent from stated/count 4 to JSON-null/NULL while leaving
+   sitelink children intact; expanded history must 409;
+4. mutate URL/title or another served ranked-result-v2 content field; expanded history must 409;
+5. mutate placement content on a ranked-result-v2 row without sitelinks; expanded history must
+   409; and
+6. prove the same damage in a candidate hidden beyond `limit` still 409s.
+
+Do not broaden R4 into reconstructing every accepted v1/reused family merely for uniformity.
+The bounded requirement is the **new ranked-result-v2 relation and its PF-18 testimony**. If the
+Writer discovers that closing R4 requires changing the expanded Recipe bytes/digest or normative
+semantic axes, stop for Steward reconciliation rather than changing them silently.
+
+**Steward remediation verdict:** `R1_R2_R3_ACCEPTED__R4_REMEDIATION_REQUIRED`.
+
+No R4 code implementation is authorized by this review commit. [GROK] is the designated current
+Writer, but a fresh explicit [CHAZ] authorization is required before R4 implementation. No
+provider call, credentials, spend, Evidence mutation, automatic Recipe-selection change, or push
+is authorized.
+
 ## Closure
 
-<!-- Project Steward fills after remediation, independent review, and final validation. -->
+<!-- Project Steward fills after R4 remediation, independent review, and final validation. -->
