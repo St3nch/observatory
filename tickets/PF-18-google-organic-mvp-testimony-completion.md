@@ -1,14 +1,15 @@
 # PF-18 — Google Organic MVP testimony completion
 
-**Status:** review — R1–R3 accepted; R4 ranked-result-v2 read-integrity remediation authorized  
+**Status:** review — R1–R3 accepted; R4 ranked-result-v2 read-integrity remediation implemented  
 **Kind:** provider fidelity remediation  
 **Triggered by:** MVP-01 Class 4 Google Organic finding  
-**Blocked by:** bounded R4 implementation by current Writer [GROK]  
+**Blocked by:** Steward R4 review, independent review, and the final [CHAZ] full-suite gate  
 **Approved by:** [CHAZ] for bounded implementation on 2026-09-01, R1–R3 remediation on 2026-09-02, and bounded R4 remediation on 2026-09-02  
 **Draft base:** `0465a5b6e3bb9c4e56aa613f5d61581620e46096`  
 **Implementation start:** `404d3bebce3755c33989e10fe63559bd8ac89616`  
 **Remediation start:** `8d2f4c7b1736ed33941c44403a06ef365395cd2a`  
 **Remediation parent (authorization checkpoint):** `10d3b2f7c368bbf534c88ad7d2ffc13be2bcff41`  
+**R4 remediation parent:** `61d7f9e837aa68b4d7d1edb8df32540fbf3b1ca7`  
 **Historical implementation/remediation Writer:** [CLAUDE]  
 **Current Writer authority:** [GROK] — [CHAZ] revoked further [CLAUDE] write authority and designated [GROK] for any subsequent PF-18 code changes on 2026-09-02  
 
@@ -1167,6 +1168,169 @@ current Writer for that remediation. The authorization is limited to the frozen 
 above and requires one direct implementation child of the durable authorization checkpoint. No
 provider call, credentials, spend, Evidence mutation, automatic Recipe-selection change, or push
 is authorized.
+
+## Remediation report — R4
+
+**Writer:** [GROK]  
+**R4 parent:** `61d7f9e837aa68b4d7d1edb8df32540fbf3b1ca7`  
+**Remediation commit:** one direct child of that parent; not pushed, not amended, not rebased.
+
+### Changed paths
+
+Production:
+
+- `src/observatory/google_organic_read.py` — the existing expanded Evidence-reconstruction
+  gate now also compares persisted `google_organic_ranked_results_v2` rows with the
+  intended ranked-result-v2 detail rows from `plan_google_organic_expanded_capture()`.
+
+Tests:
+
+- `tests/test_api_google_organic_expanded.py` — R4 tamper regressions, hidden-tail
+  proof, undamaged PF-10 control, pinned-v1 non-traversal proof, and a gate-attribution
+  proof that R3 still admits `json_null → absent` without the Evidence comparison.
+
+Ticket:
+
+- `tickets/PF-18-google-organic-mvp-testimony-completion.md` — this report.
+
+Nothing else changed. `src/observatory/dataforseo_google_organic.py`,
+`src/observatory/google_organic_derive.py`, `src/observatory/migrate.py`,
+`src/observatory/api.py`, both Recipe documents, the PF-10 Conformance fixture, the
+frozen expanded-Recipe fixture bytes, `README.md`, `docs/`, `AGENTS.md`, `VISION.md`,
+`VOCABULARY.md`, `decisions/`, other tickets, and every unrelated provider surface are
+untouched.
+
+### Exact R4 implementation
+
+`_assert_expanded_children_match_evidence()` is unchanged in call site and candidate
+coverage: it still runs only for the expanded Recipe, over **every** matching candidate
+Capture, after `_assert_history_candidates_consistent()` and **before** unique/sort/limit.
+For each candidate it still reads/verifies the Capture body through
+`EvidenceStore.read_capture_body()` and still plans with production
+`plan_google_organic_expanded_capture()`.
+
+R4 adds one comparison on that already-planned Capture, using the existing
+`_assert_child_rows_match_evidence()` helper: exact count and set membership of persisted
+`google_organic_ranked_results_v2` rows against `planned.details[RANKED_V2_TABLE]`.
+Missing, extra, or conflicting ranked-v2 content raises `IntegrityError` and the existing
+API mapping returns HTTP 409 `{"detail":"evidence_integrity_failure"}`.
+
+The three PF-18 child family comparisons are unchanged. Pinned/selected v1 still never
+enters this function.
+
+### Ranked-result-v2 columns compared against Evidence
+
+`_RANKED_V2_COLUMNS` is the complete persisted/served ranked-v2 content set, excluding
+only the query keys `capture_id` and `derivation_version_id` (the SELECT already filters
+those, matching the R1 child-column pattern):
+
+- `within_capture_identity`
+- `observation_kind`
+- `requested_keyword`
+- `page`
+- `position`
+- `rank_group`
+- `rank_absolute`
+- `url`
+- `domain`
+- `title`
+- `description`
+- `description_state`
+- `website_name`
+- `website_name_state`
+- `organic_item_timestamp`
+- `organic_item_timestamp_state`
+- `links_state`
+- `links_count`
+
+### Check executes before outer limit
+
+Yes. The ranked-v2 comparison lives inside the same pre-limit candidate loop as R1.
+`test_ranked_v2_damage_hidden_beyond_the_outer_limit_is_still_409` creates two matching
+expanded candidates, damages ranked-result-v2 on the later one, and requires both
+`limit=1&order=asc` and the unlimited request to 409.
+
+### Decisive tamper tests added
+
+All without rerunning Derivation after damage:
+
+- `test_ranked_v2_timestamp_state_to_state_damage_is_409` — `json_null → absent`.
+- `test_ranked_v2_stated_timestamp_value_replacement_is_409` — one stated UTC string
+  replaced with another syntactically valid UTC string.
+- `test_ranked_v2_links_family_damage_with_sitelinks_intact_is_409` — PF-10 stated/count=4
+  parent changed to `json_null`/NULL while the four sitelink children remain.
+- `test_ranked_v2_served_content_damage_is_409` — URL and title on a childless ranked-v2
+  row.
+- `test_ranked_v2_placement_damage_without_sitelinks_is_409` — `rank_absolute` on a
+  childless ranked-v2 row, envelope/`within_capture_identity` retained.
+- `test_ranked_v2_damage_hidden_beyond_the_outer_limit_is_still_409` — hidden-tail 409.
+- `test_undamaged_expanded_history_still_serves_the_pf10_ranked_v2_document` — HTTP 200,
+  `observation_count = 248`, 97 ranked-v2, 58/39 timestamp split, 0/96/1 links split,
+  4/3/4 child cardinalities.
+- `test_pinned_v1_history_does_not_traverse_ranked_v2_evidence_comparison` — pinning v1
+  still 200 with `observation_count = 237` even if the expanded Evidence gate is replaced
+  with a hard failure.
+- `test_ranked_v2_timestamp_refusal_comes_from_evidence_reconstruction` — names the
+  load-bearing gate: with it patched out, `json_null → absent` is HTTP 200.
+
+### Recipe identity
+
+Neither Recipe changed.
+
+- expanded Recipe: **3405** bytes, SHA-256
+  `2704ff82a175be7bacfd601cf7f0e684ca1cc85f9e8cfc93f520b603bcb29d04` — unchanged;
+- v1 Recipe: **2487** bytes, SHA-256
+  `338fc2080d31a35b1f7cc5d7a71c971d25d72517ca3b846959ccb501b666acde` — unchanged;
+- PF-10 fixture: **135722** bytes, SHA-256
+  `7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f` — unchanged;
+- ordered kinds, semantic axes, and the exact PF-10 `observation_count = 248` are
+  unchanged. No new Recipe was created and `NEEDS_STEWARD_RECONCILIATION` was not
+  required: R4 was fixable entirely below the normative Recipe contract.
+
+### Validation actually run
+
+Real PostgreSQL 18 (`postgres:18-alpine`) through the existing session fixture; every
+test file installs the public-network guard and no provider host was reachable.
+
+- `uv run pytest -q tests/test_dataforseo_google_organic_expanded.py
+  tests/test_google_organic_expanded_derive.py
+  tests/test_api_google_organic_expanded.py` — **123 passed**, 0 failed, 0 skipped,
+  1 unrelated Starlette deprecation warning (42 + 32 + 49).
+- `uv run pytest -q tests/test_api_google_organic.py` — **30 passed**. Inherited v1
+  Google Organic history/read path sharing `load_google_organic_history`.
+- `uv run ruff check .` — **All checks passed!**
+- `uv run mypy src/observatory/google_organic_read.py
+  tests/test_api_google_organic_expanded.py` — **Success: no issues found in 2 source
+  files**.
+
+Not run: the full repository suite. Per the R4 prompt, final full-suite closure remains
+a later [CHAZ] gate after Steward and independent review.
+
+### Residual risks
+
+- **Reused v1/parent families remain unreconstructed.** R4 reconstructs ranked-result v2
+  and keeps the accepted R1 child reconstruction. `google_organic_serp_features` and the
+  reused AIO/PAA/related-query families are still membership-checked by envelope/typed
+  keys only. The ticket forbids broadening R4 into those families.
+- **Read cost is unchanged in kind.** Expanded history still verifies and reparses every
+  matching candidate body before the outer limit. Ranked-v2 comparison adds one SELECT
+  and one set compare per candidate on that already-planned Capture.
+- **Helper name is slightly wider than "children".** Ranked-result v2 is a PF-18 parent
+  kind, not a child family. The comparison was added inside the existing Evidence-check
+  helper so R1's call site, candidate loop, and v1 skip remain one path. Renaming it was
+  out of R4 scope.
+- Everything the R1–R3 report listed as synthetic-only remains synthetic-only. The four
+  residuals the R4 prompt explicitly excluded were not touched.
+
+### Boundary statement
+
+No provider request was made. No DataForSEO or other credentials were read or used. No
+paid API was called. No spend occurred. No Evidence was mutated: the PF-10 Conformance
+fixture and the frozen expanded-Recipe bytes are byte-identical and no replacement live
+Capture was created. `provider_recipe_selections` is not changed automatically anywhere in
+this remediation. Nothing was pushed, amended, rebased, reset, or stashed. The
+remediation is one commit whose parent is
+`61d7f9e837aa68b4d7d1edb8df32540fbf3b1ca7`, and the working tree is clean.
 
 ## Closure
 

@@ -957,6 +957,262 @@ def test_a_falsified_child_content_field_is_409(
 
 
 # --------------------------------------------------------------------------------------
+# R4 — ranked_result.v2 rows must agree with verified Evidence
+# --------------------------------------------------------------------------------------
+
+
+def _damage_one_ranked_v2(
+    dsn: str,
+    capture_id: str,
+    set_sql: str,
+    *set_params: object,
+    where_sql: str = "TRUE",
+) -> None:
+    """Mutate one otherwise-valid ranked-result-v2 row without rerunning Derivation."""
+
+    with connect(dsn) as connection:
+        updated = connection.execute(
+            f"""
+            UPDATE google_organic_ranked_results_v2
+            SET {set_sql}
+            WHERE ctid IN (
+                SELECT ctid FROM google_organic_ranked_results_v2
+                WHERE capture_id = %s AND derivation_version_id = %s
+                  AND {where_sql}
+                LIMIT 1
+            )
+            """,
+            (*set_params, capture_id, GOOGLE_ORGANIC_EXPANDED_RECIPE_ID),
+        ).rowcount
+        assert updated == 1
+        connection.commit()
+
+
+def test_ranked_v2_timestamp_state_to_state_damage_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    """json_null → absent is still a legal PF-18 state, but it is not Evidence."""
+
+    store, _attempt, capture_id = _prepare(tmp_path, postgres_dsn)
+    with _app(store, postgres_dsn) as client:
+        assert _history(client).status_code == 200
+    _damage_one_ranked_v2(
+        postgres_dsn,
+        capture_id,
+        "organic_item_timestamp_state = 'absent'",
+        where_sql="organic_item_timestamp_state = 'json_null'",
+    )
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+def test_ranked_v2_stated_timestamp_value_replacement_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, _attempt, capture_id = _prepare(tmp_path, postgres_dsn)
+    _damage_one_ranked_v2(
+        postgres_dsn,
+        capture_id,
+        "organic_item_timestamp = %s",
+        "1999-01-01 00:00:00 +00:00",
+        where_sql=(
+            "organic_item_timestamp_state = 'stated' "
+            "AND organic_item_timestamp <> '1999-01-01 00:00:00 +00:00'"
+        ),
+    )
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+def test_ranked_v2_links_family_damage_with_sitelinks_intact_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, _attempt, capture_id = _prepare(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        parent = connection.execute(
+            """
+            SELECT within_capture_identity, links_state, links_count
+            FROM google_organic_ranked_results_v2
+            WHERE capture_id = %s AND derivation_version_id = %s
+              AND links_state = 'stated'
+            """,
+            (capture_id, GOOGLE_ORGANIC_EXPANDED_RECIPE_ID),
+        ).fetchone()
+        assert parent is not None
+        assert parent[1] == "stated"
+        assert parent[2] == 4
+        sitelinks_before = connection.execute(
+            """
+            SELECT COUNT(*) FROM google_organic_sitelinks
+            WHERE capture_id = %s AND derivation_version_id = %s
+              AND parent_within_capture_identity = %s
+            """,
+            (capture_id, GOOGLE_ORGANIC_EXPANDED_RECIPE_ID, parent[0]),
+        ).fetchone()
+        assert sitelinks_before is not None
+        assert sitelinks_before[0] == 4
+        connection.execute(
+            """
+            UPDATE google_organic_ranked_results_v2
+            SET links_state = 'json_null', links_count = NULL
+            WHERE capture_id = %s AND derivation_version_id = %s
+              AND within_capture_identity = %s
+            """,
+            (capture_id, GOOGLE_ORGANIC_EXPANDED_RECIPE_ID, parent[0]),
+        )
+        sitelinks_after = connection.execute(
+            """
+            SELECT COUNT(*) FROM google_organic_sitelinks
+            WHERE capture_id = %s AND derivation_version_id = %s
+              AND parent_within_capture_identity = %s
+            """,
+            (capture_id, GOOGLE_ORGANIC_EXPANDED_RECIPE_ID, parent[0]),
+        ).fetchone()
+        assert sitelinks_after is not None
+        assert sitelinks_after[0] == 4
+        connection.commit()
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+def test_ranked_v2_served_content_damage_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, _attempt, capture_id = _prepare(tmp_path, postgres_dsn)
+    _damage_one_ranked_v2(
+        postgres_dsn,
+        capture_id,
+        "url = %s, title = %s",
+        "https://example.invalid/ranked-v2-tamper",
+        "Fabricated ranked-result title",
+        where_sql="links_state <> 'stated'",
+    )
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+def test_ranked_v2_placement_damage_without_sitelinks_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, _attempt, capture_id = _prepare(tmp_path, postgres_dsn)
+    _damage_one_ranked_v2(
+        postgres_dsn,
+        capture_id,
+        "rank_absolute = 999",
+        where_sql="links_state <> 'stated'",
+    )
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+def test_ranked_v2_damage_hidden_beyond_the_outer_limit_is_still_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    _commit_organic(store, _body(), "87" * 32, started="2026-08-18T17:37:01.100000Z")
+    _later_attempt, later_capture = _commit_organic(
+        store,
+        _body(),
+        "88" * 32,
+        started="2026-08-18T17:38:01.100000Z",
+        authorized_at="2026-08-18T17:38:00.000000Z",
+    )
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic_expanded(store, connection)
+        select_provider_recipe(
+            connection, ORGANIC_ADAPTER_CONTRACT, GOOGLE_ORGANIC_EXPANDED_RECIPE_ID
+        )
+        connection.commit()
+    _damage_one_ranked_v2(
+        postgres_dsn,
+        later_capture,
+        "organic_item_timestamp_state = 'absent'",
+        where_sql="organic_item_timestamp_state = 'json_null'",
+    )
+    with _app(store, postgres_dsn) as client:
+        limited = _history(client, limit=1, order="asc")
+        unlimited = _history(client)
+    _assert_409(limited)
+    _assert_409(unlimited)
+
+
+def test_undamaged_expanded_history_still_serves_the_pf10_ranked_v2_document(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, _attempt, _capture_id = _prepare(tmp_path, postgres_dsn)
+    with _app(store, postgres_dsn) as client:
+        response = _history(client)
+    assert response.status_code == 200
+    capture = _capture(response)
+    assert capture["capture_outcome"]["observation_count"] == 248
+    ranked = capture["ranked_results"]
+    assert len(ranked) == 97
+    assert all(row["observation_kind"] == ORGANIC_PLACEMENT_V2_KIND for row in ranked)
+    timestamps = Counter(row["organic_item_timestamp"]["state"] for row in ranked)
+    assert timestamps == Counter({"stated": 58, "json_null": 39})
+    links = Counter(row["links"]["state"] for row in ranked)
+    assert links == Counter({"json_null": 96, "stated": 1})
+    populated = [row for row in ranked if row["links"]["state"] == "stated"]
+    assert populated[0]["links"]["returned_child_count"] == 4
+    assert len(capture["top_story_results"]) == 4
+    assert len(capture["video_results"]) == 3
+    assert len(capture["sitelinks"]) == 4
+
+
+def test_pinned_v1_history_does_not_traverse_ranked_v2_evidence_comparison(
+    tmp_path: Path, postgres_dsn: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    store, _attempt, _capture_id = _prepare(tmp_path, postgres_dsn)
+
+    def boom(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError(
+            "pinned v1 must not reconstruct expanded ranked-result-v2 Evidence"
+        )
+
+    monkeypatch.setattr(
+        google_organic_read,
+        "_assert_expanded_children_match_evidence",
+        boom,
+    )
+    with _app(store, postgres_dsn) as client:
+        pinned = _history(client, derivation_version_id=GOOGLE_ORGANIC_RECIPE_ID)
+    assert pinned.status_code == 200
+    pinned_capture = _capture(pinned)
+    assert pinned_capture["capture_outcome"]["observation_count"] == 237
+    assert all(
+        row["observation_kind"] == ORGANIC_PLACEMENT_KIND
+        for row in pinned_capture["ranked_results"]
+    )
+    assert all("organic_item_timestamp" not in row for row in pinned_capture["ranked_results"])
+    assert all("links" not in row for row in pinned_capture["ranked_results"])
+
+
+def test_ranked_v2_timestamp_refusal_comes_from_evidence_reconstruction(
+    tmp_path: Path, postgres_dsn: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Name the gate: R3 still allows json_null → absent; only Evidence disagrees."""
+
+    store, _attempt, capture_id = _prepare(tmp_path, postgres_dsn)
+    _damage_one_ranked_v2(
+        postgres_dsn,
+        capture_id,
+        "organic_item_timestamp_state = 'absent'",
+        where_sql="organic_item_timestamp_state = 'json_null'",
+    )
+    monkeypatch.setattr(
+        google_organic_read,
+        "_assert_expanded_children_match_evidence",
+        lambda *_args, **_kwargs: None,
+    )
+    with _app(store, postgres_dsn) as client:
+        assert _history(client).status_code == 200
+    monkeypatch.undo()
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+# --------------------------------------------------------------------------------------
 # PF-18 ordinary field states are exactly stated | json_null | absent
 # --------------------------------------------------------------------------------------
 

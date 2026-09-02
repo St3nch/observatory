@@ -27,6 +27,7 @@ from observatory.dataforseo_google_organic import (
 )
 from observatory.evidence_store import EvidenceStore, IntegrityError
 from observatory.google_organic_derive import (
+    RANKED_V2_TABLE,
     SITELINK_OCCURRENCES_TABLE,
     SITELINKS_TABLE,
     TOP_STORY_OCCURRENCES_TABLE,
@@ -97,16 +98,38 @@ _CHILD_OCCURRENCE_FAMILIES: Final[tuple[tuple[str, str, str], ...]] = (
         "organic sitelink has no subordinate occurrences",
     ),
 )
-# Read-side complete-set agreement for the three PF-18 child families is proved against
-# the strongest authority Observatory has: the verified Evidence body itself. "At least
-# one bound occurrence" cannot refuse a spurious extra child_index inserted under a real
-# semantic parent, and an identity-only parent citation cannot refuse a falsified parent
-# axis on an already-persisted row. Rebuilding the exact intended child rows from the
-# verified Capture body and requiring set equality refuses both, before the outer limit.
+# Read-side complete-set agreement for ranked-result v2 and the three PF-18 child
+# families is proved against the strongest authority Observatory has: the verified
+# Evidence body itself. Envelope/typed-key membership cannot refuse a legal but false
+# ranked-v2 timestamp, links family, URL, or childless placement; "at least one bound
+# occurrence" cannot refuse a spurious extra child_index; and an identity-only parent
+# citation cannot refuse a falsified parent axis. Rebuilding the exact intended rows
+# from the verified Capture body and requiring set equality refuses all of those,
+# before the outer limit.
 _CHILD_OCCURRENCE_COLUMNS: Final[tuple[str, ...]] = (
     "within_capture_identity",
     "observation_kind",
     "child_index",
+)
+_RANKED_V2_COLUMNS: Final[tuple[str, ...]] = (
+    "within_capture_identity",
+    "observation_kind",
+    "requested_keyword",
+    "page",
+    "position",
+    "rank_group",
+    "rank_absolute",
+    "url",
+    "domain",
+    "title",
+    "description",
+    "description_state",
+    "website_name",
+    "website_name_state",
+    "organic_item_timestamp",
+    "organic_item_timestamp_state",
+    "links_state",
+    "links_count",
 )
 _TOP_STORY_CHILD_COLUMNS: Final[tuple[str, ...]] = (
     "within_capture_identity",
@@ -1088,13 +1111,14 @@ def _assert_expanded_children_match_evidence(
         tuple[str, str, Mapping[str, object], Mapping[str, object]]
     ],
 ) -> None:
-    """Rebuild the PF-18 child families from verified Evidence and require agreement.
+    """Rebuild ranked-result v2 and PF-18 child families from verified Evidence.
 
     This runs over every matching candidate Capture before the outer history limit, so
-    damage hidden in an unreturned tail still fails closed. Missing, extra, orphan, and
-    content-falsified child rows are all integrity damage here: the persisted set must
-    equal the set the verified Capture body actually supports, not merely resemble it.
-    Only the expanded Recipe is reconstructed; pinned v1 behaviour is untouched.
+    damage hidden in an unreturned tail still fails closed. Missing, extra, and
+    content-falsified ranked-result-v2 rows are integrity damage, as are missing,
+    extra, orphan, and content-falsified child rows: each persisted set must equal
+    the set the verified Capture body actually supports. Only the expanded Recipe is
+    reconstructed; pinned v1 behaviour is untouched.
     """
 
     seen: set[str] = set()
@@ -1108,6 +1132,14 @@ def _assert_expanded_children_match_evidence(
             body = store.read_capture_body(capture_id)
         planned = plan_google_organic_expanded_capture(
             attempt_id, capture_id, capture, parameters, body
+        )
+        _assert_child_rows_match_evidence(
+            connection,
+            RANKED_V2_TABLE,
+            capture_id,
+            _RANKED_V2_COLUMNS,
+            planned.details[RANKED_V2_TABLE],
+            f"{RANKED_V2_TABLE} rows disagree with verified Evidence",
         )
         for detail_table, columns, occurrence_table, occurrences in (
             (
