@@ -17,6 +17,9 @@ cross-observation analytical calculations belong to downstream strategy systems.
 
 ## Current status
 
+**Observatory MVP closed and was accepted by [CHAZ] and the Project Steward on 2026-09-02.**
+The final repository gate reported `2953 passed, 1 skipped, 1 warning` with no failures.
+
 Observatory now implements the capture-event Evidence boundary, format-2 filesystem Evidence
 Store, verify-on-read and scrub tooling, rebuildable PostgreSQL derivation, provider
 Derivation Recipes, and integrity-checked read APIs.
@@ -32,7 +35,21 @@ The implemented provider slices are:
   APIs;
 - DataForSEO AI Optimization Target Metrics: bounded capture, strict parser, and typed
   PostgreSQL derivation, Recipe selection, and a fully typed admitted-history API;
-  Measurement Outcomes and Holdings remain separately gated.
+  Measurement Outcomes and Holdings remain separately gated;
+- DataForSEO AI Optimization LLM Mentions Historical: bounded protected live Evidence,
+  strict parser, Recipe-addressed typed derivation, and Recipe-selected admitted-history API;
+- DataForSEO Labs Google Related Keywords: bounded protected live Evidence, strict parser,
+  Recipe-addressed typed derivation, occurrence/relationship testimony, and integrity-checked
+  history API; and
+- DataForSEO Labs Google Ranked Keywords: bounded protected 100-of-248 returned-prefix
+  Evidence, strict parser, Recipe-addressed typed derivation, placement/keyword/monthly
+  occurrence testimony, and integrity-checked history API. Ranked Measurement Outcomes and
+  Holdings remain an explicit unimplemented API limit.
+
+The MVP provider-testimony closeout reviewed the exact protected Evidence for all seven slices
+under one fidelity rubric. PF-18 closed the sole material-fidelity finding by expanding Google
+Organic without mutating its accepted v1 Recipe. Routine F6 Cloudflare R2 protection also
+provides the accepted automated backup/restore-drill path for the protected Evidence boundary.
 
 The fixture path remains supported for conformance and regression proofs. Provider transport
 is adapter-specific and gated; there is no generic paid runner or recurring acquisition
@@ -48,7 +65,7 @@ Authority hierarchy for agents and humans:
 4. `decisions/deferred.md` — deferred work with triggers
 5. `AGENTS.md` — agent hard boundaries and commands
 6. `docs/dataforseo-surface-roadmap.md` — provider direction, completed D14 consumer
-   retrofit, and post-AI-12 sequencing
+   retrofit, and final MVP closeout state
 7. `docs/adr/0001-capture-event-evidence-boundary.md` — why the Evidence boundary is fixed
 8. `docs/specs/capture-event-v2.md` — normative capture/evidence contract
 
@@ -97,13 +114,16 @@ PostgreSQL holds rebuildable Outcomes and Observations. It is not authoritative 
   testimony, and complete-set checks.
 - Read-only FastAPI service with health and Attempt audit resources plus history,
   Measurement Outcomes, and Holdings for Keyword Overview, Google Organic, and Search
-  Mentions, plus Recipe-selected admitted history for Target Metrics; reads fail closed on
-  the accepted Evidence/PostgreSQL boundaries.
+  Mentions, Recipe-selected admitted history for Target Metrics and Historical LLM Mentions,
+  and surface-specific integrity-checked history for Related Keywords and Ranked Keywords;
+  reads fail closed on the accepted Evidence/PostgreSQL boundaries.
+- Automated routine Cloudflare R2 protection for the accepted Evidence backup path with a
+  monthly restore drill.
 
 PostgreSQL remains rebuildable state, not authoritative Evidence. Multi-process writer
 safety, routine acquisition orchestration, production API authentication/non-loopback
-exposure, outer pagination, and Target Metrics Measurement Outcomes/Holdings remain outside
-the implemented boundary.
+exposure, outer pagination, Target Metrics Measurement Outcomes/Holdings, Ranked Measurement
+Outcomes/Holdings, and additional provider families remain outside the implemented MVP boundary.
 
 ## Commands
 
@@ -125,14 +145,15 @@ the implemented boundary.
 Use each module's `--help` for its required operator arguments. Listing a provider command
 does not authorize credentials, transport, spend, or Evidence creation.
 
-## Historical Live checkpoint
+## MVP closure checkpoint
 
-AI-13 implements the closed Evidence-only DataForSEO AI Optimization LLM Mentions Historical
-Live adapter and byte-exact inspect path. No live Historical Evidence, parser, Recipe,
-Derivation, schema, or consumer API exists yet. Historical provider activation is a separate
-explicitly gated operator boundary; see `docs/dataforseo-surface-roadmap.md` and the current
-Historical activation ticket.
+MVP-01 closed on 2026-09-02 after the exact protected provider Evidence for Keyword Overview,
+Google Organic, Search Mentions, Target Metrics, Historical LLM Mentions, Related Keywords, and
+Ranked Keywords was reconciled against the final accepted parser/Recipe/persistence/API paths.
+PF-18 remediated the sole Class 4 material-fidelity finding in Google Organic. [CHAZ]'s final
+full repository validation reported `2953 passed, 1 skipped, 1 warning` with zero failures.
 
-Adapter entrypoint:
-
-    uv run python -m observatory.dataforseo_ai_optimization_llm_mentions_historical_paid_probe
+MVP closure does not make every roadmap family part of the product, authorize another provider
+call, or move strategy/scoring into Observatory. Future adapters and API changes remain
+separately gated and should be driven by demonstrated measurement value or real downstream
+consumer friction.

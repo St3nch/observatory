@@ -1,9 +1,9 @@
 # PF-18 — Google Organic MVP testimony completion
 
-**Status:** review — R1–R4 accepted; independent R4 review passed; awaiting final [CHAZ] full-suite gate  
+**Status:** closed — accepted 2026-09-02  
 **Kind:** provider fidelity remediation  
 **Triggered by:** MVP-01 Class 4 Google Organic finding  
-**Blocked by:** final [CHAZ] full-suite gate  
+**Blocked by:** none  
 **Approved by:** [CHAZ] for bounded implementation on 2026-09-01, R1–R3 remediation on 2026-09-02, and bounded R4 remediation on 2026-09-02  
 **Draft base:** `0465a5b6e3bb9c4e56aa613f5d61581620e46096`  
 **Implementation start:** `404d3bebce3755c33989e10fe63559bd8ac89616`  
@@ -1427,4 +1427,25 @@ schema question remains. PF-18 now awaits only the final [CHAZ] full-repository 
 
 ## Closure
 
-<!-- Project Steward fills after final [CHAZ] full-suite validation. -->
+[CHAZ] ran the final full repository suite from exact clean HEAD
+`643756f5127c338b528a4bcf88d867f77fc91f64` on 2026-09-02. The final result was:
+
+```text
+2953 passed, 1 skipped, 1 warning in 1582.87s (0:26:22)
+```
+
+No test failed. The single skip and warning are accepted inherited/non-blocking suite state;
+the final gate found no PF-18 regression or unresolved remediation defect.
+
+The Project Steward therefore accepts the final [CHAZ] validation gate and closes PF-18.
+The accepted expanded Google Organic contract remains the nine-kind Recipe identified by
+SHA-256 / derivation version
+`2704ff82a175be7bacfd601cf7f0e684ca1cc85f9e8cfc93f520b603bcb29d04`, while the accepted v1
+Recipe remains independently addressable and unchanged. The named residual integrity limit also
+remains explicit: reused v1/parent families are not represented as having expanded-wide
+Evidence-content reconstruction merely because the PF-18 ranked-result-v2 and child families do.
+
+**Final PF-18 verdict:** `CLOSED_ACCEPTED`.
+
+No provider call, credential use, spend, Evidence mutation, automatic Recipe-selection change,
+or push is authorized or implied by this closure.

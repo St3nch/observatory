@@ -508,13 +508,21 @@ returned `READY`, and [CHAZ]'s final integration suite produced `2592 passed, 1 
 is retained in the RANK-05 closure record rather than reopening the accepted implementation.
 RANK-06 closed on 2026-09-01 with Recipe selection and the integrity-checked Ranked read/history
 API. Routine F6 Cloudflare R2 protection then closed on 2026-09-01 with a proven daily automated
-backup path, indefinite non-destructive retention, and monthly automated restore drill. The
-active next boundary is **MVP-01 — Seven-surface provider-testimony closeout**. It reviews the
-exact protected live Evidence and final accepted implementation for Keyword Overview, Google
-Organic, Search Mentions, Target Metrics, Historical LLM Mentions, Related Keywords, and Ranked
-Keywords under one fidelity rubric. No further provider exchange is authorized by this gate.
-Any material fidelity defect earns separately bounded remediation; otherwise the Product Owner
-and Steward may record final Observatory MVP closure after the seven passes are accepted.
+backup path, indefinite non-destructive retention, and monthly automated restore drill.
+
+**MVP closeout — accepted 2026-09-02:** MVP-01 reviewed the exact protected live Evidence and
+final accepted implementation for Keyword Overview, Google Organic, Search Mentions, Target
+Metrics, Historical LLM Mentions, Related Keywords, and Ranked Keywords under one fidelity
+rubric. The sole Class 4 finding was the bounded PF-10 Google Organic under-modeling gap. PF-18
+closed that gap with a new expanded Recipe while preserving the accepted v1 Recipe independently,
+and [CHAZ]'s final full repository validation at the final pre-closeout code HEAD reported
+`2953 passed, 1 skipped, 1 warning` with zero failures. [CHAZ] then explicitly directed final
+Observatory closure; the Product Owner and Project Steward record **Observatory MVP
+`CLOSED_ACCEPTED` on 2026-09-02**.
+
+There is no automatic next provider adapter. Additional families, recurring acquisition, or
+API expansion remain separately gated and should be selected by demonstrated measurement value,
+dependency readiness, or real downstream consumer friction rather than roadmap enumeration.
 
 ## Dependency-based sequencing direction
 
@@ -545,23 +553,18 @@ DataForSEO Labs Google; SERP Google and YouTube; Backlinks; Keywords Data; Busin
 Content Analysis; OnPage; and Domain Analytics. Provider capabilities are external and may
 change; exact endpoint/schema truth is always re-verified when a surface is activated.
 
-### Superseding near-term checkpoint — 2026-08-25
+### Historical checkpoint — 2026-08-25 (superseded)
 
-AI-13 closed the Evidence-only LLM Mentions Historical Live adapter without a provider
-exchange or live Historical Evidence. [CHAZ] subsequently selected Historical as the next
-active workstream and approved reuse of the accepted bounded manual F6 protection path
-rather than new transport or backup machinery.
+This section is retained as sequencing history, not as the current work boundary. At this
+checkpoint AI-13 had closed the Evidence-only LLM Mentions Historical Live adapter without a
+provider exchange or live Historical Evidence, and [CHAZ] had selected Historical as the next
+active workstream with the accepted bounded F6 protection path.
 
-The next intended boundary is a separately gated one-shot Historical Evidence activation.
-It requires a reviewed operator ticket, fresh contract/pricing recheck, an exact fresh
-Evidence root and command, separate explicit [CHAZ] authorization, at most one POST with no
-retry, local inspect/scrub, encrypted restic snapshot through the existing accepted remote,
-fresh restore, scrub, and exact Evidence equality. This checkpoint does not itself authorize
-transport or spend.
+The then-planned one-shot Historical Evidence activation was subsequently authorized and closed;
+the accepted live Evidence, strict parser/Conformance boundary, Recipe-addressed typed
+Derivation/persistence, and Recipe-selected admitted-history API were completed through the
+Historical workstream and are included in the seven-surface MVP-01 closeout above.
 
-If accepted live Evidence results, anticipated sequencing is strict Historical parser and
-Conformance fixture, then Recipe-addressed typed Derivation/persistence, then a
-Recipe-selected admitted-history API. Those remain separate reviewed boundaries and may
-change when the actual Evidence is inspected. Target Metrics Outcomes/Holdings, earlier
-surface nested-body typing, other LLM Mentions families, F13 hardening, and F12 recurring
-acquisition remain separately gated and are not Historical prerequisites.
+Target Metrics Outcomes/Holdings, earlier surface nested-body typing, other LLM Mentions
+families, F13 hardening, F12 recurring acquisition, and any future provider family remain
+separately gated. None is an MVP-closure prerequisite or an automatically active next boundary.

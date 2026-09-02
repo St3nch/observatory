@@ -1,8 +1,8 @@
 # MVP-01 — Seven-surface provider-testimony closeout
 
-**Status:** blocked — Google Organic material-fidelity remediation required  
+**Status:** closed — Observatory MVP accepted 2026-09-02  
 **Kind:** read-only MVP milestone audit  
-**Blocked by:** none; RANK-06 and routine F6 are closed  
+**Blocked by:** none  
 **Approved by:** Project Steward  
 **Start commit:** `d0452df370d746a32b3494e2317b47885465f007`  
 **Implementation Writer:** none unless this audit earns a separate remediation ticket
@@ -334,4 +334,57 @@ Steward recommend final Observatory MVP closure to [CHAZ].
 
 ## Closure
 
-<!-- Project Steward fills after the Google Organic remediation and final reconciliation. -->
+### Final Google Organic reconciliation
+
+PF-18 closed the sole Class 4 finding without another provider exchange. The exact protected
+PF-10 body remains the Evidence anchor, while the accepted expanded Google Organic Recipe now
+types and serves the previously missing material testimony: Top Stories children, Video
+children, organic ranked-result item timestamps, and organic sitelink relationships. The
+expanded read remains Recipe-selected, preserves the accepted v1 document independently, and
+fails closed on the bounded Evidence/PostgreSQL integrity contract proven by PF-18.
+
+PF-18 also records the bounded residual that reused v1/parent families remain outside the new
+expanded Evidence-content reconstruction. That residual is a named product limit, not a Class 4
+consumer-fidelity defect, and this closeout does not overclaim otherwise.
+
+**Final PF-10 MVP-01 verdict:** Class 1 preserved correctly under the accepted expanded Recipe,
+with accepted Class 2 / Class 5 bounded limits and no unresolved Class 4 finding.
+
+### Seven-surface final result
+
+After PF-18, all seven MVP-01 surfaces have no unresolved Class 4 provider-testimony defect:
+
+1. PF-03 — Google Keyword Overview: accepted;
+2. PF-10 — Google Organic Live Advanced: accepted after PF-18;
+3. AI-03 / AI-06 — Search Mentions: accepted;
+4. AI-09 / AI-12 — Target Metrics: accepted with named API limits;
+5. AI-14 / AI-17 — LLM Mentions Historical: accepted;
+6. RK-02 / RK-05 — Related Keywords: accepted; and
+7. RANK-03 / RANK-06 — Ranked Keywords: accepted with named API limits.
+
+The exact seven protected provider bodies remain the empirical anchors recorded above. No
+one-Capture correlation has been promoted into a provider invariant, no Strategy interpretation
+has been introduced into Observatory, and no additional provider request is required for MVP
+closure.
+
+### Final repository gate and Product decision
+
+[CHAZ] ran the final full repository suite from exact clean HEAD
+`643756f5127c338b528a4bcf88d867f77fc91f64` on 2026-09-02 and reported:
+
+```text
+2953 passed, 1 skipped, 1 warning in 1582.87s (0:26:22)
+```
+
+PF-18 is closed, the README and provider roadmap are reconciled in this final Steward closeout,
+and there is no remaining MVP-01 Class 4 blocker.
+
+On 2026-09-02 [CHAZ], as Product Owner, explicitly directed the Steward to close Observatory.
+The Project Steward concurs and records the final decision:
+
+**Observatory MVP: `CLOSED_ACCEPTED` — 2026-09-02.**
+
+This closure does not authorize another provider surface, recurring acquisition, Strategy work
+inside Observatory, production exposure, provider spend, Evidence mutation, or a Git push.
+Future Observatory changes must be earned by a separately authorized need or by real consumer
+friction discovered by downstream systems such as Strategy.
