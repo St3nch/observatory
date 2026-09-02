@@ -460,3 +460,49 @@ echoes, completeness/prefix disclosures, exact provider identity, or Evidence bo
 Future consumer friction should first be classified as downstream reasoning, API ergonomics,
 genuinely absent testimony, or a new provider/instrument need before Observatory work is
 proposed.
+
+### Independent adversarial confirmation and additions — Grok 4.6, 2026-09-02
+
+An independent Grok 4.6 Product/systems review inspected the same accepted MVP HEAD without
+seeing the Fable review or this watchlist. It independently reached the same high-level
+conclusion: Observatory is sufficient for a thin supplied-subject Strategy proof and should
+not be reopened merely because broader Strategy jobs will eventually need more testimony.
+The following additional consumer-pressure details are worth retaining:
+
+- **Known-subject lookup is not open discovery.** Provider History requires an already-known
+  `requested_keyword` or `requested_target`, and Holdings inventory exists on only three of
+  seven accepted surfaces. **Trigger:** Strategy proves a real open-discovery or failure-aware
+  inventory job that cannot proceed honestly from known subjects plus the current Holdings /
+  Outcomes surface. Do not manufacture a Strategy-side shadow inventory to compensate.
+- **Evidence-only prose is an accepted consumer limit.** Google Organic snippets, AI Overview
+  prose/Markdown, and expanded PAA answer text are not generally exposed as Strategy-readable
+  API testimony, while Search Mentions does expose provider/source prose. **Trigger:** a
+  concrete Strategy decision requires the missing wording itself, not merely placement,
+  presence, source, or relationship testimony. Any future exposure requires an explicit
+  retention/Recipe decision; Strategy must not bypass the API into Evidence.
+- **Prefix captures are not corpora.** Search Mentions' accepted live capture is a returned
+  prefix and Ranked Keywords' accepted live capture is 100-of-248. **Trigger:** a Strategy
+  job genuinely requires fuller corpus testimony. Acquiring more rows is a separately
+  authorized measurement decision; current completeness disclosures must continue to
+  survive every downstream summary.
+- **First-party search testimony is the sharpest future acquisition-pressure candidate.**
+  If Strategy is expected to revisit whether owned-property work appeared to help, Search
+  Console-class query/page impression and click testimony may become materially useful and
+  externally retention-limited. Preserving such history can be an operational Product
+  decision before an Observatory adapter exists. **Trigger for Observatory work:** CHAZ
+  separately decides that source-attributed first-party testimony belongs in Observatory and
+  a concrete downstream question requires a governed read contract. Strategy must not become
+  the first-party warehouse merely because the retention clock is running.
+- **Active LLM-answer sampling remains distinct from indexed mention testimony.** If future
+  Strategy needs the actual answer/citation set observed at a point in time, the sampling
+  method, model/platform context, and variability become part of measurement identity.
+  **Trigger:** a real Strategy job requires that point-in-time testimony and CHAZ accepts the
+  cost/methodology. Do not treat one sampled answer as a stable visibility fact.
+- **F8/F12/F13 remain real gates, not missing MVP polish.** A networked Strategy deployment
+  can fire F8; recurring coordinated acquisition can fire F12; and reuse of the still-gated
+  Search Mentions transport can fire F13. Those triggers must be resolved under their existing
+  authority rather than bundled into generic "Strategy readiness" work.
+
+The two independent reviews therefore reinforce the same operating rule: preserve current
+Observatory semantics, let real Strategy consumption expose the next pressure point, and
+separate irreversible acquisition timing from software implementation timing.
