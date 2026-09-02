@@ -563,6 +563,16 @@ GOOGLE_ORGANIC_QUESTION_KIND: Final[str] = (
     "dataforseo.google.organic.related_question.v1"
 )
 GOOGLE_ORGANIC_QUERY_KIND: Final[str] = "dataforseo.google.organic.related_query.v1"
+GOOGLE_ORGANIC_RANKED_V2_KIND: Final[str] = (
+    "dataforseo.google.organic.ranked_result.v2"
+)
+GOOGLE_ORGANIC_TOP_STORY_KIND: Final[str] = (
+    "dataforseo.google.organic.top_story_result.v1"
+)
+GOOGLE_ORGANIC_VIDEO_KIND: Final[str] = "dataforseo.google.organic.video_result.v1"
+GOOGLE_ORGANIC_SITELINK_KIND: Final[str] = (
+    "dataforseo.google.organic.organic_sitelink.v1"
+)
 
 _HEX64: Final[str] = "^[0-9a-f]{64}$"
 _ENVELOPE_FK: Final[str] = """
@@ -865,6 +875,347 @@ BEGIN
             REFERENCES outcomes (derivation_version_id, attempt_id, capture_id);
     END IF;
 END $$
+"""
+
+# --------------------------------------------------------------------------------------
+# PF-18 expanded Google Organic relations
+#
+# These relations belong to the expanded Google Organic Recipe only. The accepted v1
+# relations above stay historical v1 relations: ranked-result v2 gets its own typed
+# table rather than a second shape inside `google_organic_ranked_results`, and the
+# five semantically unchanged v1 kinds keep their existing tables, discriminated by
+# `derivation_version_id` exactly as the Keyword Overview core/extended Recipes do.
+# --------------------------------------------------------------------------------------
+
+GOOGLE_ORGANIC_RANKED_V2_TABLE: Final[str] = "google_organic_ranked_results_v2"
+GOOGLE_ORGANIC_TOP_STORY_TABLE: Final[str] = "google_organic_top_story_results"
+GOOGLE_ORGANIC_TOP_STORY_OCCURRENCES_TABLE: Final[str] = (
+    "google_organic_top_story_result_occurrences"
+)
+GOOGLE_ORGANIC_VIDEO_TABLE: Final[str] = "google_organic_video_results"
+GOOGLE_ORGANIC_VIDEO_OCCURRENCES_TABLE: Final[str] = (
+    "google_organic_video_result_occurrences"
+)
+GOOGLE_ORGANIC_SITELINK_TABLE: Final[str] = "google_organic_sitelinks"
+GOOGLE_ORGANIC_SITELINK_OCCURRENCES_TABLE: Final[str] = (
+    "google_organic_sitelink_occurrences"
+)
+
+PF18_TABLES: Final[tuple[str, ...]] = (
+    GOOGLE_ORGANIC_RANKED_V2_TABLE,
+    GOOGLE_ORGANIC_TOP_STORY_TABLE,
+    GOOGLE_ORGANIC_TOP_STORY_OCCURRENCES_TABLE,
+    GOOGLE_ORGANIC_VIDEO_TABLE,
+    GOOGLE_ORGANIC_VIDEO_OCCURRENCES_TABLE,
+    GOOGLE_ORGANIC_SITELINK_TABLE,
+    GOOGLE_ORGANIC_SITELINK_OCCURRENCES_TABLE,
+)
+
+_RANKED_V2_CONSISTENCY_SQL: Final[str] = ",\n    ".join(
+    _state_value_consistency(GOOGLE_ORGANIC_RANKED_V2_TABLE, column)
+    for column in ("description", "website_name", "organic_item_timestamp")
+)
+_TOP_STORY_CONSISTENCY_SQL: Final[str] = _state_value_consistency(
+    GOOGLE_ORGANIC_TOP_STORY_TABLE, "top_story_item_timestamp"
+)
+_VIDEO_CONSISTENCY_SQL: Final[str] = _state_value_consistency(
+    GOOGLE_ORGANIC_VIDEO_TABLE, "video_item_timestamp"
+)
+_SITELINK_CONSISTENCY_SQL: Final[str] = _state_value_consistency(
+    GOOGLE_ORGANIC_SITELINK_TABLE, "description"
+)
+
+# The expanded Recipe binds Top Stories and Video children to their exact parent SERP
+# placement envelope. That FK needs a unique key on the reused v1 feature relation; it
+# is additive and leaves every existing v1 column, row, and check unchanged.
+GOOGLE_ORGANIC_FEATURES_PARENT_UNIQUE_SQL: Final[str] = """
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conrelid = 'google_organic_serp_features'::regclass
+          AND conname = 'google_organic_serp_features_parent'
+    ) THEN
+        ALTER TABLE google_organic_serp_features
+            ADD CONSTRAINT google_organic_serp_features_parent
+            UNIQUE (
+                capture_id, derivation_version_id,
+                within_capture_identity, item_type
+            );
+    END IF;
+END $$
+"""
+
+GOOGLE_ORGANIC_RANKED_V2_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_RANKED_V2_TABLE} (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL,
+    page BIGINT NOT NULL
+        CHECK (page >= 1),
+    position TEXT NOT NULL
+        CHECK (position IN ('left', 'right')),
+    rank_group BIGINT NOT NULL
+        CHECK (rank_group >= 1),
+    rank_absolute BIGINT NOT NULL
+        CHECK (rank_absolute >= 1),
+    url TEXT NOT NULL,
+    domain TEXT NOT NULL,
+    title TEXT NOT NULL,
+    description TEXT,
+    description_state TEXT NOT NULL
+        CHECK (description_state {_FIELD_STATE_CHECK}),
+    website_name TEXT,
+    website_name_state TEXT NOT NULL
+        CHECK (website_name_state {_FIELD_STATE_CHECK}),
+    organic_item_timestamp TEXT,
+    organic_item_timestamp_state TEXT NOT NULL
+        CHECK (organic_item_timestamp_state {_FIELD_STATE_CHECK}),
+    links_state TEXT NOT NULL
+        CHECK (links_state {_FIELD_STATE_CHECK}),
+    links_count BIGINT
+        CHECK (links_count IS NULL OR links_count >= 0),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT google_organic_ranked_results_v2_kind
+        CHECK (observation_kind = '{GOOGLE_ORGANIC_RANKED_V2_KIND}'),
+    CONSTRAINT google_organic_ranked_results_v2_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    CONSTRAINT google_organic_ranked_results_v2_links_consistency
+        CHECK (
+            (links_state = 'stated' AND links_count IS NOT NULL)
+            OR
+            (links_state <> 'stated' AND links_count IS NULL)
+        ),
+    {_ENVELOPE_FK},
+    {_RANKED_V2_CONSISTENCY_SQL}
+)
+"""
+
+GOOGLE_ORGANIC_TOP_STORY_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_TOP_STORY_TABLE} (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL,
+    parent_item_type TEXT NOT NULL
+        CHECK (parent_item_type = 'top_stories'),
+    parent_within_capture_identity TEXT NOT NULL
+        CHECK (parent_within_capture_identity ~ '{_HEX64}'),
+    parent_page BIGINT NOT NULL
+        CHECK (parent_page >= 1),
+    parent_position TEXT NOT NULL
+        CHECK (parent_position IN ('left', 'right')),
+    parent_rank_group BIGINT NOT NULL
+        CHECK (parent_rank_group >= 1),
+    parent_rank_absolute BIGINT NOT NULL
+        CHECK (parent_rank_absolute >= 1),
+    child_url TEXT NOT NULL,
+    source TEXT NOT NULL,
+    domain TEXT NOT NULL,
+    title TEXT NOT NULL,
+    top_story_item_timestamp TEXT,
+    top_story_item_timestamp_state TEXT NOT NULL
+        CHECK (top_story_item_timestamp_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT google_organic_top_story_results_kind
+        CHECK (observation_kind = '{GOOGLE_ORGANIC_TOP_STORY_KIND}'),
+    CONSTRAINT google_organic_top_story_results_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_ENVELOPE_FK},
+    FOREIGN KEY (
+        capture_id, derivation_version_id,
+        parent_within_capture_identity, parent_item_type
+    )
+        REFERENCES google_organic_serp_features (
+            capture_id, derivation_version_id,
+            within_capture_identity, item_type
+        ),
+    {_TOP_STORY_CONSISTENCY_SQL}
+)
+"""
+
+GOOGLE_ORGANIC_TOP_STORY_OCCURRENCES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_TOP_STORY_OCCURRENCES_TABLE} (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    child_index BIGINT NOT NULL
+        CHECK (child_index >= 0),
+    PRIMARY KEY (
+        capture_id, derivation_version_id, within_capture_identity, child_index
+    ),
+    CONSTRAINT google_organic_top_story_result_occurrences_kind
+        CHECK (observation_kind = '{GOOGLE_ORGANIC_TOP_STORY_KIND}'),
+    FOREIGN KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, observation_kind
+    )
+        REFERENCES {GOOGLE_ORGANIC_TOP_STORY_TABLE} (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+)
+"""
+
+GOOGLE_ORGANIC_VIDEO_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_VIDEO_TABLE} (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL,
+    parent_item_type TEXT NOT NULL
+        CHECK (parent_item_type = 'video'),
+    parent_within_capture_identity TEXT NOT NULL
+        CHECK (parent_within_capture_identity ~ '{_HEX64}'),
+    parent_page BIGINT NOT NULL
+        CHECK (parent_page >= 1),
+    parent_position TEXT NOT NULL
+        CHECK (parent_position IN ('left', 'right')),
+    parent_rank_group BIGINT NOT NULL
+        CHECK (parent_rank_group >= 1),
+    parent_rank_absolute BIGINT NOT NULL
+        CHECK (parent_rank_absolute >= 1),
+    child_url TEXT NOT NULL,
+    source TEXT NOT NULL,
+    title TEXT NOT NULL,
+    video_item_timestamp TEXT,
+    video_item_timestamp_state TEXT NOT NULL
+        CHECK (video_item_timestamp_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT google_organic_video_results_kind
+        CHECK (observation_kind = '{GOOGLE_ORGANIC_VIDEO_KIND}'),
+    CONSTRAINT google_organic_video_results_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_ENVELOPE_FK},
+    FOREIGN KEY (
+        capture_id, derivation_version_id,
+        parent_within_capture_identity, parent_item_type
+    )
+        REFERENCES google_organic_serp_features (
+            capture_id, derivation_version_id,
+            within_capture_identity, item_type
+        ),
+    {_VIDEO_CONSISTENCY_SQL}
+)
+"""
+
+GOOGLE_ORGANIC_VIDEO_OCCURRENCES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_VIDEO_OCCURRENCES_TABLE} (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    child_index BIGINT NOT NULL
+        CHECK (child_index >= 0),
+    PRIMARY KEY (
+        capture_id, derivation_version_id, within_capture_identity, child_index
+    ),
+    CONSTRAINT google_organic_video_result_occurrences_kind
+        CHECK (observation_kind = '{GOOGLE_ORGANIC_VIDEO_KIND}'),
+    FOREIGN KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, observation_kind
+    )
+        REFERENCES {GOOGLE_ORGANIC_VIDEO_TABLE} (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+)
+"""
+
+GOOGLE_ORGANIC_SITELINK_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_SITELINK_TABLE} (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    requested_keyword TEXT NOT NULL,
+    parent_within_capture_identity TEXT NOT NULL
+        CHECK (parent_within_capture_identity ~ '{_HEX64}'),
+    parent_page BIGINT NOT NULL
+        CHECK (parent_page >= 1),
+    parent_position TEXT NOT NULL
+        CHECK (parent_position IN ('left', 'right')),
+    parent_rank_group BIGINT NOT NULL
+        CHECK (parent_rank_group >= 1),
+    parent_rank_absolute BIGINT NOT NULL
+        CHECK (parent_rank_absolute >= 1),
+    child_url TEXT NOT NULL,
+    title TEXT NOT NULL,
+    domain TEXT NOT NULL,
+    description TEXT,
+    description_state TEXT NOT NULL
+        CHECK (description_state {_FIELD_STATE_CHECK}),
+    PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
+    CONSTRAINT google_organic_sitelinks_kind
+        CHECK (observation_kind = '{GOOGLE_ORGANIC_SITELINK_KIND}'),
+    CONSTRAINT google_organic_sitelinks_parent
+        UNIQUE (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        ),
+    {_ENVELOPE_FK},
+    FOREIGN KEY (
+        capture_id, derivation_version_id, parent_within_capture_identity
+    )
+        REFERENCES {GOOGLE_ORGANIC_RANKED_V2_TABLE} (
+            capture_id, derivation_version_id, within_capture_identity
+        ),
+    {_SITELINK_CONSISTENCY_SQL}
+)
+"""
+
+GOOGLE_ORGANIC_SITELINK_OCCURRENCES_SQL: Final[str] = f"""
+CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_SITELINK_OCCURRENCES_TABLE} (
+    capture_id TEXT NOT NULL
+        CHECK (capture_id ~ '{_HEX64}'),
+    derivation_version_id TEXT NOT NULL,
+    within_capture_identity TEXT NOT NULL
+        CHECK (within_capture_identity ~ '{_HEX64}'),
+    observation_kind TEXT NOT NULL,
+    child_index BIGINT NOT NULL
+        CHECK (child_index >= 0),
+    PRIMARY KEY (
+        capture_id, derivation_version_id, within_capture_identity, child_index
+    ),
+    CONSTRAINT google_organic_sitelink_occurrences_kind
+        CHECK (observation_kind = '{GOOGLE_ORGANIC_SITELINK_KIND}'),
+    FOREIGN KEY (
+        capture_id, derivation_version_id,
+        within_capture_identity, observation_kind
+    )
+        REFERENCES {GOOGLE_ORGANIC_SITELINK_TABLE} (
+            capture_id, derivation_version_id,
+            within_capture_identity, observation_kind
+        )
+)
 """
 
 SEARCH_MENTIONS_ITEM_KIND: Final[str] = (
@@ -2714,8 +3065,23 @@ PRE_RANK05_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     PRE_RK04_SCHEMA_STATEMENTS + RK04_SCHEMA_STATEMENTS
 )
 
-SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
+PF18_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
+    GOOGLE_ORGANIC_FEATURES_PARENT_UNIQUE_SQL,
+    GOOGLE_ORGANIC_RANKED_V2_SQL,
+    GOOGLE_ORGANIC_TOP_STORY_SQL,
+    GOOGLE_ORGANIC_TOP_STORY_OCCURRENCES_SQL,
+    GOOGLE_ORGANIC_VIDEO_SQL,
+    GOOGLE_ORGANIC_VIDEO_OCCURRENCES_SQL,
+    GOOGLE_ORGANIC_SITELINK_SQL,
+    GOOGLE_ORGANIC_SITELINK_OCCURRENCES_SQL,
+)
+
+PRE_PF18_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
     PRE_RANK05_SCHEMA_STATEMENTS + RANK05_SCHEMA_STATEMENTS
+)
+
+SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
+    PRE_PF18_SCHEMA_STATEMENTS + PF18_SCHEMA_STATEMENTS
 )
 
 WIDEN_IJSON_COLUMNS: Final[tuple[tuple[str, str], ...]] = (
@@ -2822,7 +3188,11 @@ def main(argv: list[str] | None = None) -> int:
         "google_organic_aio_source_occurrences "
         "google_organic_related_questions "
         "google_organic_related_question_occurrences "
-        "google_organic_related_queries google_organic_result_context\n"
+        "google_organic_related_queries google_organic_result_context "
+        "google_organic_ranked_results_v2 google_organic_top_story_results "
+        "google_organic_top_story_result_occurrences "
+        "google_organic_video_results google_organic_video_result_occurrences "
+        "google_organic_sitelinks google_organic_sitelink_occurrences\n"
     )
     return 0
 

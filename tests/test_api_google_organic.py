@@ -633,6 +633,19 @@ def _assert_history_openapi(spec: dict[str, Any], path: str) -> None:
     schema = spec["paths"][path]["get"]["responses"]["200"]["content"][
         "application/json"
     ]["schema"]
+    # Retargeted at PF-18: this route now advertises both the accepted v1 document and
+    # the expanded-Recipe document, so the 200 schema is an anyOf. The pinned-v1
+    # envelope below must still be offered unchanged.
+    options = schema.get("anyOf")
+    if isinstance(options, list):
+        names = {
+            str(item["$ref"]).rsplit("/", 1)[-1]
+            for item in options
+            if isinstance(item, dict) and "$ref" in item
+        }
+        assert "GoogleOrganicExpandedHistoryEnvelope" in names
+        assert "HistoryListEnvelope" in names
+        schema = spec["components"]["schemas"]["HistoryListEnvelope"]
     ref = schema.get("$ref")
     if isinstance(ref, str):
         schema = spec["components"]["schemas"][ref.rsplit("/", 1)[-1]]

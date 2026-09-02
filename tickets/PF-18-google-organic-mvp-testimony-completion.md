@@ -1,6 +1,6 @@
 # PF-18 — Google Organic MVP testimony completion
 
-**Status:** implementation authorized  
+**Status:** review  
 **Kind:** provider fidelity remediation  
 **Triggered by:** MVP-01 Class 4 Google Organic finding  
 **Blocked by:** none for the bounded PF-18 implementation  
@@ -412,7 +412,293 @@ automatic Recipe-selection change, or push is authorized by PF-18.
 
 ## Implementation report
 
-<!-- Designated Writer fills only after final Steward acceptance and implementation authority. -->
+**Writer:** [CLAUDE]  
+**Parent commit:** `a1db7449456a06afe1eee5dc8535ff92ce51e683`  
+**Implementation commit:** one direct child of that parent; not pushed, not amended.
+
+### Changed paths
+
+Production:
+
+- `src/observatory/dataforseo_google_organic.py` — parser-v2 and the expanded Recipe,
+  added alongside an untouched parser-v1 and v1 Recipe.
+- `src/observatory/migrate.py` — seven new Google-Organic-local relations plus one
+  additive UNIQUE constraint on the reused v1 feature relation.
+- `src/observatory/google_organic_derive.py` — expanded planning, atomic write, and
+  complete-set gate.
+- `src/observatory/google_organic_read.py` — expanded projections, expanded
+  occurrence-integrity checks, and the typed expanded history models.
+- `src/observatory/api.py` — the history route now returns
+  `GoogleOrganicExpandedHistoryEnvelope | HistoryListEnvelope`.
+
+Tests and fixtures:
+
+- `tests/fixtures/dataforseo_google_organic_expanded_recipe.jcs` — new frozen Recipe bytes.
+- `tests/test_dataforseo_google_organic_expanded.py` — new (42 tests).
+- `tests/test_google_organic_expanded_derive.py` — new (21 tests).
+- `tests/test_api_google_organic_expanded.py` — new (22 tests).
+- `tests/test_dataforseo_google_ranked_keywords_derive.py` — retargeted the RANK-05
+  migration-layering delta from `SCHEMA_STATEMENTS` to the new
+  `PRE_PF18_SCHEMA_STATEMENTS`, following the same retarget the RK-04 test already
+  carries. No RANK-05 behaviour assertion changed.
+- `tests/test_api_google_organic.py` — retargeted `_assert_history_openapi` to resolve
+  the route's new `anyOf` and select the `HistoryListEnvelope` branch, then assert the
+  unchanged pinned-v1 envelope exactly as before.
+
+Both retargets are consequences of PF-18 itself, not opportunistic cleanup. Nothing under
+`README.md`, `docs/`, `AGENTS.md`, `VISION.md`, `VOCABULARY.md`, `decisions/`, or any
+other ticket was modified, and the PF-10 fixture is byte-identical.
+
+### Parser contract
+
+New: `dataforseo-serp-google-organic-live-advanced-paid-probe-parser-v2`.
+
+`parse_google_organic` and `google_organic_recipe()` are unchanged. Parser-v2 is a
+deliberate local duplicate of the v1 envelope walk (`parse_google_organic_v2`,
+`_parse_top_item_v2`, `_require_unique_placements_v2`, `_expanded_error_ir`) so the two
+frozen parser contracts cannot drift into each other; it reuses only the genuinely
+identical leaf infrastructure — JSON decoding, type/URL requirements, field-state
+helpers, and the unchanged AIO/PAA/related-search walkers.
+
+Parser-v2 additionally walks `top_stories.items`, `video.items`, and organic `links`, and
+fails closed on: wrong known type, wrong child element type, malformed child URL, invalid
+item-timestamp lexical form or impossible calendar instant, missing required child
+fields, `items` absent or JSON null on an admitted Top Stories/Video parent, a repeated
+child URL under one parent whose testimony disagrees (`duplicate_child_disagreement`),
+and populated `related_result` (`parser_version_drift`).
+
+Shared UTC lexical grammar with separately named semantic boundaries:
+`_require_utc_clock_lexical` is the one syntax rule; `_optional_result_datetime` (v1,
+untouched), `_optional_organic_item_timestamp`, `_optional_top_story_item_timestamp`, and
+`_optional_video_item_timestamp` are four separately named helpers with four distinct
+error codes and four distinct persisted columns.
+
+### Expanded Recipe identity
+
+- bytes: **3405**
+- SHA-256 / `derivation_version_id`:
+  **`2704ff82a175be7bacfd601cf7f0e684ca1cc85f9e8cfc93f520b603bcb29d04`**
+- frozen at `tests/fixtures/dataforseo_google_organic_expanded_recipe.jcs`, independently
+  hashed in tests rather than trusted from the constant.
+
+Exact ordered Observation kinds:
+
+1. `dataforseo.google.organic.serp_feature_presence.v1`
+2. `dataforseo.google.organic.ranked_result.v2`
+3. `dataforseo.google.organic.ai_overview_presence.v1`
+4. `dataforseo.google.organic.ai_overview_source.v1`
+5. `dataforseo.google.organic.related_question.v1`
+6. `dataforseo.google.organic.related_query.v1`
+7. `dataforseo.google.organic.top_story_result.v1`
+8. `dataforseo.google.organic.video_result.v1`
+9. `dataforseo.google.organic.organic_sitelink.v1`
+
+Ranked-result v2 carries the accepted ranked-result-v1 placement axes verbatim (asserted
+against the v1 Recipe document, not restated by hand). The three child kinds share the
+axis set `child_url + parent_page + parent_position + parent_rank_group +
+parent_rank_absolute + requested_keyword`. No axis set contains a child index.
+
+### Exact PF-10 expanded result
+
+`observation_count` = **248** (`237 - 97 + 97 + 4 + 3 + 4`), per kind:
+
+| kind | count |
+|---|---|
+| `serp_feature_presence.v1` | 111 |
+| `ranked_result.v2` | 97 |
+| `ai_overview_presence.v1` | 1 |
+| `ai_overview_source.v1` | 15 |
+| `related_question.v1` | 4 |
+| `related_query.v1` | 9 |
+| `top_story_result.v1` | 4 |
+| `video_result.v1` | 3 |
+| `organic_sitelink.v1` | 4 |
+
+Occurrence rows (subordinate, never counted in `observation_count`): AIO source 18,
+related question 4, Top Stories child 4, Video child 3, sitelink 4.
+
+Field states for the exact frozen body:
+
+- organic item timestamp: 58 stated / 39 JSON null / 0 absent;
+- organic `links`: 0 absent / 96 JSON null / 0 stated-empty / 1 stated-populated with
+  `links_count = 4`;
+- Top Stories: one parent at page 1 / left / rank_group 1 / rank_absolute 6, four
+  children, all stating source, domain, title, URL, and timestamp;
+- Video: one parent at page 1 / left / rank_group 1 / rank_absolute 7, three children,
+  all stating source, title, URL, and timestamp, none carrying a domain key and none
+  given a derived one;
+- sitelinks: four children under the rank_absolute 2 placement, all stating title, URL,
+  and domain, all with JSON-null description;
+- stated organic timestamps split 39 midnight / 19 non-midnight through one field
+  semantics, and zero Derivation diagnostics.
+
+248 is a frozen-Capture expectation, not a provider invariant, and the tests say so.
+
+### Persistence
+
+New relations, all Google-Organic-local:
+`google_organic_ranked_results_v2`, `google_organic_top_story_results`,
+`google_organic_top_story_result_occurrences`, `google_organic_video_results`,
+`google_organic_video_result_occurrences`, `google_organic_sitelinks`,
+`google_organic_sitelink_occurrences`.
+
+`google_organic_ranked_results` is not altered and holds no v2 row. The five
+semantically unchanged kinds and the result context reuse their existing relations,
+discriminated by `derivation_version_id`, exactly as the Keyword Overview core/extended
+Recipes already coexist.
+
+Structural binding is expressed as database constraints, not string convention:
+
+- sitelink → its exact ranked-result-v2 parent by
+  `(capture_id, derivation_version_id, parent_within_capture_identity)`;
+- Top Stories/Video child → its exact parent SERP placement by
+  `(capture_id, derivation_version_id, parent_within_capture_identity, parent_item_type)`
+  against `google_organic_serp_features`, with `parent_item_type` CHECK-pinned to
+  `'top_stories'` / `'video'` respectively;
+- every typed row → its generic envelope by the existing four-column envelope FK;
+- every occurrence row → its semantic parent by
+  `(capture_id, derivation_version_id, within_capture_identity, observation_kind)`;
+- `links_state`/`links_count` consistency and every state/value pair are CHECK-enforced.
+
+The one schema change to an existing relation is an additive
+`google_organic_serp_features_parent UNIQUE (capture_id, derivation_version_id,
+within_capture_identity, item_type)` applied through an idempotent `DO $$` block. It adds
+no column, changes no v1 row, and is required for the child→parent FK above.
+
+The expanded derive unit is atomic across Outcome, result context, envelopes, typed
+details, occurrences, and diagnostics; the complete-set gate compares full intended and
+stored sets and additionally proves every semantic child keeps at least one bound
+occurrence. Missing rebuildable rows are restored; extra or conflicting rows raise
+`DerivationError`. No `ON CONFLICT DO NOTHING`, no last-write-wins.
+
+### v1 immutability proof
+
+Proved on real PostgreSQL 18 after expanded registration and derivation
+(`test_v1_recipe_bytes_rows_and_counts_are_unchanged_after_expansion`,
+`test_expanded_and_v1_recipes_coexist_and_stay_independently_derivable`,
+`test_pinned_v1_history_is_unchanged_while_expanded_is_selected`):
+
+- Recipe-v1 bytes still 2,487 and digest still
+  `338fc2080d31a35b1f7cc5d7a71c971d25d72517ca3b846959ccb501b666acde`, both in the module
+  constant and in the stored `provider_recipes` bytes;
+- v1 `observation_count` still 237 and v1 re-derivation still reports 237 after the
+  expanded derivation;
+- a full logical snapshot of every Google Organic relation plus `outcomes`,
+  `observation_envelopes`, and `derivation_diagnostics` filtered to the v1
+  `derivation_version_id` is byte-for-byte identical before and after;
+- zero v2 rows exist under the v1 version and zero v1 rows under the expanded version;
+- the pinned-v1 history document keeps its exact 17-key Capture shape, its six ordered
+  kinds, `ranked_result.v1`, and ranked rows with no `organic_item_timestamp` and no
+  `links` key.
+
+Registering or deriving the expanded Recipe never writes `provider_recipe_selections`;
+moving the selection is a separate explicit operator action, proved in both directions.
+
+### Read/API
+
+The history route resolves the Recipe and returns the expanded typed document for the
+expanded Recipe and the unchanged `HistoryListEnvelope` document otherwise, so a v1
+consumer sees no change. Generated OpenAPI advertises both through an `anyOf`, and the
+expanded models are typed deeply enough that every time, state, identity, occurrence, and
+completeness description lands on the exact nested property — asserted per property, not
+by grepping the dump.
+
+Read-side integrity knows every expanded kind, table, and occurrence family, and runs
+over **all** matching candidate Captures before the outer limit; damage hidden in an
+unreturned tail still returns the existing 409 `evidence_integrity_failure`.
+
+### Validation actually run
+
+Command environment: `OBSERVATORY_TEST_DATABASE_URL` pointed at a local
+`postgres:18-alpine` container. No provider host was reachable; every test file installs
+the public-network guard.
+
+- `uv run pytest -q tests/test_dataforseo_google_organic.py
+  tests/test_dataforseo_google_organic_derive.py
+  tests/test_dataforseo_google_organic_expanded.py
+  tests/test_google_organic_expanded_derive.py tests/test_api_google_organic.py
+  tests/test_api_google_organic_expanded.py tests/test_api_keyword_overview.py
+  tests/test_api_search_mentions.py tests/test_api_target_metrics.py
+  tests/test_api_llm_mentions_historical.py` — **250 passed** (0 failed, 0 skipped).
+- `uv run pytest -q tests/test_api.py tests/test_provider_recipe.py
+  tests/test_provider_recipe_selection.py tests/test_provider_history.py
+  tests/test_derive_matrix.py tests/test_fixture_matrix.py` — **313 passed**.
+- `uv run pytest -q tests/test_dataforseo_google_ranked_keywords_derive.py` —
+  **101 passed**.
+- `uv run ruff check .` — **All checks passed!**
+- `uv run mypy src/observatory` plus the three new test files and the retargeted RANK-05
+  test file — **Success: no issues found in 50 source files**.
+
+Not run: the full repository suite. Per the implementation prompt, final full-suite
+closure is left to [CHAZ] after Steward review.
+
+### Strongest and weakest parts
+
+Strongest: the Recipe/parser version boundary and the exact PF-10 numbers. The expanded
+Recipe is content-addressed from independently hashed frozen bytes, parser-v1 is
+untouched, and v1 immutability is proved by a whole-relation logical snapshot rather than
+by spot checks. The four family cardinalities, the 58/39/0 timestamp split, and the
+0/96/0/1 links split were recomputed from the fixture before any code was written and
+then re-proved at parser, plan, PostgreSQL, and API layers.
+
+Weakest / candid limits:
+
+- **Absent, stated-empty, and drifted branches are synthetic only.** PF-10 contains no
+  absent organic timestamp, no stated-empty `links`, no second Top Stories or Video
+  parent, no duplicate child URL, and no populated `related_result`. Every proof of those
+  branches is a bounded mutation of the frozen body. They are claimed contract plus
+  synthetic proof, never Evidence.
+- **Duplicate disagreement is detected in parser-v2, not in derive.** That differs from
+  the accepted AIO precedent, which detects it during grouping. Both land on
+  `provider_envelope_rejected`, but the parser path discards the Derivation diagnostics
+  that the AIO path preserves. This was a deliberate reading of frozen rule 24; a Steward
+  who prefers the AIO shape should say so.
+- **Fail-closed on a childless Top Stories/Video parent.** Under the expanded Recipe an
+  admitted `top_stories` or `video` item whose `items` key is absent or JSON null rejects
+  the whole Capture. That is strict; a real provider could plausibly return such a parent.
+  Parser-v1 is unaffected, so the accepted v1 Recipe still admits that body. This is the
+  most likely future false-negative in PF-18.
+- **Extra occurrence rows are caught by derive, not by read.** A hand-inserted extra
+  occurrence under a valid parent is rejected by the complete-set gate on the next
+  same-Recipe run, and true orphans are impossible because of the FK, but the read path
+  does not independently detect a spurious extra occurrence index. The same limit already
+  exists for accepted v1 AIO and PAA occurrences, so PF-18 did not widen it — but it is
+  not closed either.
+- **`_expanded_capture_group` duplicates `_capture_group`.** That duplication is
+  deliberate so the v1 document cannot change when the expanded document does, and it is
+  the place a future reviewer should look first if the two documents ever need to diverge
+  further.
+- **Union response model.** The route's OpenAPI 200 schema is now an `anyOf`. That is the
+  honest description of a route serving two Recipe documents, but it did change one
+  inherited PF-13 assertion, and any future consumer generating a client from this spec
+  must discriminate on `derivation_version_id`.
+
+### Possible false greens
+
+- `test_pf18_adds_exactly_seven_google_organic_local_relations` reads SQL text, so it
+  proves wording, not runtime behaviour; the real proof is the PostgreSQL persistence and
+  FK/CHECK tests beside it.
+- The two-database logical-equivalence test compares stringified rows. That catches value
+  and set differences but would not catch two databases sharing an identical wrong value.
+- The OpenAPI assertions check that a specific sentence is attached to a specific
+  property. They prove the documentation is placed correctly; they cannot prove a
+  consumer reads it.
+
+### Deliberately not done
+
+`related_result`, AI Overview prose, PAA expanded answers, images, `date`, `pre_snippet`,
+rectangles, xpath, badges, and every other presentation field remain raw. No URL
+normalization, no canonical Page/Site/Video identity, no cross-surface join, no Strategy
+logic, no recurring acquisition, and no automatic Recipe-selection change.
+
+### Boundary statement
+
+No provider request was made. No DataForSEO or other credentials were read or used. No
+paid API was called. No Evidence was mutated: the PF-10 fixture is byte-identical at
+135,722 bytes and SHA-256
+`7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f`, and no replacement
+live Evidence was created. Nothing was pushed, amended, rebased, reset, or stashed. The
+implementation is one commit whose parent is `a1db7449456a06afe1eee5dc8535ff92ce51e683`.
 
 ## Closure
 

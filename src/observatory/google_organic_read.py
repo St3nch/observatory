@@ -9,18 +9,24 @@ from decimal import Decimal
 from typing import Any, Final, Literal
 
 from psycopg import Connection, sql
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from observatory.capture_event import ORGANIC_ADAPTER_CONTRACT
 from observatory.dataforseo_google_organic import (
     AIO_PRESENCE_KIND,
     AIO_SOURCE_KIND,
     FEATURE_PRESENCE_KIND,
+    GOOGLE_ORGANIC_EXPANDED_RECIPE_ID,
     ORGANIC_PLACEMENT_KIND,
+    ORGANIC_PLACEMENT_V2_KIND,
+    ORGANIC_SITELINK_KIND,
     RELATED_QUERY_KIND,
     RELATED_QUESTION_KIND,
+    TOP_STORY_RESULT_KIND,
+    VIDEO_RESULT_KIND,
 )
 from observatory.evidence_store import EvidenceStore, IntegrityError
-from observatory.provider_history import history_list_response
+from observatory.provider_history import HISTORY_LIMIT_MAX, history_list_response
 from observatory.provider_holdings import (
     HoldingsAttempt,
     assert_unique_holdings_groups,
@@ -47,7 +53,696 @@ _KIND_TABLES: Final[dict[str, str]] = {
     AIO_SOURCE_KIND: "google_organic_aio_sources",
     RELATED_QUESTION_KIND: "google_organic_related_questions",
     RELATED_QUERY_KIND: "google_organic_related_queries",
+    ORGANIC_PLACEMENT_V2_KIND: "google_organic_ranked_results_v2",
+    TOP_STORY_RESULT_KIND: "google_organic_top_story_results",
+    VIDEO_RESULT_KIND: "google_organic_video_results",
+    ORGANIC_SITELINK_KIND: "google_organic_sitelinks",
 }
+EXPANDED_OBSERVATION_KINDS: Final[tuple[str, ...]] = (
+    FEATURE_PRESENCE_KIND,
+    ORGANIC_PLACEMENT_V2_KIND,
+    AIO_PRESENCE_KIND,
+    AIO_SOURCE_KIND,
+    RELATED_QUESTION_KIND,
+    RELATED_QUERY_KIND,
+    TOP_STORY_RESULT_KIND,
+    VIDEO_RESULT_KIND,
+    ORGANIC_SITELINK_KIND,
+)
+# Every semantic child of the expanded Recipe must keep at least one structurally
+# bound occurrence row. A parent with none is integrity damage, not an empty list.
+_CHILD_OCCURRENCE_FAMILIES: Final[tuple[tuple[str, str, str], ...]] = (
+    (
+        "google_organic_top_story_results",
+        "google_organic_top_story_result_occurrences",
+        "Top Stories child has no subordinate occurrences",
+    ),
+    (
+        "google_organic_video_results",
+        "google_organic_video_result_occurrences",
+        "Video child has no subordinate occurrences",
+    ),
+    (
+        "google_organic_sitelinks",
+        "google_organic_sitelink_occurrences",
+        "organic sitelink has no subordinate occurrences",
+    ),
+)
+
+
+# --------------------------------------------------------------------------------------
+# PF-18 expanded Google Organic history models
+#
+# These are typed strongly enough that generated OpenAPI attaches every time, state,
+# identity, and completeness description to the exact property it governs, rather than
+# leaving the expanded Capture as an untyped pass-through mapping.
+# --------------------------------------------------------------------------------------
+
+_FIELD_STATES = Literal["stated", "json_null", "absent", "not_requested", "inapplicable"]
+
+_EXPANDED_RECIPE_NOTE: Final[str] = (
+    "This document is served only under the PF-18 expanded Google Organic Recipe. "
+    "The accepted v1 Recipe remains separately pinnable and returns the unchanged "
+    "six-kind v1 document without ranked-result v2, Top Stories children, Video "
+    "children, or sitelinks."
+)
+_ITEM_TIME_NOTE: Final[str] = (
+    "Exact provider-stated structure-local item/result timestamp testimony. It is NOT "
+    "Capture time (request_started_at/transport_ended_at), NOT the result retrieval "
+    "datetime (result_context.provider_result_time), NOT Provider Update Time, and NOT "
+    "a Data Period. Observatory does not certify it as an independent publication "
+    "instant. It never inherits from result datetime, Capture provenance, a Top Stories "
+    "relative date string, an organic pre_snippet, a sibling field, or another row."
+)
+_ITEM_TIME_STATE_NOTE: Final[str] = (
+    "state distinguishes a provider-stated value from provider JSON null and from a "
+    "permitted absent key. Those three are never collapsed and an unstated time is "
+    "never filled in."
+)
+_CHILD_URL_NOTE: Final[str] = (
+    "Exact provider URL testimony for this child. It is NOT a canonical Page, Site, "
+    "Video, Brand, or entity identity, is never normalized or redirect-resolved, and "
+    "the same URL under another parent placement or another Observation kind stays a "
+    "distinct semantic fact."
+)
+_PARENT_PLACEMENT_NOTE: Final[str] = (
+    "Exact parent SERP placement that returned this child. Parent placement is the "
+    "semantic scope of the child fact; it is not the child's own rank and not a child "
+    "occurrence."
+)
+_OCCURRENCE_NOTE: Final[str] = (
+    "Subordinate returned-occurrence testimony for one semantic child. child_index is "
+    "the provider array position, never a rank, importance, score, or identity. "
+    "Repeated agreeing children collapse to one semantic fact carrying several "
+    "occurrences; occurrence rows never raise capture_outcome.observation_count."
+)
+_CHILD_COMPLETENESS_NOTE: Final[str] = (
+    "Returned child count and order are exactly what this Capture returned. They do "
+    "not prove provider or corpus completeness, and they are not a page size."
+)
+
+
+class GoogleOrganicTextField(BaseModel):
+    """Provider text testimony with explicit field state."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    state: _FIELD_STATES = Field(
+        description=(
+            "Provider field state. stated, provider JSON null, permitted absence, "
+            "request-disabled, and recipe-inapplicable are never collapsed."
+        )
+    )
+    value: str | None = Field(
+        description="Exact provider string when state is stated; otherwise null."
+    )
+
+
+class GoogleOrganicIntField(BaseModel):
+    """Provider integer testimony with explicit field state."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    state: _FIELD_STATES = Field(
+        description=(
+            "Provider field state. A stated numeric zero is never collapsed with "
+            "provider JSON null or absence."
+        )
+    )
+    value: int | None = Field(
+        description="Exact provider integer when state is stated; otherwise null."
+    )
+
+
+class GoogleOrganicItemTimestamp(BaseModel):
+    """Provider-stated structure-local item/result timestamp testimony."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    state: _FIELD_STATES = Field(description=_ITEM_TIME_STATE_NOTE)
+    value: str | None = Field(
+        description=(
+            "Exact provider timestamp string when state is stated; otherwise null. "
+            + _ITEM_TIME_NOTE
+        )
+    )
+
+
+class GoogleOrganicLinksFamily(BaseModel):
+    """Parent `links` family state, kept independent of any child rows."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    state: _FIELD_STATES = Field(
+        description=(
+            "Parent links-family state. absent (no key), json_null (key stated null), "
+            "and stated (an actual array) stay distinct. A stated empty array and a "
+            "stated populated array are both state=stated and are separated by "
+            "returned_child_count, so 'no sitelink rows' can never stand in for the "
+            "four distinct provider families."
+        )
+    )
+    returned_child_count: int | None = Field(
+        default=None,
+        ge=0,
+        description=(
+            "Number of link_element children the provider actually returned under this "
+            "placement: 0 for a stated empty array, N for a stated populated array, and "
+            "null whenever links was absent or JSON null. "
+            + _CHILD_COMPLETENESS_NOTE
+        ),
+    )
+
+
+class GoogleOrganicChildOccurrence(BaseModel):
+    """One returned occurrence of a semantic child."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    child_index: int = Field(ge=0, description=_OCCURRENCE_NOTE)
+
+
+class GoogleOrganicRequest(BaseModel):
+    """Exact verified Attempt request context."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    location_code: int
+    language_code: str = Field(min_length=1)
+    depth: int = Field(
+        description=(
+            "Exact requested Attempt depth. Depth bounds what the provider could "
+            "return; it does not prove provider-corpus completeness."
+        )
+    )
+    device: str = Field(min_length=1)
+    os: str = Field(min_length=1)
+    group_organic_results: bool
+    load_async_ai_overview: bool
+
+
+class GoogleOrganicCaptureOutcome(BaseModel):
+    """Derived Capture classification for this Recipe."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    classification: Literal["observation_admitted", "observation_admitted_empty"] = Field(
+        description=(
+            "Admitted Capture classification under this Recipe. Failed, partial, "
+            "no-response, unresolved, and rejected paths never appear as Observations "
+            "in this history document."
+        )
+    )
+    observation_count: int = Field(
+        ge=0,
+        description=(
+            "Semantic Observation envelopes derived from this Capture under this "
+            "Recipe. Subordinate occurrence rows are never counted here, so the "
+            "expanded count is one envelope per semantic child, not per occurrence."
+        ),
+    )
+
+
+class GoogleOrganicResultContext(BaseModel):
+    """Provider result-level context for one admitted Capture."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    requested_keyword: str = Field(min_length=1)
+    returned_keyword: GoogleOrganicTextField
+    se_domain: GoogleOrganicTextField
+    provider_result_time: GoogleOrganicTextField = Field(
+        description=(
+            "Exact provider result-level retrieval datetime. This is the result clock, "
+            "not an item timestamp: it must never be read as, or substituted for, any "
+            "organic, Top Stories, or Video item timestamp, and it is not Capture time, "
+            "Provider Update Time, or a Data Period."
+        )
+    )
+    se_results_count: GoogleOrganicIntField = Field(
+        description=(
+            "Provider-stated result-count claim. It is provider testimony, not an "
+            "Observatory completeness guarantee and not a count of returned rows."
+        )
+    )
+    pages_count: GoogleOrganicIntField = Field(
+        description=(
+            "Provider-stated page-count claim. It does not prove corpus completeness "
+            "and is not an authorization to fetch further pages."
+        )
+    )
+    items_count: int = Field(
+        ge=0,
+        description=(
+            "Provider-stated returned item count for this one Capture. Not a corpus "
+            "total and not the Observation count."
+        ),
+    )
+    item_types: list[str] = Field(
+        description="Exact provider-declared item types returned in this result."
+    )
+
+
+class GoogleOrganicSerpFeature(BaseModel):
+    """One returned SERP feature placement."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    observation_kind: Literal["dataforseo.google.organic.serp_feature_presence.v1"]
+    within_capture_identity: str = Field(
+        min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"
+    )
+    item_type: str = Field(min_length=1)
+    page: int = Field(ge=1)
+    position: Literal["left", "right"]
+    rank_group: int = Field(ge=1)
+    rank_absolute: int = Field(ge=1)
+
+
+class GoogleOrganicRankedResultV2(BaseModel):
+    """One organic ranked placement under ranked_result.v2."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    observation_kind: Literal["dataforseo.google.organic.ranked_result.v2"] = Field(
+        description=(
+            "Ranked-result v2 keeps the accepted v1 placement identity axes exactly. "
+            "The added item timestamp and links-family state are content, never "
+            "identity, and the URL is not part of placement identity. "
+            + _EXPANDED_RECIPE_NOTE
+        )
+    )
+    within_capture_identity: str = Field(
+        min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"
+    )
+    url: str = Field(
+        min_length=1,
+        description=(
+            "Exact provider URL testimony for this placement. Not a canonical Page "
+            "identity, never normalized or redirect-resolved."
+        ),
+    )
+    domain: str = Field(min_length=1)
+    title: str
+    description: GoogleOrganicTextField
+    website_name: GoogleOrganicTextField
+    page: int = Field(ge=1)
+    position: Literal["left", "right"]
+    rank_group: int = Field(ge=1)
+    rank_absolute: int = Field(ge=1)
+    organic_item_timestamp: GoogleOrganicItemTimestamp = Field(
+        description=(
+            "Exact provider-stated organic item/result timestamp for this placement. "
+            + _ITEM_TIME_NOTE
+        )
+    )
+    links: GoogleOrganicLinksFamily = Field(
+        description=(
+            "Parent links-family testimony for this placement, persisted independently "
+            "of the sitelinks list so absent, JSON null, stated-empty, and "
+            "stated-populated never collapse into one 'no child row' representation. "
+            "The child rows themselves are in the Capture-level sitelinks family."
+        )
+    )
+
+
+class GoogleOrganicAiOverviewPresence(BaseModel):
+    """AI Overview presence placement."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    observation_kind: Literal["dataforseo.google.organic.ai_overview_presence.v1"]
+    within_capture_identity: str = Field(
+        min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"
+    )
+    asynchronous_ai_overview: bool
+    page: int = Field(ge=1)
+    position: Literal["left", "right"]
+    rank_group: int = Field(ge=1)
+    rank_absolute: int = Field(ge=1)
+
+
+class GoogleOrganicAiOverviewSourceOccurrence(BaseModel):
+    """One returned occurrence of an AI Overview source."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    locus: Literal["top_level", "element"]
+    element_index: int | None = Field(default=None, ge=0)
+    reference_index: int = Field(ge=0, description=_OCCURRENCE_NOTE)
+
+
+class GoogleOrganicAiOverviewSource(BaseModel):
+    """One semantic AI Overview source with its occurrences."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    observation_kind: Literal["dataforseo.google.organic.ai_overview_source.v1"]
+    within_capture_identity: str = Field(
+        min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"
+    )
+    locus: Literal["top_level", "element"]
+    url: str = Field(min_length=1)
+    domain: GoogleOrganicTextField
+    title: GoogleOrganicTextField
+    source: GoogleOrganicTextField
+    occurrences: list[GoogleOrganicAiOverviewSourceOccurrence]
+
+
+class GoogleOrganicRelatedQuestionOccurrence(BaseModel):
+    """One returned occurrence of a related question."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    page: int = Field(ge=1)
+    position: Literal["left", "right"]
+    rank_group: int = Field(ge=1)
+    rank_absolute: int = Field(ge=1)
+    question_index: int = Field(ge=0, description=_OCCURRENCE_NOTE)
+
+
+class GoogleOrganicRelatedQuestion(BaseModel):
+    """One semantic related question with its occurrences."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    observation_kind: Literal["dataforseo.google.organic.related_question.v1"]
+    within_capture_identity: str = Field(
+        min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"
+    )
+    title: str
+    occurrences: list[GoogleOrganicRelatedQuestionOccurrence]
+
+
+class GoogleOrganicRelatedQuery(BaseModel):
+    """One returned related query."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    observation_kind: Literal["dataforseo.google.organic.related_query.v1"]
+    within_capture_identity: str = Field(
+        min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"
+    )
+    query: str
+
+
+class GoogleOrganicTopStoryResult(BaseModel):
+    """One semantic Top Stories child result under its exact parent placement."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    observation_kind: Literal["dataforseo.google.organic.top_story_result.v1"] = Field(
+        description=(
+            "Semantic identity is the exact requested keyword, the exact parent SERP "
+            "placement, and the exact child URL. Source, domain, title, and timestamp "
+            "are content. " + _EXPANDED_RECIPE_NOTE
+        )
+    )
+    within_capture_identity: str = Field(
+        min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"
+    )
+    parent_within_capture_identity: str = Field(
+        min_length=64,
+        max_length=64,
+        pattern=r"^[0-9a-f]{64}$",
+        description=(
+            "Identity of the top_stories SERP feature placement envelope that returned "
+            "this child. " + _PARENT_PLACEMENT_NOTE
+        ),
+    )
+    parent_page: int = Field(ge=1, description=_PARENT_PLACEMENT_NOTE)
+    parent_position: Literal["left", "right"] = Field(description=_PARENT_PLACEMENT_NOTE)
+    parent_rank_group: int = Field(ge=1, description=_PARENT_PLACEMENT_NOTE)
+    parent_rank_absolute: int = Field(ge=1, description=_PARENT_PLACEMENT_NOTE)
+    child_url: str = Field(min_length=1, description=_CHILD_URL_NOTE)
+    source: str = Field(
+        description="Exact provider-stated source string. Not a canonical publisher entity."
+    )
+    domain: str = Field(
+        description="Exact provider-stated child domain. Not a canonical Site identity."
+    )
+    title: str
+    top_story_item_timestamp: GoogleOrganicItemTimestamp = Field(
+        description=(
+            "Exact provider-stated Top Stories child item timestamp. "
+            + _ITEM_TIME_NOTE
+            + " In particular it is never derived from the sibling relative date string, "
+            "which PF-18 leaves raw."
+        )
+    )
+    occurrences: list[GoogleOrganicChildOccurrence] = Field(
+        min_length=1,
+        description=_OCCURRENCE_NOTE + " " + _CHILD_COMPLETENESS_NOTE,
+    )
+
+
+class GoogleOrganicVideoResult(BaseModel):
+    """One semantic Video child result under its exact parent placement."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    observation_kind: Literal["dataforseo.google.organic.video_result.v1"] = Field(
+        description=(
+            "Semantic identity is the exact requested keyword, the exact parent SERP "
+            "placement, and the exact child URL. This Google SERP video item is not a "
+            "YouTube Organic result and carries no canonical video identity. "
+            + _EXPANDED_RECIPE_NOTE
+        )
+    )
+    within_capture_identity: str = Field(
+        min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"
+    )
+    parent_within_capture_identity: str = Field(
+        min_length=64,
+        max_length=64,
+        pattern=r"^[0-9a-f]{64}$",
+        description=(
+            "Identity of the video SERP feature placement envelope that returned this "
+            "child. " + _PARENT_PLACEMENT_NOTE
+        ),
+    )
+    parent_page: int = Field(ge=1, description=_PARENT_PLACEMENT_NOTE)
+    parent_position: Literal["left", "right"] = Field(description=_PARENT_PLACEMENT_NOTE)
+    parent_rank_group: int = Field(ge=1, description=_PARENT_PLACEMENT_NOTE)
+    parent_rank_absolute: int = Field(ge=1, description=_PARENT_PLACEMENT_NOTE)
+    child_url: str = Field(min_length=1, description=_CHILD_URL_NOTE)
+    source: str = Field(
+        description=(
+            "Exact composite provider source string as returned. It is not split into "
+            "platform and channel, and no child domain is exposed because the provider "
+            "states none; PF-18 never derives one from the URL."
+        )
+    )
+    title: str
+    video_item_timestamp: GoogleOrganicItemTimestamp = Field(
+        description=(
+            "Exact provider-stated Video child item timestamp. " + _ITEM_TIME_NOTE
+        )
+    )
+    occurrences: list[GoogleOrganicChildOccurrence] = Field(
+        min_length=1,
+        description=_OCCURRENCE_NOTE + " " + _CHILD_COMPLETENESS_NOTE,
+    )
+
+
+class GoogleOrganicSitelink(BaseModel):
+    """One semantic sitelink child under its exact organic ranked placement."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    observation_kind: Literal["dataforseo.google.organic.organic_sitelink.v1"] = Field(
+        description=(
+            "Semantic identity is the exact requested keyword, the exact parent organic "
+            "placement, and the exact child URL. Title, domain, and description state "
+            "are content. " + _EXPANDED_RECIPE_NOTE
+        )
+    )
+    within_capture_identity: str = Field(
+        min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$"
+    )
+    parent_within_capture_identity: str = Field(
+        min_length=64,
+        max_length=64,
+        pattern=r"^[0-9a-f]{64}$",
+        description=(
+            "Identity of the ranked_result.v2 envelope that returned this sitelink. "
+            + _PARENT_PLACEMENT_NOTE
+        ),
+    )
+    parent_page: int = Field(ge=1, description=_PARENT_PLACEMENT_NOTE)
+    parent_position: Literal["left", "right"] = Field(description=_PARENT_PLACEMENT_NOTE)
+    parent_rank_group: int = Field(ge=1, description=_PARENT_PLACEMENT_NOTE)
+    parent_rank_absolute: int = Field(ge=1, description=_PARENT_PLACEMENT_NOTE)
+    child_url: str = Field(min_length=1, description=_CHILD_URL_NOTE)
+    title: str
+    domain: str = Field(
+        description="Exact provider-stated child domain. Not a canonical Site identity."
+    )
+    description: GoogleOrganicTextField = Field(
+        description=(
+            "Sitelink description testimony. A provider JSON null description is not an "
+            "empty string and not an absent key; the state carries that distinction."
+        )
+    )
+    occurrences: list[GoogleOrganicChildOccurrence] = Field(
+        min_length=1,
+        description=_OCCURRENCE_NOTE + " " + _CHILD_COMPLETENESS_NOTE,
+    )
+
+
+class GoogleOrganicExpandedCapture(BaseModel):
+    """One admitted Capture document under the PF-18 expanded Recipe."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    attempt_id: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    capture_id: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-f]{64}$")
+    provider: Literal["dataforseo"]
+    adapter_contract: Literal[
+        "dataforseo-serp-google-organic-live-advanced-paid-probe-v1"
+    ]
+    derivation_version_id: str = Field(
+        min_length=64,
+        max_length=64,
+        pattern=r"^[0-9a-f]{64}$",
+        description=_EXPANDED_RECIPE_NOTE,
+    )
+    authorized_at: str = Field(
+        description=(
+            "Observatory Attempt authorization time from verified Evidence. It is "
+            "Observatory provenance and must never substitute for any provider item "
+            "timestamp or result datetime."
+        )
+    )
+    request_started_at: str = Field(
+        description=(
+            "Observatory Capture transport start time from verified Evidence. This is "
+            "Capture time, not a provider item timestamp."
+        )
+    )
+    transport_ended_at: str = Field(
+        description=(
+            "Observatory Capture transport end time from verified Evidence. This is "
+            "Capture time, not a provider item timestamp."
+        )
+    )
+    request: GoogleOrganicRequest
+    capture_outcome: GoogleOrganicCaptureOutcome
+    result_context: GoogleOrganicResultContext
+    serp_features: list[GoogleOrganicSerpFeature]
+    ranked_results: list[GoogleOrganicRankedResultV2]
+    ai_overview_presence: GoogleOrganicAiOverviewPresence | None
+    ai_overview_sources: list[GoogleOrganicAiOverviewSource]
+    related_questions: list[GoogleOrganicRelatedQuestion]
+    related_queries: list[GoogleOrganicRelatedQuery]
+    top_story_results: list[GoogleOrganicTopStoryResult] = Field(
+        description=(
+            "Every Top Stories child this Capture returned, scoped to its exact parent "
+            "placement. An empty list means this Capture returned no Top Stories child "
+            "under this Recipe; it does not mean the provider has none. "
+            + _CHILD_COMPLETENESS_NOTE
+        )
+    )
+    video_results: list[GoogleOrganicVideoResult] = Field(
+        description=(
+            "Every Video child this Capture returned, scoped to its exact parent "
+            "placement. " + _CHILD_COMPLETENESS_NOTE
+        )
+    )
+    sitelinks: list[GoogleOrganicSitelink] = Field(
+        description=(
+            "Every sitelink child this Capture returned, scoped to its exact parent "
+            "organic ranked placement. An empty list never distinguishes the four "
+            "parent links families; read ranked_results[].links.state for that."
+        )
+    )
+
+
+class GoogleOrganicExpandedHistoryEnvelope(BaseModel):
+    """Closed expanded Google Organic admitted-history envelope."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    provider: Literal["dataforseo"] = Field(
+        description=(
+            "Admitted, subject-bound Capture-document history under the resolved "
+            "Recipe. The list grain is Capture documents, not Observation envelopes, "
+            "typed facts, child occurrences, or provider corpus counts."
+        )
+    )
+    adapter_contract: Literal[
+        "dataforseo-serp-google-organic-live-advanced-paid-probe-v1"
+    ]
+    requested_keyword: str = Field(
+        min_length=1,
+        description=(
+            "Requested subject for this history. An empty admitted history does not "
+            "distinguish failed measurement from never measured."
+        ),
+    )
+    derivation_version_id: str = Field(
+        min_length=64,
+        max_length=64,
+        pattern=r"^[0-9a-f]{64}$",
+        description=_EXPANDED_RECIPE_NOTE,
+    )
+    recipe_resolution: Literal["selected", "pinned"] = Field(
+        description=(
+            "How this Recipe was resolved. Pinning the accepted v1 Recipe returns the "
+            "unchanged v1 document instead of this expanded one; deriving or "
+            "registering the expanded Recipe never changes the operator selection."
+        )
+    )
+    observation_kinds: list[str] = Field(
+        min_length=9,
+        max_length=9,
+        description=(
+            "Exact ordered expanded-Recipe Observation kinds. They do not change the "
+            "list grain: the list still counts admitted Capture documents."
+        ),
+    )
+    captures: list[GoogleOrganicExpandedCapture]
+    total_matching: int = Field(
+        ge=0,
+        description=(
+            "Unique verified matching admitted Capture documents after Evidence and "
+            "PostgreSQL consistency checks and before the output limit. Not Observation "
+            "envelopes, typed facts, child occurrences, or provider corpus counts."
+        ),
+    )
+    returned_count: int = Field(
+        ge=0, description="Number of whole Capture documents in captures."
+    )
+    limit: int = Field(
+        ge=1,
+        le=HISTORY_LIMIT_MAX,
+        description=(
+            "Validated applied outer history limit. It is not a provider page size and "
+            "it never hides corruption: every matching candidate Capture is integrity "
+            "checked before the limit is applied."
+        ),
+    )
+    order: Literal["asc", "desc"] = Field(
+        description=(
+            "Echo of the validated query order over (request_started_at, capture_id). "
+            "This is not provider item order and not child occurrence order."
+        )
+    )
+    has_more: bool = Field(
+        description=(
+            "True when total_matching exceeds returned_count. It discloses an omitted "
+            "outer Capture-history tail; it is not pagination or a cursor."
+        )
+    )
+
+    @field_validator("observation_kinds")
+    @classmethod
+    def require_expanded_kinds(cls, value: list[str]) -> list[str]:
+        if value != list(EXPANDED_OBSERVATION_KINDS):
+            raise ValueError(
+                "observation_kinds must be the exact ordered expanded Recipe kinds"
+            )
+        return value
 
 
 def _json_field(state: object, value: object) -> dict[str, object]:
@@ -237,6 +932,30 @@ def _assert_history_candidates_consistent(
     ).fetchone()
     if orphan_questions is not None:
         raise IntegrityError("related-question parent has no subordinate occurrences")
+    for parent_table, occurrence_table, message in _CHILD_OCCURRENCE_FAMILIES:
+        orphan_child = connection.execute(
+            sql.SQL(
+                """
+                SELECT 1
+                FROM {} AS parent
+                WHERE parent.derivation_version_id = %s
+                  AND parent.capture_id = ANY(%s)
+                  AND NOT EXISTS (
+                        SELECT 1
+                        FROM {} AS occurrence
+                        WHERE occurrence.capture_id = parent.capture_id
+                          AND occurrence.derivation_version_id
+                              = parent.derivation_version_id
+                          AND occurrence.within_capture_identity
+                              = parent.within_capture_identity
+                  )
+                LIMIT 1
+                """
+            ).format(sql.Identifier(parent_table), sql.Identifier(occurrence_table)),
+            (derivation_version_id, capture_ids),
+        ).fetchone()
+        if orphan_child is not None:
+            raise IntegrityError(message)
 
 
 def load_google_organic_history(
@@ -389,8 +1108,13 @@ def load_google_organic_history(
     reverse = order == "desc"
     unique.sort(key=lambda item: (item[0], item[1]), reverse=reverse)
     selected = unique[:limit]
+    build_capture = (
+        _expanded_capture_group
+        if resolved.derivation_version_id == GOOGLE_ORGANIC_EXPANDED_RECIPE_ID
+        else _capture_group
+    )
     captures = [
-        _capture_group(
+        build_capture(
             connection,
             recipe=resolved,
             capture_id=capture_id,
@@ -475,6 +1199,232 @@ def _capture_group(
             connection, capture_id, recipe.derivation_version_id
         ),
     }
+
+
+def _expanded_capture_group(
+    connection: Connection[Any],
+    *,
+    recipe: ResolvedProviderRecipe,
+    capture_id: str,
+    attempt_id: str,
+    classification: str,
+    observation_count: int,
+    attempt: Mapping[str, object],
+    capture: Mapping[str, object],
+    request: Mapping[str, object],
+    result_context: Mapping[str, object],
+) -> dict[str, object]:
+    """Assemble the PF-18 expanded Capture document.
+
+    Every accepted v1 family keeps its meaning; ranked results become v2 and carry
+    item-timestamp and links-family state, and the three MVP child families arrive
+    with their exact parent placement and subordinate occurrence testimony.
+    """
+
+    version = recipe.derivation_version_id
+    return {
+        "attempt_id": attempt_id,
+        "capture_id": capture_id,
+        "provider": HISTORY_PROVIDER,
+        "adapter_contract": HISTORY_ADAPTER,
+        "derivation_version_id": version,
+        "authorized_at": _require_text(attempt, "authorized_at"),
+        "request_started_at": _require_text(capture, "request_started_at"),
+        "transport_ended_at": _require_text(capture, "transport_ended_at"),
+        "request": dict(request),
+        "capture_outcome": {
+            "classification": classification,
+            "observation_count": observation_count,
+        },
+        "result_context": dict(result_context),
+        "serp_features": _serp_features(connection, capture_id, version),
+        "ranked_results": _ranked_results_v2(connection, capture_id, version),
+        "ai_overview_presence": _aio_presence(connection, capture_id, version),
+        "ai_overview_sources": _aio_sources(connection, capture_id, version),
+        "related_questions": _related_questions(connection, capture_id, version),
+        "related_queries": _related_queries(connection, capture_id, version),
+        "top_story_results": _top_story_results(connection, capture_id, version),
+        "video_results": _video_results(connection, capture_id, version),
+        "sitelinks": _sitelinks(connection, capture_id, version),
+    }
+
+
+def _ranked_results_v2(
+    connection: Connection[Any], capture_id: str, version: str
+) -> list[dict[str, object]]:
+    rows = connection.execute(
+        """
+        SELECT within_capture_identity, url, domain, title,
+               description, description_state, website_name, website_name_state,
+               page, position, rank_group, rank_absolute,
+               organic_item_timestamp, organic_item_timestamp_state,
+               links_state, links_count
+        FROM google_organic_ranked_results_v2
+        WHERE capture_id = %s AND derivation_version_id = %s
+        ORDER BY page, position, rank_absolute, rank_group,
+                 within_capture_identity
+        """,
+        (capture_id, version),
+    ).fetchall()
+    return [
+        {
+            "observation_kind": ORGANIC_PLACEMENT_V2_KIND,
+            "within_capture_identity": str(row[0]),
+            "url": str(row[1]),
+            "domain": str(row[2]),
+            "title": str(row[3]),
+            "description": _json_field(row[5], row[4]),
+            "website_name": _json_field(row[7], row[6]),
+            "page": _as_int(row[8], "page"),
+            "position": str(row[9]),
+            "rank_group": _as_int(row[10], "rank_group"),
+            "rank_absolute": _as_int(row[11], "rank_absolute"),
+            "organic_item_timestamp": _json_field(row[13], row[12]),
+            "links": {
+                "state": str(row[14]),
+                "returned_child_count": (
+                    None if row[15] is None else _as_int(row[15], "links_count")
+                ),
+            },
+        }
+        for row in rows
+    ]
+
+
+def _child_occurrences(
+    connection: Connection[Any], table: str, capture_id: str, version: str
+) -> dict[str, list[dict[str, object]]]:
+    rows = connection.execute(
+        sql.SQL(
+            """
+            SELECT within_capture_identity, child_index
+            FROM {}
+            WHERE capture_id = %s AND derivation_version_id = %s
+            ORDER BY within_capture_identity, child_index
+            """
+        ).format(sql.Identifier(table)),
+        (capture_id, version),
+    ).fetchall()
+    grouped: dict[str, list[dict[str, object]]] = defaultdict(list)
+    for row in rows:
+        grouped[str(row[0])].append(
+            {"child_index": _as_int(row[1], "child_index")}
+        )
+    return grouped
+
+
+def _top_story_results(
+    connection: Connection[Any], capture_id: str, version: str
+) -> list[dict[str, object]]:
+    rows = connection.execute(
+        """
+        SELECT within_capture_identity, parent_within_capture_identity,
+               parent_page, parent_position, parent_rank_group, parent_rank_absolute,
+               child_url, source, domain, title,
+               top_story_item_timestamp, top_story_item_timestamp_state
+        FROM google_organic_top_story_results
+        WHERE capture_id = %s AND derivation_version_id = %s
+        ORDER BY parent_page, parent_position, parent_rank_absolute,
+                 parent_rank_group, child_url, within_capture_identity
+        """,
+        (capture_id, version),
+    ).fetchall()
+    grouped = _child_occurrences(
+        connection, "google_organic_top_story_result_occurrences", capture_id, version
+    )
+    return [
+        {
+            "observation_kind": TOP_STORY_RESULT_KIND,
+            "within_capture_identity": str(row[0]),
+            "parent_within_capture_identity": str(row[1]),
+            "parent_page": _as_int(row[2], "parent_page"),
+            "parent_position": str(row[3]),
+            "parent_rank_group": _as_int(row[4], "parent_rank_group"),
+            "parent_rank_absolute": _as_int(row[5], "parent_rank_absolute"),
+            "child_url": str(row[6]),
+            "source": str(row[7]),
+            "domain": str(row[8]),
+            "title": str(row[9]),
+            "top_story_item_timestamp": _json_field(row[11], row[10]),
+            "occurrences": grouped[str(row[0])],
+        }
+        for row in rows
+    ]
+
+
+def _video_results(
+    connection: Connection[Any], capture_id: str, version: str
+) -> list[dict[str, object]]:
+    rows = connection.execute(
+        """
+        SELECT within_capture_identity, parent_within_capture_identity,
+               parent_page, parent_position, parent_rank_group, parent_rank_absolute,
+               child_url, source, title,
+               video_item_timestamp, video_item_timestamp_state
+        FROM google_organic_video_results
+        WHERE capture_id = %s AND derivation_version_id = %s
+        ORDER BY parent_page, parent_position, parent_rank_absolute,
+                 parent_rank_group, child_url, within_capture_identity
+        """,
+        (capture_id, version),
+    ).fetchall()
+    grouped = _child_occurrences(
+        connection, "google_organic_video_result_occurrences", capture_id, version
+    )
+    return [
+        {
+            "observation_kind": VIDEO_RESULT_KIND,
+            "within_capture_identity": str(row[0]),
+            "parent_within_capture_identity": str(row[1]),
+            "parent_page": _as_int(row[2], "parent_page"),
+            "parent_position": str(row[3]),
+            "parent_rank_group": _as_int(row[4], "parent_rank_group"),
+            "parent_rank_absolute": _as_int(row[5], "parent_rank_absolute"),
+            "child_url": str(row[6]),
+            "source": str(row[7]),
+            "title": str(row[8]),
+            "video_item_timestamp": _json_field(row[10], row[9]),
+            "occurrences": grouped[str(row[0])],
+        }
+        for row in rows
+    ]
+
+
+def _sitelinks(
+    connection: Connection[Any], capture_id: str, version: str
+) -> list[dict[str, object]]:
+    rows = connection.execute(
+        """
+        SELECT within_capture_identity, parent_within_capture_identity,
+               parent_page, parent_position, parent_rank_group, parent_rank_absolute,
+               child_url, title, domain, description, description_state
+        FROM google_organic_sitelinks
+        WHERE capture_id = %s AND derivation_version_id = %s
+        ORDER BY parent_page, parent_position, parent_rank_absolute,
+                 parent_rank_group, child_url, within_capture_identity
+        """,
+        (capture_id, version),
+    ).fetchall()
+    grouped = _child_occurrences(
+        connection, "google_organic_sitelink_occurrences", capture_id, version
+    )
+    return [
+        {
+            "observation_kind": ORGANIC_SITELINK_KIND,
+            "within_capture_identity": str(row[0]),
+            "parent_within_capture_identity": str(row[1]),
+            "parent_page": _as_int(row[2], "parent_page"),
+            "parent_position": str(row[3]),
+            "parent_rank_group": _as_int(row[4], "parent_rank_group"),
+            "parent_rank_absolute": _as_int(row[5], "parent_rank_absolute"),
+            "child_url": str(row[6]),
+            "title": str(row[7]),
+            "domain": str(row[8]),
+            "description": _json_field(row[10], row[9]),
+            "occurrences": grouped[str(row[0])],
+        }
+        for row in rows
+    ]
 
 
 def _serp_features(

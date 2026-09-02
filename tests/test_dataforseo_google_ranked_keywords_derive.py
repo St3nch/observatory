@@ -71,6 +71,7 @@ from observatory.google_ranked_keywords_derive import (
     ranked_keywords_recipe,
 )
 from observatory.migrate import (
+    PRE_PF18_SCHEMA_STATEMENTS,
     PRE_RANK05_SCHEMA_STATEMENTS,
     PRE_RK04_SCHEMA_STATEMENTS,
     RANK05_SCHEMA_STATEMENTS,
@@ -759,13 +760,17 @@ def test_pre_rank05_layering_is_additive_and_preserves_the_rk04_delta() -> None:
     ]
     assert len(historical) == 12
     assert "ranked_keywords_" not in "\n".join(PRE_RANK05_SCHEMA_STATEMENTS)
+    # Retargeted at PF-18: the generic `SCHEMA_STATEMENTS` now also carries the eight
+    # expanded Google Organic statements, so the RANK-05 delta is measured against the
+    # layer immediately after it rather than against the whole current schema.
     added = [
         statement
-        for statement in SCHEMA_STATEMENTS
+        for statement in PRE_PF18_SCHEMA_STATEMENTS
         if statement not in PRE_RANK05_SCHEMA_STATEMENTS
     ]
     assert added == list(RANK05_SCHEMA_STATEMENTS)
     assert len(added) == 12
+    assert set(PRE_PF18_SCHEMA_STATEMENTS) <= set(SCHEMA_STATEMENTS)
     assert len(RANK05_TABLES) == 12
     for table in RANK05_TABLES:
         assert any(f"CREATE TABLE IF NOT EXISTS {table} (" in item for item in added)

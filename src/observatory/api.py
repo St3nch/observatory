@@ -18,8 +18,12 @@ from observatory.capture_event import (
     RELATED_KEYWORDS_ADAPTER_CONTRACT,
     TARGET_METRICS_ADAPTER_CONTRACT,
 )
+from observatory.dataforseo_google_organic import (
+    GOOGLE_ORGANIC_EXPANDED_RECIPE_ID,
+)
 from observatory.evidence_store import EvidenceStore, IntegrityError, open_store
 from observatory.google_organic_read import (
+    GoogleOrganicExpandedHistoryEnvelope,
     load_google_organic_history,
     load_google_organic_holdings,
     load_google_organic_outcomes,
@@ -338,7 +342,13 @@ def create_app(settings: Settings | None = None, *, store: EvidenceStore | None 
         derivation_version_id: str | None = Query(default=None),
         limit: int = Query(default=HISTORY_LIMIT_DEFAULT, ge=1, le=HISTORY_LIMIT_MAX),
         order: Literal["asc", "desc"] = Query(default="asc"),
-    ) -> HistoryListEnvelope:
+    ) -> GoogleOrganicExpandedHistoryEnvelope | HistoryListEnvelope:
+        """Serve Google Organic history under whichever Recipe resolved.
+
+        The accepted v1 Recipe keeps returning the unchanged v1 document; the PF-18
+        expanded Recipe returns the fully typed expanded document.
+        """
+
         settings = request.app.state.settings
         if not isinstance(settings, Settings):
             raise HTTPException(status_code=503, detail="settings are not configured")
@@ -346,16 +356,17 @@ def create_app(settings: Settings | None = None, *, store: EvidenceStore | None 
         dsn = _require_dsn(settings)
         try:
             with _read_connect(dsn) as connection:
-                return HistoryListEnvelope.model_validate(
-                    load_google_organic_history(
-                        evidence,
-                        connection,
-                        requested_keyword=requested_keyword,
-                        pinned_version=derivation_version_id,
-                        limit=limit,
-                        order=order,
-                    )
+                document = load_google_organic_history(
+                    evidence,
+                    connection,
+                    requested_keyword=requested_keyword,
+                    pinned_version=derivation_version_id,
+                    limit=limit,
+                    order=order,
                 )
+            if document.get("derivation_version_id") == GOOGLE_ORGANIC_EXPANDED_RECIPE_ID:
+                return GoogleOrganicExpandedHistoryEnvelope.model_validate(document)
+            return HistoryListEnvelope.model_validate(document)
         except IntegrityError as exc:
             raise HTTPException(status_code=409, detail=INTEGRITY_SIGNAL) from exc
         except ProviderRecipeSelectionError as exc:
