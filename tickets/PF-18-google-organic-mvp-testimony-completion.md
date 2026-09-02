@@ -1,9 +1,9 @@
 # PF-18 — Google Organic MVP testimony completion
 
-**Status:** review — R1–R4 Steward-accepted; awaiting independent review and final [CHAZ] full-suite gate  
+**Status:** review — R1–R4 accepted; independent R4 review passed; awaiting final [CHAZ] full-suite gate  
 **Kind:** provider fidelity remediation  
 **Triggered by:** MVP-01 Class 4 Google Organic finding  
-**Blocked by:** independent review and the final [CHAZ] full-suite gate  
+**Blocked by:** final [CHAZ] full-suite gate  
 **Approved by:** [CHAZ] for bounded implementation on 2026-09-01, R1–R3 remediation on 2026-09-02, and bounded R4 remediation on 2026-09-02  
 **Draft base:** `0465a5b6e3bb9c4e56aa613f5d61581620e46096`  
 **Implementation start:** `404d3bebce3755c33989e10fe63559bd8ac89616`  
@@ -1377,6 +1377,54 @@ ranked-result v2 as well as child families but does not alter behavior.
 No provider call, credentials, spend, Evidence mutation, automatic Recipe-selection change, or
 push is authorized by this review.
 
+## Independent adversarial review — R4 accepted 2026-09-02
+
+[CLAUDE] performed a read-only adversarial review of **[GROK]'s R4 delta only** at exact clean
+HEAD `19e2e6d6ec20f467402bf2a1de11fb58b00cbfef`, comparing R4 Writer commit
+`908e975b5e49105ae57e1d4d2f6f92c7b12d14b8` against authorized parent
+`61d7f9e837aa68b4d7d1edb8df32540fbf3b1ca7`. Because [CLAUDE] historically wrote the
+original PF-18 implementation and R1–R3 remediation, this review is not represented as an
+independent review of those earlier changes.
+
+**Independent R4 verdict:** `READY_FOR_STEWARD_FINALIZATION`.
+
+The review found no R4 blocker and independently checked the following from the actual code:
+
+- the R4 delta changed only `src/observatory/google_organic_read.py`,
+  `tests/test_api_google_organic_expanded.py`, and this ticket;
+- `_RANKED_V2_COLUMNS` covers all 18 persisted ranked-result-v2 columns other than the two
+  query-scope keys `capture_id` and `derivation_version_id`, and exactly covers the planner's
+  ranked-v2 content plus `within_capture_identity` / `observation_kind`;
+- the ranked-v2 Evidence comparison is scoped to one Capture and the exact expanded Recipe;
+- length equality plus set equality is sound for ranked-v2 because PostgreSQL uniqueness makes
+  duplicate compared tuples structurally impossible within the scoped Capture/Recipe;
+- intended rows come from verified Attempt/Capture Evidence through production
+  `plan_google_organic_expanded_capture()`, not from PostgreSQL state;
+- R4 validation executes over every matching expanded candidate before deduplication, sorting,
+  and outer history limiting, so hidden-tail damage fails closed;
+- pinned v1 is isolated from the expanded Evidence reconstruction path and remains unchanged;
+- the required legal-but-false timestamp, timestamp-value, links-family, URL/title, childless
+  placement, hidden-tail, undamaged PF-10, and pinned-v1 regressions are decisive and do not pass
+  merely because PostgreSQL rejected the tamper first; and
+- parser/Recipe/schema boundaries remain unchanged: expanded Recipe 3405 bytes / SHA-256
+  `2704ff82a175be7bacfd601cf7f0e684ca1cc85f9e8cfc93f520b603bcb29d04`, v1 Recipe 2487 bytes /
+  SHA-256 `338fc2080d31a35b1f7cc5d7a71c971d25d72517ca3b846959ccb501b666acde`, PF-10 fixture SHA-256
+  `7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f`, and exact expanded
+  PF-10 `observation_count = 248`.
+
+Low-severity review observations are accepted as non-blocking: the hidden-tail regression could
+self-prove its pre-limit ordering more explicitly; only one damage class has a direct
+monkeypatched load-bearing-gate attribution proof; helper names still say `children`; reused v1
+families remain membership-only; and expanded reads remain O(all matching Captures) in Evidence
+body verification. The reused-v1 integrity asymmetry is a named product limit and must not be
+misrepresented at closeout as Evidence-content reconstruction across every expanded family.
+
+The reviewer reports no edits, commits, push, provider call, credentials, paid API, Evidence
+mutation, or Recipe-selection change and ran no repository tests during review.
+
+**Steward reconciliation of independent R4 review:** `ACCEPTED`. No Product, Recipe, parser, or
+schema question remains. PF-18 now awaits only the final [CHAZ] full-repository validation gate.
+
 ## Closure
 
-<!-- Project Steward fills after independent review and final validation. -->
+<!-- Project Steward fills after final [CHAZ] full-suite validation. -->
