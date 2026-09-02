@@ -1,12 +1,13 @@
 # PF-18 — Google Organic MVP testimony completion
 
-**Status:** review — bounded integrity remediation required  
+**Status:** review — R1–R3 bounded integrity remediation authorized  
 **Kind:** provider fidelity remediation  
 **Triggered by:** MVP-01 Class 4 Google Organic finding  
-**Blocked by:** none for the bounded PF-18 implementation  
-**Approved by:** [CHAZ] for bounded implementation on 2026-09-01  
+**Blocked by:** none for the bounded PF-18 remediation  
+**Approved by:** [CHAZ] for bounded implementation on 2026-09-01 and R1–R3 remediation on 2026-09-02  
 **Draft base:** `0465a5b6e3bb9c4e56aa613f5d61581620e46096`  
 **Implementation start:** `404d3bebce3755c33989e10fe63559bd8ac89616`  
+**Remediation start:** `8d2f4c7b1736ed33941c44403a06ef365395cd2a`  
 **Implementation Writer:** [CLAUDE]  
 
 ## Why this ticket exists
