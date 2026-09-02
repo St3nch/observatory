@@ -381,3 +381,82 @@ Mentions remains separately F13-gated if it is reused or substantively modified.
 adapters should be born with the hardened closure-owned pattern rather than reusing an older
 caller-visible gate; doing so does not itself fire F13 or create a generic transport-capability
 framework.
+
+## Strategy-consumer pressure watchlist — 2026-09-02
+
+**Source and status:** After Observatory MVP closure, an independent Fable 5.1
+commissioning review inspected accepted HEAD
+`40ecd819b26fb28d808f92e75adcb9ff505c1972` as an API-only future Strategy consumer.
+The Project Steward reconciled the Observatory-specific findings below. They are retained
+as deferred consumer-pressure signals, **not** as tickets, implementation authorization,
+provider-call authorization, or evidence that the accepted MVP is incomplete. No item
+below reopens MVP-01. The review found no current Observatory blocker to beginning Strategy
+product work.
+
+### Read-API symmetry and scale
+
+- Keyword Overview, Google Organic, and Search Mentions expose History, Outcomes, and
+  Holdings, while Target Metrics, Historical LLM Mentions, Related Keywords, and Ranked
+  Keywords expose History only. For those four History-only surfaces, an API-only consumer
+  cannot uniformly distinguish never-measured from unresolved/failed acquisition using the
+  same discovery path. **Trigger:** a real consumer repeatedly needs that distinction on one
+  of those surfaces. Until then, empty History remains unknown rather than proof of
+  non-acquisition.
+- Provider History deliberately caps one response at 100 matching Captures and does not
+  expose outer pagination. **Trigger:** a real subject accumulates more than 100 comparable
+  Captures and the consumer must retrieve older history. Do not add pagination merely in
+  anticipation of recurrence.
+- Holdings are intentionally a low-volume bridge with a bounded result count and store-wide
+  verification posture. **Trigger:** more than 100 holding groups, or measured consumer
+  latency/ergonomics that makes the current bridge materially inadequate.
+- History request-context filtering remains a consumer concern at current scale. A consumer
+  can partition returned Captures by disclosed request context. **Trigger:** repeated
+  multi-context histories make that deterministic client-side partition materially awkward
+  or expensive. Exact-string provider subject identity remains deliberate and is not a
+  defect to normalize inside Observatory.
+- Google Organic expanded-history verification cost grows with matching Capture count.
+  **Trigger:** measured history-read cost becomes material after repeated acquisition; only
+  then consider the already-anticipated scalable verified index/projection path.
+
+### Acquisition is not an Observatory scheduling mandate
+
+- The review correctly distinguished "Observatory can preserve history" from "the system
+  has accumulated repeated comparable history." Current provider Evidence is primarily the
+  accepted commissioning set, not a recurring Strategy measurement panel.
+- This does **not** change F12. Observatory must not decide strategic importance, subject
+  panels, cadence, or recapture policy for downstream consumers. If Strategy later requires
+  repeated or coordinated measurement, resolve the ownership and human-authorization
+  boundary first; only then does F12's recorded trigger determine whether acquisition
+  orchestration work belongs here.
+- Additional competitor targets, keywords, locations, devices, or repeated Captures are
+  acquisition choices, not missing Observatory implementation by themselves.
+
+### Potential future testimony families
+
+- **First-party search-performance testimony:** Strategy may eventually need Search
+  Console-class source-attributed testimony to reason about owned-property impressions,
+  clicks, query/page relationships, and apparent post-change effects. `VISION.md` already
+  permits separately activated first-party/provider testimony; no activation is implied
+  here. **Trigger:** a concrete downstream question cannot be answered honestly from the
+  accepted external-provider surfaces plus consumer-owned state, and the acquisition / data
+  retention consequences have been separately reviewed.
+- **Live generative-answer / citation observation:** the accepted indexed AI-optimization
+  surfaces and Google Organic AI Overview testimony are not equivalent to repeatedly
+  observing live generative answers. Such a surface may matter for future GEO questions,
+  especially when answer/citation variability itself is material. **Trigger:** Strategy
+  demonstrates a concrete decision that requires live-sample testimony rather than the
+  accepted indexed/historical surfaces. Any future activation must preserve sampling
+  context and must not present a one-shot generative answer as deterministic visibility.
+- **Owned-site state / independent demand triangulation:** page inventories, internal-link
+  state, Search Trends-class data, or other instruments may eventually support Strategy,
+  but the existence of a provider/tool does not assign that state to Observatory. Resolve
+  consumer ownership and the exact unanswered question before activating another surface.
+
+### Consumer-ready behavior to protect
+
+The review found no reason to weaken or redesign the accepted MVP's time-axis discipline,
+Recipe pinning, provenance identifiers, fail-closed integrity behavior, request-context
+echoes, completeness/prefix disclosures, exact provider identity, or Evidence boundaries.
+Future consumer friction should first be classified as downstream reasoning, API ergonomics,
+genuinely absent testimony, or a new provider/instrument need before Observatory work is
+proposed.
