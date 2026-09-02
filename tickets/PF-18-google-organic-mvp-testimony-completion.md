@@ -1,10 +1,10 @@
 # PF-18 — Google Organic MVP testimony completion
 
-**Status:** review — R1–R3 accepted; R4 ranked-result-v2 read-integrity remediation required  
+**Status:** review — R1–R3 accepted; R4 ranked-result-v2 read-integrity remediation authorized  
 **Kind:** provider fidelity remediation  
 **Triggered by:** MVP-01 Class 4 Google Organic finding  
-**Blocked by:** explicit [CHAZ] authorization for bounded R4 implementation  
-**Approved by:** [CHAZ] for bounded implementation on 2026-09-01 and R1–R3 remediation on 2026-09-02  
+**Blocked by:** bounded R4 implementation by current Writer [GROK]  
+**Approved by:** [CHAZ] for bounded implementation on 2026-09-01, R1–R3 remediation on 2026-09-02, and bounded R4 remediation on 2026-09-02  
 **Draft base:** `0465a5b6e3bb9c4e56aa613f5d61581620e46096`  
 **Implementation start:** `404d3bebce3755c33989e10fe63559bd8ac89616`  
 **Remediation start:** `8d2f4c7b1736ed33941c44403a06ef365395cd2a`  
@@ -1162,8 +1162,9 @@ semantic axes, stop for Steward reconciliation rather than changing them silentl
 
 **Steward remediation verdict:** `R1_R2_R3_ACCEPTED__R4_REMEDIATION_REQUIRED`.
 
-No R4 code implementation is authorized by this review commit. [GROK] is the designated current
-Writer, but a fresh explicit [CHAZ] authorization is required before R4 implementation. No
+[CHAZ] explicitly authorized bounded R4 implementation on 2026-09-02. [GROK] is the designated
+current Writer for that remediation. The authorization is limited to the frozen R4 contract
+above and requires one direct implementation child of the durable authorization checkpoint. No
 provider call, credentials, spend, Evidence mutation, automatic Recipe-selection change, or push
 is authorized.
 
