@@ -9,7 +9,8 @@
 **Implementation start:** `404d3bebce3755c33989e10fe63559bd8ac89616`  
 **Remediation start:** `8d2f4c7b1736ed33941c44403a06ef365395cd2a`  
 **Remediation parent (authorization checkpoint):** `10d3b2f7c368bbf534c88ad7d2ffc13be2bcff41`  
-**Implementation Writer:** [CLAUDE]  
+**Historical implementation/remediation Writer:** [CLAUDE]  
+**Current Writer authority:** [GROK] — [CHAZ] revoked further [CLAUDE] write authority and designated [GROK] for any subsequent PF-18 code changes on 2026-09-02  
 
 ## Why this ticket exists
 
