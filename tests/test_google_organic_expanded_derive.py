@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 import socket
 from collections import Counter
 from decimal import Decimal
@@ -51,6 +52,8 @@ from observatory.google_organic_derive import (
     plan_google_organic_expanded_capture,
 )
 from observatory.migrate import (
+    PF18_ORDINARY_STATE_CONSTRAINTS,
+    PF18_PARENT_PLACEMENT_CONSTRAINTS,
     PF18_SCHEMA_STATEMENTS,
     PF18_TABLES,
     apply_migrations,
@@ -80,6 +83,58 @@ CHILD_RELATIONS = (
     ("google_organic_video_results", "google_organic_video_result_occurrences"),
     ("google_organic_sitelinks", "google_organic_sitelink_occurrences"),
 )
+# R2: every duplicated parent axis a PF-18 child stores and serves is part of the
+# composite parent key, so a child cannot cite a real parent while claiming a false
+# placement. Falsifying any one of these must be refused by PostgreSQL itself.
+FALSE_PARENT_AXES = (
+    ("google_organic_top_story_results", "parent_page", 2),
+    ("google_organic_top_story_results", "parent_position", "right"),
+    ("google_organic_top_story_results", "parent_rank_group", 2),
+    ("google_organic_top_story_results", "parent_rank_absolute", 99),
+    ("google_organic_video_results", "parent_page", 2),
+    ("google_organic_video_results", "parent_position", "right"),
+    ("google_organic_video_results", "parent_rank_group", 2),
+    ("google_organic_video_results", "parent_rank_absolute", 99),
+    ("google_organic_sitelinks", "parent_page", 2),
+    ("google_organic_sitelinks", "parent_position", "right"),
+    ("google_organic_sitelinks", "parent_rank_group", 2),
+    ("google_organic_sitelinks", "parent_rank_absolute", 99),
+)
+# R3: the ordinary PF-18 provider fields, their paired value column, and the constraint
+# that closes their state domain to stated | json_null | absent.
+PF18_ORDINARY_STATE_FIELDS = (
+    (
+        "google_organic_ranked_results_v2",
+        "organic_item_timestamp_state",
+        "organic_item_timestamp",
+        "go_ranked_v2_organic_item_timestamp_state_domain",
+    ),
+    (
+        "google_organic_ranked_results_v2",
+        "links_state",
+        "links_count",
+        "go_ranked_v2_links_state_domain",
+    ),
+    (
+        "google_organic_top_story_results",
+        "top_story_item_timestamp_state",
+        "top_story_item_timestamp",
+        "go_top_story_item_timestamp_state_domain",
+    ),
+    (
+        "google_organic_video_results",
+        "video_item_timestamp_state",
+        "video_item_timestamp",
+        "go_video_item_timestamp_state_domain",
+    ),
+    (
+        "google_organic_sitelinks",
+        "description_state",
+        "description",
+        "go_sitelink_description_state_domain",
+    ),
+)
+IMPOSSIBLE_PF18_STATES = ("not_requested", "inapplicable")
 EXPANDED_RELATIONS = (
     "google_organic_result_context",
     "google_organic_serp_features",
@@ -277,8 +332,10 @@ def test_pf18_adds_exactly_seven_google_organic_local_relations() -> None:
     joined = "\n".join(PF18_SCHEMA_STATEMENTS)
     for table in PF18_TABLES:
         assert f"CREATE TABLE IF NOT EXISTS {table} (" in joined
-    # The accepted v1 ranked relation is never reshaped into a second v1 form.
-    assert "ALTER TABLE google_organic_ranked_results" not in joined
+    # The accepted v1 ranked relation is never reshaped into a second v1 form. The
+    # expanded relation `google_organic_ranked_results_v2` is a different table and may
+    # be altered additively; only the v1 relation itself is off limits.
+    assert re.search(r"ALTER TABLE google_organic_ranked_results(?!_v2)", joined) is None
     assert "DROP" not in joined
     # No Page identity, no cross-surface joins, no universal provider clock.
     assert "page_id" not in joined
@@ -824,6 +881,356 @@ def test_a_sitelink_cannot_bind_to_a_missing_ranked_v2_parent(
                 """
             )
         connection.rollback()
+
+
+# --------------------------------------------------------------------------------------
+# R2 — a child cannot cite the real parent while claiming a false parent placement
+# --------------------------------------------------------------------------------------
+
+
+def test_pf18_child_relations_bind_to_the_full_parent_placement() -> None:
+    joined = "\n".join(PF18_SCHEMA_STATEMENTS)
+    assert PF18_PARENT_PLACEMENT_CONSTRAINTS == (
+        (
+            "google_organic_top_story_results",
+            "google_organic_top_story_results_parent_placement",
+            "google_organic_serp_features",
+            "capture_id, derivation_version_id, parent_within_capture_identity, "
+            "parent_item_type, parent_page, parent_position, parent_rank_group, "
+            "parent_rank_absolute",
+        ),
+        (
+            "google_organic_video_results",
+            "google_organic_video_results_parent_placement",
+            "google_organic_serp_features",
+            "capture_id, derivation_version_id, parent_within_capture_identity, "
+            "parent_item_type, parent_page, parent_position, parent_rank_group, "
+            "parent_rank_absolute",
+        ),
+        (
+            "google_organic_sitelinks",
+            "google_organic_sitelinks_parent_placement",
+            "google_organic_ranked_results_v2",
+            "capture_id, derivation_version_id, parent_within_capture_identity, "
+            "parent_page, parent_position, parent_rank_group, parent_rank_absolute",
+        ),
+    )
+    # The parent keys the children point at carry the full placement, not identity alone.
+    assert (
+        "REFERENCES google_organic_serp_features (capture_id, derivation_version_id, "
+        "within_capture_identity, item_type, page, position, rank_group, rank_absolute)"
+    ) in joined
+    assert (
+        "REFERENCES google_organic_ranked_results_v2 (capture_id, "
+        "derivation_version_id, within_capture_identity, page, position, rank_group, "
+        "rank_absolute)"
+    ) in joined
+    for _table, name, _parent, _key in PF18_PARENT_PLACEMENT_CONSTRAINTS:
+        assert f"CONSTRAINT {name}" in joined
+    # Both parent unique keys are additive; no accepted relation is reshaped or dropped.
+    assert "DROP" not in joined
+
+
+def test_the_parent_placement_keys_exist_in_real_postgres(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    _commit(store, _body(), "20" * 32)
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic_expanded(store, connection)
+        connection.commit()
+        for table, name, parent, _key in PF18_PARENT_PLACEMENT_CONSTRAINTS:
+            row = connection.execute(
+                """
+                SELECT confrelid::regclass::text, contype
+                FROM pg_constraint
+                WHERE conrelid = %s::regclass AND conname = %s
+                """,
+                (table, name),
+            ).fetchone()
+            assert row is not None, name
+            assert row[0] == parent
+            assert row[1] == "f"
+
+
+def test_a_child_cannot_claim_a_false_parent_placement_axis(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    _commit(store, _body(), "21" * 32)
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic_expanded(store, connection)
+        connection.commit()
+        for table, column, false_value in FALSE_PARENT_AXES:
+            with pytest.raises(ForeignKeyViolation) as excinfo:
+                connection.execute(
+                    f"UPDATE {table} SET {column} = %s", (false_value,)
+                )
+            assert excinfo.value.diag.constraint_name == next(
+                name
+                for owner, name, _parent, _key in PF18_PARENT_PLACEMENT_CONSTRAINTS
+                if owner == table
+            )
+            connection.rollback()
+        # The real placement is still writable, so the refusal is about disagreement
+        # with the cited parent rather than an immovable column.
+        for table, _column, _false_value in FALSE_PARENT_AXES:
+            connection.execute(f"UPDATE {table} SET parent_page = parent_page")
+        connection.rollback()
+
+
+def test_a_child_cannot_be_repointed_at_a_parent_with_other_placement_axes(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    """The video parent is real, but it is not the Top Stories child's parent."""
+
+    store = create_store(tmp_path / "evidence")
+    _commit(store, _body(), "22" * 32)
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic_expanded(store, connection)
+        connection.commit()
+        video_parent = connection.execute(
+            """
+            SELECT parent_within_capture_identity, parent_rank_absolute
+            FROM google_organic_video_results LIMIT 1
+            """
+        ).fetchone()
+        assert video_parent is not None
+        # Citing the real video feature identity while keeping the Top Stories
+        # placement axes is refused; so is keeping the identity and taking the
+        # video parent's rank.
+        with pytest.raises(ForeignKeyViolation):
+            connection.execute(
+                """
+                UPDATE google_organic_top_story_results
+                SET parent_within_capture_identity = %s
+                """,
+                (video_parent[0],),
+            )
+        connection.rollback()
+        with pytest.raises(ForeignKeyViolation):
+            connection.execute(
+                "UPDATE google_organic_top_story_results SET parent_rank_absolute = %s",
+                (video_parent[1],),
+            )
+        connection.rollback()
+
+
+def _remediation_constraints() -> tuple[tuple[str, str], ...]:
+    """Drop order matters: the foreign keys depend on the parent unique keys."""
+
+    return (
+        *((table, name) for table, name, _parent, _key in PF18_PARENT_PLACEMENT_CONSTRAINTS),
+        ("google_organic_serp_features", "google_organic_serp_features_placement"),
+        (
+            "google_organic_ranked_results_v2",
+            "google_organic_ranked_results_v2_placement",
+        ),
+        *((table, name) for table, name, _column in PF18_ORDINARY_STATE_CONSTRAINTS),
+    )
+
+
+def test_the_remediation_migration_is_idempotent_and_upgrades_in_place(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    _commit(store, _body(), "26" * 32)
+    apply_migrations(postgres_dsn)
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic_expanded(store, connection)
+        connection.commit()
+    # Stand in for a database migrated before this remediation.
+    with connect(postgres_dsn) as connection:
+        for table, name in _remediation_constraints():
+            connection.execute(f"ALTER TABLE {table} DROP CONSTRAINT {name}")
+        connection.commit()
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        for table, name in _remediation_constraints():
+            row = connection.execute(
+                """
+                SELECT 1 FROM pg_constraint
+                WHERE conrelid = %s::regclass AND conname = %s
+                """,
+                (table, name),
+            ).fetchone()
+            assert row is not None, name
+        assert (
+            derive_google_organic_expanded(store, connection).observations
+            == EXPECTED_EXPANDED_OBSERVATIONS
+        )
+
+
+def test_the_remediation_migration_refuses_a_database_holding_falsified_axes(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    """Damage persisted under the previous schema fails the upgrade closed."""
+
+    store = create_store(tmp_path / "evidence")
+    _commit(store, _body(), "27" * 32)
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic_expanded(store, connection)
+        connection.commit()
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            ALTER TABLE google_organic_sitelinks
+            DROP CONSTRAINT google_organic_sitelinks_parent_placement
+            """
+        )
+        connection.execute("UPDATE google_organic_sitelinks SET parent_page = 2")
+        connection.commit()
+    with pytest.raises(ForeignKeyViolation):
+        apply_migrations(postgres_dsn)
+
+
+def test_the_remediation_migration_refuses_an_impossible_persisted_state(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    _commit(store, _body(), "28" * 32)
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic_expanded(store, connection)
+        connection.commit()
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            ALTER TABLE google_organic_sitelinks
+            DROP CONSTRAINT go_sitelink_description_state_domain
+            """
+        )
+        connection.execute(
+            """
+            UPDATE google_organic_sitelinks
+            SET description = NULL, description_state = 'not_requested'
+            """
+        )
+        connection.commit()
+    with pytest.raises(CheckViolation):
+        apply_migrations(postgres_dsn)
+
+
+# --------------------------------------------------------------------------------------
+# R3 — PF-18 ordinary field states are exactly stated | json_null | absent
+# --------------------------------------------------------------------------------------
+
+
+def test_pf18_ordinary_state_registry_matches_the_narrowed_fields() -> None:
+    narrowed = tuple(
+        (table, name, column)
+        for table, column, _value_column, name in PF18_ORDINARY_STATE_FIELDS
+    )
+    assert narrowed == PF18_ORDINARY_STATE_CONSTRAINTS
+    joined = "\n".join(PF18_SCHEMA_STATEMENTS)
+    for _table, _column, _value_column, name in PF18_ORDINARY_STATE_FIELDS:
+        assert f"CONSTRAINT {name} CHECK (" in joined
+    # The repository-wide five-token domain is not globally narrowed: ranked-result v2
+    # keeps the inherited v1 description/website_name semantics verbatim.
+    assert (
+        "description_state IN ('stated', 'json_null', 'absent', 'not_requested', "
+        "'inapplicable')"
+    ) in joined
+    assert (
+        "website_name_state IN ('stated', 'json_null', 'absent', 'not_requested', "
+        "'inapplicable')"
+    ) in joined
+
+
+def test_pf18_ordinary_fields_refuse_not_requested_and_inapplicable(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    _commit(store, _body(), "23" * 32)
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic_expanded(store, connection)
+        connection.commit()
+        for table, column, value_column, constraint in PF18_ORDINARY_STATE_FIELDS:
+            for impossible in IMPOSSIBLE_PF18_STATES:
+                with pytest.raises(CheckViolation) as excinfo:
+                    # The paired value is nulled too, so the state/value consistency
+                    # CHECK is satisfied and only the narrowed domain can refuse it.
+                    connection.execute(
+                        f"UPDATE {table} SET {value_column} = NULL, {column} = %s",
+                        (impossible,),
+                    )
+                assert excinfo.value.diag.constraint_name == constraint
+                connection.rollback()
+
+
+def test_pf18_ordinary_fields_still_accept_their_three_applicable_states(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    _commit(store, _body(), "24" * 32)
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic_expanded(store, connection)
+        connection.commit()
+        for table, column, value_column, _constraint in PF18_ORDINARY_STATE_FIELDS:
+            for applicable in ("json_null", "absent"):
+                connection.execute(
+                    f"UPDATE {table} SET {value_column} = NULL, {column} = %s",
+                    (applicable,),
+                )
+                connection.rollback()
+        # stated keeps requiring a value, and a stated empty links array (count 0) is
+        # a legitimate distinct family rather than a missing value.
+        connection.execute(
+            """
+            UPDATE google_organic_ranked_results_v2
+            SET links_state = 'stated', links_count = 0
+            """
+        )
+        connection.rollback()
+        with pytest.raises(CheckViolation):
+            connection.execute(
+                """
+                UPDATE google_organic_ranked_results_v2
+                SET links_state = 'stated', links_count = NULL
+                """
+            )
+        connection.rollback()
+        with pytest.raises(CheckViolation):
+            connection.execute(
+                """
+                UPDATE google_organic_ranked_results_v2
+                SET links_state = 'absent', links_count = 4
+                """
+            )
+        connection.rollback()
+
+
+def test_inherited_v1_ranked_states_are_not_narrowed_by_pf18(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    """PF-18 must not tighten the accepted v1 description/website_name contract."""
+
+    store = create_store(tmp_path / "evidence")
+    _commit(store, _body(), "25" * 32)
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic_expanded(store, connection)
+        connection.commit()
+        for column, value_column in (
+            ("description_state", "description"),
+            ("website_name_state", "website_name"),
+        ):
+            for state in IMPOSSIBLE_PF18_STATES:
+                connection.execute(
+                    f"""
+                    UPDATE google_organic_ranked_results_v2
+                    SET {value_column} = NULL, {column} = %s
+                    """,
+                    (state,),
+                )
+                connection.rollback()
 
 
 def test_two_fresh_postgres_rebuilds_are_logically_equivalent(

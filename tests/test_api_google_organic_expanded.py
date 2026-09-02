@@ -18,7 +18,9 @@ from urllib.parse import urlencode
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
+from observatory import google_organic_read
 from observatory.api import create_app
 from observatory.capture_event import (
     ORGANIC_ADAPTER_CONTRACT,
@@ -49,6 +51,12 @@ from observatory.evidence_store import EvidenceStore, create_store
 from observatory.google_organic_derive import (
     derive_google_organic,
     derive_google_organic_expanded,
+)
+from observatory.google_organic_read import (
+    GoogleOrganicItemTimestamp,
+    GoogleOrganicLinksFamily,
+    GoogleOrganicOrdinaryTextField,
+    GoogleOrganicTextField,
 )
 from observatory.migrate import apply_migrations, connect
 from observatory.provider_recipe_selection import select_provider_recipe
@@ -731,6 +739,304 @@ def test_undamaged_expanded_history_is_still_limitable(
     assert body["returned_count"] == 1
     assert body["has_more"] is True
     assert len(body["captures"][0]["top_story_results"]) == 4
+
+
+CHILD_OCCURRENCE_FAMILIES = (
+    (
+        "google_organic_top_story_results",
+        "google_organic_top_story_result_occurrences",
+    ),
+    ("google_organic_video_results", "google_organic_video_result_occurrences"),
+    ("google_organic_sitelinks", "google_organic_sitelink_occurrences"),
+)
+IMPOSSIBLE_PF18_STATES = ("not_requested", "inapplicable")
+
+
+def _insert_extra_occurrence(
+    connection: Any, parent_table: str, occurrence_table: str, capture_id: str
+) -> None:
+    """Add one more FK-valid child_index under an existing semantic child.
+
+    The parent exists, the envelope exists, the observation_kind agrees and the
+    foreign key is satisfied, so nothing but complete-set agreement with verified
+    Evidence can refuse this row.
+    """
+
+    inserted = connection.execute(
+        f"""
+        INSERT INTO {occurrence_table} (
+            capture_id, derivation_version_id, within_capture_identity,
+            observation_kind, child_index
+        )
+        SELECT capture_id, derivation_version_id, within_capture_identity,
+               observation_kind, 99
+        FROM {parent_table}
+        WHERE capture_id = %s AND derivation_version_id = %s
+        ORDER BY within_capture_identity
+        LIMIT 1
+        """,
+        (capture_id, GOOGLE_ORGANIC_EXPANDED_RECIPE_ID),
+    ).rowcount
+    assert inserted == 1
+
+
+@pytest.mark.parametrize(("parent_table", "occurrence_table"), CHILD_OCCURRENCE_FAMILIES)
+def test_an_extra_child_occurrence_under_a_real_parent_is_409(
+    tmp_path: Path, postgres_dsn: str, parent_table: str, occurrence_table: str
+) -> None:
+    store, _attempt, capture_id = _prepare(tmp_path, postgres_dsn)
+    with _app(store, postgres_dsn) as client:
+        assert _history(client).status_code == 200
+    with connect(postgres_dsn) as connection:
+        _insert_extra_occurrence(connection, parent_table, occurrence_table, capture_id)
+        connection.commit()
+    # Derivation is deliberately NOT rerun: the read path must refuse this on its own.
+    with _app(store, postgres_dsn) as client:
+        response = _history(client)
+    _assert_409(response)
+
+
+def test_the_extra_occurrence_refusal_comes_from_evidence_reconstruction(
+    tmp_path: Path, postgres_dsn: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Name the gate that actually refuses the row, so it cannot silently regress.
+
+    The pre-existing envelope/typed-key and at-least-one-occurrence checks pass on a
+    spurious extra child_index; only complete-set agreement with the verified Evidence
+    body refuses it.
+    """
+
+    store, _attempt, capture_id = _prepare(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        _insert_extra_occurrence(
+            connection,
+            "google_organic_video_results",
+            "google_organic_video_result_occurrences",
+            capture_id,
+        )
+        connection.commit()
+    monkeypatch.setattr(
+        google_organic_read,
+        "_assert_expanded_children_match_evidence",
+        lambda *args, **kwargs: None,
+    )
+    with _app(store, postgres_dsn) as client:
+        assert _history(client).status_code == 200
+    monkeypatch.undo()
+    with _app(store, postgres_dsn) as client:
+        _assert_409(_history(client))
+
+
+def test_an_extra_child_occurrence_hidden_beyond_the_outer_limit_is_still_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store = create_store(tmp_path / "evidence")
+    _commit_organic(store, _body(), "85" * 32, started="2026-08-18T17:37:01.100000Z")
+    _later_attempt, later_capture = _commit_organic(
+        store,
+        _body(),
+        "86" * 32,
+        started="2026-08-18T17:38:01.100000Z",
+        authorized_at="2026-08-18T17:38:00.000000Z",
+    )
+    apply_migrations(postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        derive_google_organic_expanded(store, connection)
+        select_provider_recipe(
+            connection, ORGANIC_ADAPTER_CONTRACT, GOOGLE_ORGANIC_EXPANDED_RECIPE_ID
+        )
+        connection.commit()
+        _insert_extra_occurrence(
+            connection,
+            "google_organic_sitelinks",
+            "google_organic_sitelink_occurrences",
+            later_capture,
+        )
+        connection.commit()
+    with _app(store, postgres_dsn) as client:
+        limited = _history(client, limit=1, order="asc")
+        unlimited = _history(client)
+    # The damaged Capture sorts second and limit=1 would hide it; it still 409s.
+    _assert_409(limited)
+    _assert_409(unlimited)
+
+
+@pytest.mark.parametrize(("parent_table", "occurrence_table"), CHILD_OCCURRENCE_FAMILIES)
+def test_a_duplicated_semantic_child_occurrence_index_is_409(
+    tmp_path: Path, postgres_dsn: str, parent_table: str, occurrence_table: str
+) -> None:
+    """Moving a real occurrence onto another real semantic child is still damage."""
+
+    store, _attempt, capture_id = _prepare(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        identities = connection.execute(
+            f"""
+            SELECT within_capture_identity FROM {parent_table}
+            WHERE capture_id = %s AND derivation_version_id = %s
+            ORDER BY within_capture_identity
+            """,
+            (capture_id, GOOGLE_ORGANIC_EXPANDED_RECIPE_ID),
+        ).fetchall()
+        assert len(identities) >= 2
+        connection.execute(
+            f"""
+            UPDATE {occurrence_table} SET within_capture_identity = %s
+            WHERE within_capture_identity = %s
+            """,
+            (identities[0][0], identities[1][0]),
+        )
+        connection.commit()
+    with _app(store, postgres_dsn) as client:
+        response = _history(client)
+    _assert_409(response)
+
+
+@pytest.mark.parametrize(
+    ("table", "constraint", "column", "false_value"),
+    (
+        (
+            "google_organic_top_story_results",
+            "google_organic_top_story_results_parent_placement",
+            "parent_page",
+            2,
+        ),
+        (
+            "google_organic_video_results",
+            "google_organic_video_results_parent_placement",
+            "parent_rank_absolute",
+            99,
+        ),
+        (
+            "google_organic_sitelinks",
+            "google_organic_sitelinks_parent_placement",
+            "parent_rank_group",
+            2,
+        ),
+    ),
+)
+def test_a_falsified_parent_axis_is_409_even_without_the_database_constraint(
+    tmp_path: Path,
+    postgres_dsn: str,
+    table: str,
+    constraint: str,
+    column: str,
+    false_value: object,
+) -> None:
+    """Defence in depth for damage persisted before the composite key existed.
+
+    PostgreSQL now refuses a false parent axis outright. Dropping that constraint
+    simulates a database damaged under the previous schema, and proves the read path
+    independently refuses to serve contradictory parent-placement testimony.
+    """
+
+    store, _attempt, _capture_id = _prepare(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        connection.execute(f"ALTER TABLE {table} DROP CONSTRAINT {constraint}")
+        connection.execute(f"UPDATE {table} SET {column} = %s", (false_value,))
+        connection.commit()
+    with _app(store, postgres_dsn) as client:
+        response = _history(client)
+    _assert_409(response)
+
+
+def test_a_falsified_child_content_field_is_409(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, _attempt, _capture_id = _prepare(tmp_path, postgres_dsn)
+    with connect(postgres_dsn) as connection:
+        connection.execute(
+            """
+            UPDATE google_organic_top_story_results
+            SET source = 'Fabricated Wire Service'
+            """
+        )
+        connection.commit()
+    with _app(store, postgres_dsn) as client:
+        response = _history(client)
+    _assert_409(response)
+
+
+# --------------------------------------------------------------------------------------
+# PF-18 ordinary field states are exactly stated | json_null | absent
+# --------------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("impossible", IMPOSSIBLE_PF18_STATES)
+def test_pf18_ordinary_models_refuse_impossible_field_states(impossible: str) -> None:
+    with pytest.raises(ValidationError):
+        GoogleOrganicItemTimestamp.model_validate({"state": impossible, "value": None})
+    with pytest.raises(ValidationError):
+        GoogleOrganicOrdinaryTextField.model_validate(
+            {"state": impossible, "value": None}
+        )
+    with pytest.raises(ValidationError):
+        GoogleOrganicLinksFamily.model_validate(
+            {"state": impossible, "returned_child_count": None}
+        )
+    # The inherited v1 field model keeps its accepted five-token contract.
+    assert (
+        GoogleOrganicTextField.model_validate({"state": impossible, "value": None}).state
+        == impossible
+    )
+
+
+@pytest.mark.parametrize("applicable", ("stated", "json_null", "absent"))
+def test_pf18_ordinary_models_accept_their_three_applicable_states(
+    applicable: str,
+) -> None:
+    value = "2026-08-18 09:37:26 +00:00" if applicable == "stated" else None
+    assert (
+        GoogleOrganicItemTimestamp.model_validate(
+            {"state": applicable, "value": value}
+        ).state
+        == applicable
+    )
+    assert (
+        GoogleOrganicOrdinaryTextField.model_validate(
+            {"state": applicable, "value": value}
+        ).state
+        == applicable
+    )
+    assert (
+        GoogleOrganicLinksFamily.model_validate(
+            {
+                "state": applicable,
+                "returned_child_count": 0 if applicable == "stated" else None,
+            }
+        ).state
+        == applicable
+    )
+
+
+def test_openapi_publishes_the_narrow_domain_only_for_pf18_ordinary_fields(
+    tmp_path: Path, postgres_dsn: str
+) -> None:
+    store, _attempt, _capture_id = _prepare(tmp_path, postgres_dsn)
+    with _app(store, postgres_dsn) as client:
+        schemas = _schemas(client)
+    ordinary = ["stated", "json_null", "absent"]
+    inherited = ordinary + ["not_requested", "inapplicable"]
+    for model in (
+        "GoogleOrganicItemTimestamp",
+        "GoogleOrganicOrdinaryTextField",
+        "GoogleOrganicLinksFamily",
+    ):
+        assert schemas[model]["properties"]["state"]["enum"] == ordinary, model
+    for model in ("GoogleOrganicTextField", "GoogleOrganicIntField"):
+        assert schemas[model]["properties"]["state"]["enum"] == inherited, model
+    # The narrowed state carries its own documentation on the exact properties.
+    for model in (
+        "GoogleOrganicItemTimestamp",
+        "GoogleOrganicOrdinaryTextField",
+        "GoogleOrganicLinksFamily",
+    ):
+        assert "not_requested and inapplicable are impossible" in _description(
+            schemas, model, "state"
+        )
+    assert (
+        schemas["GoogleOrganicSitelink"]["properties"]["description"]["$ref"]
+        == "#/components/schemas/GoogleOrganicOrdinaryTextField"
+    )
 
 
 # --------------------------------------------------------------------------------------

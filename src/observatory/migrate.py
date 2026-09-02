@@ -911,6 +911,129 @@ PF18_TABLES: Final[tuple[str, ...]] = (
     GOOGLE_ORGANIC_SITELINK_OCCURRENCES_TABLE,
 )
 
+# PF-18 introduces ordinary provider fields whose applicable state domain is exactly
+# stated | json_null | absent. `not_requested` and `inapplicable` are impossible for
+# them: the expanded Recipe never disables these dimensions per request and never
+# declares them recipe-inapplicable, so persisting either token would be damage rather
+# than testimony. The repository-wide five-token `_FIELD_STATE_CHECK` is unchanged and
+# still governs every accepted v1 field, including the ranked-result
+# description/website_name states that ranked-result v2 inherits verbatim.
+_PF18_ORDINARY_STATE_CHECK: Final[str] = "IN ('stated', 'json_null', 'absent')"
+
+PF18_ORDINARY_STATE_CONSTRAINTS: Final[tuple[tuple[str, str, str], ...]] = (
+    (
+        GOOGLE_ORGANIC_RANKED_V2_TABLE,
+        "go_ranked_v2_organic_item_timestamp_state_domain",
+        "organic_item_timestamp_state",
+    ),
+    (
+        GOOGLE_ORGANIC_RANKED_V2_TABLE,
+        "go_ranked_v2_links_state_domain",
+        "links_state",
+    ),
+    (
+        GOOGLE_ORGANIC_TOP_STORY_TABLE,
+        "go_top_story_item_timestamp_state_domain",
+        "top_story_item_timestamp_state",
+    ),
+    (
+        GOOGLE_ORGANIC_VIDEO_TABLE,
+        "go_video_item_timestamp_state_domain",
+        "video_item_timestamp_state",
+    ),
+    (
+        GOOGLE_ORGANIC_SITELINK_TABLE,
+        "go_sitelink_description_state_domain",
+        "description_state",
+    ),
+)
+
+
+def _pf18_ordinary_state_domain(name: str, column: str) -> str:
+    return f"CONSTRAINT {name} CHECK ({column} {_PF18_ORDINARY_STATE_CHECK})"
+
+
+def _pf18_table_state_domains(table: str) -> str:
+    return ",\n    ".join(
+        _pf18_ordinary_state_domain(name, column)
+        for owner, name, column in PF18_ORDINARY_STATE_CONSTRAINTS
+        if owner == table
+    )
+
+
+_RANKED_V2_STATE_DOMAIN_SQL: Final[str] = _pf18_table_state_domains(
+    GOOGLE_ORGANIC_RANKED_V2_TABLE
+)
+_TOP_STORY_STATE_DOMAIN_SQL: Final[str] = _pf18_table_state_domains(
+    GOOGLE_ORGANIC_TOP_STORY_TABLE
+)
+_VIDEO_STATE_DOMAIN_SQL: Final[str] = _pf18_table_state_domains(
+    GOOGLE_ORGANIC_VIDEO_TABLE
+)
+_SITELINK_STATE_DOMAIN_SQL: Final[str] = _pf18_table_state_domains(
+    GOOGLE_ORGANIC_SITELINK_TABLE
+)
+
+# PF-18 children cite their parent by identity *and* by the exact parent placement axes
+# they duplicate and serve. Binding only the identity would let damaged rows keep a real
+# parent while claiming a false page/position/rank, so the composite parent key carries
+# every served axis and PostgreSQL — not application convention — proves the agreement.
+_FEATURE_PLACEMENT_KEY: Final[str] = (
+    "capture_id, derivation_version_id, within_capture_identity, item_type, "
+    "page, position, rank_group, rank_absolute"
+)
+_FEATURE_CHILD_PLACEMENT_KEY: Final[str] = (
+    "capture_id, derivation_version_id, parent_within_capture_identity, "
+    "parent_item_type, parent_page, parent_position, parent_rank_group, "
+    "parent_rank_absolute"
+)
+_RANKED_V2_PLACEMENT_KEY: Final[str] = (
+    "capture_id, derivation_version_id, within_capture_identity, "
+    "page, position, rank_group, rank_absolute"
+)
+_SITELINK_PARENT_PLACEMENT_KEY: Final[str] = (
+    "capture_id, derivation_version_id, parent_within_capture_identity, "
+    "parent_page, parent_position, parent_rank_group, parent_rank_absolute"
+)
+GOOGLE_ORGANIC_FEATURES_PLACEMENT_CONSTRAINT: Final[str] = (
+    "google_organic_serp_features_placement"
+)
+GOOGLE_ORGANIC_RANKED_V2_PLACEMENT_CONSTRAINT: Final[str] = (
+    "google_organic_ranked_results_v2_placement"
+)
+PF18_PARENT_PLACEMENT_CONSTRAINTS: Final[tuple[tuple[str, str, str, str], ...]] = (
+    (
+        GOOGLE_ORGANIC_TOP_STORY_TABLE,
+        "google_organic_top_story_results_parent_placement",
+        "google_organic_serp_features",
+        _FEATURE_CHILD_PLACEMENT_KEY,
+    ),
+    (
+        GOOGLE_ORGANIC_VIDEO_TABLE,
+        "google_organic_video_results_parent_placement",
+        "google_organic_serp_features",
+        _FEATURE_CHILD_PLACEMENT_KEY,
+    ),
+    (
+        GOOGLE_ORGANIC_SITELINK_TABLE,
+        "google_organic_sitelinks_parent_placement",
+        GOOGLE_ORGANIC_RANKED_V2_TABLE,
+        _SITELINK_PARENT_PLACEMENT_KEY,
+    ),
+)
+_PARENT_PLACEMENT_TARGET_KEY: Final[dict[str, str]] = {
+    "google_organic_serp_features": _FEATURE_PLACEMENT_KEY,
+    GOOGLE_ORGANIC_RANKED_V2_TABLE: _RANKED_V2_PLACEMENT_KEY,
+}
+
+
+def _pf18_parent_placement_fk(name: str, parent: str, child_key: str) -> str:
+    return (
+        f"CONSTRAINT {name}\n"
+        f"        FOREIGN KEY ({child_key})\n"
+        f"        REFERENCES {parent} ({_PARENT_PLACEMENT_TARGET_KEY[parent]})"
+    )
+
 _RANKED_V2_CONSISTENCY_SQL: Final[str] = ",\n    ".join(
     _state_value_consistency(GOOGLE_ORGANIC_RANKED_V2_TABLE, column)
     for column in ("description", "website_name", "organic_item_timestamp")
@@ -947,6 +1070,22 @@ BEGIN
 END $$
 """
 
+GOOGLE_ORGANIC_FEATURES_PLACEMENT_UNIQUE_SQL: Final[str] = f"""
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conrelid = 'google_organic_serp_features'::regclass
+          AND conname = '{GOOGLE_ORGANIC_FEATURES_PLACEMENT_CONSTRAINT}'
+    ) THEN
+        ALTER TABLE google_organic_serp_features
+            ADD CONSTRAINT {GOOGLE_ORGANIC_FEATURES_PLACEMENT_CONSTRAINT}
+            UNIQUE ({_FEATURE_PLACEMENT_KEY});
+    END IF;
+END $$
+"""
+
 GOOGLE_ORGANIC_RANKED_V2_SQL: Final[str] = f"""
 CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_RANKED_V2_TABLE} (
     capture_id TEXT NOT NULL
@@ -974,10 +1113,8 @@ CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_RANKED_V2_TABLE} (
     website_name_state TEXT NOT NULL
         CHECK (website_name_state {_FIELD_STATE_CHECK}),
     organic_item_timestamp TEXT,
-    organic_item_timestamp_state TEXT NOT NULL
-        CHECK (organic_item_timestamp_state {_FIELD_STATE_CHECK}),
-    links_state TEXT NOT NULL
-        CHECK (links_state {_FIELD_STATE_CHECK}),
+    organic_item_timestamp_state TEXT NOT NULL,
+    links_state TEXT NOT NULL,
     links_count BIGINT
         CHECK (links_count IS NULL OR links_count >= 0),
     PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
@@ -988,6 +1125,9 @@ CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_RANKED_V2_TABLE} (
             capture_id, derivation_version_id,
             within_capture_identity, observation_kind
         ),
+    CONSTRAINT {GOOGLE_ORGANIC_RANKED_V2_PLACEMENT_CONSTRAINT}
+        UNIQUE ({_RANKED_V2_PLACEMENT_KEY}),
+    {_RANKED_V2_STATE_DOMAIN_SQL},
     CONSTRAINT google_organic_ranked_results_v2_links_consistency
         CHECK (
             (links_state = 'stated' AND links_count IS NOT NULL)
@@ -1025,8 +1165,7 @@ CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_TOP_STORY_TABLE} (
     domain TEXT NOT NULL,
     title TEXT NOT NULL,
     top_story_item_timestamp TEXT,
-    top_story_item_timestamp_state TEXT NOT NULL
-        CHECK (top_story_item_timestamp_state {_FIELD_STATE_CHECK}),
+    top_story_item_timestamp_state TEXT NOT NULL,
     PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
     CONSTRAINT google_organic_top_story_results_kind
         CHECK (observation_kind = '{GOOGLE_ORGANIC_TOP_STORY_KIND}'),
@@ -1044,6 +1183,12 @@ CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_TOP_STORY_TABLE} (
             capture_id, derivation_version_id,
             within_capture_identity, item_type
         ),
+    {_pf18_parent_placement_fk(
+        'google_organic_top_story_results_parent_placement',
+        'google_organic_serp_features',
+        _FEATURE_CHILD_PLACEMENT_KEY,
+    )},
+    {_TOP_STORY_STATE_DOMAIN_SQL},
     {_TOP_STORY_CONSISTENCY_SQL}
 )
 """
@@ -1099,8 +1244,7 @@ CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_VIDEO_TABLE} (
     source TEXT NOT NULL,
     title TEXT NOT NULL,
     video_item_timestamp TEXT,
-    video_item_timestamp_state TEXT NOT NULL
-        CHECK (video_item_timestamp_state {_FIELD_STATE_CHECK}),
+    video_item_timestamp_state TEXT NOT NULL,
     PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
     CONSTRAINT google_organic_video_results_kind
         CHECK (observation_kind = '{GOOGLE_ORGANIC_VIDEO_KIND}'),
@@ -1118,6 +1262,12 @@ CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_VIDEO_TABLE} (
             capture_id, derivation_version_id,
             within_capture_identity, item_type
         ),
+    {_pf18_parent_placement_fk(
+        'google_organic_video_results_parent_placement',
+        'google_organic_serp_features',
+        _FEATURE_CHILD_PLACEMENT_KEY,
+    )},
+    {_VIDEO_STATE_DOMAIN_SQL},
     {_VIDEO_CONSISTENCY_SQL}
 )
 """
@@ -1171,8 +1321,7 @@ CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_SITELINK_TABLE} (
     title TEXT NOT NULL,
     domain TEXT NOT NULL,
     description TEXT,
-    description_state TEXT NOT NULL
-        CHECK (description_state {_FIELD_STATE_CHECK}),
+    description_state TEXT NOT NULL,
     PRIMARY KEY (capture_id, derivation_version_id, within_capture_identity),
     CONSTRAINT google_organic_sitelinks_kind
         CHECK (observation_kind = '{GOOGLE_ORGANIC_SITELINK_KIND}'),
@@ -1188,6 +1337,12 @@ CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_SITELINK_TABLE} (
         REFERENCES {GOOGLE_ORGANIC_RANKED_V2_TABLE} (
             capture_id, derivation_version_id, within_capture_identity
         ),
+    {_pf18_parent_placement_fk(
+        'google_organic_sitelinks_parent_placement',
+        GOOGLE_ORGANIC_RANKED_V2_TABLE,
+        _SITELINK_PARENT_PLACEMENT_KEY,
+    )},
+    {_SITELINK_STATE_DOMAIN_SQL},
     {_SITELINK_CONSISTENCY_SQL}
 )
 """
@@ -1217,6 +1372,62 @@ CREATE TABLE IF NOT EXISTS {GOOGLE_ORGANIC_SITELINK_OCCURRENCES_TABLE} (
         )
 )
 """
+
+GOOGLE_ORGANIC_RANKED_V2_PLACEMENT_UNIQUE_SQL: Final[str] = f"""
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conrelid = '{GOOGLE_ORGANIC_RANKED_V2_TABLE}'::regclass
+          AND conname = '{GOOGLE_ORGANIC_RANKED_V2_PLACEMENT_CONSTRAINT}'
+    ) THEN
+        ALTER TABLE {GOOGLE_ORGANIC_RANKED_V2_TABLE}
+            ADD CONSTRAINT {GOOGLE_ORGANIC_RANKED_V2_PLACEMENT_CONSTRAINT}
+            UNIQUE ({_RANKED_V2_PLACEMENT_KEY});
+    END IF;
+END $$
+"""
+
+# A database migrated before this remediation already holds the identity-only child
+# binding. These blocks add the composite parent-placement key additively; PostgreSQL
+# validates the existing rows, so persisted damage refuses the migration instead of
+# being silently accepted.
+PF18_PARENT_PLACEMENT_FK_SQL: Final[tuple[str, ...]] = tuple(
+    f"""
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conrelid = '{table}'::regclass
+          AND conname = '{name}'
+    ) THEN
+        ALTER TABLE {table}
+            ADD {_pf18_parent_placement_fk(name, parent, child_key)};
+    END IF;
+END $$
+"""
+    for table, name, parent, child_key in PF18_PARENT_PLACEMENT_CONSTRAINTS
+)
+
+PF18_ORDINARY_STATE_DOMAIN_SQL: Final[tuple[str, ...]] = tuple(
+    f"""
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conrelid = '{table}'::regclass
+          AND conname = '{name}'
+    ) THEN
+        ALTER TABLE {table}
+            ADD {_pf18_ordinary_state_domain(name, column)};
+    END IF;
+END $$
+"""
+    for table, name, column in PF18_ORDINARY_STATE_CONSTRAINTS
+)
 
 SEARCH_MENTIONS_ITEM_KIND: Final[str] = (
     "dataforseo.google.ai_optimization.search_mentions.item.v1"
@@ -3066,14 +3277,20 @@ PRE_RANK05_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
 )
 
 PF18_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (
-    GOOGLE_ORGANIC_FEATURES_PARENT_UNIQUE_SQL,
-    GOOGLE_ORGANIC_RANKED_V2_SQL,
-    GOOGLE_ORGANIC_TOP_STORY_SQL,
-    GOOGLE_ORGANIC_TOP_STORY_OCCURRENCES_SQL,
-    GOOGLE_ORGANIC_VIDEO_SQL,
-    GOOGLE_ORGANIC_VIDEO_OCCURRENCES_SQL,
-    GOOGLE_ORGANIC_SITELINK_SQL,
-    GOOGLE_ORGANIC_SITELINK_OCCURRENCES_SQL,
+    (
+        GOOGLE_ORGANIC_FEATURES_PARENT_UNIQUE_SQL,
+        GOOGLE_ORGANIC_FEATURES_PLACEMENT_UNIQUE_SQL,
+        GOOGLE_ORGANIC_RANKED_V2_SQL,
+        GOOGLE_ORGANIC_RANKED_V2_PLACEMENT_UNIQUE_SQL,
+        GOOGLE_ORGANIC_TOP_STORY_SQL,
+        GOOGLE_ORGANIC_TOP_STORY_OCCURRENCES_SQL,
+        GOOGLE_ORGANIC_VIDEO_SQL,
+        GOOGLE_ORGANIC_VIDEO_OCCURRENCES_SQL,
+        GOOGLE_ORGANIC_SITELINK_SQL,
+        GOOGLE_ORGANIC_SITELINK_OCCURRENCES_SQL,
+    )
+    + PF18_PARENT_PLACEMENT_FK_SQL
+    + PF18_ORDINARY_STATE_DOMAIN_SQL
 )
 
 PRE_PF18_SCHEMA_STATEMENTS: Final[tuple[str, ...]] = (

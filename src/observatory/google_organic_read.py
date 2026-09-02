@@ -26,6 +26,15 @@ from observatory.dataforseo_google_organic import (
     VIDEO_RESULT_KIND,
 )
 from observatory.evidence_store import EvidenceStore, IntegrityError
+from observatory.google_organic_derive import (
+    SITELINK_OCCURRENCES_TABLE,
+    SITELINKS_TABLE,
+    TOP_STORY_OCCURRENCES_TABLE,
+    TOP_STORY_TABLE,
+    VIDEO_OCCURRENCES_TABLE,
+    VIDEO_TABLE,
+    plan_google_organic_expanded_capture,
+)
 from observatory.provider_history import HISTORY_LIMIT_MAX, history_list_response
 from observatory.provider_holdings import (
     HoldingsAttempt,
@@ -73,20 +82,79 @@ EXPANDED_OBSERVATION_KINDS: Final[tuple[str, ...]] = (
 # bound occurrence row. A parent with none is integrity damage, not an empty list.
 _CHILD_OCCURRENCE_FAMILIES: Final[tuple[tuple[str, str, str], ...]] = (
     (
-        "google_organic_top_story_results",
-        "google_organic_top_story_result_occurrences",
+        TOP_STORY_TABLE,
+        TOP_STORY_OCCURRENCES_TABLE,
         "Top Stories child has no subordinate occurrences",
     ),
     (
-        "google_organic_video_results",
-        "google_organic_video_result_occurrences",
+        VIDEO_TABLE,
+        VIDEO_OCCURRENCES_TABLE,
         "Video child has no subordinate occurrences",
     ),
     (
-        "google_organic_sitelinks",
-        "google_organic_sitelink_occurrences",
+        SITELINKS_TABLE,
+        SITELINK_OCCURRENCES_TABLE,
         "organic sitelink has no subordinate occurrences",
     ),
+)
+# Read-side complete-set agreement for the three PF-18 child families is proved against
+# the strongest authority Observatory has: the verified Evidence body itself. "At least
+# one bound occurrence" cannot refuse a spurious extra child_index inserted under a real
+# semantic parent, and an identity-only parent citation cannot refuse a falsified parent
+# axis on an already-persisted row. Rebuilding the exact intended child rows from the
+# verified Capture body and requiring set equality refuses both, before the outer limit.
+_CHILD_OCCURRENCE_COLUMNS: Final[tuple[str, ...]] = (
+    "within_capture_identity",
+    "observation_kind",
+    "child_index",
+)
+_TOP_STORY_CHILD_COLUMNS: Final[tuple[str, ...]] = (
+    "within_capture_identity",
+    "observation_kind",
+    "requested_keyword",
+    "parent_item_type",
+    "parent_within_capture_identity",
+    "parent_page",
+    "parent_position",
+    "parent_rank_group",
+    "parent_rank_absolute",
+    "child_url",
+    "source",
+    "domain",
+    "title",
+    "top_story_item_timestamp",
+    "top_story_item_timestamp_state",
+)
+_VIDEO_CHILD_COLUMNS: Final[tuple[str, ...]] = (
+    "within_capture_identity",
+    "observation_kind",
+    "requested_keyword",
+    "parent_item_type",
+    "parent_within_capture_identity",
+    "parent_page",
+    "parent_position",
+    "parent_rank_group",
+    "parent_rank_absolute",
+    "child_url",
+    "source",
+    "title",
+    "video_item_timestamp",
+    "video_item_timestamp_state",
+)
+_SITELINK_CHILD_COLUMNS: Final[tuple[str, ...]] = (
+    "within_capture_identity",
+    "observation_kind",
+    "requested_keyword",
+    "parent_within_capture_identity",
+    "parent_page",
+    "parent_position",
+    "parent_rank_group",
+    "parent_rank_absolute",
+    "child_url",
+    "title",
+    "domain",
+    "description",
+    "description_state",
 )
 
 
@@ -99,6 +167,10 @@ _CHILD_OCCURRENCE_FAMILIES: Final[tuple[tuple[str, str, str], ...]] = (
 # --------------------------------------------------------------------------------------
 
 _FIELD_STATES = Literal["stated", "json_null", "absent", "not_requested", "inapplicable"]
+# PF-18 introduced ordinary provider fields whose applicable domain is narrower than the
+# repository-wide five-token one. Accepted v1 fields keep the wide domain; only the newly
+# introduced PF-18 ordinary fields use this one.
+_ORDINARY_FIELD_STATES = Literal["stated", "json_null", "absent"]
 
 _EXPANDED_RECIPE_NOTE: Final[str] = (
     "This document is served only under the PF-18 expanded Google Organic Recipe. "
@@ -135,6 +207,13 @@ _OCCURRENCE_NOTE: Final[str] = (
     "the provider array position, never a rank, importance, score, or identity. "
     "Repeated agreeing children collapse to one semantic fact carrying several "
     "occurrences; occurrence rows never raise capture_outcome.observation_count."
+)
+_ORDINARY_STATE_NOTE: Final[str] = (
+    "The applicable states for this ordinary provider field are exactly stated, "
+    "provider JSON null, and permitted absence. The expanded Recipe never disables this "
+    "dimension per request and never declares it recipe-inapplicable, so not_requested "
+    "and inapplicable are impossible here: persistence and this contract refuse them "
+    "instead of serving them as testimony."
 )
 _CHILD_COMPLETENESS_NOTE: Final[str] = (
     "Returned child count and order are exactly what this Capture returned. They do "
@@ -179,7 +258,9 @@ class GoogleOrganicItemTimestamp(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: _FIELD_STATES = Field(description=_ITEM_TIME_STATE_NOTE)
+    state: _ORDINARY_FIELD_STATES = Field(
+        description=_ITEM_TIME_STATE_NOTE + " " + _ORDINARY_STATE_NOTE
+    )
     value: str | None = Field(
         description=(
             "Exact provider timestamp string when state is stated; otherwise null. "
@@ -193,13 +274,13 @@ class GoogleOrganicLinksFamily(BaseModel):
 
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    state: _FIELD_STATES = Field(
+    state: _ORDINARY_FIELD_STATES = Field(
         description=(
             "Parent links-family state. absent (no key), json_null (key stated null), "
             "and stated (an actual array) stay distinct. A stated empty array and a "
             "stated populated array are both state=stated and are separated by "
             "returned_child_count, so 'no sitelink rows' can never stand in for the "
-            "four distinct provider families."
+            "four distinct provider families. " + _ORDINARY_STATE_NOTE
         )
     )
     returned_child_count: int | None = Field(
@@ -211,6 +292,17 @@ class GoogleOrganicLinksFamily(BaseModel):
             "null whenever links was absent or JSON null. "
             + _CHILD_COMPLETENESS_NOTE
         ),
+    )
+
+
+class GoogleOrganicOrdinaryTextField(BaseModel):
+    """PF-18 ordinary provider text testimony with a narrowed field-state domain."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    state: _ORDINARY_FIELD_STATES = Field(description=_ORDINARY_STATE_NOTE)
+    value: str | None = Field(
+        description="Exact provider string when state is stated; otherwise null."
     )
 
 
@@ -578,10 +670,13 @@ class GoogleOrganicSitelink(BaseModel):
     domain: str = Field(
         description="Exact provider-stated child domain. Not a canonical Site identity."
     )
-    description: GoogleOrganicTextField = Field(
+    description: GoogleOrganicOrdinaryTextField = Field(
         description=(
             "Sitelink description testimony. A provider JSON null description is not an "
-            "empty string and not an absent key; the state carries that distinction."
+            "empty string and not an absent key; the state carries that distinction. "
+            "This is an ordinary provider field introduced by PF-18, not an inherited v1 "
+            "field, so it never carries request-disabled or recipe-inapplicable "
+            "semantics."
         )
     )
     occurrences: list[GoogleOrganicChildOccurrence] = Field(
@@ -958,6 +1053,100 @@ def _assert_history_candidates_consistent(
             raise IntegrityError(message)
 
 
+def _assert_child_rows_match_evidence(
+    connection: Connection[Any],
+    table: str,
+    capture_id: str,
+    columns: Sequence[str],
+    intended_rows: Sequence[Mapping[str, object]],
+    message: str,
+) -> None:
+    stored = connection.execute(
+        sql.SQL(
+            """
+            SELECT {}
+            FROM {}
+            WHERE capture_id = %s AND derivation_version_id = %s
+            """
+        ).format(
+            sql.SQL(", ").join(sql.Identifier(column) for column in columns),
+            sql.Identifier(table),
+        ),
+        (capture_id, GOOGLE_ORGANIC_EXPANDED_RECIPE_ID),
+    ).fetchall()
+    intended = [tuple(row[column] for column in columns) for row in intended_rows]
+    if len(stored) != len(intended):
+        raise IntegrityError(message)
+    if {tuple(row) for row in stored} != set(intended):
+        raise IntegrityError(message)
+
+
+def _assert_expanded_children_match_evidence(
+    connection: Connection[Any],
+    store: EvidenceStore,
+    candidates: Sequence[
+        tuple[str, str, Mapping[str, object], Mapping[str, object]]
+    ],
+) -> None:
+    """Rebuild the PF-18 child families from verified Evidence and require agreement.
+
+    This runs over every matching candidate Capture before the outer history limit, so
+    damage hidden in an unreturned tail still fails closed. Missing, extra, orphan, and
+    content-falsified child rows are all integrity damage here: the persisted set must
+    equal the set the verified Capture body actually supports, not merely resemble it.
+    Only the expanded Recipe is reconstructed; pinned v1 behaviour is untouched.
+    """
+
+    seen: set[str] = set()
+    for capture_id, attempt_id, capture, attempt in candidates:
+        if capture_id in seen:
+            continue
+        seen.add(capture_id)
+        parameters = _parameters(attempt)
+        body: bytes | None = None
+        if capture.get("transport_state") != "no_response":
+            body = store.read_capture_body(capture_id)
+        planned = plan_google_organic_expanded_capture(
+            attempt_id, capture_id, capture, parameters, body
+        )
+        for detail_table, columns, occurrence_table, occurrences in (
+            (
+                TOP_STORY_TABLE,
+                _TOP_STORY_CHILD_COLUMNS,
+                TOP_STORY_OCCURRENCES_TABLE,
+                planned.top_story_occurrences,
+            ),
+            (
+                VIDEO_TABLE,
+                _VIDEO_CHILD_COLUMNS,
+                VIDEO_OCCURRENCES_TABLE,
+                planned.video_occurrences,
+            ),
+            (
+                SITELINKS_TABLE,
+                _SITELINK_CHILD_COLUMNS,
+                SITELINK_OCCURRENCES_TABLE,
+                planned.sitelink_occurrences,
+            ),
+        ):
+            _assert_child_rows_match_evidence(
+                connection,
+                detail_table,
+                capture_id,
+                columns,
+                planned.details[detail_table],
+                f"{detail_table} rows disagree with verified Evidence",
+            )
+            _assert_child_rows_match_evidence(
+                connection,
+                occurrence_table,
+                capture_id,
+                _CHILD_OCCURRENCE_COLUMNS,
+                occurrences,
+                f"{occurrence_table} rows disagree with verified Evidence",
+            )
+
+
 def load_google_organic_history(
     store: EvidenceStore,
     connection: Connection[Any],
@@ -1084,6 +1273,25 @@ def load_google_organic_history(
         resolved.derivation_version_id,
         kinds,
     )
+    if resolved.derivation_version_id == GOOGLE_ORGANIC_EXPANDED_RECIPE_ID:
+        _assert_expanded_children_match_evidence(
+            connection,
+            store,
+            [
+                (capture_id, attempt_id, capture, attempt)
+                for (
+                    _started,
+                    capture_id,
+                    attempt_id,
+                    _classification,
+                    _observation_count,
+                    attempt,
+                    capture,
+                    _request,
+                    _result_context,
+                ) in candidates
+            ],
+        )
     unique: list[
         tuple[
             str,

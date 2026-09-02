@@ -1,6 +1,6 @@
 # PF-18 — Google Organic MVP testimony completion
 
-**Status:** review — R1–R3 bounded integrity remediation authorized  
+**Status:** review — R1–R3 bounded integrity remediation delivered  
 **Kind:** provider fidelity remediation  
 **Triggered by:** MVP-01 Class 4 Google Organic finding  
 **Blocked by:** none for the bounded PF-18 remediation  
@@ -8,6 +8,7 @@
 **Draft base:** `0465a5b6e3bb9c4e56aa613f5d61581620e46096`  
 **Implementation start:** `404d3bebce3755c33989e10fe63559bd8ac89616`  
 **Remediation start:** `8d2f4c7b1736ed33941c44403a06ef365395cd2a`  
+**Remediation parent (authorization checkpoint):** `10d3b2f7c368bbf534c88ad7d2ffc13be2bcff41`  
 **Implementation Writer:** [CLAUDE]  
 
 ## Why this ticket exists
@@ -791,6 +792,268 @@ and leave the tree clean. No provider request, credentials, spend, Evidence muta
 automatic Recipe-selection change, amend, rebase, reset, or push is authorized.
 
 **Steward implementation verdict:** `REMEDIATION_REQUIRED`.
+
+## Remediation report — R1–R3
+
+**Writer:** [CLAUDE]  
+**Remediation parent:** `10d3b2f7c368bbf534c88ad7d2ffc13be2bcff41`  
+**Remediation commit:** one direct child of that parent; not pushed, not amended, not rebased.
+
+### Changed paths
+
+Production:
+
+- `src/observatory/migrate.py` — R2 composite parent-placement binding and R3 narrowed
+  PF-18 ordinary state domains, all additive and idempotent.
+- `src/observatory/google_organic_read.py` — R1 read-side Evidence reconstruction of the
+  three PF-18 child families and R3 narrowed expanded response models.
+
+Tests:
+
+- `tests/test_google_organic_expanded_derive.py` — R2/R3 PostgreSQL constraint proofs,
+  migration upgrade-path proofs, and one retargeted migration-layering assertion.
+- `tests/test_api_google_organic_expanded.py` — R1 API tamper regressions (including
+  the hidden-tail case and a gate-attribution proof) and R3 model/OpenAPI proofs.
+
+Ticket:
+
+- `tickets/PF-18-google-organic-mvp-testimony-completion.md` — this report.
+
+Nothing else changed. `src/observatory/dataforseo_google_organic.py`,
+`src/observatory/google_organic_derive.py`, `src/observatory/api.py`, both Recipe
+documents, the PF-10 Conformance fixture, the frozen expanded-Recipe fixture bytes,
+`README.md`, `docs/`, `AGENTS.md`, `VISION.md`, `VOCABULARY.md`, `decisions/`, other
+tickets, and every unrelated provider surface are untouched.
+
+The one existing assertion that had to be retargeted is
+`test_pf18_adds_exactly_seven_google_organic_local_relations`, whose
+`"ALTER TABLE google_organic_ranked_results" not in joined` substring check also matched
+`ALTER TABLE google_organic_ranked_results_v2`. It is now a negative-lookahead regex, so
+it still forbids altering the accepted v1 relation while allowing additive alteration of
+the PF-18-local v2 relation. No behaviour assertion changed.
+
+### R1 — read-side extra-occurrence integrity
+
+`_assert_history_candidates_consistent()` is unchanged and still runs first. A new
+`_assert_expanded_children_match_evidence()` then runs, for the expanded Recipe only,
+over **every** matching candidate Capture before the outer history limit and before
+deduplication. For each candidate it reads the verified Capture body through
+`EvidenceStore.read_capture_body()` (identity-verified, so damaged Evidence raises
+`IntegrityError` and 409s), replans that Capture with the production
+`plan_google_organic_expanded_capture()`, and requires exact set equality — count and
+membership — between the intended and the persisted rows for all six PF-18 child
+relations: the three semantic child relations with every served column
+(`_TOP_STORY_CHILD_COLUMNS`, `_VIDEO_CHILD_COLUMNS`, `_SITELINK_CHILD_COLUMNS`) and the
+three occurrence relations by `(within_capture_identity, observation_kind, child_index)`.
+
+The authority is verified Evidence, not a count and not an orphan probe. An extra
+FK-valid `child_index` under a real semantic parent is now surplus membership in that
+set and is refused; so are a missing occurrence, a moved occurrence, and falsified child
+content. Evidence verification is not weakened anywhere, no new generic framework is
+introduced, and pinned-v1 reads take none of this path.
+
+Regressions added:
+
+- `test_an_extra_child_occurrence_under_a_real_parent_is_409` — parametrized over all
+  three families. It asserts HTTP 200 first, then inserts one additional FK-valid
+  `child_index = 99` under an existing semantic child, does **not** rerun Derivation,
+  and requires HTTP 409 `{"detail":"evidence_integrity_failure"}`.
+- `test_the_extra_occurrence_refusal_comes_from_evidence_reconstruction` — monkeypatches
+  the new gate out and proves the pre-existing checks return HTTP 200 on exactly that
+  row, then restores it and proves 409. This names the load-bearing gate so it cannot
+  regress silently.
+- `test_an_extra_child_occurrence_hidden_beyond_the_outer_limit_is_still_409` — two
+  Captures, damage on the one `limit=1&order=asc` would hide; both the limited and the
+  unlimited request 409.
+- `test_a_duplicated_semantic_child_occurrence_index_is_409` — parametrized over all
+  three families; moving a real occurrence onto another real semantic child is damage.
+- `test_a_falsified_child_content_field_is_409`.
+
+### R2 — child parent axes must match the exact parent
+
+Structural, PostgreSQL-enforced composite binding, additive and idempotent:
+
+- new `UNIQUE google_organic_serp_features_placement (capture_id,
+  derivation_version_id, within_capture_identity, item_type, page, position,
+  rank_group, rank_absolute)` on the reused v1 feature relation — no column added, no v1
+  row changed;
+- new `UNIQUE google_organic_ranked_results_v2_placement (capture_id,
+  derivation_version_id, within_capture_identity, page, position, rank_group,
+  rank_absolute)`;
+- new FKs `google_organic_top_story_results_parent_placement` and
+  `google_organic_video_results_parent_placement` from
+  `(capture_id, derivation_version_id, parent_within_capture_identity,
+  parent_item_type, parent_page, parent_position, parent_rank_group,
+  parent_rank_absolute)` to the feature placement key;
+- new FK `google_organic_sitelinks_parent_placement` from
+  `(capture_id, derivation_version_id, parent_within_capture_identity, parent_page,
+  parent_position, parent_rank_group, parent_rank_absolute)` to the ranked-result-v2
+  placement key.
+
+Every parent axis a PF-18 child stores and serves is therefore part of the key it cites.
+The accepted narrow identity-only constraints and FKs are retained rather than replaced,
+so a freshly created database and a database migrated at the previous commit converge on
+the same constraint set. Each new constraint is written both inside its `CREATE TABLE`
+and in an idempotent `DO $$` block, following the existing
+`google_organic_result_context_outcome` precedent. `google_organic_ranked_results` (v1)
+is not altered and no constraint is dropped.
+
+Adding an FK validates existing rows, so a database that already holds falsified axes
+refuses the upgrade instead of accepting it. Read-side defence in depth also exists: the
+R1 reconstruction compares every child parent axis with verified Evidence, which catches
+damage persisted before the composite key existed.
+
+Proofs added:
+
+- `test_a_child_cannot_claim_a_false_parent_placement_axis` — twelve cases (three
+  families x page/position/rank_group/rank_absolute) each raising `ForeignKeyViolation`
+  with the exact expected constraint name, plus a control update proving the columns are
+  otherwise writable.
+- `test_a_child_cannot_be_repointed_at_a_parent_with_other_placement_axes` — citing the
+  real Video feature identity, or taking its rank, from a Top Stories child is refused.
+- `test_the_parent_placement_keys_exist_in_real_postgres` — each constraint exists as a
+  foreign key against the named parent relation in PostgreSQL 18.
+- `test_pf18_child_relations_bind_to_the_full_parent_placement` — the registered
+  constraint set and referenced parent keys carry the full placement, and no `DROP`
+  appears in the PF-18 statements.
+- `test_a_falsified_parent_axis_is_409_even_without_the_database_constraint` — the
+  API-level regression for legacy persisted damage: the constraint is dropped to
+  simulate a pre-remediation database, one parent axis is falsified, and history 409s.
+- `test_the_remediation_migration_refuses_a_database_holding_falsified_axes` — the
+  in-place upgrade of a damaged database fails closed with `ForeignKeyViolation`.
+
+### R3 — PF-18 ordinary field states are exactly `stated | json_null | absent`
+
+Persistence: a PF-18-local `_PF18_ORDINARY_STATE_CHECK` closes the domain for the five
+newly introduced ordinary provider fields, each through its own named constraint
+(`PF18_ORDINARY_STATE_CONSTRAINTS`):
+
+| relation | column | constraint |
+|---|---|---|
+| `google_organic_ranked_results_v2` | `organic_item_timestamp_state` | `go_ranked_v2_organic_item_timestamp_state_domain` |
+| `google_organic_ranked_results_v2` | `links_state` | `go_ranked_v2_links_state_domain` |
+| `google_organic_top_story_results` | `top_story_item_timestamp_state` | `go_top_story_item_timestamp_state_domain` |
+| `google_organic_video_results` | `video_item_timestamp_state` | `go_video_item_timestamp_state_domain` |
+| `google_organic_sitelinks` | `description_state` | `go_sitelink_description_state_domain` |
+
+The newly introduced sitelink description state was reviewed under the same rule and is
+narrowed: it is an ordinary provider field, not an inherited v1 one. The repository-wide
+`_FIELD_STATE_CHECK` is untouched and is **not** globally narrowed; ranked-result v2 keeps
+the inherited v1 `description_state`/`website_name_state` five-token semantics verbatim.
+State/value consistency is preserved unchanged: `stated` requires the paired value,
+`json_null`/`absent` require null, and `links_state = 'stated'` requires a non-null
+`links_count` including 0.
+
+API/Pydantic: a dedicated three-token `_ORDINARY_FIELD_STATES` literal now types
+`GoogleOrganicItemTimestamp.state` and `GoogleOrganicLinksFamily.state`, and a new
+`GoogleOrganicOrdinaryTextField` model carries the sitelink description. The five-token
+`GoogleOrganicTextField`/`GoogleOrganicIntField` models still serve every inherited v1
+field. Generated OpenAPI therefore publishes a three-token enum on exactly the PF-18
+ordinary properties and the unchanged five-token enum elsewhere, each with its own
+description of why the two impossible states cannot occur.
+
+Proofs added:
+
+- `test_pf18_ordinary_fields_refuse_not_requested_and_inapplicable` — all five fields x
+  both impossible tokens, with the paired value nulled so only the narrowed domain can
+  refuse it; each raises `CheckViolation` naming the exact constraint.
+- `test_pf18_ordinary_fields_still_accept_their_three_applicable_states` — the three
+  applicable states remain writable, stated-empty links (`links_count = 0`) remains a
+  distinct legitimate family, and `stated` with a null count and `absent` with a count
+  are both refused.
+- `test_inherited_v1_ranked_states_are_not_narrowed_by_pf18` — the accepted v1
+  description/website_name contract still admits all five tokens.
+- `test_pf18_ordinary_state_registry_matches_the_narrowed_fields` — the production
+  register and the intended field list agree, and the wide domain is still present for
+  the inherited v1 columns.
+- `test_pf18_ordinary_models_refuse_impossible_field_states` and
+  `test_pf18_ordinary_models_accept_their_three_applicable_states` — model-level.
+- `test_openapi_publishes_the_narrow_domain_only_for_pf18_ordinary_fields`.
+- `test_the_remediation_migration_refuses_an_impossible_persisted_state` — an in-place
+  upgrade over a persisted `not_requested` fails closed with `CheckViolation`.
+
+### Recipe identity
+
+Neither Recipe changed. `src/observatory/dataforseo_google_organic.py` and
+`tests/fixtures/dataforseo_google_organic_expanded_recipe.jcs` are byte-identical.
+
+- expanded Recipe: **3405** bytes, SHA-256
+  `2704ff82a175be7bacfd601cf7f0e684ca1cc85f9e8cfc93f520b603bcb29d04` — unchanged;
+- v1 Recipe: **2487** bytes, SHA-256
+  `338fc2080d31a35b1f7cc5d7a71c971d25d72517ca3b846959ccb501b666acde` — unchanged;
+- PF-10 fixture: **135722** bytes, SHA-256
+  `7143871e3e1e88b1eb462dd5c06300e7db0fd7c68a55e075d33107d7cbd9955f` — unchanged;
+- ordered kinds, semantic axes, and the exact PF-10 `observation_count = 248` are
+  unchanged. No new Recipe was created and `NEEDS_STEWARD_RECONCILIATION` was not
+  required: R1–R3 were fixable entirely below the normative Recipe contract.
+
+### Validation actually run
+
+Real PostgreSQL 18 (`postgres:18-alpine`) through the existing session fixture; every
+test file installs the public-network guard and no provider host was reachable.
+
+- `uv run pytest -q tests/test_dataforseo_google_organic_expanded.py
+  tests/test_google_organic_expanded_derive.py
+  tests/test_api_google_organic_expanded.py` — **114 passed**, 0 failed, 0 skipped,
+  1 unrelated Starlette deprecation warning (42 + 32 + 40).
+- `uv run pytest -q tests/test_api_google_organic.py
+  tests/test_dataforseo_google_organic.py tests/test_dataforseo_google_organic_derive.py
+  tests/test_dataforseo_google_ranked_keywords_derive.py tests/test_provider_recipe.py
+  tests/test_provider_recipe_selection.py tests/test_provider_history.py
+  tests/test_api.py` — **201 passed**. This is the inherited set that shares the changed
+  production paths: the v1 Google Organic read/parse/derive path, the shared migration
+  schema, and Recipe registration/selection.
+- `uv run ruff check .` — **All checks passed!**
+- `uv run mypy src/observatory tests/test_api_google_organic_expanded.py
+  tests/test_google_organic_expanded_derive.py` — **Success: no issues found in 48
+  source files**.
+
+Not run: the full repository suite. Per the remediation prompt, final full-suite closure
+validation remains with [CHAZ] after Steward and independent review. No provider call was
+made and no unrelated inherited failure was investigated or fixed.
+
+### Residual risks
+
+- **Read cost.** The expanded history read now verifies and reparses each matching
+  candidate Capture body before the outer limit. That is the price of Evidence-strength
+  complete-set agreement and matches frozen rule 21, but expanded history is now O(all
+  matching Captures) in body reads, not O(limit). At MVP volume this is immaterial; at
+  F12 scale it is a real cost and the natural place to revisit is a scalable index, not a
+  weaker gate.
+- **Parent rows themselves are not reconstructed.** The read-side Evidence comparison is
+  bounded to the three PF-18 child families named by R1 and R2. A falsified placement axis
+  on a `google_organic_ranked_results_v2` or `google_organic_serp_features` row that has
+  no children would still be served, because the composite FK only proves child/parent
+  agreement and nothing compares those parent rows with Evidence. This is the same posture
+  the accepted v1 document already has and PF-18 did not widen it; extending the
+  reconstruction to the parent families is adjacent work, deliberately not taken inside
+  this bounded remediation, and is offered to the Steward as a finding.
+- **Two retained narrow constraints.** `google_organic_serp_features_parent` and
+  `google_organic_ranked_results_v2_parent` are now implied by the wider placement keys.
+  They are kept because dropping them would not be additive and because keeping them makes
+  a fresh database and an upgraded database converge exactly. They cost one redundant
+  unique index each.
+- **Upgrade of a damaged database is fail-closed, not self-healing.** A database that
+  already holds falsified axes or an impossible persisted state cannot be migrated until
+  the damage is removed or the affected rows are re-derived. That is the intended
+  direction, but it is an operational consequence worth naming.
+- **`GoogleOrganicIntField` keeps the five-token domain.** It carries only result-context
+  `se_results_count`/`pages_count`, which are inherited v1 fields; narrowing it would have
+  altered accepted v1 semantics, which R3 forbids.
+- Everything the previous implementation report listed as synthetic-only remains
+  synthetic-only. The four residuals the remediation prompt explicitly excluded —
+  parser-v2 duplicate disagreement, fail-closed childless Top Stories/Video parents, the
+  `anyOf` 200 schema, and the deliberate expanded/v1 duplication — were not touched.
+
+### Boundary statement
+
+No provider request was made. No DataForSEO or other credentials were read or used. No
+paid API was called. No spend occurred. No Evidence was mutated: the PF-10 Conformance
+fixture and the frozen expanded-Recipe bytes are byte-identical and no replacement live
+Capture was created. `provider_recipe_selections` is not changed automatically anywhere in
+this remediation. Nothing was pushed, amended, rebased, reset, or stashed. The remediation
+is one commit whose parent is `10d3b2f7c368bbf534c88ad7d2ffc13be2bcff41`, and the working
+tree is clean.
 
 ## Closure
 
