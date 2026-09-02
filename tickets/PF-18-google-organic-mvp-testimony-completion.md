@@ -1,9 +1,9 @@
 # PF-18 — Google Organic MVP testimony completion
 
-**Status:** review — R1–R3 accepted; R4 ranked-result-v2 read-integrity remediation implemented  
+**Status:** review — R1–R4 Steward-accepted; awaiting independent review and final [CHAZ] full-suite gate  
 **Kind:** provider fidelity remediation  
 **Triggered by:** MVP-01 Class 4 Google Organic finding  
-**Blocked by:** Steward R4 review, independent review, and the final [CHAZ] full-suite gate  
+**Blocked by:** independent review and the final [CHAZ] full-suite gate  
 **Approved by:** [CHAZ] for bounded implementation on 2026-09-01, R1–R3 remediation on 2026-09-02, and bounded R4 remediation on 2026-09-02  
 **Draft base:** `0465a5b6e3bb9c4e56aa613f5d61581620e46096`  
 **Implementation start:** `404d3bebce3755c33989e10fe63559bd8ac89616`  
@@ -1332,6 +1332,51 @@ this remediation. Nothing was pushed, amended, rebased, reset, or stashed. The
 remediation is one commit whose parent is
 `61d7f9e837aa68b4d7d1edb8df32540fbf3b1ca7`, and the working tree is clean.
 
+## Steward R4 review — 2026-09-02
+
+The Project Steward reviewed exact remediation commit
+`908e975b5e49105ae57e1d4d2f6f92c7b12d14b8` against authorized parent
+`61d7f9e837aa68b4d7d1edb8df32540fbf3b1ca7`. The commit is one direct child, the working tree
+was clean, and the changed paths are exactly the bounded R4 production/read path, R4 API tests,
+and this ticket.
+
+The R4 implementation satisfies the frozen remediation contract. The expanded-only Evidence
+reconstruction still runs for every matching candidate before deduplication, sorting, and the
+outer history limit. It now compares `google_organic_ranked_results_v2` with the rows produced by
+`plan_google_organic_expanded_capture()` using exact count plus set membership. The comparison
+covers the complete ranked-v2 persisted/served content contract: semantic envelope keys,
+requested keyword, all placement axes, URL/domain/title, description and website-name
+state/value, organic item-timestamp state/value, and `links_state`/`links_count`. Inspection of
+`_RANKED_V2_CONTENT` confirms no ranked-v2 persisted content column is omitted; `capture_id` and
+`derivation_version_id` are intentionally enforced by the per-Capture/per-Recipe query predicate.
+
+The decisive regressions directly exercise the failure modes frozen in R4 without rerunning
+Derivation: legal state-to-state timestamp damage, replacement with another valid UTC timestamp,
+populated-links parent damage while sitelinks remain, served content mutation, childless
+placement mutation, and damage hidden beyond the outer limit. Controls preserve the exact PF-10
+expanded document (`observation_count=248`, 97 ranked-v2 rows, 58/39 timestamp states,
+96 JSON-null plus one stated links family, and 4/3/4 child cardinalities) and prove pinned v1
+(`observation_count=237`) never traverses the expanded Evidence gate.
+
+Neither Recipe, parser contract, migration schema, PF-10 fixture, semantic axes, Observation-kind
+order, nor Recipe selection changed. The remediation is therefore below the normative Recipe
+boundary and requires no Product or Steward reconciliation.
+
+The Writer report records real PostgreSQL 18 validation of **123 passed** across the focused
+PF-18 set, **30 passed** for inherited Google Organic history, `ruff` clean, and targeted `mypy`
+clean. The Project Steward did not rerun tests through MCP; those results are accepted as Writer
+handoff evidence pending the independent review and final [CHAZ] full-suite gate.
+
+The remaining notes are non-blocking within PF-18: reused v1 families remain outside R4 Evidence
+reconstruction by explicit scope; expanded history continues to read/reparse every matching
+Capture before limit; and the helper name `_assert_expanded_children_match_evidence()` now covers
+ranked-result v2 as well as child families but does not alter behavior.
+
+**Steward R4 verdict:** `ACCEPTED_READY_FOR_INDEPENDENT_REVIEW`.
+
+No provider call, credentials, spend, Evidence mutation, automatic Recipe-selection change, or
+push is authorized by this review.
+
 ## Closure
 
-<!-- Project Steward fills after R4 remediation, independent review, and final validation. -->
+<!-- Project Steward fills after independent review and final validation. -->
